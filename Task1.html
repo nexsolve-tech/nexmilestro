@@ -1,0 +1,603 @@
+<!-- Task1.html -->
+<div class="view-container">
+  <!-- Filter & Search Bar -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="task-search" class="search-input" placeholder="Search tasks..." oninput="filterTasks()">
+    </div>
+    
+    <div class="filter-group">
+      <select id="filter-task-project" class="select-filter" style="max-width: 180px;" onchange="filterTasks()">
+        <option value="">All Projects</option>
+      </select>
+
+      <select id="filter-task-priority" class="select-filter" onchange="filterTasks()">
+        <option value="">All Priorities</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+      
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary" id="btn-add-task" onclick="openTaskModal()"><i class="fas fa-plus"></i> Add Task</button>
+    </div>
+  </div>
+
+  <!-- Kanban Board View -->
+  <div class="kanban-board">
+    <!-- Pending Column -->
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <h4 class="kanban-col-title">Pending</h4>
+        <span class="kanban-card-count" id="count-pending">0</span>
+      </div>
+      <div class="kanban-card-list" id="list-pending">
+        <!-- Rendered tasks go here -->
+      </div>
+    </div>
+
+    <!-- In Progress Column -->
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <h4 class="kanban-col-title">In Progress</h4>
+        <span class="kanban-card-count" id="count-inprogress">0</span>
+      </div>
+      <div class="kanban-card-list" id="list-inprogress">
+        <!-- Rendered tasks go here -->
+      </div>
+    </div>
+
+    <!-- Completed Column -->
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <h4 class="kanban-col-title">Completed</h4>
+        <span class="kanban-card-count" id="count-completed">0</span>
+      </div>
+      <div class="kanban-card-list" id="list-completed">
+        <!-- Rendered tasks go here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Task Modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal-container" style="max-width: 650px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="task-modal-title">Add New Task</h3>
+      <button class="icon-btn" onclick="closeTaskModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="task-form" onsubmit="handleTaskSubmit(event)">
+      <input type="hidden" id="task-id" name="TaskID">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Task Name *</label>
+            <input type="text" id="task-name" name="TaskName" class="form-control" placeholder="e.g. Draw kitchen counter layouts" required>
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Project *</label>
+            <select id="task-project-id" name="ProjectID" class="form-control" required>
+              <option value="">Select Project</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Assigned Type *</label>
+            <select id="task-assigned-type" name="AssignedType" class="form-control" onchange="handleAssignedTypeChange()" required>
+              <option value="Staff">Internal Staff</option>
+              <option value="Vendor">Vendor</option>
+              <option value="Associate">Associate</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Assigned To (User Name/ID) *</label>
+            <select id="task-assigned-to" name="AssignedTo" class="form-control" required>
+              <option value="">Select User</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input type="date" id="task-start-date" name="StartDate" class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Due Date *</label>
+            <input type="date" id="task-due-date" name="DueDate" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Priority *</label>
+            <select id="task-priority" name="Priority" class="form-control" required>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="task-status" name="Status" class="form-control" onchange="onTaskStatusChange()" required>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="task-completion-date-group" style="display: none;">
+            <label class="form-label">Actual Completion Date</label>
+            <input type="date" id="task-completion-date" name="CompletionDate" class="form-control">
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Description / Details</label>
+            <textarea id="task-desc" name="Description" class="form-control" placeholder="Specify steps, requirements, checklist..."></textarea>
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Remarks / Closure Details</label>
+            <input type="text" id="task-remarks" name="Remarks" class="form-control" placeholder="Feedback or closing comments">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div>
+          <button type="button" id="btn-delete-task" class="btn btn-danger" style="display: none;" onclick="triggerDeleteCurrentTask()"><i class="fas fa-trash"></i> Delete Task</button>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeTaskModal()">Cancel</button>
+          <button type="submit" id="btn-save-task" class="btn btn-primary">Save Task</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  var allTasks = [];
+  var projectsCacheList = [];
+  var usersCacheList = [];
+  var vendorsCacheList = [];
+  var associatesCacheList = [];
+  var dropdownsCache = {};
+  window.loadTasksView = function(forceRefresh) {
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var taskPerm = perms["Tasks"] || {};
+    var canAdd = isSuperAdmin || taskPerm.add === true;
+    var addBtn = document.getElementById("btn-add-task");
+    if (addBtn)
+      addBtn.style.display = canAdd ? "inline-block" : "none";
+
+    function applyTasksData(result) {
+      result = result || {};
+      projectsCacheList = result.projects || [];
+      var projSelect = document.getElementById("task-project-id");
+      if (projSelect) {
+        projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
+          return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), "</option>");
+        }).join("");
+      }
+
+      usersCacheList = result.users || [];
+      var userSelect = document.getElementById("task-assigned-to");
+      if (userSelect) {
+        userSelect.innerHTML = '<option value="">Select Staff</option>' + (usersCacheList || []).filter(function(u) {
+          return u && typeof u === "object";
+        }).map(function(u) {
+          var role = u.RoleID || u.roleId || u.Role || "";
+          var roleStr = role ? " (" + escapeHtml(String(role)) + ")" : "";
+          var val = u.FullName || u.UserID || "";
+          var name = u.FullName || u.UserID || "User";
+          return '<option value="'.concat(escapeHtml(val), '">').concat(escapeHtml(name)).concat(roleStr, "</option>");
+        }).join("");
+      }
+
+      allTasks = result.tasks || [];
+      dropdownsCache = result.dropdowns || {};
+      vendorsCacheList = result.vendors || [];
+      associatesCacheList = result.associates || [];
+
+      populateDropdownsFromCache();
+      populateTaskFilters();
+      renderKanban(allTasks);
+      showLoader(false);
+      var pendingProjId = localStorage.getItem("pending_add_task_project_id");
+      if (pendingProjId) {
+        localStorage.removeItem("pending_add_task_project_id");
+        openTaskModal({ ProjectID: pendingProjId });
+      }
+    }
+
+    // Check global cache first if not forceRefresh
+    if (!forceRefresh) {
+      var cached = cacheGet("tasksViewData");
+      if (cached) {
+        applyTasksData(cached);
+        return;
+      }
+    }
+
+    if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(result) {
+        if (result && result.success !== false) {
+          cacheSet("tasksViewData", result);
+          applyTasksData(result);
+        } else {
+          fetchLegacyTasksData();
+        }
+      }).withFailureHandler(function(err) {
+        fetchLegacyTasksData();
+      }).getTasksViewData();
+    } else {
+      fetchLegacyTasksData();
+    }
+  };
+
+  function fetchLegacyTasksData() {
+    var loadedCount = 0;
+    var totalRequests = 6;
+    function checkLoaded() {
+      loadedCount++;
+      if (loadedCount === totalRequests) {
+        populateDropdownsFromCache();
+        populateTaskFilters();
+        renderKanban(allTasks);
+        showLoader(false);
+      }
+    }
+    google.script.run.withSuccessHandler(function(data) {
+      projectsCacheList = data || [];
+      var select = document.getElementById("task-project-id");
+      if (select) {
+        select.innerHTML = '<option value="">Select Project</option>' + projectsCacheList.filter(function(p) {
+          return p.Status !== "Completed" && p.Status !== "Cancelled";
+        }).map(function(p) {
+          return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), " (").concat(p.ProjectID, ")</option>");
+        }).join("");
+      }
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getProjects();
+    google.script.run.withSuccessHandler(function(data) {
+      usersCacheList = data || [];
+      var select = document.getElementById("task-assigned-to");
+      if (select) {
+        select.innerHTML = '<option value="">Select User</option>' + (usersCacheList || []).filter(function(u) {
+          return u && typeof u === "object";
+        }).map(function(u) {
+          var role = u.RoleID || u.roleId || u.Role || "";
+          var roleStr = role ? " (" + escapeHtml(String(role)) + ")" : "";
+          var val = u.FullName || u.UserID || "";
+          var name = u.FullName || u.UserID || "User";
+          return '<option value="'.concat(escapeHtml(val), '">').concat(escapeHtml(name)).concat(roleStr, "</option>");
+        }).join("");
+      }
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getUsers();
+    google.script.run.withSuccessHandler(function(data) { allTasks = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getTasks();
+    google.script.run.withSuccessHandler(function(data) { dropdownsCache = data || {}; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getDropdownValues();
+    google.script.run.withSuccessHandler(function(data) { vendorsCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getVendors();
+    google.script.run.withSuccessHandler(function(data) { associatesCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getAssociates();
+  }
+  function populateDropdownsFromCache() {
+    var priorities = dropdownsCache["TaskPriority"] || [];
+    var prioritySelect = document.getElementById("task-priority");
+    if (prioritySelect) {
+      prioritySelect.innerHTML = priorities.map(function(p) {
+        return '<option value="'.concat(p, '">').concat(escapeHtml(p), "</option>");
+      }).join("");
+    }
+    var priorityFilter = document.getElementById("filter-task-priority");
+    if (priorityFilter) {
+      priorityFilter.innerHTML = '<option value="">All Priorities</option>' + priorities.map(function(p) {
+        return '<option value="'.concat(p, '">').concat(escapeHtml(p), "</option>");
+      }).join("");
+    }
+    var statuses = dropdownsCache["TaskStatus"] || [];
+    var statusSelect = document.getElementById("task-status");
+    if (statusSelect) {
+      statusSelect.innerHTML = statuses.map(function(s) {
+        return '<option value="'.concat(s, '">').concat(escapeHtml(s), "</option>");
+      }).join("");
+    }
+  }
+  function populateTaskFilters() {
+    var filterSelect = document.getElementById("filter-task-project");
+    filterSelect.innerHTML = '<option value="">All Projects</option>' + projectsCacheList.map(function(p) {
+      return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), "</option>");
+    }).join("");
+  }
+  function renderKanban(tasks) {
+    var columns = {
+      "Pending": { listEl: document.getElementById("list-pending"), countEl: document.getElementById("count-pending"), items: [] },
+      "In Progress": { listEl: document.getElementById("list-inprogress"), countEl: document.getElementById("count-inprogress"), items: [] },
+      "Completed": { listEl: document.getElementById("list-completed"), countEl: document.getElementById("count-completed"), items: [] }
+    };
+    for (var key in columns) {
+      columns[key].listEl.innerHTML = "";
+      columns[key].countEl.innerText = "0";
+    }
+    tasks.forEach(function(task) {
+      if (task.Status === "Cancelled")
+        return;
+      var colName = task.Status;
+      if (colName === "Todo" || colName === "Pending")
+        colName = "Pending";
+      if (columns[colName]) {
+        columns[colName].items.push(task);
+      }
+    });
+    for (var key in columns) {
+      var col = columns[key];
+      col.countEl.innerText = col.items.length;
+      if (col.items.length === 0) {
+        col.listEl.innerHTML = '\n          <div style="text-align:center; padding: 1.5rem; border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.8rem;">\n            No tasks in this lane\n          </div>\n        ';
+        continue;
+      }
+      col.items.sort(function(a, b) {
+        var idA = String(a.TaskID || "");
+        var idB = String(b.TaskID || "");
+        return idB.localeCompare(idA);
+      });
+      col.listEl.innerHTML = col.items.map(function(task) {
+        var proj = projectsCacheList.find(function(p) {
+          return p.ProjectID === task.ProjectID;
+        });
+        var projName = proj ? proj.ProjectName : "Unknown Project";
+        var dateStr = task.DueDate ? formatDate(task.DueDate) : "No Due Date";
+        var priorityClass = (task.Priority || "Medium").toLowerCase();
+        return '<div class="kanban-card" onclick="editTask(\'' + task.TaskID + '\')">' +
+          '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">' +
+            '<span class="kanban-card-title">' + escapeHtml(task.TaskName) + '</span>' +
+            '<div style="display:flex; align-items:center; gap:0.35rem;">' +
+              '<button type="button" data-task-id="' + escapeHtml(task.TaskID) + '" onclick="event.stopPropagation(); notifyTaskWhatsApp(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: #25D366; padding:0; width:22px; height:22px; cursor:pointer;" title="Notify via WhatsApp"><i class="fab fa-whatsapp"></i></button>' +
+              '<span class="badge priority-' + priorityClass + '">' + escapeHtml(task.Priority) + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="kanban-card-desc">' + escapeHtml(task.Description || "No description.") + '</div>' +
+          '<div class="kanban-card-footer">' +
+            '<span class="kanban-card-assigned"><i class="far fa-user"></i> ' + escapeHtml(task.AssignedTo || "Unassigned") + '</span>' +
+            '<span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;"><i class="far fa-calendar"></i> ' + dateStr + '</span>' +
+          '</div>' +
+          '<div style="font-size: 0.65rem; color: var(--primary); font-weight: 700; margin-top: 0.25rem;">' +
+            'Project: ' + escapeHtml(projName) +
+          '</div>' +
+        '</div>';
+      }).join("");
+    }
+  }
+  function notifyTaskWhatsApp(taskId) {
+    var task = allTasks.find(function(t) { return t.TaskID === taskId; });
+    if (!task) return;
+    var proj = projectsCacheList.find(function(p) { return p.ProjectID === task.ProjectID; });
+    var projName = proj ? proj.ProjectName : task.ProjectID;
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var loggerName = currentUser.fullName || currentUser.FullName || "StudioSpace Team";
+    var recipientName = task.AssignedTo || "Team Member";
+
+    var msg = "Hello, " + recipientName + ",\n\n" +
+              "*Task Update* -\n\n" +
+              "Task Name: " + (task.TaskName || "-") + "\n" +
+              "Project Name: " + projName + "\n" +
+              "Priority: " + (task.Priority || "Medium") + "\n" +
+              "Due Date: " + (task.DueDate ? formatDate(task.DueDate) : "No due date") + "\n" +
+              "Description: " + (task.Description || "-") + "\n\n" +
+              "Regards,\n" + loggerName;
+
+    var phone = "";
+    if (task.AssignedType === "Staff" && window.usersCacheList) {
+      var u = window.usersCacheList.find(function(usr) { return usr.FullName === task.AssignedTo || usr.UserID === task.AssignedTo; });
+      if (u) phone = u.Mobile;
+    } else if (task.AssignedType === "Vendor" && window.vendorsCacheList) {
+      var v = window.vendorsCacheList.find(function(vnd) { return vnd.VendorName === task.AssignedTo || vnd.VendorID === task.AssignedTo; });
+      if (v) phone = v.Mobile;
+    } else if (task.AssignedType === "Associate" && window.associatesCacheList) {
+      var a = window.associatesCacheList.find(function(asc) { return asc.AssociateName === task.AssignedTo || asc.AssociateID === task.AssignedTo; });
+      if (a) phone = a.Mobile;
+    }
+
+    var groupLink = (proj && proj.WhatsAppGroupLink) ? proj.WhatsAppGroupLink : "";
+    openWAShareModal(msg, phone, groupLink, recipientName);
+  }
+  window.notifyTaskWhatsApp = notifyTaskWhatsApp;
+  function filterTasks() {
+    var searchVal = document.getElementById("task-search").value.toLowerCase();
+    var projVal = document.getElementById("filter-task-project").value;
+    var priorityVal = document.getElementById("filter-task-priority").value;
+    var filtered = allTasks.filter(function(t) {
+      var matchesSearch = t.TaskName.toLowerCase().includes(searchVal) || t.Description && t.Description.toLowerCase().includes(searchVal) || t.AssignedTo && t.AssignedTo.toLowerCase().includes(searchVal);
+      var matchesProj = !projVal || t.ProjectID === projVal;
+      var matchesPriority = !priorityVal || t.Priority === priorityVal;
+      return matchesSearch && matchesProj && matchesPriority;
+    });
+    renderKanban(filtered);
+  }
+  window.onTaskStatusChange = function() {
+    var statusVal = document.getElementById("task-status").value;
+    var group = document.getElementById("task-completion-date-group");
+    var field = document.getElementById("task-completion-date");
+    if (statusVal === "Completed") {
+      if (group) group.style.display = "block";
+      if (field && !field.value) {
+        field.value = (new Date()).toISOString().substring(0, 10);
+      }
+    } else {
+      if (group) group.style.display = "none";
+    }
+  };
+
+  function openTaskModal(taskObj) {
+    if (taskObj === void 0) {
+      taskObj = null;
+    }
+    var form = document.getElementById("task-form");
+    form.reset();
+    document.getElementById("task-id").value = "";
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var taskPerm = perms["Tasks"] || {};
+    var canAdd = isSuperAdmin || taskPerm.add === true;
+    var canEdit = isSuperAdmin || taskPerm.edit === true;
+    var canDelete = isSuperAdmin || taskPerm.del === true;
+    var isEdit = !!taskObj;
+    var saveBtn = document.getElementById("btn-save-task");
+    if (saveBtn) {
+      saveBtn.style.display = (isEdit ? canEdit : canAdd) ? "inline-block" : "none";
+    }
+    var delBtn = document.getElementById("btn-delete-task");
+    if (taskObj && taskObj.TaskID) {
+      document.getElementById("task-modal-title").innerText = "Edit Task " + taskObj.TaskID;
+      document.getElementById("task-id").value = taskObj.TaskID;
+      document.getElementById("task-name").value = taskObj.TaskName;
+      document.getElementById("task-project-id").value = taskObj.ProjectID;
+      document.getElementById("task-assigned-type").value = taskObj.AssignedType || "Staff";
+      handleAssignedTypeChange();
+      document.getElementById("task-assigned-to").value = taskObj.AssignedTo || "";
+      document.getElementById("task-start-date").value = parseRawDateString(taskObj.StartDate);
+      document.getElementById("task-due-date").value = parseRawDateString(taskObj.DueDate);
+      document.getElementById("task-priority").value = taskObj.Priority;
+      document.getElementById("task-status").value = taskObj.Status;
+      document.getElementById("task-completion-date").value = parseRawDateString(taskObj.CompletionDate);
+      document.getElementById("task-desc").value = taskObj.Description || "";
+      document.getElementById("task-remarks").value = taskObj.Remarks || "";
+      onTaskStatusChange();
+      if (delBtn)
+        delBtn.style.display = canDelete ? "inline-block" : "none";
+    } else {
+      document.getElementById("task-modal-title").innerText = "Add New Task";
+      document.getElementById("task-status").value = "Pending";
+      document.getElementById("task-priority").value = "Medium";
+      document.getElementById("task-assigned-type").value = "Staff";
+      handleAssignedTypeChange();
+      document.getElementById("task-start-date").value = (/* @__PURE__ */ new Date()).toISOString().substring(0, 10);
+      document.getElementById("task-completion-date").value = "";
+      onTaskStatusChange();
+      if (taskObj && taskObj.ProjectID) {
+        document.getElementById("task-project-id").value = taskObj.ProjectID;
+      }
+      if (delBtn)
+        delBtn.style.display = "none";
+    }
+    document.getElementById("task-modal").classList.add("show");
+  }
+  function closeTaskModal() {
+    document.getElementById("task-modal").classList.remove("show");
+  }
+  function editTask(taskId) {
+    var task = allTasks.find(function(t) {
+      return t.TaskID === taskId;
+    });
+    if (task) {
+      openTaskModal(task);
+    }
+  }
+  function handleTaskSubmit(e) {
+    e.preventDefault();
+    var form = document.getElementById("task-form");
+    var formData = {};
+    var inputs = form.querySelectorAll("input, select, textarea");
+    inputs.forEach(function(input) {
+      if (input.name) {
+        formData[input.name] = input.value;
+      }
+    });
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+    google.script.run.withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        if (typeof cacheClearAll === "function") cacheClearAll();
+        closeTaskModal();
+        loadTasksView(true);
+      } else {
+        showToast(response.message, "error");
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast(err.message, "error");
+    }).saveTask(formData, currentUserId);
+  }
+  function deleteTask(taskId) {
+    if (confirm("Are you sure you want to delete Task " + taskId + "?")) {
+      showLoader(true);
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          closeTaskModal();
+          allTasks = allTasks.filter(function(t) { return t.TaskID !== taskId; });
+          renderKanban(allTasks);
+          loadTasksView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteTask(taskId);
+    }
+  }
+  function triggerDeleteCurrentTask() {
+    var taskId = document.getElementById("task-id").value;
+    if (taskId) {
+      deleteTask(taskId);
+    }
+  }
+  function handleAssignedTypeChange() {
+    var typeEl = document.getElementById("task-assigned-type");
+    var type = typeEl ? typeEl.value : "Staff";
+    var select = document.getElementById("task-assigned-to");
+    if (!select)
+      return;
+    if (type === "Staff") {
+      select.innerHTML = '<option value="">Select Staff</option>' + (usersCacheList || []).filter(function(u) {
+        return u && typeof u === "object";
+      }).map(function(u) {
+        var role = u.RoleID || u.roleId || u.Role || "";
+        var roleStr = role ? " (" + escapeHtml(String(role)) + ")" : "";
+        var val = u.FullName || u.UserID || "";
+        var name = u.FullName || u.UserID || "User";
+        return '<option value="'.concat(escapeHtml(val), '">').concat(escapeHtml(name)).concat(roleStr, "</option>");
+      }).join("");
+    } else if (type === "Vendor") {
+      select.innerHTML = '<option value="">Select Vendor</option>' + (vendorsCacheList || []).filter(function(v) {
+        return v && typeof v === "object";
+      }).map(function(v) {
+        var vName = v.VendorName || v.VendorID || "";
+        var vType = v.VendorType || "Vendor";
+        return '<option value="'.concat(escapeHtml(vName), '">').concat(escapeHtml(vName), " (").concat(escapeHtml(vType), ")</option>");
+      }).join("");
+    } else if (type === "Associate") {
+      select.innerHTML = '<option value="">Select Associate</option>' + (associatesCacheList || []).filter(function(a) {
+        return a && typeof a === "object";
+      }).map(function(a) {
+        var aName = a.AssociateName || a.AssociateID || "";
+        return '<option value="'.concat(escapeHtml(aName), '">').concat(escapeHtml(aName), "</option>");
+      }).join("");
+    } else {
+      select.innerHTML = '<option value="">Select Assignee</option>';
+    }
+  }
+  window.openTaskModal = openTaskModal;
+  window.closeTaskModal = closeTaskModal;
+  window.editTask = editTask;
+  window.deleteTask = deleteTask;
+  window.triggerDeleteCurrentTask = triggerDeleteCurrentTask;
+  window.filterTasks = filterTasks;
+  window.handleTaskSubmit = handleTaskSubmit;
+  window.handleAssignedTypeChange = handleAssignedTypeChange;
+})();
+
+</script>

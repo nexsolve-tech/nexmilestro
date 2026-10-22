@@ -1,0 +1,723 @@
+<!-- Customer1.html -->
+<div class="view-container">
+  <!-- Action Header -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="cust-search" class="search-input" placeholder="Search by name, email, phone..." oninput="filterCustomers()">
+    </div>
+    
+    <div class="filter-group">
+      <select id="filter-cust-type" class="select-filter" onchange="filterCustomers()">
+        <option value="">All Customer Types</option>
+      </select>
+
+      <select id="filter-cust-status" class="select-filter" onchange="filterCustomers()">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+      
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary" id="btn-add-customer" onclick="openCustomerModal()"><i class="fas fa-plus"></i> Add Customer</button>
+    </div>
+  </div>
+
+  <!-- Table View -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none;">
+        <table class="data-table" id="customers-table">
+          <thead>
+            <tr>
+              <th>Customer ID</th>
+              <th>Customer Name</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>Customer Type</th>
+              <th>Attachments</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading customers list...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Customer Modal -->
+<div class="modal-overlay" id="customer-modal">
+  <div class="modal-container" style="max-width: 680px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="cust-modal-title">Add New Customer</h3>
+      <button class="icon-btn" onclick="closeCustomerModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="customer-form" onsubmit="handleCustomerSubmit(event)">
+      <input type="hidden" id="cust-id" name="CustomerID">
+      <input type="hidden" id="cust-converted-lead-id" name="ConvertedLeadID">
+      <div class="modal-body">
+        <div class="form-grid">
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Customer Name *</label>
+            <input type="text" id="cust-name" name="CustomerName" class="form-control" placeholder="e.g. John Doe" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Contact Number *</label>
+            <input type="tel" id="cust-mobile" name="Mobile" class="form-control" placeholder="10-digit mobile" required pattern="[0-9]{10}" maxlength="10" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+            <small style="color:var(--text-muted); font-size:0.75rem;">10-digit numeric only</small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Alternate Contact Number</label>
+            <input type="tel" id="cust-alt-mobile" name="AlternateMobile" class="form-control" placeholder="Alternate mobile" pattern="[0-9]{10}" maxlength="10" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+            <small style="color:var(--text-muted); font-size:0.75rem;">10-digit numeric only</small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Email ID *</label>
+            <input type="email" id="cust-email" name="Email" class="form-control" placeholder="email@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">PAN Card No.</label>
+            <input type="text" id="cust-pan" name="PANCardNumber" class="form-control" placeholder="e.g. ABCDE1234F" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" style="text-transform: uppercase;" maxlength="10">
+            <small style="color:var(--text-muted); font-size:0.75rem;">Format: ABCDE1234F</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">GST No.</label>
+            <input type="text" id="cust-gst" name="GSTNumber" class="form-control" placeholder="15-digit GSTIN" style="text-transform: uppercase;" pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}" maxlength="15">
+            <small style="color:var(--text-muted); font-size:0.75rem;">Format: 27AAACA1234A1Z1</small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Customer Type *</label>
+            <select id="cust-type" name="CustomerType" class="form-control" required>
+              <!-- Populated dynamically via Masters -->
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="cust-status" name="Status" class="form-control" required>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Address *</label>
+            <input type="text" id="cust-address" name="Address" class="form-control" placeholder="Building, Street name..." required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">State *</label>
+            <select id="cust-state" name="State" class="form-control" onchange="onStateChange()" required>
+              <option value="">Select State</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">City *</label>
+            <select id="cust-city" name="City" class="form-control" onchange="onCityChange()" required>
+              <option value="">Select City</option>
+            </select>
+          </div>
+
+          <!-- Dynamic Other City Text Input -->
+          <div class="form-group form-grid-full" id="cust-city-other-group" style="display: none;">
+            <label class="form-label">Specify Custom City Name *</label>
+            <input type="text" id="cust-city-other" class="form-control" placeholder="Type city name">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Pincode</label>
+            <input type="text" id="cust-pincode" name="Pincode" class="form-control" placeholder="Pincode" pattern="[0-9]{6}" maxlength="6" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Created By *</label>
+            <select id="cust-created-by" name="CreatedBy" class="form-control" required>
+              <option value="">Select Staff</option>
+            </select>
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Notes</label>
+            <textarea id="cust-notes" name="Notes" class="form-control" placeholder="Additional details, project requirements..."></textarea>
+          </div>
+          
+          <input type="hidden" id="cust-attachments-hidden" name="Attachments">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Add Attachments / Documents</label>
+            <input type="file" id="cust-attachment" class="form-control" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Choose one or more files to upload directly to Google Drive. Leave empty to keep existing attachments if editing.</small>
+            <div id="cust-current-attachments-container" style="margin-top: 0.5rem; display: none;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">Current Attachments:</span>
+              <div id="cust-current-attachments-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Customer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  var allCustomers = [];
+  var dropdownsCache = {};
+  var cityStateMap = {
+    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Tirupati", "Rajahmundry", "Other"],
+    "Arunachal Pradesh": ["Itanagar", "Tawang", "Naharlagun", "Other"],
+    "Assam": ["Guwahati", "Dibrugarh", "Silchar", "Tezpur", "Jorhat", "Nagaon", "Other"],
+    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga", "Purnia", "Arrah", "Other"],
+    "Chhattisgarh": ["Raipur", "Bilaspur", "Durg", "Bhilai", "Korba", "Rajnandgaon", "Other"],
+    "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Other"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Gandhinagar", "Other"],
+    "Haryana": ["Gurgaon", "Faridabad", "Panipat", "Ambala", "Rohtak", "Hisar", "Karnal", "Other"],
+    "Himachal Pradesh": ["Shimla", "Dharamshala", "Solan", "Mandi", "Una", "Kullu", "Other"],
+    "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar", "Hazaribagh", "Other"],
+    "Karnataka": ["Bangalore", "Mysore", "Mangalore", "Hubli-Dharwad", "Belgaum", "Gulbarga", "Davanagere", "Other"],
+    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Alappuzha", "Kollam", "Other"],
+    "Madhya Pradesh": ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Sagar", "Dewas", "Other"],
+    "Maharashtra": ["Mumbai", "Pune", "Thane", "Nagpur", "Nashik", "Aurangabad", "Navi Mumbai", "Solapur", "Kolhapur", "Other"],
+    "Manipur": ["Imphal", "Churachandpur", "Thoubal", "Other"],
+    "Meghalaya": ["Shillong", "Tura", "Jowai", "Other"],
+    "Mizoram": ["Aizawl", "Lunglei", "Other"],
+    "Nagaland": ["Kohima", "Dimapur", "Mokokchung", "Other"],
+    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur", "Puri", "Balasore", "Other"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Other"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Bikaner", "Alwar", "Other"],
+    "Sikkim": ["Gangtok", "Namchi", "Geyzing", "Other"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Trichy", "Salem", "Tirunelveli", "Vellore", "Other"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Other"],
+    "Tripura": ["Agartala", "Dharmanagar", "Udaipur", "Other"],
+    "Uttarakhand": ["Dehradun", "Haridwar", "Haldwani", "Roorkee", "Rudrapur", "Other"],
+    "Uttar Pradesh": ["Noida", "Lucknow", "Kanpur", "Agra", "Ghaziabad", "Varanasi", "Meerut", "Prayagraj", "Other"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Kharagpur", "Other"],
+    "Andaman and Nicobar Islands": ["Port Blair", "Other"],
+    "Chandigarh": ["Chandigarh", "Other"],
+    "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Diu", "Silvassa", "Other"],
+    "Jammu and Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla", "Other"],
+    "Ladakh": ["Leh", "Kargil", "Other"],
+    "Lakshadweep": ["Kavaratti", "Other"],
+    "Delhi": ["New Delhi", "Delhi NCR", "Other"],
+    "Puducherry": ["Puducherry", "Karaikal", "Mahe", "Yanam", "Other"]
+  };
+  window.loadCustomersView = function(forceRefresh) {
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var customerPerm = perms["Customers"] || {};
+    var canAdd = isSuperAdmin || customerPerm.add === true;
+    var addBtn = document.getElementById("btn-add-customer");
+    if (addBtn)
+      addBtn.style.display = canAdd ? "inline-block" : "none";
+    var loadedCount = 0;
+    var totalCalls = 1;
+    function checkCompleted() {
+      loadedCount++;
+      if (loadedCount === totalCalls) {
+        var filterTypeSelect = document.getElementById("filter-cust-type");
+        var typeOptions = dropdownsCache.CustomerType || [];
+        filterTypeSelect.innerHTML = '<option value="">All Customer Types</option>' + typeOptions.map(function(opt) {
+          return '<option value="'.concat(opt, '">').concat(opt, "</option>");
+        }).join("");
+        var typeSelect = document.getElementById("cust-type");
+        typeSelect.innerHTML = typeOptions.map(function(opt) {
+          return '<option value="'.concat(opt, '">').concat(opt, "</option>");
+        }).join("");
+        renderCustomers(allCustomers);
+        showLoader(false);
+      }
+    }
+
+    function applyCustomersData(result) {
+      allCustomers = result.customers || [];
+      var staffList = result.users || [];
+      var select = document.getElementById("cust-created-by");
+      if (select) {
+        select.innerHTML = '<option value="">Select Staff</option>' + staffList.map(function(u) {
+          return '<option value="'.concat(u.FullName, '">').concat(escapeHtml(u.FullName), "</option>");
+        }).join("");
+      }
+      dropdownsCache = result.dropdowns || {};
+      checkCompleted();
+    }
+
+    // Check global cache first if not forceRefresh
+    if (!forceRefresh) {
+      var cached = cacheGet("customersViewData");
+      if (cached) {
+        applyCustomersData(cached);
+        return;
+      }
+    }
+
+    if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(result) {
+        if (result && result.success !== false) {
+          cacheSet("customersViewData", result);
+          applyCustomersData(result);
+        } else {
+          fetchLegacyCustomersData();
+        }
+      }).withFailureHandler(function(err) {
+        fetchLegacyCustomersData();
+      }).getCustomersViewData();
+    } else {
+      fetchLegacyCustomersData();
+    }
+  };
+
+  function fetchLegacyCustomersData() {
+    var loadedCount = 0;
+    var totalCalls = 3;
+    function checkLegacyCompleted() {
+      loadedCount++;
+      if (loadedCount === totalCalls) {
+        var filterTypeSelect = document.getElementById("filter-cust-type");
+        var typeOptions = dropdownsCache.CustomerType || [];
+        if (filterTypeSelect) {
+          filterTypeSelect.innerHTML = '<option value="">All Customer Types</option>' + typeOptions.map(function(opt) {
+            return '<option value="'.concat(opt, '">').concat(opt, "</option>");
+          }).join("");
+        }
+        var typeSelect = document.getElementById("cust-type");
+        if (typeSelect) {
+          typeSelect.innerHTML = typeOptions.map(function(opt) {
+            return '<option value="'.concat(opt, '">').concat(opt, "</option>");
+          }).join("");
+        }
+        renderCustomers(allCustomers);
+        showLoader(false);
+      }
+    }
+    google.script.run.withSuccessHandler(function(data) { allCustomers = data || []; checkLegacyCompleted(); }).withFailureHandler(function(err) { checkLegacyCompleted(); }).getCustomers();
+    google.script.run.withSuccessHandler(function(data) {
+      var select = document.getElementById("cust-created-by");
+      var staffList = data || [];
+      if (select) {
+        select.innerHTML = '<option value="">Select Staff</option>' + staffList.map(function(u) {
+          return '<option value="'.concat(u.FullName, '">').concat(escapeHtml(u.FullName), "</option>");
+        }).join("");
+      }
+      checkLegacyCompleted();
+    }).withFailureHandler(function(err) { checkLegacyCompleted(); }).getUsers();
+    google.script.run.withSuccessHandler(function(data) { dropdownsCache = data || {}; checkLegacyCompleted(); }).withFailureHandler(function(err) { checkLegacyCompleted(); }).getDropdownValues();
+  }
+  function onStateChange() {
+    var stateSelect = document.getElementById("cust-state");
+    var citySelect = document.getElementById("cust-city");
+    var selectedState = stateSelect.value;
+    citySelect.innerHTML = '<option value="">Select City</option>';
+    if (selectedState && cityStateMap[selectedState]) {
+      cityStateMap[selectedState].forEach(function(city) {
+        var opt = document.createElement("option");
+        opt.value = city;
+        opt.innerText = city;
+        citySelect.appendChild(opt);
+      });
+    }
+    onCityChange();
+  }
+  function onCityChange() {
+    var citySelect = document.getElementById("cust-city");
+    var otherGroup = document.getElementById("cust-city-other-group");
+    var otherInput = document.getElementById("cust-city-other");
+    if (citySelect.value === "Other") {
+      otherGroup.style.display = "block";
+      otherInput.required = true;
+      otherInput.focus();
+    } else {
+      otherGroup.style.display = "none";
+      otherInput.required = false;
+      otherInput.value = "";
+    }
+  }
+  function renderCustomers(customers) {
+    var tbody = document.querySelector("#customers-table tbody");
+    if (customers.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-users empty-state-icon"></i>\n          <p class="empty-state-title">No customers found</p>\n          <p class="empty-state-desc">Get started by creating your first customer contact.</p>\n        </div>\n      </td></tr>';
+      return;
+    }
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var customerPerm = perms["Customers"] || {};
+    var canEdit = isSuperAdmin || customerPerm.edit === true;
+    var canDelete = isSuperAdmin || customerPerm.del === true;
+    var sorted = customers.slice().sort(function(a, b) {
+      var idA = String(a.CustomerID || "");
+      var idB = String(b.CustomerID || "");
+      return idB.localeCompare(idA);
+    });
+    tbody.innerHTML = sorted.map(function(cust) {
+      var actionsHtml = "";
+      if (canEdit) {
+        var cId = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
+        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Customer" onclick="editCustomer(\'' + cId + '\')"><i class="fas fa-pen"></i></button>';
+      }
+      if (canDelete) {
+        var cId = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
+        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Customer" onclick="deleteCustomer(\'' + cId + '\')"><i class="fas fa-trash"></i></button>';
+      }
+      var photosHtml = "-";
+      if (cust.Attachments && typeof cust.Attachments === "string" && cust.Attachments.trim() !== "") {
+        var links = cust.Attachments.split(",").map(function(l) {
+          return l.trim();
+        }).filter(function(l) {
+          return l !== "";
+        });
+        if (links.length === 1) {
+          photosHtml = '<a href="' + escapeHtml(links[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View</a>';
+        } else if (links.length > 1) {
+          var cIdEsc = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
+          var itemsHtml = links.map(function(link, idx) {
+            return '<a href="' + escapeHtml(link) + '" target="_blank" style="display: block; padding: 0.35rem 0.75rem; font-size: 0.75rem; color: var(--text-main); text-decoration: none; font-weight: 500;"><i class="fas fa-file" style="margin-right: 0.35rem; color: var(--primary);"></i> Attachment ' + (idx + 1) + '</a>';
+          }).join("");
+          photosHtml = '<div style="position: relative; display: inline-block;">' +
+            '<button class="btn btn-secondary btn-sm dropdown-toggle" onclick="toggleCustAttachmentsDropdown(event, \'' + cIdEsc + '\')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View (' + links.length + ')</button>' +
+            '<div id="dropdown-' + cIdEsc + '" class="attachments-dropdown-menu" style="display: none; position: absolute; right: 0; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; min-width: 150px; padding: 0.35rem 0;">' +
+              itemsHtml +
+            '</div>' +
+          '</div>';
+        }
+      }
+
+      var cIdEsc = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
+      var cNameEsc = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerName || "") : (cust.CustomerName || "");
+      var cMobileEsc = typeof escapeHtml === "function" ? escapeHtml(cust.Mobile || "") : (cust.Mobile || "");
+      var cEmailEsc = typeof escapeHtml === "function" ? escapeHtml(cust.Email || "") : (cust.Email || "");
+      var cTypeEsc = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerType || "") : (cust.CustomerType || "");
+
+      return '<tr id="row-' + cIdEsc + '">' +
+        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + cIdEsc + '</td>' +
+        '<td style="font-weight: 600;">' + cNameEsc + '</td>' +
+        '<td>' + cMobileEsc + '</td>' +
+        '<td>' + cEmailEsc + '</td>' +
+        '<td>' + cTypeEsc + '</td>' +
+        '<td>' + photosHtml + '</td>' +
+        '<td style="text-align: right;">' + actionsHtml + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+  function filterCustomers() {
+    var searchInput = document.getElementById("cust-search");
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+    var typeVal = document.getElementById("filter-cust-type").value;
+    var statusVal = document.getElementById("filter-cust-status").value;
+    var filtered = allCustomers.filter(function(cust) {
+      var name = cust.CustomerName ? String(cust.CustomerName).toLowerCase() : "";
+      var email = cust.Email ? String(cust.Email).toLowerCase() : "";
+      var phone = cust.Mobile ? String(cust.Mobile) : "";
+      var id = cust.CustomerID ? String(cust.CustomerID).toLowerCase() : "";
+      var matchesSearch = name.includes(searchVal) || email.includes(searchVal) || phone.includes(searchVal) || id.includes(searchVal);
+      var matchesType = !typeVal || cust.CustomerType === typeVal;
+      var matchesStatus = !statusVal || cust.Status === statusVal;
+      return matchesSearch && matchesType && matchesStatus;
+    });
+    renderCustomers(filtered);
+  }
+  function openCustomerModal(custObj) {
+    if (custObj === void 0) {
+      custObj = null;
+    }
+    var form = document.getElementById("customer-form");
+    form.reset();
+    document.getElementById("cust-id").value = "";
+    document.getElementById("cust-attachments-hidden").value = "";
+    var fileInput = document.getElementById("cust-attachment");
+    if (fileInput)
+      fileInput.value = "";
+    var currentAttachmentsContainer = document.getElementById("cust-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("cust-current-attachments-list");
+    if (currentAttachmentsContainer)
+      currentAttachmentsContainer.style.display = "none";
+    if (currentAttachmentsList)
+      currentAttachmentsList.innerHTML = "";
+    var stateSelect = document.getElementById("cust-state");
+    stateSelect.innerHTML = '<option value="">Select State</option>' + Object.keys(cityStateMap).map(function(state) {
+      return '<option value="'.concat(state, '">').concat(state, "</option>");
+    }).join("");
+    document.getElementById("cust-city").innerHTML = '<option value="">Select City</option>';
+    document.getElementById("cust-city-other-group").style.display = "none";
+    document.getElementById("cust-city-other").required = false;
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isAdmin = currentUser.roleId === "Super Admin" || currentUser.roleId === "Admin";
+    var custNameElem = document.getElementById("cust-name");
+    var custTypeElem = document.getElementById("cust-type");
+    if (custNameElem) custNameElem.disabled = false;
+    if (custTypeElem) custTypeElem.disabled = false;
+
+    if (custObj && custObj.CustomerID) {
+      document.getElementById("cust-modal-title").innerText = "Edit Customer " + custObj.CustomerID;
+      document.getElementById("cust-id").value = custObj.CustomerID;
+      document.getElementById("cust-converted-lead-id").value = "";
+      document.getElementById("cust-name").value = custObj.CustomerName;
+      document.getElementById("cust-mobile").value = custObj.Mobile;
+      document.getElementById("cust-alt-mobile").value = custObj.AlternateMobile || "";
+      document.getElementById("cust-email").value = custObj.Email;
+      document.getElementById("cust-pan").value = custObj.PANCardNumber || "";
+      document.getElementById("cust-gst").value = custObj.GSTNumber || "";
+      document.getElementById("cust-type").value = custObj.CustomerType;
+      document.getElementById("cust-status").value = custObj.Status;
+      document.getElementById("cust-address").value = custObj.Address || "";
+      document.getElementById("cust-attachments-hidden").value = custObj.Attachments || "";
+
+      if (!isAdmin) {
+        if (custNameElem) custNameElem.disabled = true;
+        if (custTypeElem) custTypeElem.disabled = true;
+      }
+      stateSelect.value = custObj.State || "";
+      onStateChange();
+      var citySelect = document.getElementById("cust-city");
+      var cityOptions = Array.from(citySelect.options).map(function(opt) {
+        return opt.value;
+      });
+      if (cityOptions.includes(custObj.City)) {
+        citySelect.value = custObj.City;
+      } else {
+        citySelect.value = "Other";
+        onCityChange();
+        document.getElementById("cust-city-other").value = custObj.City || "";
+      }
+      document.getElementById("cust-pincode").value = custObj.Pincode || "";
+      document.getElementById("cust-created-by").value = custObj.CreatedBy || "";
+      document.getElementById("cust-notes").value = custObj.Notes || "";
+      if (custObj.Attachments && typeof custObj.Attachments === "string" && custObj.Attachments.trim() !== "") {
+        if (currentAttachmentsContainer)
+          currentAttachmentsContainer.style.display = "block";
+        var links = custObj.Attachments.split(",").map(function(l) {
+          return l.trim();
+        }).filter(function(l) {
+          return l !== "";
+        });
+        if (currentAttachmentsList) {
+          currentAttachmentsList.innerHTML = links.map(function(link, idx) {
+            return '\n            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">\n              <a href="'.concat(escapeHtml(link), '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ').concat(idx + 1, '</a>\n              <button type="button" onclick="removeAttachment(').concat(idx, ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>\n            </div>\n          ');
+          }).join("");
+        }
+      }
+    } else if (custObj && custObj.isLeadConversion) {
+      document.getElementById("cust-modal-title").innerText = "Add New Customer (From Lead " + custObj.LeadID + ")";
+      document.getElementById("cust-id").value = "";
+      document.getElementById("cust-converted-lead-id").value = custObj.LeadID || "";
+      document.getElementById("cust-status").value = "Active";
+      document.getElementById("cust-created-by").value = custObj.AssignedTo || currentUser.fullName || "";
+      document.getElementById("cust-name").value = custObj.CustomerName || "";
+      document.getElementById("cust-mobile").value = custObj.Mobile || "";
+      document.getElementById("cust-email").value = custObj.Email || "";
+      document.getElementById("cust-notes").value = "Converted from Lead ID " + custObj.LeadID + ". Inquiry: " + (custObj.ProjectDetails || "");
+    } else {
+      document.getElementById("cust-modal-title").innerText = "Add New Customer";
+      document.getElementById("cust-id").value = "";
+      document.getElementById("cust-converted-lead-id").value = "";
+      document.getElementById("cust-status").value = "Active";
+      document.getElementById("cust-created-by").value = currentUser.fullName || "";
+    }
+    document.getElementById("customer-modal").classList.add("show");
+  }
+  function closeCustomerModal() {
+    document.getElementById("customer-modal").classList.remove("show");
+  }
+  function editCustomer(customerId) {
+    var cust = allCustomers.find(function(c) {
+      return c.CustomerID === customerId;
+    });
+    if (cust) {
+      openCustomerModal(cust);
+    }
+  }
+  function handleCustomerSubmit(e) {
+    e.preventDefault();
+    var form = document.getElementById("customer-form");
+    var formData = {};
+    var inputs = form.querySelectorAll("input, select, textarea");
+    inputs.forEach(function(input) {
+      if (input.name) {
+        formData[input.name] = input.value;
+      }
+    });
+    if (document.getElementById("cust-city").value === "Other") {
+      formData["City"] = document.getElementById("cust-city-other").value.trim();
+    }
+    if (formData.PANCardNumber)
+      formData.PANCardNumber = formData.PANCardNumber.toUpperCase();
+    if (formData.GSTNumber)
+      formData.GSTNumber = formData.GSTNumber.toUpperCase();
+    var fileInput = document.getElementById("cust-attachment");
+    var files = fileInput ? fileInput.files : [];
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    function executeSaveCustomer(fileDataArray2) {
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          closeCustomerModal();
+          if (formData.ConvertedLeadID) {
+            google.script.run.markLeadAsWon(formData.ConvertedLeadID, currentUser.userId);
+          }
+          loadCustomersView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).saveCustomer(formData, fileDataArray2, currentUser.userId);
+    }
+    if (files.length > 0) {
+      var fileDataArray = [];
+      var loadedFiles = 0;
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var reader = new FileReader();
+        reader.onload = /* @__PURE__ */ function(f) {
+          return function(evt) {
+            var base64Data = evt.target.result.split(",")[1];
+            fileDataArray.push({
+              filename: f.name,
+              mimeType: f.type,
+              base64: base64Data
+            });
+            loadedFiles++;
+            if (loadedFiles === files.length) {
+              executeSaveCustomer(fileDataArray);
+            }
+          };
+        }(file);
+        reader.onerror = function() {
+          showLoader(false);
+          showToast("Failed to read one of the selected files.", "error");
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      executeSaveCustomer(null);
+    }
+  }
+  function deleteCustomer(customerId) {
+    if (confirm("Are you sure you want to delete Customer " + customerId + "? This action cannot be undone.")) {
+      showLoader(true);
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          allCustomers = allCustomers.filter(function(c) { return c.CustomerID !== customerId; });
+          renderCustomers(allCustomers);
+          loadCustomersView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteCustomer(customerId);
+    }
+  }
+  function removeAttachment(index) {
+    var hiddenInput = document.getElementById("cust-attachments-hidden");
+    var photos = hiddenInput.value;
+    if (!photos)
+      return;
+    var links = photos.split(",").map(function(l) {
+      return l.trim();
+    }).filter(function(l) {
+      return l !== "";
+    });
+    links.splice(index, 1);
+    var updatedPhotos = links.join(", ");
+    hiddenInput.value = updatedPhotos;
+    var currentAttachmentsContainer = document.getElementById("cust-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("cust-current-attachments-list");
+    if (updatedPhotos === "") {
+      if (currentAttachmentsContainer)
+        currentAttachmentsContainer.style.display = "none";
+      if (currentAttachmentsList)
+        currentAttachmentsList.innerHTML = "";
+    } else {
+      if (currentAttachmentsList) {
+        currentAttachmentsList.innerHTML = links.map(function(link, idx) {
+          return '\n          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">\n            <a href="'.concat(escapeHtml(link), '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ').concat(idx + 1, '</a>\n            <button type="button" onclick="removeAttachment(').concat(idx, ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>\n          </div>\n        ');
+        }).join("");
+      }
+    }
+  }
+  function toggleCustAttachmentsDropdown(event, customerId) {
+    event.stopPropagation();
+    var dropdown = document.getElementById("dropdown-" + customerId);
+    if (!dropdown)
+      return;
+    var isOpen = dropdown.style.display === "block";
+    document.querySelectorAll(".attachments-dropdown-menu").forEach(function(el) {
+      el.style.display = "none";
+    });
+    if (!isOpen) {
+      dropdown.style.display = "block";
+    }
+  }
+  document.addEventListener("click", function() {
+    document.querySelectorAll(".attachments-dropdown-menu").forEach(function(el) {
+      el.style.display = "none";
+    });
+  });
+  window.filterCustomers = filterCustomers;
+  window.editCustomer = editCustomer;
+  window.deleteCustomer = deleteCustomer;
+  window.openCustomerModal = openCustomerModal;
+  window.closeCustomerModal = closeCustomerModal;
+  window.onStateChange = onStateChange;
+  window.onCityChange = onCityChange;
+  window.handleCustomerSubmit = handleCustomerSubmit;
+  window.removeAttachment = removeAttachment;
+  window.toggleCustAttachmentsDropdown = toggleCustAttachmentsDropdown;
+  window.openCustomerModalById = function(customerId) {
+    showLoader(true);
+    google.script.run.withSuccessHandler(function(data) {
+      allCustomers = data;
+      renderCustomers(data);
+      showLoader(false);
+      var cust = allCustomers.find(function(c) {
+        return c.CustomerID === customerId;
+      });
+      if (cust) {
+        openCustomerModal(cust);
+      }
+    }).withFailureHandler(function(err) {
+      showToast(err.message, "error");
+      showLoader(false);
+    }).getCustomers();
+  };
+  window.openCustomerModalWithLead = function(leadObj) {
+    if (!leadObj) return;
+    var custObj = {
+      isLeadConversion: true,
+      LeadID: leadObj.LeadID,
+      CustomerName: leadObj.CustomerName,
+      Mobile: leadObj.Mobile,
+      Email: leadObj.Email,
+      ProjectDetails: leadObj.ProjectDetails,
+      AssignedTo: leadObj.AssignedTo
+    };
+    openCustomerModal(custObj);
+  };
+})();
+
+</script>

@@ -1,0 +1,1326 @@
+<script>
+window.txnsDataList = window.txnsDataList || [];
+window.projsCacheList = window.projsCacheList || [];
+window.vndrsCacheList = window.vndrsCacheList || [];
+window.associatesCacheList = window.associatesCacheList || [];
+window.siteVisitsCacheList = window.siteVisitsCacheList || [];
+window.dropdownsCache = window.dropdownsCache || {};
+
+window.calculateGSTBreakdown = function() {
+  var taxableInput = document.getElementById("txn-taxable-amount");
+  var typeSelect = document.getElementById("txn-gst-type");
+  var rateSelect = document.getElementById("txn-gst-rate");
+  var rateGroup = document.getElementById("txn-gst-rate-group");
+  var breakdownBox = document.getElementById("txn-gst-breakdown-box");
+  var cgstGroup = document.getElementById("txn-cgst-group");
+  var sgstGroup = document.getElementById("txn-sgst-group");
+  var igstGroup = document.getElementById("txn-igst-group");
+
+  var cgstInput = document.getElementById("txn-cgst-amount");
+  var sgstInput = document.getElementById("txn-sgst-amount");
+  var igstInput = document.getElementById("txn-igst-amount");
+  var totalGstInput = document.getElementById("txn-total-gst");
+  var amountInput = document.getElementById("txn-amount-field");
+
+  if (!taxableInput || !typeSelect || !rateSelect) return;
+
+  var gstType = typeSelect.value || "None";
+  var rate = parseFloat(rateSelect.value) || 0;
+  var taxable = parseFloat(taxableInput.value) || 0;
+
+  if (gstType === "None") {
+    if (rateGroup) rateGroup.style.display = "none";
+    if (breakdownBox) breakdownBox.style.display = "none";
+    if (cgstInput) cgstInput.value = 0;
+    if (sgstInput) sgstInput.value = 0;
+    if (igstInput) igstInput.value = 0;
+    if (totalGstInput) totalGstInput.value = 0;
+    if (amountInput) amountInput.value = taxable > 0 ? taxable.toFixed(2) : "";
+    return;
+  }
+
+  if (rateGroup) rateGroup.style.display = "block";
+  if (breakdownBox) breakdownBox.style.display = "block";
+
+  var totalGst = (taxable * rate) / 100;
+  var cgst = 0;
+  var sgst = 0;
+  var igst = 0;
+
+  if (gstType === "CGST+SGST") {
+    if (cgstGroup) cgstGroup.style.display = "block";
+    if (sgstGroup) sgstGroup.style.display = "block";
+    if (igstGroup) igstGroup.style.display = "none";
+
+    cgst = totalGst / 2;
+    sgst = totalGst / 2;
+    igst = 0;
+  } else if (gstType === "IGST") {
+    if (cgstGroup) cgstGroup.style.display = "none";
+    if (sgstGroup) sgstGroup.style.display = "none";
+    if (igstGroup) igstGroup.style.display = "block";
+
+    cgst = 0;
+    sgst = 0;
+    igst = totalGst;
+  }
+
+  if (cgstInput) cgstInput.value = cgst > 0 ? cgst.toFixed(2) : 0;
+  if (sgstInput) sgstInput.value = sgst > 0 ? sgst.toFixed(2) : 0;
+  if (igstInput) igstInput.value = igst > 0 ? igst.toFixed(2) : 0;
+  if (totalGstInput) totalGstInput.value = totalGst > 0 ? totalGst.toFixed(2) : 0;
+
+  var netTotal = taxable + totalGst;
+  if (amountInput) amountInput.value = netTotal > 0 ? netTotal.toFixed(2) : "";
+};
+
+window.updateGSTTotalsFromInputs = function() {
+  var taxableInput = document.getElementById("txn-taxable-amount");
+  var cgstInput = document.getElementById("txn-cgst-amount");
+  var sgstInput = document.getElementById("txn-sgst-amount");
+  var igstInput = document.getElementById("txn-igst-amount");
+  var totalGstInput = document.getElementById("txn-total-gst");
+  var amountInput = document.getElementById("txn-amount-field");
+
+  var taxable = parseFloat(taxableInput ? taxableInput.value : 0) || 0;
+  var cgst = parseFloat(cgstInput ? cgstInput.value : 0) || 0;
+  var sgst = parseFloat(sgstInput ? sgstInput.value : 0) || 0;
+  var igst = parseFloat(igstInput ? igstInput.value : 0) || 0;
+
+  var totalGst = cgst + sgst + igst;
+  if (totalGstInput) totalGstInput.value = totalGst.toFixed(2);
+  var netTotal = taxable + totalGst;
+  if (amountInput) amountInput.value = netTotal.toFixed(2);
+};
+
+window.handleTotalAmountDirectInput = function() {
+  var taxableInput = document.getElementById("txn-taxable-amount");
+  var typeSelect = document.getElementById("txn-gst-type");
+  var rateSelect = document.getElementById("txn-gst-rate");
+  var amountInput = document.getElementById("txn-amount-field");
+
+  if (!amountInput || !typeSelect || !rateSelect || !taxableInput) return;
+
+  var totalAmt = parseFloat(amountInput.value) || 0;
+  var gstType = typeSelect.value || "None";
+  var rate = parseFloat(rateSelect.value) || 0;
+
+  if (gstType === "None" || rate <= 0) {
+    taxableInput.value = totalAmt > 0 ? totalAmt.toFixed(2) : "";
+    window.calculateGSTBreakdown();
+  } else {
+    var taxable = totalAmt / (1 + (rate / 100));
+    taxableInput.value = taxable > 0 ? taxable.toFixed(2) : "";
+    window.calculateGSTBreakdown();
+  }
+};
+
+window.toggleNonProjectExpense = function() {
+  var chk = document.getElementById("txn-non-project-check");
+  var projSel = document.getElementById("txn-project-select");
+  if (chk && projSel) {
+    if (chk.checked) {
+      projSel.value = "";
+      projSel.disabled = true;
+    } else {
+      projSel.disabled = false;
+    }
+  }
+  var typeSel = document.getElementById("txn-type-select");
+  var currentType = typeSel ? typeSel.value : "Income";
+  var categorySelect = document.getElementById("txn-category-select");
+  var currentCategory = categorySelect ? categorySelect.value : "";
+  window.populateCategoryOptions(currentType, currentCategory);
+};
+
+window.populateCategoryOptions = function(type, selectedCategory) {
+  var categorySelect = document.getElementById("txn-category-select");
+  if (!categorySelect) return;
+
+  var isNonProject = document.getElementById("txn-non-project-check") && document.getElementById("txn-non-project-check").checked;
+  var cache = window.dropdownsCache || {};
+  var html = "";
+
+  if (type === "Expense") {
+    var expenseOptions = [];
+    if (isNonProject) {
+      expenseOptions = (cache.ExpenseCategoryNonProject && cache.ExpenseCategoryNonProject.length > 0)
+        ? cache.ExpenseCategoryNonProject
+        : (cache.ExpenseCategory || ["Office Rent", "Travel & Fuel", "Office Supplies & Admin", "Utilities & Bills", "Salaries & Bonus", "Marketing & Advertising", "Software & Subscriptions", "Other Expense"]);
+    } else {
+      expenseOptions = (cache.ExpenseCategoryProject && cache.ExpenseCategoryProject.length > 0)
+        ? cache.ExpenseCategoryProject
+        : (cache.ExpenseCategory || ["Material Purchase", "Labor Wages", "Subcontractor / Labor", "Tools & Equipment", "Site Expense", "Transport & Logistics", "Design & Consultation"]);
+    }
+
+    for (var i = 0; i < expenseOptions.length; i++) {
+      var val = typeof escapeHtml === "function" ? escapeHtml(expenseOptions[i]) : expenseOptions[i];
+      html += '<option value="' + val + '">' + val + '</option>';
+    }
+  } else {
+    var incomeOptions = [];
+    if (isNonProject) {
+      incomeOptions = (cache.IncomeCategoryNonProject && cache.IncomeCategoryNonProject.length > 0)
+        ? cache.IncomeCategoryNonProject
+        : (cache.IncomeCategory || ["Refund / Cash-in", "Interest / Investment", "Other Income"]);
+    } else {
+      incomeOptions = (cache.IncomeCategoryProject && cache.IncomeCategoryProject.length > 0)
+        ? cache.IncomeCategoryProject
+        : (cache.IncomeCategory || ["Client Payment", "Advance Payment", "Site Visit Charges", "Design Fee", "Consultancy Fee"]);
+    }
+
+    for (var k = 0; k < incomeOptions.length; k++) {
+      var val = typeof escapeHtml === "function" ? escapeHtml(incomeOptions[k]) : incomeOptions[k];
+      html += '<option value="' + val + '">' + val + '</option>';
+    }
+  }
+
+  categorySelect.innerHTML = html;
+
+  if (selectedCategory) {
+    categorySelect.value = selectedCategory;
+  }
+};
+
+window.openTxnModal = function(txnObj) {
+  if (txnObj === void 0) txnObj = null;
+  var form = document.getElementById("txn-form");
+  if (!form) return;
+  form.reset();
+
+  var title = document.getElementById("txn-modal-title");
+  var idField = document.getElementById("txn-id-field");
+  var container = document.getElementById("txn-current-attachments-container");
+  var list = document.getElementById("txn-current-attachments-list");
+  var dateField = document.getElementById("txn-date-field");
+
+  var nonProjChk = document.getElementById("txn-non-project-check");
+  var projSel = document.getElementById("txn-project-select");
+  if (nonProjChk) nonProjChk.checked = false;
+  if (projSel) projSel.disabled = false;
+
+  if (idField) idField.value = "";
+  if (container) container.style.display = "none";
+  if (list) list.innerHTML = "";
+  if (dateField) dateField.value = new Date().toISOString().split("T")[0];
+
+  if (txnObj) {
+    var txnIdStr = typeof escapeHtml === "function" ? escapeHtml(txnObj.TransactionID) : txnObj.TransactionID;
+    if (title) title.innerHTML = "Edit Transaction (" + txnIdStr + ")";
+    if (idField) idField.value = txnObj.TransactionID;
+    
+    var typeSel = document.getElementById("txn-type-select");
+    var currentType = txnObj.Type || "Income";
+    if (typeSel) typeSel.value = currentType;
+    
+    window.populateCategoryOptions(currentType, txnObj.Category);
+    
+    var amtField = document.getElementById("txn-amount-field");
+    if (amtField) amtField.value = txnObj.Amount;
+    
+    var taxAmtField = document.getElementById("txn-taxable-amount");
+    if (taxAmtField) taxAmtField.value = txnObj.TaxableAmount !== undefined && txnObj.TaxableAmount !== "" ? txnObj.TaxableAmount : (txnObj.Amount || "");
+    
+    var gstTypeSel = document.getElementById("txn-gst-type");
+    if (gstTypeSel) gstTypeSel.value = txnObj.GSTType || "None";
+    
+    var gstRateSel = document.getElementById("txn-gst-rate");
+    if (gstRateSel) gstRateSel.value = (txnObj.GSTRate !== undefined && txnObj.GSTRate !== "") ? txnObj.GSTRate : 18;
+    
+    var cgstField = document.getElementById("txn-cgst-amount");
+    if (cgstField) cgstField.value = txnObj.CGST !== undefined ? txnObj.CGST : 0;
+    
+    var sgstField = document.getElementById("txn-sgst-amount");
+    if (sgstField) sgstField.value = txnObj.SGST !== undefined ? txnObj.SGST : 0;
+    
+    var igstField = document.getElementById("txn-igst-amount");
+    if (igstField) igstField.value = txnObj.IGST !== undefined ? txnObj.IGST : 0;
+    
+    var totGstField = document.getElementById("txn-total-gst");
+    if (totGstField) totGstField.value = txnObj.TotalGST !== undefined ? txnObj.TotalGST : 0;
+    
+    if (txnObj.TransactionDate && typeof parseRawDateString === "function") {
+      var dField = document.getElementById("txn-date-field");
+      if (dField) dField.value = parseRawDateString(txnObj.TransactionDate);
+    }
+    
+    if (projSel) projSel.value = txnObj.ProjectID || "";
+    if (nonProjChk) {
+      nonProjChk.checked = (txnObj.IsNonProject === true || txnObj.IsNonProject === "true" || !txnObj.ProjectID);
+      window.toggleNonProjectExpense();
+    }
+    
+    var modeSel = document.getElementById("txn-mode-select");
+    if (modeSel) modeSel.value = txnObj.PaymentMode || "Bank Transfer";
+    
+    window.populateBankOptions(txnObj.BankAccount || "");
+    
+    var refField = document.getElementById("txn-ref-field");
+    if (refField) refField.value = txnObj.ReferenceNumber || "";
+    
+    var remField = document.getElementById("txn-remarks-field");
+    if (remField) remField.value = txnObj.Remarks || "";
+    
+    var attField = document.getElementById("txn-attachments-hidden");
+    if (attField) attField.value = txnObj.Attachments || "";
+
+    if (txnObj.Type === "Expense") {
+      var rType = document.getElementById("txn-recipient-type");
+      if (txnObj.VendorID) {
+        if (rType) rType.value = "Vendor";
+        var vSel = document.getElementById("txn-vendor-select");
+        if (vSel) vSel.value = txnObj.VendorID;
+      } else if (txnObj.AssociateName) {
+        if (rType) rType.value = "Associate";
+        var aSel = document.getElementById("txn-associate-select");
+        if (aSel) aSel.value = txnObj.AssociateName;
+      } else {
+        if (rType) rType.value = "None";
+      }
+    }
+
+    if (txnObj.Attachments) {
+      var urls = String(txnObj.Attachments).split(",").map(function(item) { return item.trim(); }).filter(function(item) { return item !== ""; });
+      if (urls.length > 0) {
+        if (container) container.style.display = "block";
+        var html = "";
+        for (var j = 0; j < urls.length; j++) {
+          var fileLink = typeof escapeHtml === "function" ? escapeHtml(urls[j]) : urls[j];
+          html += '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+            '<a href="' + fileLink + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (j + 1) + '</a>' +
+            '<button type="button" onclick="removeAttachment(' + j + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0;"><i class="fas fa-times"></i></button>' +
+          '</div>';
+        }
+        if (list) list.innerHTML = html;
+      }
+    }
+  } else {
+    if (title) title.innerHTML = "Book Transaction";
+    var rType = document.getElementById("txn-recipient-type");
+    if (rType) rType.value = "None";
+    
+    var taxAmtField = document.getElementById("txn-taxable-amount");
+    if (taxAmtField) taxAmtField.value = "";
+    var gstTypeSel = document.getElementById("txn-gst-type");
+    if (gstTypeSel) gstTypeSel.value = "None";
+    var gstRateSel = document.getElementById("txn-gst-rate");
+    if (gstRateSel) gstRateSel.value = 18;
+
+    var initialType = (document.getElementById("txn-type-select") && document.getElementById("txn-type-select").value) || "Income";
+    window.populateCategoryOptions(initialType);
+  }
+
+  if (typeof window.toggleTxnTypeForm === "function") window.toggleTxnTypeForm();
+  if (typeof window.toggleRecipientFields === "function") window.toggleRecipientFields();
+  if (typeof window.calculateGSTBreakdown === "function") window.calculateGSTBreakdown();
+
+  var modal = document.getElementById("txn-modal");
+  if (modal) modal.classList.add("show");
+};
+
+window.closeTxnModal = function() {
+  var modal = document.getElementById("txn-modal");
+  if (modal) modal.classList.remove("show");
+};
+
+window.editTxn = function(txnId) {
+  var txn = (window.txnsDataList || []).find(function(item) { return item.TransactionID === txnId; });
+  if (txn) {
+    window.openTxnModal(txn);
+  }
+};
+
+window.deleteTxnRow = function(txnId) {
+  if (confirm("Are you sure you want to delete this transaction ledger row?")) {
+    if (typeof showLoader === "function") showLoader(true);
+    var currentUser = {};
+    try { currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}"); } catch(e){}
+    var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+    
+    if (google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (typeof showLoader === "function") showLoader(false);
+          if (response.success) {
+            if (typeof showToast === "function") showToast(response.message, "success");
+            if (typeof cacheClear === "function") cacheClear(["dashboardData", "financeData"]);
+            window.loadFinanceView(true);
+          } else {
+            if (typeof showToast === "function") showToast(response.message, "error");
+          }
+        })
+        .withFailureHandler(function(err) {
+          if (typeof showLoader === "function") showLoader(false);
+          if (typeof showToast === "function") showToast("Error deleting transaction: " + err.message, "error");
+        })
+        .deleteTransaction(txnId, currentUserId);
+    }
+  }
+};
+
+window.handleTxnSubmit = function(e) {
+  e.preventDefault();
+  var form = document.getElementById("txn-form");
+  var formData = new FormData(form);
+  var txnData = {};
+  formData.forEach(function(value, key) {
+    txnData[key] = value;
+  });
+
+  if (txnData.Type === "Income") {
+    txnData.VendorID = "";
+    txnData.AssociateName = "";
+  } else {
+    var rTypeEl = document.getElementById("txn-recipient-type");
+    var rType = rTypeEl ? rTypeEl.value : "None";
+    if (rType === "Vendor") {
+      txnData.AssociateName = "";
+    } else if (rType === "Associate") {
+      txnData.VendorID = "";
+    } else {
+      txnData.VendorID = "";
+      txnData.AssociateName = "";
+    }
+  }
+
+  var fileInput = document.getElementById("txn-attachment");
+  var currentUser = {};
+  try { currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}"); } catch(e){}
+  var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+
+  if (typeof showLoader === "function") showLoader(true);
+
+  if (fileInput && fileInput.files.length > 0) {
+    var files = fileInput.files;
+    var fileDataArr = [];
+    var loadedFiles = 0;
+
+    for (var i = 0; i < files.length; i++) {
+      (function(file) {
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          var dataUrl = evt.target.result;
+          var base64Data = dataUrl.split(",")[1];
+          fileDataArr.push({
+            fileName: file.name,
+            mimeType: file.type,
+            base64Data: base64Data
+          });
+          loadedFiles++;
+          if (loadedFiles === files.length) {
+            window.submitFormWithAttachment(txnData, fileDataArr, currentUserId);
+          }
+        };
+        reader.readAsDataURL(file);
+      })(files[i]);
+    }
+  } else {
+    window.submitFormWithAttachment(txnData, null, currentUserId);
+  }
+};
+
+window.submitFormWithAttachment = function(txnData, fileDataArr, userId) {
+  if (google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(function(response) {
+        if (typeof showLoader === "function") showLoader(false);
+        if (response.success) {
+          if (typeof showToast === "function") showToast(response.message, "success");
+          window.closeTxnModal();
+          if (typeof cacheClear === "function") cacheClear(["dashboardData", "financeData"]);
+          window.loadFinanceView(true);
+        } else {
+          if (typeof showToast === "function") showToast(response.message, "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        if (typeof showLoader === "function") showLoader(false);
+        if (typeof showToast === "function") showToast("Error booking transaction: " + err.message, "error");
+      })
+      .saveTransaction(txnData, fileDataArr, userId);
+  }
+};
+
+window.toggleTxnTypeForm = function() {
+  var typeSelect = document.getElementById("txn-type-select");
+  if (!typeSelect) return;
+  var type = typeSelect.value;
+  var recipientTypeGroup = document.getElementById("txn-recipient-type-group");
+  var visitGroup = document.getElementById("txn-visit-group");
+  
+  window.populateCategoryOptions(type);
+
+  if (type === "Expense") {
+    if (recipientTypeGroup) recipientTypeGroup.style.display = "block";
+    if (visitGroup) visitGroup.style.display = "none";
+  } else {
+    if (recipientTypeGroup) recipientTypeGroup.style.display = "none";
+    if (visitGroup) visitGroup.style.display = "block";
+    window.handleFinanceProjectChange();
+  }
+};
+
+window.toggleRecipientFields = function() {
+  var rTypeSelect = document.getElementById("txn-recipient-type");
+  if (!rTypeSelect) return;
+  var recipientType = rTypeSelect.value;
+  var vendorGroup = document.getElementById("txn-vendor-group");
+  var associateGroup = document.getElementById("txn-associate-group");
+  
+  if (vendorGroup) vendorGroup.style.display = "none";
+  if (associateGroup) associateGroup.style.display = "none";
+
+  var vSelect = document.getElementById("txn-vendor-select");
+  var aSelect = document.getElementById("txn-associate-select");
+  if (vSelect) vSelect.required = false;
+  if (aSelect) aSelect.required = false;
+
+  if (recipientType === "Vendor") {
+    if (vendorGroup) vendorGroup.style.display = "block";
+    if (vSelect) vSelect.required = true;
+  } else if (recipientType === "Associate") {
+    if (associateGroup) associateGroup.style.display = "block";
+    if (aSelect) aSelect.required = true;
+  }
+};
+
+window.handleFinanceProjectChange = function() {
+  var typeSelect = document.getElementById("txn-type-select");
+  if (!typeSelect || typeSelect.value !== "Income") return;
+  
+  var projSelect = document.getElementById("txn-project-select");
+  if (!projSelect) return;
+  var projId = projSelect.value;
+  var visitGroup = document.getElementById("txn-visit-group");
+  var visitSelect = document.getElementById("txn-visit-select");
+  if (!visitSelect) return;
+  
+  visitSelect.innerHTML = '<option value="">Select Billable Visit</option>';
+  
+  if (!projId) {
+    if (visitGroup) visitGroup.style.display = "none";
+    return;
+  }
+
+  var billableVisits = (window.siteVisitsCacheList || []).filter(function(item) {
+    return item.ProjectID === projId && String(item.IsBillable || "").toLowerCase() === "yes" && String(item.BillableStatus || "").toLowerCase() !== "invoiced";
+  });
+
+  if (billableVisits.length > 0) {
+    if (visitGroup) visitGroup.style.display = "block";
+    var html = '<option value="">Select Billable Visit</option>';
+    for (var i = 0; i < billableVisits.length; i++) {
+      var v = billableVisits[i];
+      var pName = typeof escapeHtml === "function" ? escapeHtml(v.Purpose || "Site Visit") : (v.Purpose || "Site Visit");
+      html += '<option value="' + v.VisitID + '">' + v.VisitID + ' - ' + pName + ' (₹' + (v.BillableAmount || 0) + ')</option>';
+    }
+    visitSelect.innerHTML = html;
+  } else {
+    if (visitGroup) visitGroup.style.display = "none";
+  }
+};
+
+window.handleTxnVisitSelectChange = function() {
+  var visitSelect = document.getElementById("txn-visit-select");
+  if (!visitSelect) return;
+  var visitId = visitSelect.value;
+  if (!visitId) return;
+  
+  var visit = (window.siteVisitsCacheList || []).find(function(item) { return item.VisitID === visitId; });
+  if (visit) {
+    var amtField = document.getElementById("txn-amount-field");
+    if (amtField) amtField.value = visit.BillableAmount || 0;
+    var remField = document.getElementById("txn-remarks-field");
+    if (remField) remField.value = "Payment for billable site visit " + visitId + ": " + (visit.Purpose || "");
+  }
+};
+
+window.removeAttachment = function(idx) {
+  var attachmentsField = document.getElementById("txn-attachments-hidden");
+  if (!attachmentsField) return;
+  
+  var links = attachmentsField.value.split(",").map(function(item) { return item.trim(); }).filter(function(item) { return item !== ""; });
+  links.splice(idx, 1);
+  var updated = links.join(", ");
+  attachmentsField.value = updated;
+
+  var container = document.getElementById("txn-current-attachments-container");
+  var list = document.getElementById("txn-current-attachments-list");
+  
+  if (updated === "") {
+    if (container) container.style.display = "none";
+    if (list) list.innerHTML = "";
+  } else {
+    if (list) {
+      var html = "";
+      for (var i = 0; i < links.length; i++) {
+        var linkVal = typeof escapeHtml === "function" ? escapeHtml(links[i]) : links[i];
+        html += '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+          '<a href="' + linkVal + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (i + 1) + '</a>' +
+          '<button type="button" onclick="removeAttachment(' + i + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0;"><i class="fas fa-times"></i></button>' +
+        '</div>';
+      }
+      list.innerHTML = html;
+    }
+  }
+};
+
+window.toggleTxnAttachmentsDropdown = function(event, txnId) {
+  if (event) event.stopPropagation();
+  var dropdown = document.getElementById("dropdown-" + txnId);
+  if (!dropdown) return;
+  var isOpen = dropdown.style.display === "block";
+  var dropdowns = document.querySelectorAll(".attachments-dropdown-menu");
+  for (var i = 0; i < dropdowns.length; i++) {
+    dropdowns[i].style.display = "none";
+  }
+  if (!isOpen) {
+    dropdown.style.display = "block";
+  }
+};
+
+window.populateDropdownsFromCache = function() {
+  var types = (window.dropdownsCache && window.dropdownsCache["TransactionType"]) || ["Income", "Expense"];
+  var typeSelect = document.getElementById("txn-type-select");
+  var html, i;
+  if (typeSelect) {
+    html = "";
+    for (i = 0; i < types.length; i++) {
+      var typeLabel = types[i] === "Income" ? "Income (Received In)" : (types[i] === "Expense" ? "Expense (Paid Out)" : types[i]);
+      html += '<option value="' + types[i] + '">' + typeLabel + '</option>';
+    }
+    typeSelect.innerHTML = html;
+  }
+
+  var currentType = (typeSelect && typeSelect.value) || "Income";
+  window.populateCategoryOptions(currentType);
+
+  var modes = (window.dropdownsCache && window.dropdownsCache["PaymentMode"]) || ["Bank Transfer", "UPI", "Cheque", "Cash"];
+  var modeSelect = document.getElementById("txn-mode-select");
+  if (modeSelect) {
+    html = "";
+    for (i = 0; i < modes.length; i++) {
+      html += '<option value="' + modes[i] + '">' + modes[i] + '</option>';
+    }
+    modeSelect.innerHTML = html;
+  }
+
+  var projSelect = document.getElementById("txn-project-select");
+  if (projSelect) {
+    html = '<option value="">Select Project</option>';
+    var projs = window.projsCacheList || [];
+    for (i = 0; i < projs.length; i++) {
+      var p = projs[i];
+      if (p && p.ProjectID) {
+        var pName = typeof escapeHtml === "function" ? escapeHtml(p.ProjectName) : p.ProjectName;
+        html += '<option value="' + p.ProjectID + '">' + pName + '</option>';
+      }
+    }
+    projSelect.innerHTML = html;
+  }
+
+  var vendorSelect = document.getElementById("txn-vendor-select");
+  if (vendorSelect) {
+    html = '<option value="">Select Vendor</option>';
+    var vndrs = window.vndrsCacheList || [];
+    for (i = 0; i < vndrs.length; i++) {
+      var v = vndrs[i];
+      if (v && v.VendorID) {
+        var status = String(v.Status || "").trim().toLowerCase();
+        if (status === "" || status === "active") {
+          var vName = typeof escapeHtml === "function" ? escapeHtml(v.VendorName) : v.VendorName;
+          html += '<option value="' + v.VendorID + '">' + vName + '</option>';
+        }
+      }
+    }
+    vendorSelect.innerHTML = html;
+  }
+
+  var assocSelect = document.getElementById("txn-associate-select");
+  if (assocSelect) {
+    html = '<option value="">Select Associate</option>';
+    var assocs = window.associatesCacheList || [];
+    for (i = 0; i < assocs.length; i++) {
+      var a = assocs[i];
+      if (a && a.AssociateName) {
+        var aStatus = String(a.Status || "").trim().toLowerCase();
+        if (aStatus === "" || aStatus === "active") {
+          var aName = typeof escapeHtml === "function" ? escapeHtml(a.AssociateName) : a.AssociateName;
+          html += '<option value="' + a.AssociateName + '">' + aName + '</option>';
+        }
+      }
+    }
+    assocSelect.innerHTML = html;
+  }
+
+  window.populateBankOptions();
+};
+
+window.populateBankOptions = function(selectedBank) {
+  var bankSelect = document.getElementById("txn-bank-account-select");
+  var bankFilter = document.getElementById("filter-txn-bank");
+  if (!bankSelect && !bankFilter) return;
+
+  var fetchCompany = function(callback) {
+    if (window.companySetupCache) {
+      callback(window.companySetupCache);
+    } else if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(rows) {
+        window.companySetupCache = (rows && Array.isArray(rows) && rows.length > 0) ? rows[0] : (rows || {});
+        callback(window.companySetupCache);
+      }).withFailureHandler(function() {
+        callback({});
+      }).readTable("CompanySetup");
+    }
+  };
+
+  fetchCompany(function(company) {
+    var list = [];
+    if (company && company.BankAccounts) {
+      if (typeof company.BankAccounts === "string") {
+        try { list = JSON.parse(company.BankAccounts); } catch(e){}
+      } else if (Array.isArray(company.BankAccounts)) {
+        list = company.BankAccounts;
+      }
+    }
+    if ((!list || list.length === 0) && company && company.BankName && company.AccountNumber) {
+      list = [{ AccountLabel: company.BankName + " Primary", BankName: company.BankName, AccountNumber: company.AccountNumber }];
+    }
+
+    if (bankSelect) {
+      var html = '<option value="">Select Bank Account (Optional)</option>';
+      for (var i = 0; i < list.length; i++) {
+        var b = list[i];
+        var label = (b.AccountLabel || b.BankName) + " - " + b.AccountNumber;
+        html += '<option value="' + label + '">' + label + '</option>';
+      }
+      bankSelect.innerHTML = html;
+      if (selectedBank) bankSelect.value = selectedBank;
+    }
+
+    if (bankFilter && bankFilter.options.length <= 1) {
+      var filterHtml = '<option value="">All Bank Accounts</option>';
+      for (var j = 0; j < list.length; j++) {
+        var bItem = list[j];
+        var fLabel = (bItem.AccountLabel || bItem.BankName) + " - " + bItem.AccountNumber;
+        filterHtml += '<option value="' + fLabel + '">' + fLabel + '</option>';
+      }
+      bankFilter.innerHTML = filterHtml;
+    }
+  });
+};
+
+window.populateFinanceFilters = function() {
+  var typeFilter = document.getElementById("filter-txn-type");
+  var typeVal = typeFilter ? typeFilter.value : "";
+  if (typeFilter && typeFilter.options.length <= 1) {
+    var types = (window.dropdownsCache && window.dropdownsCache["TransactionType"]) || ["Income", "Expense"];
+    var html = '<option value="">All Transactions</option>';
+    for (var i = 0; i < types.length; i++) {
+      var label = types[i] === "Income" ? "Income (Payments In)" : "Expense (Spends Out)";
+      html += '<option value="' + types[i] + '">' + label + '</option>';
+    }
+    typeFilter.innerHTML = html;
+  }
+
+  var categoryFilter = document.getElementById("filter-txn-category");
+  if (categoryFilter) {
+    var categories = [];
+    if (typeVal === "Income") {
+      categories = (window.dropdownsCache && window.dropdownsCache["IncomeCategory"] && window.dropdownsCache["IncomeCategory"].length > 0)
+        ? window.dropdownsCache["IncomeCategory"]
+        : ["Client Payment", "Advance Payment", "Site Visit Charges", "Design Fee", "Consultancy Fee", "Refund / Cash-in", "Other Income"];
+    } else if (typeVal === "Expense") {
+      categories = (window.dropdownsCache && window.dropdownsCache["ExpenseCategory"] && window.dropdownsCache["ExpenseCategory"].length > 0)
+        ? window.dropdownsCache["ExpenseCategory"]
+        : ["Material Purchase", "Labor Wages", "Subcontractor / Labor", "Tools & Equipment", "Office Rent", "Travel & Fuel", "Site Expense", "Transport & Logistics", "Design & Consultation", "Other Expense"];
+    } else {
+      var incCats = (window.dropdownsCache && window.dropdownsCache["IncomeCategory"] && window.dropdownsCache["IncomeCategory"].length > 0)
+        ? window.dropdownsCache["IncomeCategory"]
+        : ["Client Payment", "Advance Payment", "Site Visit Charges", "Design Fee", "Consultancy Fee", "Refund / Cash-in", "Other Income"];
+      var expCats = (window.dropdownsCache && window.dropdownsCache["ExpenseCategory"] && window.dropdownsCache["ExpenseCategory"].length > 0)
+        ? window.dropdownsCache["ExpenseCategory"]
+        : ["Material Purchase", "Labor Wages", "Subcontractor / Labor", "Tools & Equipment", "Office Rent", "Travel & Fuel", "Site Expense", "Transport & Logistics", "Design & Consultation", "Other Expense"];
+      categories = incCats.concat(expCats);
+    }
+    
+    var currentCatVal = categoryFilter.value;
+    var html = '<option value="">All Categories</option>';
+    for (var i = 0; i < categories.length; i++) {
+      html += '<option value="' + categories[i] + '">' + categories[i] + '</option>';
+    }
+    categoryFilter.innerHTML = html;
+    if (currentCatVal && categories.indexOf(currentCatVal) !== -1) {
+      categoryFilter.value = currentCatVal;
+    }
+  }
+
+  var projFilter = document.getElementById("filter-txn-project");
+  if (projFilter && projFilter.options.length <= 1) {
+    var html = '<option value="">All Projects</option>';
+    var sortedProjs = (window.projsCacheList || []).slice().sort(function(a, b) {
+      return (b.ProjectID || "").localeCompare(a.ProjectID || "");
+    });
+    for (var i = 0; i < sortedProjs.length; i++) {
+      var p = sortedProjs[i];
+      if (p && p.ProjectID) {
+        var pName = typeof escapeHtml === "function" ? escapeHtml(p.ProjectName) : p.ProjectName;
+        html += '<option value="' + p.ProjectID + '">' + pName + ' (' + p.ProjectID + ')</option>';
+      }
+    }
+    projFilter.innerHTML = html;
+  }
+};
+
+window.calculateDashboardTotals = function(txns) {
+  txns = txns || [];
+  var income = 0;
+  var expense = 0;
+  for (var i = 0; i < txns.length; i++) {
+    var t = txns[i];
+    var amt = parseFloat(t.Amount) || 0;
+    var type = String(t.Type || "").trim().toLowerCase();
+    if (type === "income") {
+      income += amt;
+    } else if (type === "expense") {
+      expense += amt;
+    }
+  }
+  
+  var net = income - expense;
+  var incEl = document.getElementById("fin-total-income");
+  var expEl = document.getElementById("fin-total-expense");
+  var balEl = document.getElementById("fin-net-balance");
+  if (incEl) incEl.innerHTML = typeof formatCurrency === "function" ? formatCurrency(income) : "₹" + income;
+  if (expEl) expEl.innerHTML = typeof formatCurrency === "function" ? formatCurrency(expense) : "₹" + expense;
+  if (balEl) balEl.innerHTML = typeof formatCurrency === "function" ? formatCurrency(net) : "₹" + net;
+};
+
+window.renderLedger = function(txns) {
+  var tbody = document.querySelector("#transactions-table tbody");
+  if (!tbody) return;
+  
+  txns = txns || [];
+  if (txns.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">No transactions found.</td></tr>';
+    return;
+  }
+
+  var currentUser = {};
+  try { currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}"); } catch(e){}
+  var isSuperAdmin = currentUser.roleId === "Super Admin";
+  var perms = currentUser.permissions || {};
+  var financePerm = perms["Finance"] || {};
+  var canEdit = isSuperAdmin || financePerm.edit === true;
+  var canDelete = isSuperAdmin || financePerm.del === true;
+
+  var sorted = txns.slice().sort(function(a, b) {
+    var dateA = new Date(a.TransactionDate || 0);
+    var dateB = new Date(b.TransactionDate || 0);
+    return dateB - dateA;
+  });
+
+  var html = "";
+  for (var i = 0; i < sorted.length; i++) {
+    var t = sorted[i];
+    
+    var projName = "-";
+    if (t.ProjectID) {
+      var p = (window.projsCacheList || []).find(function(item) { return item.ProjectID === t.ProjectID; });
+      if (p) projName = typeof escapeHtml === "function" ? escapeHtml(p.ProjectName) : p.ProjectName;
+    }
+
+    var recipient = "-";
+    if (t.Type === "Expense") {
+      if (t.VendorID) {
+        var v = (window.vndrsCacheList || []).find(function(item) { return item.VendorID === t.VendorID; });
+        var vName = v ? (typeof escapeHtml === "function" ? escapeHtml(v.VendorName) : v.VendorName) : (typeof escapeHtml === "function" ? escapeHtml(t.VendorID) : t.VendorID);
+        recipient = vName + " (Vendor)";
+      } else if (t.AssociateName) {
+        var aName = typeof escapeHtml === "function" ? escapeHtml(t.AssociateName) : t.AssociateName;
+        recipient = aName + " (Associate)";
+      }
+    }
+
+    var amountClass = t.Type === "Income" ? "amount-income" : "amount-expense";
+    var typeSign = t.Type === "Income" ? "+ " : "- ";
+    var formattedAmt = typeof formatCurrency === "function" ? formatCurrency(t.Amount) : "₹" + t.Amount;
+    var amountText = '<span class="' + amountClass + '">' + typeSign + formattedAmt + '</span>';
+
+    var totGstVal = parseFloat(t.TotalGST) || (parseFloat(t.CGST || 0) + parseFloat(t.SGST || 0) + parseFloat(t.IGST || 0));
+    var taxVal = parseFloat(t.TaxableAmount) || 0;
+    if (totGstVal > 0) {
+      var gstDetailStr = "";
+      if (t.GSTType === "CGST+SGST" || (t.CGST > 0 || t.SGST > 0)) {
+        var cVal = parseFloat(t.CGST) || (totGstVal / 2);
+        var sVal = parseFloat(t.SGST) || (totGstVal / 2);
+        gstDetailStr = "CGST: ₹" + cVal.toLocaleString() + " | SGST: ₹" + sVal.toLocaleString();
+      } else if (t.GSTType === "IGST" || t.IGST > 0) {
+        gstDetailStr = "IGST: ₹" + (parseFloat(t.IGST) || totGstVal).toLocaleString();
+      } else {
+        gstDetailStr = "GST: ₹" + totGstVal.toLocaleString();
+      }
+      var baseValStr = (taxVal > 0 ? taxVal : (t.Amount - totGstVal)).toLocaleString();
+      amountText += '<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem; font-weight: 500;">' +
+        '<i class="fas fa-receipt" style="color: var(--primary); margin-right: 0.2rem;"></i>' +
+        'Base: ₹' + baseValStr + '<br>' + gstDetailStr +
+      '</div>';
+    }
+
+    var dateText = typeof formatDate === "function" ? formatDate(t.TransactionDate) : String(t.TransactionDate || "");
+
+    var attachmentHtml = "-";
+    if (t.Attachments) {
+      var links = String(t.Attachments).split(",").map(function(item) { return item.trim(); }).filter(function(item) { return item !== ""; });
+      if (links.length === 1) {
+        var linkStr = typeof escapeHtml === "function" ? escapeHtml(links[0]) : links[0];
+        attachmentHtml = '<a href="' + linkStr + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"><i class="fas fa-paperclip"></i> View</a>';
+      } else if (links.length > 1) {
+        var txnIdStr = typeof escapeHtml === "function" ? escapeHtml(t.TransactionID) : t.TransactionID;
+        attachmentHtml = '<div style="position: relative; display: inline-block;">' +
+          '<button class="btn btn-secondary btn-sm dropdown-toggle" onclick="window.toggleTxnAttachmentsDropdown(event, \'' + txnIdStr + '\')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">' +
+            '<i class="fas fa-paperclip"></i> View (' + links.length + ')' +
+          '</button>' +
+          '<div id="dropdown-' + txnIdStr + '" class="attachments-dropdown-menu" style="display: none; position: absolute; right: 0; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; min-width: 150px; padding: 0.35rem 0;">';
+        for (var j = 0; j < links.length; j++) {
+          var itemLink = typeof escapeHtml === "function" ? escapeHtml(links[j]) : links[j];
+          attachmentHtml += '<a href="' + itemLink + '" target="_blank" style="display: block; padding: 0.35rem 0.75rem; font-size: 0.75rem; color: var(--text-main); text-decoration: none;">' +
+            '<i class="fas fa-file" style="margin-right: 0.35rem; color: var(--primary);"></i> File ' + (j + 1) +
+          '</a>';
+        }
+        attachmentHtml += '</div></div>';
+      }
+    }
+
+    var actionsHtml = "";
+    var tIdEscaped = typeof escapeHtml === "function" ? escapeHtml(t.TransactionID) : t.TransactionID;
+    actionsHtml += '<button type="button" class="icon-btn" style="color: #25D366; cursor: pointer; margin-right: 0.35rem;" title="Share Voucher on WhatsApp" onclick="window.sendTxnWhatsApp(\'' + tIdEscaped + '\')"><i class="fab fa-whatsapp"></i></button>';
+    if (canEdit) {
+      actionsHtml += '<button class="icon-btn btn-edit" title="Edit Transaction" onclick="window.editTxn(\'' + tIdEscaped + '\')" style="margin-right:0.35rem;"><i class="fas fa-pen"></i></button>';
+    }
+    if (canDelete) {
+      actionsHtml += '<button class="icon-btn btn-delete" title="Delete Transaction" onclick="window.deleteTxnRow(\'' + tIdEscaped + '\')"><i class="fas fa-trash"></i></button>';
+    }
+    if (!canEdit && !canDelete) {
+      actionsHtml = '<button type="button" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Share Voucher on WhatsApp" onclick="window.sendTxnWhatsApp(\'' + tIdEscaped + '\')"><i class="fab fa-whatsapp"></i></button>';
+    }
+
+    var catStr = typeof escapeHtml === "function" ? escapeHtml(t.Category || "") : (t.Category || "");
+    var modeStr = typeof escapeHtml === "function" ? escapeHtml(t.PaymentMode || "") : (t.PaymentMode || "");
+    if (t.BankAccount) {
+      var bankLabelEscaped = typeof escapeHtml === "function" ? escapeHtml(t.BankAccount) : t.BankAccount;
+      modeStr += '<div style="font-size:0.75rem; color:var(--primary); font-weight:600; margin-top:0.15rem;"><i class="fas fa-university"></i> ' + bankLabelEscaped + '</div>';
+    }
+
+    var refStr = typeof escapeHtml === "function" ? escapeHtml(t.ReferenceNumber || t.Remarks || "-") : (t.ReferenceNumber || t.Remarks || "-");
+
+    html += '<tr id="row-' + tIdEscaped + '">' +
+      '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + tIdEscaped + '</td>' +
+      '<td>' + dateText + '</td>' +
+      '<td>' + projName + '</td>' +
+      '<td>' + recipient + '</td>' +
+      '<td>' + catStr + '</td>' +
+      '<td>' + amountText + '</td>' +
+      '<td>' + modeStr + '</td>' +
+      '<td>' + refStr + '</td>' +
+      '<td>' + attachmentHtml + '</td>' +
+      '<td style="text-align: right;">' + actionsHtml + '</td>' +
+    '</tr>';
+  }
+  tbody.innerHTML = html;
+};
+
+window.filterTransactionsTable = function() {
+  var searchInput = document.getElementById("txn-search-input");
+  var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+  var typeFilter = document.getElementById("filter-txn-type");
+  var typeVal = typeFilter ? typeFilter.value : "";
+  var projFilter = document.getElementById("filter-txn-project");
+  var projVal = projFilter ? projFilter.value : "";
+  var catFilter = document.getElementById("filter-txn-category");
+  var catVal = catFilter ? catFilter.value : "";
+  var modeFilter = document.getElementById("filter-txn-mode");
+  var modeVal = modeFilter ? modeFilter.value : "";
+  var bankFilter = document.getElementById("filter-txn-bank");
+  var bankVal = bankFilter ? bankFilter.value : "";
+
+  var filtered = (window.txnsDataList || []).filter(function(t) {
+    if (!t) return false;
+
+    var matchSearch = true;
+    if (searchVal) {
+      var ref = (t.ReferenceNumber || "").toLowerCase();
+      var rem = (t.Remarks || "").toLowerCase();
+      var cat = (t.Category || "").toLowerCase();
+      var id = (t.TransactionID || "").toLowerCase();
+      var bank = (t.BankAccount || "").toLowerCase();
+      matchSearch = ref.indexOf(searchVal) !== -1 || rem.indexOf(searchVal) !== -1 || cat.indexOf(searchVal) !== -1 || id.indexOf(searchVal) !== -1 || bank.indexOf(searchVal) !== -1;
+    }
+
+    var matchType = true;
+    if (typeVal) {
+      matchType = String(t.Type || "").toLowerCase() === typeVal.toLowerCase();
+    }
+
+    var matchProj = true;
+    if (projVal) {
+      matchProj = String(t.ProjectID || "") === projVal;
+    }
+
+    var matchCat = true;
+    if (catVal) {
+      matchCat = String(t.Category || "").toLowerCase() === catVal.toLowerCase();
+    }
+
+    var matchMode = true;
+    if (modeVal) {
+      matchMode = String(t.PaymentMode || "").toLowerCase() === modeVal.toLowerCase();
+    }
+
+    var matchBank = true;
+    if (bankVal) {
+      matchBank = String(t.BankAccount || "").toLowerCase() === bankVal.toLowerCase();
+    }
+
+    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank;
+  });
+
+  window.renderLedger(filtered);
+  window.calculateDashboardTotals(filtered);
+};
+
+window.exportTransactionsCSV = function() {
+  var searchInput = document.getElementById("txn-search-input");
+  var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+  var typeFilter = document.getElementById("filter-txn-type");
+  var typeVal = typeFilter ? typeFilter.value : "";
+  var projFilter = document.getElementById("filter-txn-project");
+  var projVal = projFilter ? projFilter.value : "";
+  var catFilter = document.getElementById("filter-txn-category");
+  var catVal = catFilter ? catFilter.value : "";
+  var modeFilter = document.getElementById("filter-txn-mode");
+  var modeVal = modeFilter ? modeFilter.value : "";
+  var bankFilter = document.getElementById("filter-txn-bank");
+  var bankVal = bankFilter ? bankFilter.value : "";
+
+  var filtered = (window.txnsDataList || []).filter(function(t) {
+    if (!t) return false;
+
+    var matchSearch = true;
+    if (searchVal) {
+      var ref = (t.ReferenceNumber || "").toLowerCase();
+      var rem = (t.Remarks || "").toLowerCase();
+      var cat = (t.Category || "").toLowerCase();
+      var id = (t.TransactionID || "").toLowerCase();
+      var bank = (t.BankAccount || "").toLowerCase();
+      matchSearch = ref.indexOf(searchVal) !== -1 || rem.indexOf(searchVal) !== -1 || cat.indexOf(searchVal) !== -1 || id.indexOf(searchVal) !== -1 || bank.indexOf(searchVal) !== -1;
+    }
+    var matchType = true;
+    if (typeVal) { matchType = String(t.Type || "").toLowerCase() === typeVal.toLowerCase(); }
+    var matchProj = true;
+    if (projVal) { matchProj = String(t.ProjectID || "") === projVal; }
+    var matchCat = true;
+    if (catVal) { matchCat = String(t.Category || "").toLowerCase() === catVal.toLowerCase(); }
+    var matchMode = true;
+    if (modeVal) { matchMode = String(t.PaymentMode || "").toLowerCase() === modeVal.toLowerCase(); }
+    var matchBank = true;
+    if (bankVal) { matchBank = String(t.BankAccount || "").toLowerCase() === bankVal.toLowerCase(); }
+
+    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank;
+  });
+
+  if (!filtered || filtered.length === 0) {
+    if (typeof showToast === "function") showToast("No transaction data available to export.", "error");
+    return;
+  }
+
+  var headers = [
+    "Transaction ID",
+    "Date",
+    "Type",
+    "Project Name",
+    "Recipient / Vendor",
+    "Category",
+    "Taxable Base Amount (INR)",
+    "GST Type",
+    "GST Rate (%)",
+    "CGST (INR)",
+    "SGST (INR)",
+    "IGST (INR)",
+    "Total GST (INR)",
+    "Total Amount (INR)",
+    "Payment Mode",
+    "Bank Account",
+    "Reference Number",
+    "Remarks"
+  ];
+
+  var csvRows = [];
+  csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+  for (var i = 0; i < filtered.length; i++) {
+    var t = filtered[i];
+
+    var projName = "-";
+    if (t.ProjectID) {
+      var p = (window.projsCacheList || []).find(function(item) { return item.ProjectID === t.ProjectID; });
+      if (p) projName = p.ProjectName;
+    }
+
+    var recipient = "-";
+    if (t.Type === "Expense") {
+      if (t.VendorID) {
+        var v = (window.vndrsCacheList || []).find(function(item) { return item.VendorID === t.VendorID; });
+        recipient = (v ? v.VendorName : t.VendorID) + " (Vendor)";
+      } else if (t.AssociateName) {
+        recipient = t.AssociateName + " (Associate)";
+      }
+    }
+
+    var row = [
+      t.TransactionID || "",
+      typeof formatDate === "function" ? formatDate(t.TransactionDate) : String(t.TransactionDate || ""),
+      t.Type || "",
+      projName,
+      recipient,
+      t.Category || "",
+      t.TaxableAmount !== undefined && t.TaxableAmount !== "" ? t.TaxableAmount : (t.Amount || 0),
+      t.GSTType || "None",
+      t.GSTRate || 0,
+      t.CGST || 0,
+      t.SGST || 0,
+      t.IGST || 0,
+      t.TotalGST || 0,
+      t.Amount || 0,
+      t.PaymentMode || "",
+      t.BankAccount || "",
+      t.ReferenceNumber || "",
+      t.Remarks || ""
+    ];
+
+    csvRows.push(row.map(function(val) {
+      var str = String(val !== undefined && val !== null ? val : "");
+      return '"' + str.replace(/"/g, '""') + '"';
+    }).join(","));
+  }
+
+  var csvContent = "\uFEFF" + csvRows.join("\n");
+  var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement("a");
+  link.setAttribute("href", url);
+  var dateStr = new Date().toISOString().split("T")[0];
+  link.setAttribute("download", "Transactions_Ledger_" + dateStr + ".csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  if (typeof showToast === "function") showToast("Transactions exported to CSV successfully!", "success");
+};
+
+window.loadFinanceView = function(forceRefresh) {
+  if (typeof showLoader === "function") showLoader(true);
+
+  if (forceRefresh && typeof cacheClear === "function") {
+    cacheClear(["dashboardData", "financeData"]);
+  }
+  
+  var currentUser = {};
+  try {
+    currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+  } catch(e){}
+  
+  var isSuperAdmin = currentUser.roleId === "Super Admin";
+  var perms = currentUser.permissions || {};
+  var financePerm = perms["Finance"] || {};
+  var canAdd = isSuperAdmin || financePerm.add === true;
+  var addBtn = document.getElementById("btn-add-txn");
+  if (addBtn) {
+    addBtn.style.display = canAdd ? "inline-block" : "none";
+  }
+
+  function applyData(res) {
+    try {
+      if (typeof showLoader === "function") showLoader(false);
+      res = res || {};
+      window.txnsDataList = res.transactions || (Array.isArray(res) ? res : []);
+      window.projsCacheList = res.projects || [];
+      window.vndrsCacheList = res.vendors || [];
+      window.associatesCacheList = res.associates || [];
+      window.customersCacheList = res.customers || [];
+      window.siteVisitsCacheList = res.siteVisits || [];
+      window.dropdownsCache = res.dropdowns || {};
+
+      try { window.populateDropdownsFromCache(); } catch(e){ console.error(e); }
+      try { window.filterTransactionsTable(); } catch(e){
+        console.error(e);
+        window.renderLedger(window.txnsDataList);
+        window.calculateDashboardTotals(window.txnsDataList);
+      }
+    } catch(err) {
+      console.error("Error in applyData:", err);
+      if (typeof showLoader === "function") showLoader(false);
+      window.renderLedger([]);
+      window.calculateDashboardTotals([]);
+    }
+  }
+
+  // Check preloaded cache for instant 0s tab switch (skip if forceRefresh)
+  if (!forceRefresh) {
+    var cachedDash = typeof cacheGet === "function" ? cacheGet("dashboardData") : null;
+    if (cachedDash && cachedDash.transactions && cachedDash.transactions.length > 0) {
+      applyData({
+        transactions: cachedDash.transactions || [],
+        projects: cachedDash.projects || [],
+        vendors: window.vndrsCacheList || [],
+        associates: window.associatesCacheList || [],
+        customers: cachedDash.customers || [],
+        siteVisits: cachedDash.siteVisits || []
+      });
+      return;
+    }
+  }
+
+  if (google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(function(res) {
+        applyData(res);
+      })
+      .withFailureHandler(function(err) {
+        console.error("getFinanceAggregatedData failure:", err);
+        fallbackLoad();
+      })
+      .getFinanceAggregatedData();
+  } else {
+    fallbackLoad();
+  }
+
+  function fallbackLoad() {
+    if (google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(function(txns) {
+          applyData({ transactions: txns || [] });
+        })
+        .withFailureHandler(function(err) {
+          console.error("getTransactions failure:", err);
+          if (typeof showLoader === "function") showLoader(false);
+          window.renderLedger([]);
+          window.calculateDashboardTotals([]);
+        })
+        .getTransactions();
+    } else {
+      if (typeof showLoader === "function") showLoader(false);
+      window.renderLedger([]);
+      window.calculateDashboardTotals([]);
+    }
+  }
+
+  if (google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(applyData)
+      .withFailureHandler(function(err) {
+        console.error("getFinanceAggregatedData failure:", err);
+        fallbackLoad();
+      })
+      .getFinanceAggregatedData();
+  } else {
+    fallbackLoad();
+  }
+};
+
+window.sendTxnWhatsApp = function(txnId) {
+  var txns = window.txnsDataList || [];
+  var t = txns.find(function(item) { return String(item.TransactionID) === String(txnId); });
+  if (!t) {
+    if (typeof showToast === "function") showToast("Transaction record not found.", "warning");
+    return;
+  }
+
+  var projName = "General / Non-Project";
+  var groupLink = "";
+  var custPhone = "";
+  var custName = "";
+
+  if (t.ProjectID) {
+    var p = (window.projsCacheList || []).find(function(item) { return item.ProjectID === t.ProjectID; });
+    if (p) {
+      projName = p.ProjectName || t.ProjectID;
+      groupLink = p.WhatsAppGroupLink || "";
+      if (p.CustomerID) {
+        var cList = window.customersCacheList || [];
+        var c = cList.find(function(cust) { return cust.CustomerID === p.CustomerID; });
+        if (c) {
+          custName = c.CustomerName || "";
+          custPhone = c.Mobile || "";
+        }
+      }
+    }
+  }
+
+  var recipientPhone = "";
+  var recipientName = custName || "Client / Contact";
+
+  if (t.Type === "Expense") {
+    if (t.VendorID) {
+      var v = (window.vndrsCacheList || []).find(function(item) { return item.VendorID === t.VendorID; });
+      if (v) {
+        recipientName = v.VendorName;
+        recipientPhone = v.Mobile || "";
+      }
+    } else if (t.AssociateName) {
+      var a = (window.associatesCacheList || []).find(function(item) { return item.AssociateName === t.AssociateName; });
+      if (a) {
+        recipientName = a.AssociateName;
+        recipientPhone = a.Mobile || "";
+      } else {
+        recipientName = t.AssociateName;
+      }
+    }
+  } else {
+    recipientPhone = custPhone;
+  }
+
+  var currentUser = {};
+  try { currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}"); } catch(e){}
+  var loggerName = currentUser.fullName || currentUser.FullName || "StudioSpace Team";
+
+  var amtFormatted = typeof formatCurrency === "function" ? formatCurrency(t.Amount) : ("₹" + t.Amount);
+  var dateStr = typeof formatDate === "function" ? formatDate(t.TransactionDate) : String(t.TransactionDate || "");
+
+  var msg = "🧾 *Payment Voucher / Financial Record*\n\n" +
+            "📌 *Transaction ID:* " + t.TransactionID + "\n" +
+            "📅 *Date:* " + dateStr + "\n" +
+            "🏷️ *Type:* " + t.Type + " (" + (t.Category || "General") + ")\n" +
+            "💰 *Amount:* " + amtFormatted + "\n" +
+            "💳 *Payment Mode:* " + (t.PaymentMode || "N/A") + (t.BankAccount ? (" (" + t.BankAccount + ")") : "") + "\n" +
+            "🏗️ *Project:* " + projName + "\n" +
+            "📝 *Ref / Details:* " + (t.ReferenceNumber || t.Remarks || "N/A") + "\n\n" +
+            "Regards,\n*" + loggerName + "*";
+
+  if (typeof openWAShareModal === "function") {
+    openWAShareModal(msg, recipientPhone, groupLink, recipientName);
+  } else {
+    if (typeof showToast === "function") showToast("WhatsApp share helper loading...", "info");
+  }
+};
+
+function populateCategoryOptions(type, selectedCategory) { window.populateCategoryOptions(type, selectedCategory); }
+function openTxnModal(txnObj) { window.openTxnModal(txnObj); }
+function closeTxnModal() { window.closeTxnModal(); }
+function editTxn(txnId) { window.editTxn(txnId); }
+function deleteTxnRow(txnId) { window.deleteTxnRow(txnId); }
+function handleTxnSubmit(e) { window.handleTxnSubmit(e); }
+function filterTransactionsTable() { window.filterTransactionsTable(); }
+function toggleTxnTypeForm() { window.toggleTxnTypeForm(); }
+function toggleRecipientFields() { window.toggleRecipientFields(); }
+function handleFinanceProjectChange() { window.handleFinanceProjectChange(); }
+function handleTxnVisitSelectChange() { window.handleTxnVisitSelectChange(); }
+function removeAttachment(idx) { window.removeAttachment(idx); }
+function toggleTxnAttachmentsDropdown(event, txnId) { window.toggleTxnAttachmentsDropdown(event, txnId); }
+
+document.addEventListener("click", function() {
+  var dropdowns = document.querySelectorAll(".attachments-dropdown-menu");
+  for (var i = 0; i < dropdowns.length; i++) {
+    dropdowns[i].style.display = "none";
+  }
+});
+</script>

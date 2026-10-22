@@ -1,0 +1,324 @@
+<!-- Associate1.html -->
+<div class="view-container">
+  <!-- Action Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="associate-search-input" class="search-input" placeholder="Search associates by name, contact..." oninput="filterAssociatesTable()">
+    </div>
+    
+    <div class="filter-group">
+      <select id="filter-associate-status" class="select-filter" onchange="filterAssociatesTable()">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+      
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary" id="btn-add-associate" onclick="openAssociateModal()"><i class="fas fa-plus"></i> Add Associate</button>
+    </div>
+  </div>
+
+  <!-- Associates Data Table -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none;">
+        <table class="data-table" id="associates-table">
+          <thead>
+            <tr>
+              <th>Associate ID</th>
+              <th>Associate Name</th>
+              <th>Contact Person</th>
+              <th>Category / Services</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>GST Number</th>
+              <th>Status</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading associates...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Associate Modal -->
+<div class="modal-overlay" id="associate-modal">
+  <div class="modal-container" style="max-width: 650px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="associate-modal-title">Add Associate Profile</h3>
+      <button class="icon-btn" onclick="closeAssociateModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="associate-form" onsubmit="handleAssociateSubmit(event)">
+      <input type="hidden" id="associate-id-field" name="AssociateID">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Associate Name *</label>
+            <input type="text" id="associate-name-field" name="AssociateName" class="form-control" placeholder="e.g. Rajesh & Co." required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Contact Person Name</label>
+            <input type="text" id="associate-contact-field" name="ContactPerson" class="form-control" placeholder="e.g. Ramesh Singh">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category / Scope of Services *</label>
+            <select id="associate-category-field" name="Category" class="form-control" required>
+              <option value="Architectural Design">Architectural Design</option>
+              <option value="Interior Design">Interior Design</option>
+              <option value="Structural Engineering">Structural Engineering</option>
+              <option value="MEP & HVAC">MEP & HVAC</option>
+              <option value="Civil & Masonry">Civil & Masonry</option>
+              <option value="Lighting & Automation">Lighting & Automation</option>
+              <option value="Furniture & Joinery">Furniture & Joinery</option>
+              <option value="Landscape & Outdoor">Landscape & Outdoor</option>
+              <option value="General Consultancy">General Consultancy</option>
+              <option value="Other Specialist">Other Specialist</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Mobile Number *</label>
+            <input type="tel" id="associate-mobile-field" name="Mobile" class="form-control" placeholder="e.g. 9876543210" pattern="[0-9]{10}" title="Must be exactly 10 digits" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="associate-email-field" name="Email" class="form-control" placeholder="e.g. rajesh@associate.com">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">GST Number</label>
+            <input type="text" id="associate-gst-field" name="GSTNumber" class="form-control" placeholder="e.g. 27AAAAA1111A1Z1">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="associate-status-field" name="Status" class="form-control" required>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Office Address / Notes</label>
+            <textarea id="associate-address-field" name="Address" class="form-control" placeholder="Office coordinates or service description..." rows="3"></textarea>
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Private Memo / Terms</label>
+            <textarea id="associate-notes-field" name="Notes" class="form-control" placeholder="Internal terms, notes, details..." rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAssociateModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Associate</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  var associatesList = [];
+  window.loadAssociatesView = function(forceRefresh) {
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var assocPerms = perms["Associates"] || {};
+    var canAdd = isSuperAdmin || assocPerms.add === true;
+    var addBtn = document.getElementById("btn-add-associate");
+    if (addBtn)
+      addBtn.style.display = canAdd ? "inline-block" : "none";
+
+    // Check preloaded cache for instant render if not forceRefresh
+    if (!forceRefresh) {
+      var cached = cacheGet("projectsViewData") || cacheGet("tasksViewData") || cacheGet("siteVisitsViewData");
+      if (cached && cached.associates) {
+        associatesList = cached.associates || [];
+        renderAssociates(associatesList);
+        showLoader(false);
+        return;
+      }
+    }
+
+    google.script.run.withSuccessHandler(function(data) {
+      associatesList = data || [];
+      renderAssociates(associatesList);
+      showLoader(false);
+    }).withFailureHandler(function(err) {
+      showToast("Error loading associates: " + err.message, "error");
+      showLoader(false);
+    }).getAssociates();
+  };
+  function renderAssociates(list) {
+    var tbody = document.querySelector("#associates-table tbody");
+    if (!tbody)
+      return;
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-handshake empty-state-icon"></i>\n          <p class="empty-state-title">No associates registered</p>\n          <p class="empty-state-desc">Input external specialists, trade partners, and associates.</p>\n        </div>\n      </td></tr>';
+      return;
+    }
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var assocPerms = perms["Associates"] || {};
+    var canEdit = isSuperAdmin || assocPerms.edit === true;
+    var canDelete = isSuperAdmin || assocPerms.del === true;
+    var sorted = list.slice().sort(function(a, b) {
+      return b.AssociateID.localeCompare(a.AssociateID);
+    });
+    tbody.innerHTML = sorted.map(function(assoc) {
+      var badgeClass = assoc.Status === "Active" ? "badge-completed" : "badge-inactive";
+      var categoryStr = assoc.Category || assoc.ServiceCategory || "-";
+      var actionsHtml = "";
+      if (canEdit) {
+        var aId = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateID) : assoc.AssociateID;
+        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Associate" onclick="editAssociate(\'' + aId + '\')"><i class="fas fa-pen"></i></button>';
+      }
+      if (canDelete) {
+        var aId = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateID) : assoc.AssociateID;
+        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Associate" onclick="deleteAssociateRow(\'' + aId + '\')"><i class="fas fa-trash"></i></button>';
+      }
+      var aIdEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateID) : assoc.AssociateID;
+      var aNameEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateName || "") : (assoc.AssociateName || "");
+      var aContactEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.ContactPerson || "-") : (assoc.ContactPerson || "-");
+      var aCategoryEsc = typeof escapeHtml === "function" ? escapeHtml(categoryStr) : categoryStr;
+      var aMobileEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.Mobile || "") : (assoc.Mobile || "");
+      var aEmailEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.Email || "-") : (assoc.Email || "-");
+      var aGstEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.GSTNumber || "-") : (assoc.GSTNumber || "-");
+      var aStatusEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.Status || "Active") : (assoc.Status || "Active");
+
+      return '<tr id="row-' + aIdEsc + '">' +
+        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + aIdEsc + '</td>' +
+        '<td style="font-weight: 600;">' + aNameEsc + '</td>' +
+        '<td>' + aContactEsc + '</td>' +
+        '<td>' + aCategoryEsc + '</td>' +
+        '<td>' + aMobileEsc + '</td>' +
+        '<td>' + aEmailEsc + '</td>' +
+        '<td>' + aGstEsc + '</td>' +
+        '<td><span class="badge ' + badgeClass + '">' + aStatusEsc + '</span></td>' +
+        '<td style="text-align: right;">' + actionsHtml + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+  function filterAssociatesTable() {
+    var searchVal = (document.getElementById("associate-search-input").value || "").toLowerCase();
+    var statusVal = document.getElementById("filter-associate-status").value;
+    var filtered = associatesList.filter(function(assoc) {
+      var name = (assoc.AssociateName || "").toLowerCase();
+      var contact = (assoc.ContactPerson || "").toLowerCase();
+      var category = (assoc.Category || assoc.ServiceCategory || "").toLowerCase();
+      var mobile = assoc.Mobile || "";
+      var matchesSearch = name.indexOf(searchVal) !== -1 || contact.indexOf(searchVal) !== -1 || category.indexOf(searchVal) !== -1 || mobile.indexOf(searchVal) !== -1;
+      var matchesStatus = !statusVal || assoc.Status === statusVal;
+      return matchesSearch && matchesStatus;
+    });
+    renderAssociates(filtered);
+  }
+  function openAssociateModal(assocObj) {
+    if (assocObj === void 0) {
+      assocObj = null;
+    }
+    var form = document.getElementById("associate-form");
+    form.reset();
+    document.getElementById("associate-id-field").value = "";
+    if (assocObj) {
+      document.getElementById("associate-modal-title").innerText = "Edit Associate " + assocObj.AssociateID;
+      document.getElementById("associate-id-field").value = assocObj.AssociateID;
+      document.getElementById("associate-name-field").value = assocObj.AssociateName;
+      document.getElementById("associate-contact-field").value = assocObj.ContactPerson || "";
+      var catField = document.getElementById("associate-category-field");
+      if (catField) catField.value = assocObj.Category || assocObj.ServiceCategory || "Architectural Design";
+      document.getElementById("associate-mobile-field").value = assocObj.Mobile;
+      document.getElementById("associate-email-field").value = assocObj.Email || "";
+      document.getElementById("associate-gst-field").value = assocObj.GSTNumber || "";
+      document.getElementById("associate-status-field").value = assocObj.Status || "Active";
+      document.getElementById("associate-address-field").value = assocObj.Address || "";
+      document.getElementById("associate-notes-field").value = assocObj.Notes || "";
+    } else {
+      document.getElementById("associate-modal-title").innerText = "Add Associate Profile";
+      document.getElementById("associate-status-field").value = "Active";
+      var catField = document.getElementById("associate-category-field");
+      if (catField) catField.value = "Architectural Design";
+    }
+    document.getElementById("associate-modal").classList.add("show");
+  }
+  function closeAssociateModal() {
+    document.getElementById("associate-modal").classList.remove("show");
+  }
+  function editAssociate(assocId) {
+    var assoc = associatesList.find(function(a) {
+      return a.AssociateID === assocId;
+    });
+    if (assoc) {
+      openAssociateModal(assoc);
+    }
+  }
+  function deleteAssociateRow(assocId) {
+    if (confirm("Are you sure you want to delete this associate profile?")) {
+      showLoader(true);
+      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          associatesList = associatesList.filter(function(a) { return a.AssociateID !== assocId; });
+          renderAssociates(associatesList);
+          loadAssociatesView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteAssociate(assocId, currentUser.userId);
+    }
+  }
+  function handleAssociateSubmit(e) {
+    e.preventDefault();
+    var form = document.getElementById("associate-form");
+    var formData = {};
+    var inputs = form.querySelectorAll("input, select, textarea");
+    inputs.forEach(function(input) {
+      if (input.name) {
+        formData[input.name] = input.value;
+      }
+    });
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    google.script.run.withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        if (typeof cacheClearAll === "function") cacheClearAll();
+        closeAssociateModal();
+        loadAssociatesView(true);
+      } else {
+        showToast(response.message, "error");
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast(err.message, "error");
+    }).saveAssociate(formData, currentUser.userId);
+  }
+  window.openAssociateModal = openAssociateModal;
+  window.closeAssociateModal = closeAssociateModal;
+  window.editAssociate = editAssociate;
+  window.deleteAssociateRow = deleteAssociateRow;
+  window.handleAssociateSubmit = handleAssociateSubmit;
+  window.filterAssociatesTable = filterAssociatesTable;
+})();
+
+</script>

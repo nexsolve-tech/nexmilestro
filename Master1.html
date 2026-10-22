@@ -1,0 +1,168 @@
+<!-- Master1.html -->
+<div class="view-container">
+  
+  <div class="form-grid">
+    <!-- Left panel: Category Selector -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-list-ul" style="color: var(--primary); margin-right: 0.5rem;"></i>Dropdown Categories</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Select Dropdown Menu to Manage</label>
+          <select id="master-category-select" class="form-control" onchange="onMasterCategoryChange()">
+            <option value="CustomerType">Customer Type (Customers)</option>
+            <option value="ProjectType">Project Type (Projects)</option>
+            <option value="ProjectStatus">Project Status (Projects)</option>
+            <option value="TaskPriority">Task Priority (Tasks)</option>
+            <option value="TaskStatus">Task Status (Tasks)</option>
+            <option value="LeadSource">Inquiry Lead Source (Leads)</option>
+            <option value="LeadStatus">Lead Pipeline Status (Leads)</option>
+            <option value="LeadType">Lead Priority / Type (Leads)</option>
+            <option value="ProposalStatus">Proposal Status (Proposals)</option>
+            <option value="VendorType">Vendor Category (Vendors)</option>
+            <option value="IncomeCategoryProject">Income Category - Project (Finance)</option>
+            <option value="IncomeCategoryNonProject">Income Category - Non-Project (Finance)</option>
+            <option value="ExpenseCategoryProject">Expense Category - Project (Finance)</option>
+            <option value="ExpenseCategoryNonProject">Expense Category - Non-Project (Finance)</option>
+            <option value="PaymentMode">Payment Mode (Finance)</option>
+            <option value="UserRole">User Role (Users)</option>
+            <option value="TransactionType">Transaction Type (Finance)</option>
+          </select>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin-top: 1rem;">
+          <i class="fas fa-info-circle"></i> Selecting a category lists the current dropdown choices. Modifying options dynamically alters selection options in corresponding forms.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right panel: Values list and add option form -->
+    <div class="card">
+      <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+        <h3 class="card-title" id="master-list-title">Active Options</h3>
+        
+        <form id="master-add-form" onsubmit="handleMasterAddOption(event)" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin:0;">
+          <input type="text" id="master-new-value" class="form-control" style="max-width:180px; padding:0.4rem 0.75rem;" placeholder="e.g. VIP Customer" required>
+          <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Option</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </form>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-wrapper" style="border: none;">
+          <table class="data-table" id="masters-table">
+            <thead>
+              <tr>
+                <th>Active Option Value</th>
+                <th style="text-align: right; width: 100px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading dropdown values...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var mastersCacheData = {};
+  window.loadMastersView = function() {
+    showLoader(true);
+    google.script.run.withSuccessHandler(function(data) {
+      mastersCacheData = data;
+      renderCategoryOptions();
+      showLoader(false);
+    }).withFailureHandler(function(err) {
+      showToast("Error loading masters configurations: " + err.message, "error");
+      showLoader(false);
+    }).getDropdownValues();
+  };
+  function onMasterCategoryChange() {
+    renderCategoryOptions();
+  }
+  function renderCategoryOptions() {
+    var selectEl = document.getElementById("master-category-select");
+    var key = selectEl.value;
+    var categoryLabel = selectEl.options[selectEl.selectedIndex].text;
+    document.getElementById("master-list-title").innerText = "".concat(categoryLabel, " Options");
+    document.getElementById("master-new-value").value = "";
+    var tbody = document.querySelector("#masters-table tbody");
+    if (!tbody)
+      return;
+    var optionsList = mastersCacheData[key] || [];
+    if (optionsList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2rem;">No options defined. Add your first option below.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = optionsList.map(function(opt) {
+      var keyEsc = typeof escapeHtml === "function" ? escapeHtml(key) : key;
+      var optEsc = typeof escapeHtml === "function" ? escapeHtml(opt) : opt;
+      var optJsEsc = optEsc.replace(/'/g, "\\'");
+
+      return '<tr>' +
+        '<td style="font-weight:600;">' + optEsc + '</td>' +
+        '<td style="text-align: right;">' +
+          '<button class="icon-btn btn-delete btn-sm" title="Delete Option" onclick="deleteMasterOption(\'' + keyEsc + '\', \'' + optJsEsc + '\')"><i class="fas fa-trash"></i></button>' +
+        '</td>' +
+      '</tr>';
+    }).join("");
+  }
+  function handleMasterAddOption(e) {
+    e.preventDefault();
+    var key = document.getElementById("master-category-select").value;
+    var input = document.getElementById("master-new-value");
+    var val = (input.value || "").trim();
+    if (!val) {
+      showToast("Option value cannot be empty.", "error");
+      return;
+    }
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
+    google.script.run.withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        if (typeof cacheClearAll === "function") cacheClearAll();
+        input.value = "";
+        loadMastersView();
+      } else {
+        showToast(response.message, "error");
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast(err.message, "error");
+    }).addDropdownValue(key, val, userId);
+  }
+  function deleteMasterOption(key, value) {
+    if (confirm('Are you sure you want to delete option "'.concat(value, '"? This will not alter existing sheet records, but it will remove it from future form select lists.'))) {
+      showLoader(true);
+      var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+      var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          loadMastersView();
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteDropdownValue(key, value, userId);
+    }
+  }
+  window.onMasterCategoryChange = onMasterCategoryChange;
+  window.handleMasterAddOption = handleMasterAddOption;
+  window.deleteMasterOption = deleteMasterOption;
+})();
+
+</script>

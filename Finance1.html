@@ -1,0 +1,319 @@
+<!-- Finance1.html -->
+<style>
+  .amount-income {
+    color: #059669;
+    font-weight: 700;
+  }
+  .amount-expense {
+    color: #e11d48;
+    font-weight: 700;
+  }
+</style>
+
+<div class="view-container">
+
+  <!-- Financial Metrics Dashboard widgets -->
+  <div class="dashboard-grid">
+    <div class="stats-card card-emerald">
+      <div class="stats-info">
+        <span class="stats-label">Total Invoiced Income</span>
+        <span class="stats-value" id="fin-total-income">₹0</span>
+      </div>
+      <div class="stats-icon-wrapper">
+        <i class="fas fa-arrow-trend-up"></i>
+      </div>
+    </div>
+
+    <div class="stats-card card-amber">
+      <div class="stats-info">
+        <span class="stats-label">Total Expenditures</span>
+        <span class="stats-value" id="fin-total-expense">₹0</span>
+      </div>
+      <div class="stats-icon-wrapper">
+        <i class="fas fa-arrow-trend-down"></i>
+      </div>
+    </div>
+
+    <div class="stats-card card-sky">
+      <div class="stats-info">
+        <span class="stats-label">Net Operational Balance</span>
+        <span class="stats-value" id="fin-net-balance">₹0</span>
+      </div>
+      <div class="stats-icon-wrapper">
+        <i class="fas fa-scale-balanced"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="txn-search-input" class="search-input" placeholder="Search references, remarks..."
+        oninput="filterTransactionsTable()">
+    </div>
+
+    <div class="filter-group" style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center;">
+      <select id="filter-txn-type" class="select-filter" onchange="filterTransactionsTable()">
+        <option value="" selected>All Transactions</option>
+        <option value="Income">Income (Payments In)</option>
+        <option value="Expense">Expense (Spends Out)</option>
+      </select>
+
+      <select id="filter-txn-project" class="select-filter" style="max-width: 170px;"
+        onchange="filterTransactionsTable()">
+        <option value="">All Projects</option>
+      </select>
+
+      <select id="filter-txn-category" class="select-filter" onchange="filterTransactionsTable()">
+        <option value="">All Categories</option>
+        <option value="Client Payment">Client Payment</option>
+        <option value="Material Purchase">Material Purchase</option>
+        <option value="Labor Wages">Labor Wages</option>
+        <option value="Tools">Tools & Equipment</option>
+        <option value="Rent">Office Rent</option>
+        <option value="Travel">Travel & Fuel</option>
+        <option value="Other">Other Category</option>
+      </select>
+
+      <select id="filter-txn-mode" class="select-filter" style="max-width: 170px;" onchange="filterTransactionsTable()">
+        <option value="">All Payment Modes</option>
+        <option value="Bank Transfer">Bank Transfer</option>
+        <option value="UPI">UPI</option>
+        <option value="Cheque">Cheque</option>
+        <option value="Cash">Cash</option>
+        <option value="Credit Card">Credit Card</option>
+      </select>
+
+      <select id="filter-txn-bank" class="select-filter" style="max-width: 170px;" onchange="filterTransactionsTable()">
+        <option value="">All Bank Accounts</option>
+      </select>
+
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportTransactionsCSV()" title="Export Filtered Transactions to CSV"><i class="fas fa-download"></i> Download CSV</button>
+      <button class="btn btn-primary" id="btn-add-txn" onclick="openTxnModal()"><i class="fas fa-plus"></i> Book
+        Transaction</button>
+    </div>
+  </div>
+
+  <!-- Transactions Ledger Table -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none;">
+        <table class="data-table" id="transactions-table">
+          <thead>
+            <tr>
+              <th>Txn ID</th>
+              <th>Date</th>
+              <th>Project</th>
+              <th>Vendor (If Paid Out)</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Payment & Bank</th>
+              <th>Ref / Details</th>
+              <th>Attachments</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading transaction ledger...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Transaction Modal -->
+<div class="modal-overlay" id="txn-modal">
+  <div class="modal-container" style="max-width: 650px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="txn-modal-title">Book Transaction</h3>
+      <button class="icon-btn" onclick="closeTxnModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="txn-form" onsubmit="handleTxnSubmit(event)">
+      <input type="hidden" id="txn-id-field" name="TransactionID">
+      <div class="modal-body">
+        <div class="form-grid">
+
+          <div class="form-group form-grid-full" style="margin-bottom: 0.5rem; background: var(--bg-primary); padding: 0.65rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-toggle-on" style="color: var(--primary);"></i> Non-Project Expense / Income
+            </span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="txn-non-project-check" name="IsNonProject" value="true" onchange="toggleNonProjectExpense()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Transaction Type *</label>
+            <select id="txn-type-select" name="Type" class="form-control" onchange="toggleTxnTypeForm()" required>
+              <option value="Income">Income (Received In)</option>
+              <option value="Expense">Expense (Paid Out)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Taxable (Base) Amount (₹) *</label>
+            <input type="number" id="txn-taxable-amount" name="TaxableAmount" class="form-control" placeholder="e.g. 50000"
+              min="0" step="0.01" oninput="calculateGSTBreakdown()" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">GST Applicability / Type</label>
+            <select id="txn-gst-type" name="GSTType" class="form-control" onchange="calculateGSTBreakdown()">
+              <option value="None" selected>None / Exempt (0% GST)</option>
+              <option value="CGST+SGST">Intra-State (CGST + SGST)</option>
+              <option value="IGST">Inter-State (IGST)</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="txn-gst-rate-group" style="display: none;">
+            <label class="form-label">GST Rate (%)</label>
+            <select id="txn-gst-rate" name="GSTRate" class="form-control" onchange="calculateGSTBreakdown()">
+              <option value="0">0%</option>
+              <option value="5">5%</option>
+              <option value="12">12%</option>
+              <option value="18" selected>18%</option>
+              <option value="28">28%</option>
+            </select>
+          </div>
+
+          <!-- Dynamic GST Breakdown Box -->
+          <div class="form-group form-grid-full" id="txn-gst-breakdown-box" style="display: none; background: rgba(2, 132, 199, 0.05); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(2, 132, 199, 0.2);">
+            <div style="font-weight: 600; font-size: 0.82rem; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+              <i class="fas fa-calculator"></i> GST Breakdown Details
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.65rem;">
+              <div id="txn-cgst-group">
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">CGST (₹)</label>
+                <input type="number" id="txn-cgst-amount" name="CGST" class="form-control" style="font-size: 0.85rem;" step="0.01" min="0" value="0" oninput="updateGSTTotalsFromInputs()">
+              </div>
+              <div id="txn-sgst-group">
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">SGST (₹)</label>
+                <input type="number" id="txn-sgst-amount" name="SGST" class="form-control" style="font-size: 0.85rem;" step="0.01" min="0" value="0" oninput="updateGSTTotalsFromInputs()">
+              </div>
+              <div id="txn-igst-group" style="display: none;">
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">IGST (₹)</label>
+                <input type="number" id="txn-igst-amount" name="IGST" class="form-control" style="font-size: 0.85rem;" step="0.01" min="0" value="0" oninput="updateGSTTotalsFromInputs()">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Total GST (₹)</label>
+                <input type="number" id="txn-total-gst" name="TotalGST" class="form-control" style="font-size: 0.85rem; font-weight: 700; background: var(--bg-primary);" step="0.01" min="0" value="0" readonly>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Total Transaction Amount (₹) *</label>
+            <input type="number" id="txn-amount-field" name="Amount" class="form-control" placeholder="Total incl. GST"
+              min="0.01" step="0.01" oninput="handleTotalAmountDirectInput()" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Transaction Date *</label>
+            <input type="date" id="txn-date-field" name="TransactionDate" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Linked Project (Optional)</label>
+            <select id="txn-project-select" name="ProjectID" class="form-control"
+              onchange="handleFinanceProjectChange()">
+              <option value="">Select Project</option>
+            </select>
+          </div>
+
+
+
+          <div class="form-group" id="txn-visit-group" style="display: none;">
+            <label class="form-label">Link Billable Site Visit</label>
+            <select id="txn-visit-select" class="form-control" onchange="handleTxnVisitSelectChange()">
+              <option value="">Select Billable Visit</option>
+            </select>
+          </div>
+
+          <!-- Recipient type selection for Expense -->
+          <div class="form-group" id="txn-recipient-type-group" style="display: none;">
+            <label class="form-label">Recipient Type</label>
+            <select id="txn-recipient-type" class="form-control" onchange="toggleRecipientFields()">
+              <option value="None">None</option>
+              <option value="Vendor">Vendor</option>
+              <option value="Associate">Associate</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="txn-vendor-group" style="display: none;">
+            <label class="form-label">Paid to Vendor *</label>
+            <select id="txn-vendor-select" name="VendorID" class="form-control">
+              <option value="">Select Vendor</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="txn-associate-group" style="display: none;">
+            <label class="form-label">Paid to Associate *</label>
+            <select id="txn-associate-select" name="AssociateName" class="form-control">
+              <option value="">Select Associate</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="txn-category-group">
+            <label class="form-label">Category *</label>
+            <select id="txn-category-select" name="Category" class="form-control" required>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Payment Mode *</label>
+            <select id="txn-mode-select" name="PaymentMode" class="form-control" required>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="UPI">UPI</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="txn-bank-account-group">
+            <label class="form-label">Linked Bank Account (Optional)</label>
+            <select id="txn-bank-account-select" name="BankAccount" class="form-control">
+              <option value="">Select Bank Account</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Reference Number (Optional)</label>
+            <input type="text" id="txn-ref-field" name="ReferenceNumber" class="form-control"
+              placeholder="UPI ID / Cheque Num / Bank Ref">
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Remarks / Description</label>
+            <textarea id="txn-remarks-field" name="Remarks" class="form-control"
+              placeholder="Description of transactions..."></textarea>
+          </div>
+
+          <input type="hidden" id="txn-attachments-hidden" name="Attachments">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Add Attachments / Bills / Receipts</label>
+            <input type="file" id="txn-attachment" class="form-control"
+              accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              multiple>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Choose one or more files
+              to upload directly to Google Drive. Leave empty to keep existing attachments if editing.</small>
+            <div id="txn-current-attachments-container" style="margin-top: 0.5rem; display: none;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">Current Attachments:</span>
+              <div id="txn-current-attachments-list"
+                style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeTxnModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Transaction</button>
+      </div>
+    </form>
+  </div>
+</div>

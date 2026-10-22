@@ -1,0 +1,429 @@
+<!-- Dashboard.html -->
+<div class="view-container">
+  <!-- Dashboard Filter Bar -->
+  <div class="filter-bar" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <i class="fas fa-filter" style="color: var(--primary);"></i>
+      <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">Filter Workspace View:</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <select id="dash-project-filter" class="select-filter" style="max-width: 280px; min-width: 200px;" onchange="applyDashboardFilter()">
+        <option value="">All Projects</option>
+      </select>
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
+  </div>
+
+  <!-- Dynamic Stats Grid -->
+  <div class="dashboard-grid">
+    <div class="stats-card card-sky">
+      <div class="stats-info">
+        <span class="stats-label">Active Projects</span>
+        <span class="stats-value" id="dash-active-projects">0</span>
+      </div>
+      <div class="stats-icon-wrapper">
+        <i class="fas fa-folder-open"></i>
+      </div>
+    </div>
+    
+    <div class="stats-card card-emerald">
+      <div class="stats-info">
+        <span class="stats-label">Total Customers</span>
+        <span class="stats-value" id="dash-total-customers">0</span>
+      </div>
+      <div class="stats-icon-wrapper">
+        <i class="fas fa-users"></i>
+      </div>
+    </div>
+    
+    <div class="stats-card card-amber">
+      <div class="stats-info">
+        <span class="stats-label">Pending Tasks</span>
+        <span class="stats-value" id="dash-pending-tasks">0</span>
+      </div>
+      <div class="stats-icon-wrapper">
+        <i class="fas fa-tasks"></i>
+      </div>
+    </div>
+    
+    <div class="stats-card card-indigo">
+      <div class="stats-info">
+        <span class="stats-label">Recent Site Visits</span>
+        <span class="stats-value" id="dash-site-visits">0</span>
+      </div>
+      <div class="stats-icon-wrapper">
+        <i class="fas fa-eye"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Sections -->
+  <div class="form-grid" style="margin-top: 1rem;">
+    <!-- Recent Projects list -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 0.5rem;"></i>Active Projects Overview</h3>
+        <button class="btn btn-secondary btn-sm" onclick="appRouter.navigate('projects')">View All</button>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-wrapper" style="border: none; box-shadow: none;">
+          <table class="data-table" id="dash-projects-table">
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>Type</th>
+                <th>Expected Completion</th>
+                <th>Progress (Milestones)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading projects...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Urgent Tasks checklist -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
+        <button class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-wrapper" style="border: none; box-shadow: none;">
+          <table class="data-table" id="dash-tasks-table">
+            <thead>
+              <tr>
+                <th>Task Name</th>
+                <th>Project</th>
+                <th>Due Date</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-grid" style="margin-top: 1rem;">
+    <!-- Sales Funnel Performance Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-funnel-dollar" style="color: var(--secondary); margin-right: 0.5rem;"></i>Inquiry Conversion Funnel</h3>
+      </div>
+      <div class="card-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <div>
+            <div style="font-size:0.85rem; color:var(--text-muted);">Total Inquiries / Leads</div>
+            <div style="font-size:1.75rem; font-weight:700; font-family:'Outfit';" id="rep-leads-total">0</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.85rem; color:var(--text-muted);">Qualified & Converted (Won)</div>
+            <div style="font-size:1.75rem; font-weight:700; font-family:'Outfit'; color:var(--success);" id="rep-leads-won">0</div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom:1.5rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:600; margin-bottom:0.35rem;">
+            <span>Lead Conversion Rate</span>
+            <span id="rep-conversion-rate">0%</span>
+          </div>
+          <div style="height:12px; background:#f1f5f9; border-radius:10px; overflow:hidden;">
+            <div id="rep-conversion-bar" style="height:100%; width:0%; background: linear-gradient(135deg, var(--secondary-light), var(--secondary)); transition: width 0.6s ease;"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.50rem; font-size:0.85rem;">
+          <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:0.25rem;">
+            <span style="color:var(--text-muted);"><i class="fas fa-circle-question" style="margin-right:0.35rem;"></i>New/Uncontacted Inquiries</span>
+            <span id="rep-leads-new" style="font-weight:600;">0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:0.25rem;">
+            <span style="color:var(--text-muted);"><i class="fas fa-comments" style="margin-right:0.35rem;"></i>Active Discussions</span>
+            <span id="rep-leads-active" style="font-weight:600;">0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);"><i class="fas fa-ban" style="margin-right:0.35rem;"></i>Disqualified / Lost Leads</span>
+            <span id="rep-leads-lost" style="font-weight:600; color:var(--danger);">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expenditures Breakdown Category Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-pie-chart" style="color: var(--warning); margin-right: 0.5rem;"></i>Expense Outflow Breakdown</h3>
+      </div>
+      <div class="card-body">
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Distribution of expenditures across core categories:</div>
+        
+        <div id="rep-expense-distribution-list" style="display:flex; flex-direction:column; gap:1.25rem;">
+          <p style="text-align: center; color: var(--text-muted); padding: 1rem;">No expense transactions logged.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var rawCustomers = [];
+  var rawProjects = [];
+  var rawTasks = [];
+  var rawSiteVisits = [];
+  var rawMilestones = [];
+  var rawLeads = [];
+  var rawTransactions = [];
+  window.loadDashboardView = function(forceRefresh) {
+    showLoader(true);
+    // Check client-side cache first if not forceRefresh
+    if (!forceRefresh) {
+      var cached = cacheGet("dashboardData");
+      if (cached) {
+        rawCustomers = cached.customers || [];
+        rawProjects = cached.projects || [];
+        rawTasks = cached.tasks || [];
+        rawSiteVisits = cached.siteVisits || [];
+        rawMilestones = cached.milestones || [];
+        rawLeads = cached.leads || [];
+        rawTransactions = cached.transactions || [];
+        try {
+          populateDashboardFilters();
+          applyDashboardFilter();
+        } catch (e) {
+          showToast("Dashboard Render Error: " + e.message, "error");
+        }
+        showLoader(false);
+        return;
+      }
+    }
+
+    if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(result) {
+        if (result && result.success !== false) {
+          rawCustomers = result.customers || [];
+          rawProjects = result.projects || [];
+          rawTasks = result.tasks || [];
+          rawSiteVisits = result.siteVisits || [];
+          rawMilestones = result.milestones || [];
+          rawLeads = result.leads || [];
+          rawTransactions = result.transactions || [];
+          cacheSet("dashboardData", result);
+          try {
+            populateDashboardFilters();
+            applyDashboardFilter();
+          } catch (e) {
+            showToast("Dashboard Render Error: " + e.message, "error");
+          }
+          showLoader(false);
+        } else {
+          fetchLegacyDashboardData();
+        }
+      }).withFailureHandler(function(err) {
+        fetchLegacyDashboardData();
+      }).getDashboardData();
+    } else {
+      fetchLegacyDashboardData();
+    }
+  };
+
+  function fetchLegacyDashboardData() {
+    var loadedCount = 0;
+    var totalRequests = 7;
+    function checkCompletion() {
+      loadedCount++;
+      if (loadedCount === totalRequests) {
+        try {
+          populateDashboardFilters();
+          applyDashboardFilter();
+        } catch (e) {
+          showToast("Dashboard Render Error: " + e.message, "error");
+        }
+        showLoader(false);
+      }
+    }
+    google.script.run.withSuccessHandler(function(data) { rawCustomers = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getCustomers();
+    google.script.run.withSuccessHandler(function(data) { rawProjects = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getProjects();
+    google.script.run.withSuccessHandler(function(data) { rawTasks = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getTasks();
+    google.script.run.withSuccessHandler(function(data) { rawSiteVisits = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getSiteVisits();
+    google.script.run.withSuccessHandler(function(data) { rawMilestones = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getMilestones();
+    google.script.run.withSuccessHandler(function(data) { rawLeads = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getLeads();
+    google.script.run.withSuccessHandler(function(data) { rawTransactions = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getTransactions();
+  }
+  function populateDashboardFilters() {
+    var filter = document.getElementById("dash-project-filter");
+    if (!filter)
+      return;
+    var sortedProjects = rawProjects.slice().sort(function(a, b) {
+      return b.ProjectID.localeCompare(a.ProjectID);
+    });
+    filter.innerHTML = '<option value="">All Projects</option>' + sortedProjects.map(function(p) {
+      return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), " (").concat(p.ProjectID, ")</option>");
+    }).join("");
+  }
+  window.applyDashboardFilter = function() {
+    var selectedProjId = document.getElementById("dash-project-filter").value;
+    var filteredProjects = rawProjects;
+    var filteredTasks = rawTasks;
+    var filteredSiteVisits = rawSiteVisits;
+    var filteredCustomers = rawCustomers;
+    var filteredTransactions = rawTransactions;
+    if (selectedProjId) {
+      filteredProjects = rawProjects.filter(function(p) {
+        return p.ProjectID === selectedProjId;
+      });
+      filteredTasks = rawTasks.filter(function(t) {
+        return t.ProjectID === selectedProjId;
+      });
+      filteredSiteVisits = rawSiteVisits.filter(function(sv) {
+        return sv.ProjectID === selectedProjId;
+      });
+      filteredTransactions = rawTransactions.filter(function(t) {
+        return t.ProjectID === selectedProjId;
+      });
+      var custIds = filteredProjects.map(function(p) {
+        return p.CustomerID;
+      });
+      filteredCustomers = rawCustomers.filter(function(c) {
+        return custIds.indexOf(c.CustomerID) !== -1;
+      });
+    }
+    renderDashboardWidgets(filteredCustomers, filteredProjects, filteredTasks, filteredSiteVisits, rawMilestones, filteredTransactions);
+  };
+  function renderDashboardWidgets(customers, projects, tasks, siteVisits, milestones, transactions) {
+    var activeProjects = projects.filter(function(p) {
+      return p.Status !== "Completed" && p.Status !== "Cancelled";
+    });
+    document.getElementById("dash-active-projects").innerText = activeProjects.length;
+    document.getElementById("dash-total-customers").innerText = customers.length;
+    var pendingTasks = tasks.filter(function(t) {
+      return t.Status !== "Completed" && t.Status !== "Cancelled";
+    });
+    document.getElementById("dash-pending-tasks").innerText = pendingTasks.length;
+    document.getElementById("dash-site-visits").innerText = siteVisits.length;
+    var projectsTableBody = document.querySelector("#dash-projects-table tbody");
+    var activeProjectsSorted = activeProjects.slice().sort(function(a, b) {
+      return b.ProjectID.localeCompare(a.ProjectID);
+    });
+    if (activeProjectsSorted.length === 0) {
+      projectsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active projects.</td></tr>';
+    } else {
+      var recentActiveProjects = activeProjectsSorted.slice(0, 5);
+      projectsTableBody.innerHTML = recentActiveProjects.map(function(p) {
+        var dateStr = "Not set";
+        if (p.ExpectedCompletionDate) {
+          dateStr = formatDate(p.ExpectedCompletionDate);
+        }
+        var statusStr = p.Status || "Proposed";
+        var statusClass = statusStr.toLowerCase().replace(/\s+/g, "-");
+        var projMs = milestones.filter(function(m) {
+          return m.ProjectID === p.ProjectID;
+        });
+        var total = projMs.length;
+        var completed = projMs.filter(function(m) {
+          return m.Status === "Completed";
+        }).length;
+        var pct = total > 0 ? Math.round(completed / total * 100) : 0;
+        var progressBarHtml = '\n          <div style="display:flex; align-items:center; gap:0.5rem; width:120px;">\n            <div style="flex:1; height:8px; background:#e2e8f0; border-radius:10px; overflow:hidden; border: 1px solid var(--border-color);">\n              <div style="height:100%; width:'.concat(pct, "%; background:").concat(pct === 100 ? "var(--success)" : "var(--primary)", '; border-radius:10px;"></div>\n            </div>\n            <span style="font-size:0.7rem; font-weight:600; color:var(--text-main); min-width:24px; text-align:right;">').concat(pct, "%</span>\n          </div>\n        ");
+        return '\n          <tr>\n            <td style="font-weight: 600;">'.concat(escapeHtml(p.ProjectName), "</td>\n            <td>").concat(escapeHtml(p.ProjectType || "General"), "</td>\n            <td>").concat(dateStr, "</td>\n            <td>").concat(progressBarHtml, '</td>\n            <td><span class="badge badge-').concat(statusClass, '">').concat(escapeHtml(statusStr), "</span></td>\n          </tr>\n        ");
+      }).join("");
+    }
+    var tasksTableBody = document.querySelector("#dash-tasks-table tbody");
+    var urgentTasks = tasks.filter(function(t) {
+      return t.Priority === "High" && t.Status !== "Completed" && t.Status !== "Cancelled";
+    }).sort(function(a, b) {
+      return b.TaskID.localeCompare(a.TaskID);
+    }).slice(0, 5);
+    if (urgentTasks.length === 0) {
+      tasksTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No urgent high priority tasks.</td></tr>';
+    } else {
+      tasksTableBody.innerHTML = urgentTasks.map(function(t) {
+        var proj = rawProjects.find(function(p) {
+          return p.ProjectID === t.ProjectID;
+        });
+        var projName = proj ? proj.ProjectName : "Unknown Project";
+        var dueStr = "No date";
+        if (t.DueDate) {
+          dueStr = formatDate(t.DueDate);
+        }
+        return '\n          <tr>\n            <td style="font-weight: 600;">'.concat(escapeHtml(t.TaskName), "</td>\n            <td>").concat(escapeHtml(projName), "</td>\n            <td>").concat(dueStr, '</td>\n            <td><span class="badge priority-').concat(t.Priority.toLowerCase(), '">').concat(escapeHtml(t.Priority), "</span></td>\n          </tr>\n        ");
+      }).join("");
+    }
+    renderConversionFunnel();
+    renderExpenseBreakdown(transactions);
+  }
+  function renderConversionFunnel() {
+    var total = rawLeads.length;
+    var won = rawLeads.filter(function(l) {
+      return l.Status === "Won";
+    }).length;
+    var lost = rawLeads.filter(function(l) {
+      return l.Status === "Lost";
+    }).length;
+    var isNew = rawLeads.filter(function(l) {
+      return l.Status === "New";
+    }).length;
+    var active = total - (won + lost + isNew);
+    var rate = total > 0 ? Math.round(won / total * 100) : 0;
+    document.getElementById("rep-leads-total").innerText = total;
+    document.getElementById("rep-leads-won").innerText = won;
+    document.getElementById("rep-conversion-rate").innerText = rate + "%";
+    document.getElementById("rep-conversion-bar").style.width = rate + "%";
+    document.getElementById("rep-leads-new").innerText = isNew;
+    document.getElementById("rep-leads-active").innerText = active;
+    document.getElementById("rep-leads-lost").innerText = lost;
+  }
+  function renderExpenseBreakdown(transactions) {
+    var listContainer = document.getElementById("rep-expense-distribution-list");
+    if (!listContainer)
+      return;
+    var categories = {};
+    var grandTotalExpense = 0;
+    transactions.forEach(function(t) {
+      if (t.Type === "Expense") {
+        var amt = parseFloat(t.Amount) || 0;
+        var cat = t.Category || "Other";
+        categories[cat] = (categories[cat] || 0) + amt;
+        grandTotalExpense += amt;
+      }
+    });
+    if (grandTotalExpense === 0) {
+      listContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No expense records logged in the database yet.</p>';
+      return;
+    }
+    var fmt = function(val) {
+      return formatCurrency(val);
+    };
+    var sortedCats = Object.keys(categories).sort(function(a, b) {
+      return categories[b] - categories[a];
+    });
+    var catColors = {
+      "Material Purchase": "linear-gradient(135deg, #e11d48, #be123c)",
+      "Labor Wages": "linear-gradient(135deg, #d97706, #b45309)",
+      "Tools": "linear-gradient(135deg, #2563eb, #1d4ed8)",
+      "Rent": "linear-gradient(135deg, #7c3aed, #6d28d9)",
+      "Travel": "linear-gradient(135deg, #0d9488, #0f766e)",
+      "Other": "linear-gradient(135deg, #64748b, #475569)"
+    };
+    listContainer.innerHTML = sortedCats.map(function(cat) {
+      var amt = categories[cat];
+      var pct = Math.round(amt / grandTotalExpense * 100);
+      var bgStyle = catColors[cat] || "linear-gradient(135deg, var(--primary-light), var(--primary))";
+      return '\n        <div>\n          <div style="display:flex; justify-content:space-between; font-size:0.825rem; font-weight:600; margin-bottom:0.35rem;">\n            <span><i class="fas fa-tag" style="margin-right:0.35rem; color:var(--text-muted);"></i>'.concat(escapeHtml(cat), '</span>\n            <span style="color:var(--text-main); font-family:monospace;">').concat(fmt(amt), " (").concat(pct, '%)</span>\n          </div>\n          <div style="height:10px; background:#f1f5f9; border-radius:10px; overflow:hidden;">\n            <div style="height:100%; width:').concat(pct, "%; background:").concat(bgStyle, '; border-radius:10px; transition: width 0.6s ease-in-out;"></div>\n          </div>\n        </div>\n      ');
+    }).join("");
+  }
+})();
+
+</script>

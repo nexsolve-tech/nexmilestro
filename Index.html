@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>NexMilestro - Project & Operations Management</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Inject Core CSS Stylesheet -->
+  <?!= include('CSS'); ?>
+</head>
+<body>
+
+  <!-- ==================== MAIN SITE CONTAINER ==================== -->
+  <div class="app-container" id="app-container">
+    
+    <!-- Sidebar Mobile Backdrop -->
+    <div class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
+    
+    <!-- Left Navigation Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+          <div id="header-company-logo-wrapper" style="display: none; background: #ffffff !important; padding: 4px 8px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); align-items: center; justify-content: center; height: 32px;">
+            <img id="header-company-logo" style="max-height: 24px; max-width: 80px; object-fit: contain; display: block;" alt="Logo">
+          </div>
+          <i class="fas fa-cubes" id="header-default-brand-icon"></i> Nex<span>Milestro</span>
+        </div>
+      </div>
+      
+      <nav class="sidebar-menu">
+        <div class="menu-label">Main Console</div>
+        
+        <li class="menu-item" data-view="dashboard">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'dashboard')">
+            <i class="fas fa-chart-line"></i> Dashboard
+          </a>
+        </li>
+        
+        <li class="menu-item" data-view="customers">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'customers')">
+            <i class="fas fa-users"></i> Customers
+          </a>
+        </li>
+        
+        <li class="menu-item" data-view="projects">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'projects')">
+            <i class="fas fa-project-diagram"></i> Projects
+          </a>
+        </li>
+        
+        <li class="menu-item" data-view="sitevisits">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'sitevisits')">
+            <i class="fas fa-eye"></i> Site Visits
+          </a>
+        </li>
+        
+        <li class="menu-item" data-view="tasks">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'tasks')">
+            <i class="fas fa-check-square"></i> Tasks
+          </a>
+        </li>
+
+        <div class="menu-label" style="margin-top: 1.5rem;">Commercial & Finance</div>
+
+        <li class="menu-item" data-view="leads">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'leads')">
+            <i class="fas fa-bullseye"></i> Leads
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="proposals">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'proposals')">
+            <i class="fas fa-file-invoice-dollar"></i> Proposals
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="vendors">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'vendors')">
+            <i class="fas fa-truck"></i> Vendors
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="associates">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'associates')">
+            <i class="fas fa-handshake"></i> Associates
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="finance">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'finance')">
+            <i class="fas fa-wallet"></i> Finance Booking
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="reports">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'reports')">
+            <i class="fas fa-chart-bar"></i> Reports
+          </a>
+        </li>
+
+        <div class="menu-label" style="margin-top: 1.5rem;">Administration</div>
+        
+        <li class="menu-item" data-view="users">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'users')">
+            <i class="fas fa-user-shield"></i> Users & Access
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="company">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'company')">
+            <i class="fas fa-building"></i> Company Setup
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="masters">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'masters')">
+            <i class="fas fa-sliders-h"></i> Masters
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="help">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'help')">
+            <i class="fas fa-question-circle"></i> User Guide & Support
+          </a>
+        </li>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-profile-summary">
+          <div class="user-avatar" id="nav-user-avatar">A</div>
+          <div class="user-info-text">
+            <span class="user-name" id="nav-user-name">Loading...</span>
+            <span class="user-role" id="nav-user-role">Designer</span>
+          </div>
+        </div>
+        <button class="btn-logout" title="Log Out" onclick="handleLogout()">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <main class="app-main">
+      <header class="app-header">
+        <div class="header-left">
+          <button class="btn-sidebar-toggle" onclick="toggleSidebar(true)">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="header-title-container">
+            <h2 class="header-title" id="page-title">Dashboard</h2>
+            <span class="header-subtitle" id="page-subtitle">Project manager analytics overview</span>
+          </div>
+        </div>
+        
+        <div class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+          <div id="license-expiry-warning-badge" style="display: none; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700; border-radius: 50px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="license-expiry-warning-text">Renew within 30 days for uninterrupted services</span>
+            <a href="#" onclick="openUpgradeLicenseModal(); event.preventDefault();" style="color: #ef4444; text-decoration: underline; font-weight: 800; margin-left: 0.25rem;">Upgrade</a>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="header-refresh-btn" onclick="refreshCurrentView()" title="Force Refresh Current View" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; font-size: 0.85rem; font-weight: 600; border-radius: 50px; cursor: pointer; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
+            <i class="fas fa-sync-alt" id="header-refresh-icon" style="color: var(--primary);"></i> <span>Refresh</span>
+          </button>
+          <div class="user-profile-pill" id="user-profile-pill" style="display: none; align-items: center; gap: 0.5rem; background: var(--bg-secondary); padding: 0.35rem 0.75rem; border-radius: 50px; border: 1px solid var(--border-color); font-size: 0.85rem; font-weight: 600; color: var(--text-main);">
+            <i class="fas fa-user-circle" style="color: var(--primary); font-size: 1.1rem;"></i>
+            <span id="header-user-name">Guest</span>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Responsive Viewport Container -->
+      <div class="page-viewport" id="app-content">
+        <!-- SPA view is dynamically loaded here -->
+      </div>
+
+      <!-- Persistent Brand Footer Strip -->
+      <footer class="brand-footer-strip" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff; padding: 0.65rem 1.5rem; font-size: 0.8rem; display: flex; justify-content: center; align-items: center; border-top: 2px solid var(--primary); margin-top: auto; z-index: 10;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <i class="fas fa-certificate" style="color: #38bdf8;"></i>
+          <span>Powered by <strong>NexSolve Training & Consulting</strong></span>
+        </div>
+      </footer>
+    </main>
+    
+  </div>
+
+  <!-- ==================== LOGIN OVERLAY ==================== -->
+  <div class="login-overlay" id="login-overlay" style="display: none;">
+    <div class="login-card">
+      <div class="login-brand"><i class="fas fa-cubes"></i> Nex<span>Milestro</span></div>
+      <div class="login-title">Project Management Suite</div>
+      
+      <form id="login-form" onsubmit="handleLoginSubmit(event)">
+        <div class="login-form-group">
+          <label class="login-label">Email Address</label>
+          <input type="email" id="login-email" class="login-control" placeholder="admin@example.com" required>
+        </div>
+        
+        <div class="login-form-group" style="margin-top: 1rem;">
+          <label class="login-label">Password</label>
+          <input type="password" id="login-password" class="login-control" placeholder="••••••••" required>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 1rem 0; font-size: 0.8rem; color: var(--text-muted);">
+          <label style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-weight: 600; color: var(--text-main);">
+            <input type="checkbox" id="login-remember-me" checked style="accent-color: var(--primary);"> Remember Me
+          </label>
+          <a href="#" onclick="showForgotPassword(true); event.preventDefault();" style="color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+        </div>
+        
+        <button type="submit" class="btn-login-submit" style="width: 100%;">Access Account</button>
+      </form>
+
+      <!-- Forgot Password Section -->
+      <div id="forgot-password-section" style="display: none;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Enter your registered email address to receive a 6-digit OTP for resetting your password.
+        </div>
+        
+        <!-- Step 1: Request OTP -->
+        <form id="otp-request-form" onsubmit="handleSendOTP(event)">
+          <div class="login-form-group">
+            <label class="login-label">Registered Email Address</label>
+            <input type="email" id="forgot-email" class="login-control" placeholder="e.g. admin@example.com" required>
+          </div>
+          <button type="submit" class="btn-login-submit" style="width: 100%; margin-top: 1rem;">Send OTP Code</button>
+        </form>
+
+        <!-- Step 2: Verify & Reset -->
+        <form id="otp-verify-form" onsubmit="handleVerifyReset(event)" style="display: none; margin-top: 1.25rem;">
+          <div class="login-form-group">
+            <label class="login-label">Enter 6-Digit OTP</label>
+            <input type="text" id="forgot-otp" class="login-control" placeholder="e.g. 123456" required pattern="[0-9]{6}">
+          </div>
+          <div class="login-form-group" style="margin-top: 1rem;">
+            <label class="login-label">New Password</label>
+            <input type="password" id="forgot-new-password" class="login-control" placeholder="At least 6 characters" required minlength="6">
+          </div>
+          <div class="login-form-group" style="margin-top: 1rem;">
+            <label class="login-label">Confirm New Password</label>
+            <input type="password" id="forgot-confirm-password" class="login-control" placeholder="Confirm new password" required>
+          </div>
+          <button type="submit" class="btn-login-submit" style="width: 100%; margin-top: 1.25rem; background: var(--success);">Reset Password</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 1.25rem;">
+          <a href="#" onclick="showForgotPassword(false); event.preventDefault();" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Back to Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FORCE CHANGE PASSWORD MODAL ==================== -->
+  <div class="modal-overlay" id="password-reset-modal" style="z-index: 600; display: none;">
+    <div class="modal-container" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-lock" style="color: var(--warning); margin-right: 0.5rem;"></i>Reset Password</h3>
+      </div>
+      <form id="password-reset-form" onsubmit="handlePasswordResetSubmit(event)">
+        <div class="modal-body">
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Your administrator has required you to change your password before proceeding.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Current Password</label>
+            <input type="password" id="reset-current-password" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" id="reset-new-password" class="form-control" placeholder="At least 6 characters" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" id="reset-confirm-password" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Update and Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== WHATSAPP SHARE HELPER MODAL ==================== -->
+  <div class="modal-overlay" id="wa-share-modal" style="z-index: 700;">
+    <div class="modal-container" style="max-width: 540px;">
+      <div class="modal-header" style="background: rgba(37, 211, 102, 0.1); border-bottom: 1px solid rgba(37, 211, 102, 0.2);">
+        <h3 class="modal-title" style="color: #075e54; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+          <i class="fab fa-whatsapp" style="font-size: 1.4rem; color: #25D366;"></i> Send WhatsApp Message
+        </h3>
+        <button class="icon-btn" onclick="closeWAShareModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <label class="form-label" style="font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">Message Preview:</label>
+        <textarea id="wa-share-text-area" class="form-control" rows="7" style="font-family: inherit; font-size: 0.85rem; background: var(--bg-secondary); border: 1px solid var(--border-color); white-space: pre-wrap; margin-bottom: 0.85rem;"></textarea>
+
+        <!-- Recipient Info Banner -->
+        <div id="wa-recipient-info" style="font-size: 0.825rem; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+          <span><i class="fas fa-user-circle" style="color: var(--primary); margin-right: 0.35rem;"></i><strong id="wa-recipient-name">Recipient Contact</strong></span>
+          <span style="font-family: monospace; font-weight: 600; color: var(--success);" id="wa-recipient-phone">Auto-fetched</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <!-- Option 1: Send Personally -->
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="tel" id="wa-share-phone-input" class="form-control" placeholder="Mobile Number (Auto-fetched)" style="flex: 1;">
+            <button type="button" class="btn btn-primary" onclick="triggerWASendDirect()" style="background: #25D366; border-color: #25D366; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+              <i class="fab fa-whatsapp"></i> Send Personally
+            </button>
+          </div>
+
+          <!-- Option 2: Send in Group & Copy Text -->
+          <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
+            <button type="button" class="btn btn-secondary" id="wa-group-btn" onclick="triggerWAGroupSend()" style="flex: 1; background: #075e54; color: #fff; border-color: #075e54; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-weight: 600;">
+              <i class="fas fa-users"></i> Send to Project Group
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="copyWAMessageText()" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+              <i class="fas fa-copy"></i> Copy Text Only
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST & FEEDBACK UTILITIES ==================== -->
+  <div class="toast-container" id="toast-container"></div>
+  
+  <div class="global-loader" id="global-loader">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- ==================== UNIVERSAL CUSTOM CONFIRMATION MODAL ==================== -->
+  <div class="modal-overlay" id="custom-confirm-modal" style="z-index: 9999;">
+    <div class="modal-container" style="max-width: 440px; text-align: center; padding: 1.75rem 1.5rem; border-radius: var(--radius-lg); box-shadow: 0 20px 50px rgba(0,0,0,0.35);">
+      <div id="custom-confirm-icon-box" style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--primary); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--primary); font-size: 1.5rem;">
+        <i class="fas fa-question-circle" id="custom-confirm-icon"></i>
+      </div>
+      <h3 class="modal-title" id="custom-confirm-title" style="margin-bottom: 0.5rem; font-size: 1.15rem; font-weight: 700; justify-content: center;">Please Confirm</h3>
+      <p id="custom-confirm-msg" style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem;">Are you sure you want to proceed?</p>
+      <div style="display: flex; gap: 0.75rem; justify-content: center;">
+        <button type="button" class="btn btn-secondary" onclick="closeCustomConfirm()" style="padding: 0.55rem 1.25rem; font-weight: 600;">Cancel</button>
+        <button type="button" class="btn btn-primary" id="custom-confirm-btn" onclick="handleCustomConfirmAccept()" style="padding: 0.55rem 1.25rem; font-weight: 700;"><i class="fas fa-check"></i> Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SPA EMBEDDED TEMPLATE ENGINES ==================== -->
+  <script type="text/html" id="dashboard-view-template">
+    <?!= include('Dashboard'); ?>
+  </script>
+  
+  <script type="text/html" id="customers-view-template">
+    <?!= include('Customer1'); ?>
+  </script>
+  
+  <script type="text/html" id="projects-view-template">
+    <?!= include('Project1'); ?>
+  </script>
+  
+  <script type="text/html" id="sitevisits-view-template">
+    <?!= include('SiteVisits1'); ?>
+  </script>
+  
+  <script type="text/html" id="tasks-view-template">
+    <?!= include('Task1'); ?>
+  </script>
+  
+  <script type="text/html" id="users-view-template">
+    <?!= include('User1'); ?>
+  </script>
+
+  <script type="text/html" id="leads-view-template">
+    <?!= include('Lead1'); ?>
+  </script>
+
+  <script type="text/html" id="proposals-view-template">
+    <?!= include('Proposal1'); ?>
+  </script>
+
+  <script type="text/html" id="vendors-view-template">
+    <?!= include('Vendor1'); ?>
+  </script>
+
+  <script type="text/html" id="associates-view-template">
+    <?!= include('Associate1'); ?>
+  </script>
+
+  <script type="text/html" id="finance-view-template">
+    <?!= include('Finance1'); ?>
+  </script>
+
+  <script type="text/html" id="reports-view-template">
+    <?!= include('Report1'); ?>
+  </script>
+
+  <script type="text/html" id="company-view-template">
+    <?!= include('Company1'); ?>
+  </script>
+
+  <script type="text/html" id="masters-view-template">
+    <?!= include('Master1'); ?>
+  </script>
+
+  <script type="text/html" id="help-view-template">
+    <?!= include('Help1'); ?>
+  </script>
+
+  <!-- ==================== CLIENT-SIDE JAVASCRIPT LOGIC ==================== -->
+  <script>
+if (!window.google || !window.google.script || !window.google.script.run) {
+  window.google = window.google || {};
+  window.google.script = window.google.script || {};
+  window.google.script.run = new Proxy({}, {
+    get: function(target, prop) {
+      if (prop === 'withSuccessHandler') {
+        return function(successCb) {
+          return new Proxy({}, {
+            get: function(t, p) {
+              if (p === 'withFailureHandler') {
+                return function(failCb) {
+                  return new Proxy({}, {
+                    get: function(t2, fnName) {
+                      return function() {
+                        setTimeout(function() {
+                          if (fnName === 'authenticateUser') {
+                            successCb({ success: true, user: { FullName: 'Super Admin', RoleID: 'Super Admin', UserID: 'USR-1001', Email: 'admin@studiospace.com' } });
+                          } else if (fnName === 'getCompanySetup') {
+                            successCb({ CompanyID: 'CMP-001', CompanyName: 'StudioSpace Interiors', OfficialEmail: 'info@studiospace.com', ContactNumber: '9876543210', PANNumber: 'ABCDE1234F', GSTNumber: '27AAACS1234A1Z1', BankName: 'HDFC Bank', AccountNumber: '50200012345678', IFSCCode: 'HDFC0001234', Branch: 'MG Road' });
+                          } else {
+                            successCb({ success: true, message: 'Operation completed successfully.' });
+                          }
+                        }, 50);
+                      };
+                    }
+                  });
+                }
+              }
+              return function() {
+                setTimeout(function() {
+                  if (p === 'authenticateUser') {
+                    successCb({ success: true, user: { FullName: 'Super Admin', RoleID: 'Super Admin', UserID: 'USR-1001', Email: 'admin@studiospace.com' } });
+                  } else if (p === 'getCompanySetup') {
+                    successCb({ CompanyID: 'CMP-001', CompanyName: 'StudioSpace Interiors', OfficialEmail: 'info@studiospace.com', ContactNumber: '9876543210', PANNumber: 'ABCDE1234F', GSTNumber: '27AAACS1234A1Z1', BankName: 'HDFC Bank', AccountNumber: '50200012345678', IFSCCode: 'HDFC0001234', Branch: 'MG Road' });
+                  } else {
+                    successCb({ success: true, message: 'Operation completed successfully.' });
+                  }
+                }, 50);
+              };
+            }
+          });
+        };
+      }
+      return function() {};
+    }
+  });
+}
+if (typeof NodeList !== "undefined" && NodeList.prototype && !NodeList.prototype.forEach) {
+  NodeList.prototype.forEach = Array.prototype.forEach;
+}
+if (typeof HTMLCollection !== "undefined" && HTMLCollection.prototype && !HTMLCollection.prototype.forEach) {
+  HTMLCollection.prototype.forEach = Array.prototype.forEach;
+}
+window.onerror = function(message, source, lineno, colno, error) {
+  try {
+    showToast("JS Error: " + message + " (Line " + lineno + ")", "error");
+  } catch (e) {
+  }
+  return false;
+};
+
+/**
+ * ============================================================
+ * GLOBAL DATA CACHE — Performance Optimization
+ * Caches server data in-memory to avoid redundant google.script.run
+ * calls when switching between tabs. 5-minute TTL with write-through
+ * invalidation on save/delete operations.
+ * ============================================================
+ */
+window._dataCache = {};
+window._dataCacheTimestamps = {};
+var CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 Hours (Full Session Cache)
+
+/**
+ * Store data in cache with current timestamp
+ */
+function cacheSet(key, data) {
+  window._dataCache[key] = data;
+  window._dataCacheTimestamps[key] = Date.now();
+}
+window.cacheSet = cacheSet;
+
+/**
+ * Retrieve cached data if it exists and is within TTL
+ * @param {string} key - Cache key
+ * @param {number} [maxAgeMs] - Custom TTL override (default 5 min)
+ * @returns {*} Cached data or null if expired/missing
+ */
+function cacheGet(key, maxAgeMs) {
+  var ttl = maxAgeMs || CACHE_TTL_MS;
+  var ts = window._dataCacheTimestamps[key];
+  if (ts && (Date.now() - ts) < ttl && window._dataCache[key] !== undefined) {
+    return window._dataCache[key];
+  }
+  return null;
+}
+window.cacheGet = cacheGet;
+
+/**
+ * Invalidate ALL cached data across all modules whenever any write operation occurs
+ * This ensures newly added Leads, Customers, Projects, Vendors, Site Visits, etc.
+ * immediately reflect across all tabs, dropdowns, and modals app-wide.
+ * @param {string|string[]} [keys] - Optional keys (ignored, full cache wiped)
+ */
+function cacheClear(keys) {
+  window._dataCache = {};
+  window._dataCacheTimestamps = {};
+  if (typeof window.preloadAllAppData === "function") {
+    setTimeout(function() {
+      window.preloadAllAppData();
+    }, 100);
+  }
+}
+window.cacheClear = cacheClear;
+
+/**
+ * Invalidate ALL cached data (e.g., on logout or full refresh)
+ */
+function cacheClearAll() {
+  window._dataCache = {};
+  window._dataCacheTimestamps = {};
+}
+window.cacheClearAll = cacheClearAll;
+
+/**
+ * Populate all view caches simultaneously from a single master data object
+ */
+function populateAllCaches(data) {
+  if (!data || data.success === false) return;
+  
+  // Dashboard
+  cacheSet("dashboardData", {
+    customers: data.customers || [],
+    projects: data.projects || [],
+    tasks: data.tasks || [],
+    siteVisits: data.siteVisits || [],
+    milestones: data.milestones || [],
+    leads: data.leads || [],
+    transactions: data.transactions || []
+  });
+
+  // Projects View
+  cacheSet("projectsViewData", {
+    users: data.users || [],
+    customers: data.customers || [],
+    projects: data.projects || [],
+    dropdowns: data.dropdowns || {},
+    milestones: data.milestones || [],
+    associates: data.associates || [],
+    vendors: data.vendors || []
+  });
+
+  // Tasks View
+  cacheSet("tasksViewData", {
+    projects: data.projects || [],
+    users: data.users || [],
+    tasks: data.tasks || [],
+    dropdowns: data.dropdowns || {},
+    vendors: data.vendors || [],
+    associates: data.associates || []
+  });
+
+  // Site Visits View
+  cacheSet("siteVisitsViewData", {
+    customers: data.customers || [],
+    projects: data.projects || [],
+    leads: data.leads || [],
+    siteVisits: data.siteVisits || [],
+    users: data.users || [],
+    vendors: data.vendors || [],
+    associates: data.associates || []
+  });
+
+  // Leads View
+  cacheSet("leadsViewData", {
+    users: data.users || [],
+    leads: data.leads || [],
+    dropdowns: data.dropdowns || {}
+  });
+
+  // Proposals View
+  cacheSet("proposalsViewData", {
+    customers: data.customers || [],
+    leads: data.leads || [],
+    proposals: data.proposals || [],
+    dropdowns: data.dropdowns || {}
+  });
+
+  // Customers View
+  cacheSet("customersViewData", {
+    customers: data.customers || [],
+    users: data.users || [],
+    dropdowns: data.dropdowns || {}
+  });
+
+  // Vendors View
+  cacheSet("vendorsViewData", {
+    vendors: data.vendors || [],
+    dropdowns: data.dropdowns || {}
+  });
+}
+window.populateAllCaches = populateAllCaches;
+
+/**
+ * Preloads ALL application data on login so every single tab loads INSTANTLY on first click
+ */
+function preloadAllAppData(callback) {
+  if (google && google.script && google.script.run) {
+    google.script.run.withSuccessHandler(function(res) {
+      if (res && res.success !== false) {
+        populateAllCaches(res);
+      }
+      if (typeof callback === "function") callback();
+    }).withFailureHandler(function(err) {
+      if (typeof callback === "function") callback();
+    }).getAllAppData();
+  } else {
+    if (typeof callback === "function") callback();
+  }
+}
+window.preloadAllAppData = preloadAllAppData;
+
+function formatCurrency(val) {
+  try {
+    var num = parseFloat(val) || 0;
+    var parts = Math.round(num).toString().split(".");
+    var numStr = parts[0];
+    var lastThree = numStr.substring(numStr.length - 3);
+    var otherNumbers = numStr.substring(0, numStr.length - 3);
+    if (otherNumbers != "") {
+      lastThree = "," + lastThree;
+    }
+    var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+    if (parts.length > 1) {
+      res += "." + parts[1];
+    }
+    return "\u20B9" + res;
+  } catch (e) {
+    return "\u20B9" + (parseFloat(val) || 0).toString();
+  }
+}
+window.formatCurrency = formatCurrency;
+
+window.waShareModalData = { message: "", phone: "", groupLink: "", recipientName: "" };
+
+function openWAShareModal(messageText, phone, groupLink, recipientName) {
+  window.waShareModalData = {
+    message: messageText || "",
+    phone: phone || "",
+    groupLink: groupLink || "",
+    recipientName: recipientName || "Target Contact"
+  };
+
+  var txtArea = document.getElementById("wa-share-text-area");
+  var phoneInp = document.getElementById("wa-share-phone-input");
+  var groupBtn = document.getElementById("wa-group-btn");
+  var modal = document.getElementById("wa-share-modal");
+  var recName = document.getElementById("wa-recipient-name");
+  var recPhone = document.getElementById("wa-recipient-phone");
+
+  if (txtArea) txtArea.value = messageText || "";
+  var cleanPhone = phone ? String(phone).replace(/\D/g, "").slice(-10) : "";
+  if (phoneInp) phoneInp.value = cleanPhone;
+
+  if (recName) recName.innerText = recipientName || "Target Contact";
+  if (recPhone) recPhone.innerText = cleanPhone ? ("📱 " + cleanPhone) : "No phone saved";
+
+  if (groupBtn) {
+    if (groupLink && String(groupLink).trim() !== "") {
+      groupBtn.style.display = "inline-flex";
+      groupBtn.title = "Open Project WhatsApp Group & copy text";
+    } else {
+      groupBtn.style.display = "inline-flex";
+      groupBtn.title = "Copy message text & open WhatsApp Web/App";
+    }
+  }
+
+  if (modal) modal.classList.add("show");
+}
+window.openWAShareModal = openWAShareModal;
+
+function closeWAShareModal() {
+  var modal = document.getElementById("wa-share-modal");
+  if (modal) modal.classList.remove("show");
+}
+window.closeWAShareModal = closeWAShareModal;
+
+function showCustomConfirm(options) {
+  var modal = document.getElementById("custom-confirm-modal");
+  var titleEl = document.getElementById("custom-confirm-title");
+  var msgEl = document.getElementById("custom-confirm-msg");
+  var btnConfirm = document.getElementById("custom-confirm-btn");
+
+  if (!modal) return;
+
+  if (titleEl) titleEl.innerHTML = options.title || "Please Confirm";
+  if (msgEl) msgEl.innerHTML = options.message || "Are you sure you want to proceed?";
+  if (btnConfirm) {
+    btnConfirm.innerHTML = options.confirmText || '<i class="fas fa-check"></i> Confirm';
+    btnConfirm.className = "btn " + (options.confirmBtnClass || "btn-primary");
+  }
+  window.customConfirmCallback = options.onConfirm || null;
+  modal.classList.add("show");
+}
+window.showCustomConfirm = showCustomConfirm;
+
+function handleCustomConfirmAccept() {
+  closeCustomConfirm();
+  if (typeof window.customConfirmCallback === "function") {
+    var cb = window.customConfirmCallback;
+    window.customConfirmCallback = null;
+    cb();
+  }
+}
+window.handleCustomConfirmAccept = handleCustomConfirmAccept;
+
+function closeCustomConfirm() {
+  var modal = document.getElementById("custom-confirm-modal");
+  if (modal) modal.classList.remove("show");
+  window.customConfirmCallback = null;
+}
+window.closeCustomConfirm = closeCustomConfirm;
+
+function copyTextToClipboard(text) {
+  if (!text) return false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text);
+    }
+  } catch(e) {}
+  
+  var textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  textArea.style.top = "0";
+  textArea.style.left = "0";
+  textArea.style.opacity = "0";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  var successful = false;
+  try {
+    successful = document.execCommand('copy');
+  } catch (err) {
+    successful = false;
+  }
+  document.body.removeChild(textArea);
+  return successful;
+}
+window.copyTextToClipboard = copyTextToClipboard;
+
+function copyWAMessageText() {
+  var txtArea = document.getElementById("wa-share-text-area");
+  var text = txtArea ? txtArea.value : window.waShareModalData.message;
+  copyTextToClipboard(text);
+  showToast("Message text copied to clipboard! You can paste (Ctrl+V) anywhere.", "success");
+}
+window.copyWAMessageText = copyWAMessageText;
+
+function triggerWASendDirect() {
+  var txtArea = document.getElementById("wa-share-text-area");
+  var text = txtArea ? txtArea.value : window.waShareModalData.message;
+  var phoneInp = document.getElementById("wa-share-phone-input");
+  var phone = phoneInp ? phoneInp.value : window.waShareModalData.phone;
+
+  if (!phone || String(phone).trim() === "") {
+    showToast("Please enter a 10-digit mobile number for direct chat.", "warning");
+    return;
+  }
+
+  var cleanPhone = String(phone).replace(/\D/g, "");
+  if (cleanPhone.length === 10) {
+    cleanPhone = "91" + cleanPhone;
+  }
+
+  copyTextToClipboard(text);
+
+  var encodedMsg = encodeURIComponent(text || "");
+  var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+  // WhatsApp Web for PC/Browser, WhatsApp App for Mobile
+  var url = isMobile 
+    ? "https://wa.me/" + cleanPhone + "?text=" + encodedMsg
+    : "https://web.whatsapp.com/send?phone=" + cleanPhone + "&text=" + encodedMsg;
+
+  window.open(url, "_blank");
+  closeWAShareModal();
+}
+window.triggerWASendDirect = triggerWASendDirect;
+
+function triggerWAGroupSend() {
+  var txtArea = document.getElementById("wa-share-text-area");
+  var text = txtArea ? txtArea.value : window.waShareModalData.message;
+  var groupLink = window.waShareModalData.groupLink;
+
+  copyTextToClipboard(text);
+  showToast("Message text copied to clipboard! Press Ctrl+V (or Paste) in your WhatsApp Group chat.", "info");
+
+  var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+  if (groupLink && String(groupLink).trim() !== "") {
+    window.open(String(groupLink).trim(), "_blank");
+  } else {
+    // WhatsApp Web for PC/Browser, WhatsApp App for Mobile
+    var url = isMobile ? "https://wa.me" : "https://web.whatsapp.com";
+    window.open(url, "_blank");
+  }
+  closeWAShareModal();
+}
+window.triggerWAGroupSend = triggerWAGroupSend;
+
+/**
+ * Opens WhatsApp Share Modal pre-populated with phone.
+ */
+function sendWhatsAppToPhone(phone, messageText) {
+  openWAShareModal(messageText, phone, "");
+}
+window.sendWhatsAppToPhone = sendWhatsAppToPhone;
+
+/**
+ * Opens WhatsApp Share Modal pre-populated with Group Link.
+ */
+function sendWhatsAppToGroup(groupLink, messageText) {
+  openWAShareModal(messageText, "", groupLink);
+}
+window.sendWhatsAppToGroup = sendWhatsAppToGroup;
+var appRouter = {
+  currentView: "dashboard",
+  navigate: function(viewId) {
+    if (!isAuthenticated()) {
+      showLoginOverlay(true);
+      return;
+    }
+    var user = getSessionUser();
+    if (user.mustChangePassword === "Yes" || user.mustChangePassword === true) {
+      showPasswordResetModal(true);
+      return;
+    }
+    var isSuperAdmin = user.roleId === "Super Admin";
+    var isAdmin = isSuperAdmin || user.roleId === "Admin";
+    if (viewId === "company" && !isAdmin) {
+      showToast("Access Denied: Company Setup is restricted to Admin users only.", "error");
+      return;
+    }
+    var modKey = viewId.charAt(0).toUpperCase() + viewId.slice(1);
+    if (viewId === "sitevisits")
+      modKey = "SiteVisits";
+    var perms = user.permissions || {};
+    var perm = perms[modKey] || {};
+    var canView = isSuperAdmin || viewId === "dashboard" || perm.view === true;
+    if (!canView) {
+      showToast("Access Denied: You do not have permission to view the '" + modKey + "' section.", "error");
+      if (this.currentView && this.currentView !== viewId) {
+        document.querySelectorAll(".menu-item").forEach(function(el) {
+          return el.classList.remove("active");
+        });
+        var prevActive = document.querySelector('.menu-item[data-view="'.concat(this.currentView, '"]'));
+        if (prevActive)
+          prevActive.classList.add("active");
+        updateHeader(this.currentView);
+      }
+      return;
+    }
+    document.querySelectorAll(".menu-item").forEach(function(el) {
+      return el.classList.remove("active");
+    });
+    var activeMenuItem = document.querySelector('.menu-item[data-view="'.concat(viewId, '"]'));
+    if (activeMenuItem)
+      activeMenuItem.classList.add("active");
+    updateHeader(viewId);
+    var template = document.getElementById("".concat(viewId, "-view-template"));
+    if (template) {
+      document.getElementById("app-content").innerHTML = template.innerHTML;
+      var scripts = document.getElementById("app-content").querySelectorAll("script");
+      scripts.forEach(function(script) {
+        var newScript = document.createElement("script");
+        newScript.text = script.text || script.textContent;
+        document.body.appendChild(newScript).parentNode.removeChild(newScript);
+      });
+
+      var loaderHook = "load".concat(viewId.charAt(0).toUpperCase() + viewId.slice(1), "View");
+      if (viewId === "sitevisits") {
+        loaderHook = "loadSiteVisitsView";
+      }
+      if (viewId === "finance") {
+        loaderHook = "loadFinanceView";
+      }
+      if (viewId === "company") {
+        loaderHook = "loadCompanySetupView";
+      }
+      if (typeof window[loaderHook] === "function") {
+        window[loaderHook]();
+      }
+      this.currentView = viewId;
+    }
+    toggleSidebar(false);
+  }
+};
+
+function updateHeaderCompanyLogo(logoUrl) {
+  var logoImg = document.getElementById("header-company-logo");
+  var logoWrapper = document.getElementById("header-company-logo-wrapper");
+  var defaultIcon = document.getElementById("header-default-brand-icon");
+  if (logoImg) {
+    if (logoUrl && String(logoUrl).trim() !== "") {
+      logoImg.src = logoUrl;
+      logoImg.style.display = "block";
+      if (logoWrapper) logoWrapper.style.display = "inline-flex";
+      if (defaultIcon) defaultIcon.style.display = "none";
+    } else {
+      logoImg.style.display = "none";
+      if (logoWrapper) logoWrapper.style.display = "none";
+      if (defaultIcon) defaultIcon.style.display = "inline-block";
+    }
+  }
+}
+window.updateHeaderCompanyLogo = updateHeaderCompanyLogo;
+
+function initCompanyBranding() {
+  if (google.script && google.script.run) {
+    google.script.run.withSuccessHandler(function(data) {
+      if (data && data.LogoUrl) {
+        updateHeaderCompanyLogo(data.LogoUrl);
+      }
+    }).getCompanySetup();
+  }
+}
+
+function renderHeaderLicenseBadge(licenseData) {
+  if (!licenseData) return;
+  var days = licenseData.daysRemaining;
+  if (days === undefined || days === null || isNaN(days)) {
+    var exp = licenseData.expiryDate;
+    if (exp) {
+      try {
+        var str = String(exp).trim();
+        var parts = str.split(/[\/\-]/);
+        var expD = null;
+        if (parts.length === 3) {
+          var p1 = parseInt(parts[0], 10); // MM (Month 1-12)
+          var p2 = parseInt(parts[1], 10); // DD (Day 1-31)
+          var p3 = parseInt(parts[2], 10); // YYYY (Year 4 digits)
+          if (p3 > 1000) {
+            if (p1 > 12) {
+              // DD/MM/YYYY (e.g. 26/08/2026)
+              expD = new Date(p3, p2 - 1, p1);
+            } else {
+              // MM/DD/YYYY (e.g. 08/26/2026)
+              expD = new Date(p3, p1 - 1, p2);
+            }
+          } else if (p1 > 1000) {
+            // YYYY-MM-DD
+            expD = new Date(p1, p2 - 1, p3);
+          }
+        }
+        if (!expD || isNaN(expD.getTime())) expD = new Date(str);
+        if (expD && !isNaN(expD.getTime())) {
+          var today = new Date();
+          today.setHours(0,0,0,0);
+          days = Math.ceil((expD.getTime() - today.getTime()) / (1000*60*60*24));
+        }
+      } catch(e){}
+    }
+  }
+  var daysNum = parseInt(days, 10);
+  var badge = document.getElementById("license-expiry-warning-badge");
+  var textEl = document.getElementById("license-expiry-warning-text");
+  if (badge && textEl) {
+    if (!isNaN(daysNum) && daysNum <= 30) {
+      if (daysNum <= 0) {
+        textEl.innerText = "Renew immediately! License Expired";
+        badge.style.background = "rgba(239, 68, 68, 0.15)";
+        badge.style.borderColor = "rgba(239, 68, 68, 0.4)";
+        badge.style.color = "#ef4444";
+      } else {
+        textEl.innerText = "Renew within " + daysNum + " days for uninterrupted services";
+        if (daysNum <= 10) {
+          badge.style.background = "rgba(239, 68, 68, 0.15)";
+          badge.style.borderColor = "rgba(239, 68, 68, 0.4)";
+          badge.style.color = "#ef4444";
+        } else {
+          badge.style.background = "rgba(245, 158, 11, 0.15)";
+          badge.style.borderColor = "rgba(245, 158, 11, 0.4)";
+          badge.style.color = "#f59e0b";
+        }
+      }
+      badge.style.setProperty("display", "inline-flex", "important");
+    } else {
+      badge.style.setProperty("display", "none", "important");
+    }
+  }
+}
+
+function checkLicenseExpiryHeader(forceRefresh) {
+  var cachedStr = sessionStorage.getItem("pm_license_info");
+  if (!forceRefresh && cachedStr) {
+    try {
+      var cachedData = JSON.parse(cachedStr);
+      renderHeaderLicenseBadge(cachedData);
+      return;
+    } catch(e){}
+  }
+  if (google && google.script && google.script.run) {
+    google.script.run.withSuccessHandler(function(licenseData) {
+      if (licenseData) {
+        try { sessionStorage.setItem("pm_license_info", JSON.stringify(licenseData)); } catch(e){}
+        renderHeaderLicenseBadge(licenseData);
+      }
+    }).getLicenseSettings();
+  }
+}
+window.checkLicenseExpiryHeader = checkLicenseExpiryHeader;
+
+function openUpgradeLicenseModal() {
+  var modal = document.getElementById("upgrade-license-modal");
+  if (modal) {
+    modal.classList.add("show");
+  } else if (typeof window.appRouter !== "undefined") {
+    window.appRouter.navigate("users");
+    setTimeout(function() {
+      var m = document.getElementById("upgrade-license-modal");
+      if (m) m.classList.add("show");
+    }, 400);
+  }
+}
+window.openUpgradeLicenseModal = openUpgradeLicenseModal;
+
+document.addEventListener("DOMContentLoaded", function() {
+  if (isAuthenticated()) {
+    showLoginOverlay(false);
+    populateSidebarUserProfile();
+    applySidebarPermissions();
+    initCompanyBranding();
+    checkLicenseExpiryHeader();
+    appRouter.navigate("dashboard");
+    preloadAllAppData();
+  } else {
+    showLoginOverlay(true);
+  }
+});
+function navigateRoute(e, viewId) {
+  e.preventDefault();
+  appRouter.navigate(viewId);
+}
+function updateHeader(viewId) {
+  var pageTitle = document.getElementById("page-title");
+  var pageSubtitle = document.getElementById("page-subtitle");
+  var viewsMetaData = {
+    dashboard: { title: "Dashboard", sub: "Project manager analytics overview" },
+    customers: { title: "Customers", sub: "Manage client portfolios, contacts and info" },
+    projects: { title: "Projects", sub: "Track design blueprints, value budgets and stages" },
+    sitevisits: { title: "Site Visits", sub: "Inspect structural progress and log visits" },
+    tasks: { title: "Tasks & Timelines", sub: "Inspect board lanes and manage works" },
+    leads: { title: "Lead Management", sub: "Track client inquiries, prospects, and follow-ups" },
+    proposals: { title: "Proposals & Estimates", sub: "Record design proposals, quotes, and revisions" },
+    vendors: { title: "Vendor & Contractor Directory", sub: "Manage supply lines, tradespeople, and contractors" },
+    associates: { title: "Associates Directory", sub: "Manage project partners, external specialists, and independent associates" },
+    finance: { title: "Finance & Accounts", sub: "Record client payments, purchase expenses, and cashflow" },
+    reports: { title: "Analytics & Reports", sub: "Evaluate project margins, category expenses, and sales conversions" },
+    users: { title: "Users & Staff", sub: "Manage administration access lists" },
+    masters: { title: "Masters Configuration", sub: "Configure categories and dropdown lists for all modules" },
+    help: { title: "User Guide & Support", sub: "Comprehensive feature documentation and step-by-step instructions" }
+  };
+  var meta = viewsMetaData[viewId] || { title: "Management Suite", sub: "System Console" };
+  pageTitle.innerText = meta.title;
+  pageSubtitle.innerText = meta.sub;
+  checkLicenseExpiryHeader();
+}
+function toggleSidebar(open) {
+  var container = document.getElementById("app-container");
+  if (open) {
+    container.classList.add("sidebar-open");
+  } else {
+    container.classList.remove("sidebar-open");
+  }
+}
+function isAuthenticated() {
+  var user = localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user");
+  return user !== null;
+}
+function getSessionUser() {
+  return JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+}
+function showLoginOverlay(show) {
+  var overlay = document.getElementById("login-overlay");
+  overlay.style.display = show ? "flex" : "none";
+}
+function showPasswordResetModal(show) {
+  var modal = document.getElementById("password-reset-modal");
+  if (show) {
+    modal.classList.add("show");
+  } else {
+    modal.classList.remove("show");
+  }
+}
+function populateSidebarUserProfile() {
+  var user = getSessionUser();
+  var pill = document.getElementById("user-profile-pill");
+  var nameEl = document.getElementById("header-user-name");
+  if (user.fullName) {
+    document.getElementById("nav-user-name").innerText = user.fullName;
+    document.getElementById("nav-user-role").innerText = user.roleId || "Staff";
+    document.getElementById("nav-user-avatar").innerText = user.fullName.charAt(0).toUpperCase();
+    if (nameEl)
+      nameEl.innerText = user.fullName;
+    if (pill) {
+      pill.style.display = "flex";
+    }
+  } else {
+    if (pill) {
+      pill.style.display = "none";
+    }
+  }
+}
+function applySidebarPermissions() {
+  var user = getSessionUser();
+  if (!user || !user.roleId)
+    return;
+  var isSuperAdmin = user.roleId === "Super Admin";
+  var menuItems = document.querySelectorAll(".sidebar-menu .menu-item");
+  menuItems.forEach(function(item) {
+    var viewId = item.getAttribute("data-view");
+    if (!viewId)
+      return;
+    if (viewId === "dashboard") {
+      item.style.display = "block";
+      return;
+    }
+    if (viewId === "company") {
+      var isAdmin = isSuperAdmin || user.roleId === "Admin";
+      item.style.display = isAdmin ? "block" : "none";
+      return;
+    }
+    var modKey = viewId.charAt(0).toUpperCase() + viewId.slice(1);
+    if (viewId === "sitevisits")
+      modKey = "SiteVisits";
+    var perms = user.permissions || {};
+    var perm = perms[modKey] || {};
+    var canView = isSuperAdmin || perm.view === true;
+    if (canView) {
+      item.style.display = "block";
+    } else {
+      item.style.display = "none";
+    }
+  });
+}
+function handleLogout() {
+  localStorage.removeItem("pm_user");
+  sessionStorage.removeItem("pm_user");
+  sessionStorage.removeItem("pm_license_info");
+  if (typeof cacheClearAll === "function") cacheClearAll();
+  var badge = document.getElementById("license-expiry-warning-badge");
+  if (badge) badge.style.setProperty("display", "none", "important");
+  populateSidebarUserProfile();
+  showLoginOverlay(true);
+  showToast("Logged out successfully.", "info");
+}
+function handleLoginSubmit(e) {
+  e.preventDefault();
+  var email = document.getElementById("login-email").value;
+  var pass = document.getElementById("login-password").value;
+  var remember = document.getElementById("login-remember-me").checked;
+  showLoader(true);
+  google.script.run.withSuccessHandler(function(response) {
+    showLoader(false);
+    if (response.success) {
+      if (remember) {
+        localStorage.setItem("pm_user", JSON.stringify(response));
+        sessionStorage.removeItem("pm_user");
+      } else {
+        sessionStorage.setItem("pm_user", JSON.stringify(response));
+        localStorage.removeItem("pm_user");
+      }
+      sessionStorage.removeItem("pm_license_info");
+      showLoginOverlay(false);
+      populateSidebarUserProfile();
+      applySidebarPermissions();
+      checkLicenseExpiryHeader(true);
+      if (response.mustChangePassword === "Yes" || response.mustChangePassword === true) {
+        showPasswordResetModal(true);
+      } else {
+        appRouter.navigate("dashboard");
+        showToast("Welcome back, " + response.fullName + "!", "success");
+        preloadAllAppData();
+      }
+    } else {
+      showToast(response.message, "error");
+    }
+  }).withFailureHandler(function(err) {
+    showLoader(false);
+    showToast(err.message, "error");
+  }).authenticateUser(email, pass);
+}
+function handlePasswordResetSubmit(e) {
+  e.preventDefault();
+  var current = document.getElementById("reset-current-password").value;
+  var newPass = document.getElementById("reset-new-password").value;
+  var confirmPass = document.getElementById("reset-confirm-password").value;
+  if (newPass !== confirmPass) {
+    showToast("New passwords do not match.", "error");
+    return;
+  }
+  var user = getSessionUser();
+  showLoader(true);
+  google.script.run.withSuccessHandler(function(response) {
+    showLoader(false);
+    if (response.success) {
+      user.mustChangePassword = "No";
+      if (localStorage.getItem("pm_user")) {
+        localStorage.setItem("pm_user", JSON.stringify(user));
+      } else {
+        sessionStorage.setItem("pm_user", JSON.stringify(user));
+      }
+      showPasswordResetModal(false);
+      populateSidebarUserProfile();
+      applySidebarPermissions();
+      appRouter.navigate("dashboard");
+      showToast("Password updated successfully. Access granted.", "success");
+    } else {
+      showToast(response.message, "error");
+    }
+  }).withFailureHandler(function(err) {
+    showLoader(false);
+    showToast(err.message, "error");
+  }).changePassword(user.userId, current, newPass);
+}
+function showToast(message, type) {
+  if (type === void 0) {
+    type = "info";
+  }
+  var container = document.getElementById("toast-container");
+  var toast = document.createElement("div");
+  toast.className = "toast-alert toast-".concat(type);
+  var icon = "fa-info-circle";
+  if (type === "success")
+    icon = "fa-check-circle";
+  if (type === "error")
+    icon = "fa-exclamation-triangle";
+  toast.innerHTML = '\n        <i class="fas '.concat(icon, '"></i>\n        <div style="flex-grow:1; font-size:0.85rem; font-weight:500;">').concat(escapeHtml(message), "</div>\n      ");
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(50px)";
+    setTimeout(function() {
+      return toast.remove();
+    }, 300);
+  }, 4e3);
+}
+function showLoader(show) {
+  var loader = document.getElementById("global-loader");
+  if (show) {
+    loader.classList.add("show");
+  } else {
+    loader.classList.remove("show");
+  }
+}
+function escapeHtml(unsafe) {
+  if (!unsafe)
+    return "";
+  return String(unsafe).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+function formatDate(dateVal) {
+  if (!dateVal)
+    return "-";
+  var date = new Date(dateVal);
+  if (isNaN(date.getTime()))
+    return String(dateVal);
+  var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var day = String(date.getDate()).padStart(2, "0");
+  var month = months[date.getMonth()];
+  var year = date.getFullYear();
+  return "".concat(day, "-").concat(month, "-").concat(year);
+}
+function parseRawDateString(dateVal) {
+  if (!dateVal)
+    return "";
+  var date = new Date(dateVal);
+  if (isNaN(date.getTime()))
+    return "";
+  return date.toISOString().substring(0, 10);
+}
+function refreshCurrentView() {
+  var icon = document.getElementById("header-refresh-icon");
+  if (icon) {
+    icon.classList.add("fa-spin");
+    setTimeout(function() {
+      if (icon) icon.classList.remove("fa-spin");
+    }, 1000);
+  }
+  var currentView = appRouter.currentView || "dashboard";
+  showToast("Refreshing " + currentView.toUpperCase() + "...", "info");
+  if (typeof cacheClearAll === "function") cacheClearAll();
+  checkLicenseExpiryHeader(true);
+  appRouter.navigate(currentView);
+}
+window.refreshCurrentView = refreshCurrentView;
+
+function showForgotPassword(show) {
+  var loginForm = document.getElementById("login-form");
+  var forgotSection = document.getElementById("forgot-password-section");
+  var requestForm = document.getElementById("otp-request-form");
+  var verifyForm = document.getElementById("otp-verify-form");
+  if (show) {
+    loginForm.style.display = "none";
+    forgotSection.style.display = "block";
+    requestForm.style.display = "block";
+    verifyForm.style.display = "none";
+    var emailInput = document.getElementById("forgot-email");
+    if (emailInput) emailInput.value = "";
+    document.getElementById("forgot-otp").value = "";
+    document.getElementById("forgot-new-password").value = "";
+    document.getElementById("forgot-confirm-password").value = "";
+  } else {
+    loginForm.style.display = "block";
+    forgotSection.style.display = "none";
+  }
+}
+function handleSendOTP(e) {
+  e.preventDefault();
+  var email = document.getElementById("forgot-email").value.trim();
+  if (!email) {
+    showToast("Please enter your email address.", "error");
+    return;
+  }
+  showLoader(true);
+
+  var handleRes = function(response) {
+    showLoader(false);
+    if (response && response.success) {
+      showToast(response.message, "success");
+      document.getElementById("otp-request-form").style.display = "none";
+      document.getElementById("otp-verify-form").style.display = "block";
+      if (response.message.indexOf("Simulation:") !== -1 || response.message.indexOf("generated:") !== -1) {
+        var otpMatch = response.message.match(/OTP is (\d+)|generated: (\d+)/);
+        if (otpMatch) {
+          document.getElementById("forgot-otp").value = otpMatch[1] || otpMatch[2];
+        }
+      }
+    } else {
+      showToast(response ? response.message : "Failed to send OTP", "error");
+    }
+  };
+
+  var handleErr = function(err) {
+    showLoader(false);
+    showToast(err.message, "error");
+  };
+
+  if (google.script && google.script.run) {
+    google.script.run.withSuccessHandler(handleRes).withFailureHandler(handleErr).sendPasswordResetOTP(email);
+  }
+}
+function handleVerifyReset(e) {
+  e.preventDefault();
+  var email = document.getElementById("forgot-email").value.trim();
+  var otp = document.getElementById("forgot-otp").value.trim();
+  var newPass = document.getElementById("forgot-new-password").value;
+  var confirmPass = document.getElementById("forgot-confirm-password").value;
+  if (newPass !== confirmPass) {
+    showToast("New passwords do not match.", "error");
+    return;
+  }
+  showLoader(true);
+  google.script.run.withSuccessHandler(function(response) {
+    showLoader(false);
+    if (response.success) {
+      showToast(response.message, "success");
+      showForgotPassword(false);
+    } else {
+      showToast(response.message, "error");
+    }
+  }).withFailureHandler(function(err) {
+    showLoader(false);
+    showToast(err.message, "error");
+  }).verifyOTPAndResetPassword(email, otp, newPass);
+}
+
+</script>
+
+<script type="text/html" id="masters-view-template">
+    <?!= include('Master1'); ?>
+  </script>
+
+  <!-- Include FinanceJS globally so all functions register on page load -->
+  <?!= include('FinanceJS'); ?>
+
+  <!-- ==================== CLIENT-SIDE JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // ... all your existing router & utility JS code from Index.html ...
+  </script>
+
+</body>
+</html>

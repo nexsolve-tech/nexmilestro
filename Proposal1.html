@@ -1,0 +1,699 @@
+<!-- Proposal1.html -->
+<div class="view-container">
+  <!-- Action Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="prop-search-input" class="search-input" placeholder="Search proposals by project description..." oninput="filterProposalsTable()">
+    </div>
+    
+    <div class="filter-group">
+      <select id="filter-prop-customer" class="select-filter" style="max-width: 180px;" onchange="filterProposalsTable()">
+        <option value="">All Clients</option>
+      </select>
+
+      <select id="filter-prop-status" class="select-filter" onchange="filterProposalsTable()">
+        <option value="">All Statuses</option>
+        <option value="Draft">Draft</option>
+        <option value="Sent">Sent</option>
+        <option value="Revised">Revised</option>
+        <option value="Accepted">Accepted</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+      
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary" id="btn-add-proposal" onclick="openProposalModal()"><i class="fas fa-plus"></i> Record Proposal</button>
+    </div>
+  </div>
+
+  <!-- Proposals Data Table -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none;">
+        <table class="data-table" id="proposals-table">
+          <thead>
+            <tr>
+              <th>Proposal ID</th>
+              <th>Client / Prospect</th>
+              <th>Project / Description</th>
+              <th>Proposal Date</th>
+              <th>Amount</th>
+              <th>Validity</th>
+              <th>Follow-up</th>
+              <th>Status</th>
+              <th>Attachments</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading proposals...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Proposal Modal -->
+<div class="modal-overlay" id="proposal-modal">
+  <div class="modal-container" style="max-width: 660px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="prop-modal-title">Record Proposal</h3>
+      <button class="icon-btn" onclick="closeProposalModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="proposal-form" onsubmit="handleProposalSubmit(event)">
+      <input type="hidden" id="prop-id-field" name="ProposalID">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Record Proposal For *</label>
+            <div style="display: flex; gap: 1.5rem; margin-top: 0.25rem; align-items: center;">
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-main);">
+                <input type="radio" id="prop-link-customer" name="PropLinkType" value="Customer" checked onchange="handleProposalLinkTypeChange()" style="width: auto; cursor: pointer;">
+                <i class="fas fa-user-tie" style="color: var(--primary);"></i> Existing Client
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-main);">
+                <input type="radio" id="prop-link-lead" name="PropLinkType" value="Lead" onchange="handleProposalLinkTypeChange()" style="width: auto; cursor: pointer;">
+                <i class="fas fa-bullseye" style="color: #0284c7;"></i> Lead / Prospect
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="prop-customer-group">
+            <label class="form-label">Select Client *</label>
+            <select id="prop-customer-select" name="CustomerID" class="form-control" required>
+              <option value="">Select Client</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="prop-lead-group" style="display: none;">
+            <label class="form-label">Select Lead / Prospect *</label>
+            <select id="prop-lead-select" name="LeadID" class="form-control">
+              <option value="">Select Lead</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Proposal Amount (Estimate) *</label>
+            <input type="number" id="prop-amount-field" name="Amount" class="form-control" placeholder="e.g. 250000" min="0" required>
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Project Name / Brief Description *</label>
+            <input type="text" id="prop-name-field" name="ProjectName" class="form-control" placeholder="e.g. Sharma Villa Master Bedroom decor" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Proposal Date *</label>
+            <input type="date" id="prop-date-field" name="ProposalDate" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Validity Expiry Date *</label>
+            <input type="date" id="prop-validity-field" name="ValidityDate" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Follow-up Schedule Date</label>
+            <input type="date" id="prop-followup-field" name="FollowUpDate" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="prop-status-select" name="Status" class="form-control" required>
+              <option value="Draft">Draft</option>
+              <option value="Sent">Sent</option>
+              <option value="Revised">Revised</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Scope of Work Summary</label>
+            <textarea id="prop-scope-field" name="ScopeOfWork" class="form-control" placeholder="Describe materials, lighting plans, electrical layouts, dimensions included..."></textarea>
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Remarks / Follow-up Notes</label>
+            <textarea id="prop-remarks-field" name="Remarks" class="form-control" placeholder="Note down client reactions, modifications requested..."></textarea>
+          </div>
+
+          <input type="hidden" id="prop-attachments-hidden" name="Attachments">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Add Attachments / Proposal Documents</label>
+            <input type="file" id="prop-attachment" class="form-control" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Choose one or more files to upload directly to Google Drive. Leave empty to keep existing attachments if editing.</small>
+            <div id="prop-current-attachments-container" style="margin-top: 0.5rem; display: none;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">Current Attachments:</span>
+              <div id="prop-current-attachments-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeProposalModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Proposal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  var proposalsDataList = [];
+  var clientsCacheList = [];
+  var leadsCacheList = [];
+  var dropdownsCache = {};
+
+  window.handleProposalLinkTypeChange = function() {
+    var isLead = document.getElementById("prop-link-lead") ? document.getElementById("prop-link-lead").checked : false;
+    var custGroup = document.getElementById("prop-customer-group");
+    var leadGroup = document.getElementById("prop-lead-group");
+    var custSelect = document.getElementById("prop-customer-select");
+    var leadSelect = document.getElementById("prop-lead-select");
+
+    if (isLead) {
+      if (custGroup) custGroup.style.display = "none";
+      if (leadGroup) leadGroup.style.display = "block";
+      if (custSelect) { custSelect.removeAttribute("required"); custSelect.value = ""; }
+      if (leadSelect) { leadSelect.setAttribute("required", "required"); }
+    } else {
+      if (custGroup) custGroup.style.display = "block";
+      if (leadGroup) leadGroup.style.display = "none";
+      if (leadSelect) { leadSelect.removeAttribute("required"); leadSelect.value = ""; }
+      if (custSelect) { custSelect.setAttribute("required", "required"); }
+    }
+  };
+
+  window.loadProposalsView = function(forceRefresh) {
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var proposalPerm = perms["Proposals"] || {};
+    var canAdd = isSuperAdmin || proposalPerm.add === true;
+    var addBtn = document.getElementById("btn-add-proposal");
+    if (addBtn)
+      addBtn.style.display = canAdd ? "inline-block" : "none";
+
+    var loadedCount = 0;
+    var totalCalls = 1;
+    function checkCompletion() {
+      loadedCount++;
+      if (loadedCount === totalCalls) {
+        populateDropdownsFromCache();
+        populateClientFilters();
+        renderProposals(proposalsDataList);
+        showLoader(false);
+      }
+    }
+
+    function applyProposalsData(result) {
+      clientsCacheList = result.customers || [];
+      var select = document.getElementById("prop-customer-select");
+      if (select) {
+        select.innerHTML = '<option value="">Select Client</option>' + clientsCacheList.filter(function(c) {
+          return c.Status === "Active";
+        }).map(function(c) {
+          return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), "</option>");
+        }).join("");
+      }
+
+      leadsCacheList = result.leads || [];
+      window.leadsCacheList = result.leads || [];
+      var leadSelect = document.getElementById("prop-lead-select");
+      if (leadSelect) {
+        leadSelect.innerHTML = '<option value="">Select Lead</option>' + leadsCacheList.filter(function(l) {
+          return l.LeadStatus !== "Lost";
+        }).map(function(l) {
+          var name = l.CustomerName || l.LeadName || l.LeadID;
+          return '<option value="'.concat(l.LeadID, '">').concat(escapeHtml(name), " (").concat(l.LeadID, ")</option>");
+        }).join("");
+      }
+
+      proposalsDataList = result.proposals || [];
+      dropdownsCache = result.dropdowns || {};
+      checkCompletion();
+    }
+
+    // Check global cache first if not forceRefresh
+    if (!forceRefresh) {
+      var cached = cacheGet("proposalsViewData");
+      if (cached) {
+        applyProposalsData(cached);
+        return;
+      }
+    }
+
+    if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(result) {
+        if (result && result.success !== false) {
+          cacheSet("proposalsViewData", result);
+          applyProposalsData(result);
+        } else {
+          fetchLegacyProposalsData();
+        }
+      }).withFailureHandler(function(err) {
+        fetchLegacyProposalsData();
+      }).getProposalsViewData();
+    } else {
+      fetchLegacyProposalsData();
+    }
+  };
+
+  function fetchLegacyProposalsData() {
+    var loadedCount = 0;
+    var totalCalls = 4;
+    function checkLegacyCompletion() {
+      loadedCount++;
+      if (loadedCount === totalCalls) {
+        populateDropdownsFromCache();
+        populateClientFilters();
+        renderProposals(proposalsDataList);
+        showLoader(false);
+      }
+    }
+    google.script.run.withSuccessHandler(function(data) {
+      clientsCacheList = data || [];
+      var select = document.getElementById("prop-customer-select");
+      if (select) {
+        select.innerHTML = '<option value="">Select Client</option>' + clientsCacheList.filter(function(c) {
+          return c.Status === "Active";
+        }).map(function(c) {
+          return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), "</option>");
+        }).join("");
+      }
+      checkLegacyCompletion();
+    }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getCustomers();
+    google.script.run.withSuccessHandler(function(data) {
+      leadsCacheList = data || [];
+      window.leadsCacheList = data || [];
+      var leadSelect = document.getElementById("prop-lead-select");
+      if (leadSelect) {
+        leadSelect.innerHTML = '<option value="">Select Lead</option>' + leadsCacheList.filter(function(l) {
+          return l.LeadStatus !== "Lost";
+        }).map(function(l) {
+          var name = l.CustomerName || l.LeadName || l.LeadID;
+          return '<option value="'.concat(l.LeadID, '">').concat(escapeHtml(name), " (").concat(l.LeadID, ")</option>");
+        }).join("");
+      }
+      checkLegacyCompletion();
+    }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getLeads();
+    google.script.run.withSuccessHandler(function(data) { proposalsDataList = data || []; checkLegacyCompletion(); }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getProposals();
+    google.script.run.withSuccessHandler(function(data) { dropdownsCache = data || {}; checkLegacyCompletion(); }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getDropdownValues();
+  }
+
+  function populateDropdownsFromCache() {
+    var statuses = dropdownsCache["ProposalStatus"] || [];
+    var statusSelect = document.getElementById("prop-status-select");
+    if (statusSelect) {
+      statusSelect.innerHTML = statuses.map(function(s) {
+        return '<option value="'.concat(s, '">').concat(escapeHtml(s), "</option>");
+      }).join("");
+    }
+    var statusFilter = document.getElementById("filter-prop-status");
+    if (statusFilter) {
+      statusFilter.innerHTML = '<option value="">All Statuses</option>' + statuses.map(function(s) {
+        return '<option value="'.concat(s, '">').concat(escapeHtml(s), "</option>");
+      }).join("");
+    }
+  }
+
+  function populateClientFilters() {
+    var filterSelect = document.getElementById("filter-prop-customer");
+    if (!filterSelect) return;
+    var html = '<option value="">All Clients & Leads</option>';
+    if (clientsCacheList.length > 0) {
+      html += '<optgroup label="Existing Clients">';
+      html += clientsCacheList.map(function(c) {
+        return '<option value="CUST:'.concat(c.CustomerID, '">&#128100; ').concat(escapeHtml(c.CustomerName), '</option>');
+      }).join("");
+      html += '</optgroup>';
+    }
+    if (leadsCacheList.length > 0) {
+      html += '<optgroup label="Leads / Prospects">';
+      html += leadsCacheList.map(function(l) {
+        var name = l.CustomerName || l.LeadName || l.LeadID;
+        return '<option value="LEAD:'.concat(l.LeadID, '">&#127919; ').concat(escapeHtml(name), " (").concat(l.LeadID, ')</option>');
+      }).join("");
+      html += '</optgroup>';
+    }
+    filterSelect.innerHTML = html;
+  }
+
+  function renderProposals(proposals) {
+    var tbody = document.querySelector("#proposals-table tbody");
+    if (!tbody) return;
+    if (proposals.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-file-invoice-dollar empty-state-icon"></i>\n          <p class="empty-state-title">No proposals recorded</p>\n          <p class="empty-state-desc">Record architectural quotes and designer proposals.</p>\n        </div>\n      </td></tr>';
+      return;
+    }
+    var sorted = proposals.slice().sort(function(a, b) {
+      var idA = String(a.ProposalID || "");
+      var idB = String(b.ProposalID || "");
+      return idB.localeCompare(idA);
+    });
+    tbody.innerHTML = sorted.map(function(prop) {
+      var clientHtml = "-";
+      if (prop.CustomerID) {
+        var client = clientsCacheList.find(function(c) { return c.CustomerID === prop.CustomerID; });
+        var clientName = client ? client.CustomerName : ("Client ID: " + prop.CustomerID);
+        clientHtml = '<i class="fas fa-user-tie" style="color: var(--primary); margin-right: 0.35rem;"></i>' + escapeHtml(clientName);
+      } else if (prop.LeadID) {
+        var lead = leadsCacheList.find(function(l) { return l.LeadID === prop.LeadID; });
+        var leadName = lead ? (lead.CustomerName || lead.LeadName || lead.LeadID) : ("Lead ID: " + prop.LeadID);
+        clientHtml = '<i class="fas fa-bullseye" style="color: #0284c7; margin-right: 0.35rem;"></i>' + escapeHtml(leadName) + ' <span style="font-size:0.75rem; color:var(--text-muted); font-weight: 500;">(Lead)</span>';
+      }
+
+      var amountFormatted = formatCurrency(prop.Amount || 0);
+      var propDate = prop.ProposalDate ? formatDate(prop.ProposalDate) : "-";
+      var validityDate = prop.ValidityDate ? formatDate(prop.ValidityDate) : "-";
+      var followupDate = prop.FollowUpDate ? formatDate(prop.FollowUpDate) : "-";
+      var badgeClass = "badge-pending";
+      if (prop.Status === "Accepted")
+        badgeClass = "badge-completed";
+      if (prop.Status === "Rejected")
+        badgeClass = "badge-inactive";
+      if (prop.Status === "Sent")
+        badgeClass = "badge-on-hold";
+
+      var attHtml = "-";
+      if (prop.Attachments) {
+        var attUrls = String(prop.Attachments).split(",").map(function(u){ return u.trim(); }).filter(function(u){ return u !== ""; });
+        if (attUrls.length > 0) {
+          attHtml = attUrls.map(function(url, idx) {
+            return '<a href="' + escapeHtml(url) + '" target="_blank" class="badge badge-completed" style="text-decoration: none; font-size: 0.75rem;" title="View attachment"><i class="fas fa-paperclip"></i> Doc ' + (idx + 1) + '</a>';
+          }).join(" ");
+        }
+      }
+
+      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      var isSuperAdmin = currentUser.roleId === "Super Admin";
+      var perms = currentUser.permissions || {};
+      var proposalPerm = perms["Proposals"] || {};
+      var canEdit = isSuperAdmin || proposalPerm.edit === true;
+      var canDelete = isSuperAdmin || proposalPerm.del === true;
+      var actionsHtml = "";
+      actionsHtml += '<button type="button" data-prop-id="' + escapeHtml(prop.ProposalID) + '" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Share Proposal on WhatsApp" onclick="sendProposalWhatsApp(this.getAttribute(\'data-prop-id\'))"><i class="fab fa-whatsapp"></i></button>';
+      if (canEdit) {
+        var prId = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
+        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Proposal" onclick="editProposal(\'' + prId + '\')"><i class="fas fa-pen"></i></button>';
+      }
+      if (canDelete) {
+        var prId = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
+        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Proposal" onclick="deleteProposal(\'' + prId + '\')"><i class="fas fa-trash"></i></button>';
+      }
+      var prIdEsc = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
+      var prProjNameEsc = typeof escapeHtml === "function" ? escapeHtml(prop.ProjectName || "") : (prop.ProjectName || "");
+      var prStatusEsc = typeof escapeHtml === "function" ? escapeHtml(prop.Status || "") : (prop.Status || "");
+
+      return '<tr id="row-' + prIdEsc + '">' +
+        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + prIdEsc + '</td>' +
+        '<td style="font-weight: 600;">' + clientHtml + '</td>' +
+        '<td>' + prProjNameEsc + '</td>' +
+        '<td>' + propDate + '</td>' +
+        '<td style="font-family: monospace; font-weight: 500;">' + amountFormatted + '</td>' +
+        '<td>' + validityDate + '</td>' +
+        '<td>' + followupDate + '</td>' +
+        '<td><span class="badge ' + badgeClass + '">' + prStatusEsc + '</span></td>' +
+        '<td>' + attHtml + '</td>' +
+        '<td style="text-align: right;">' + actionsHtml + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function filterProposalsTable() {
+    var searchVal = document.getElementById("prop-search-input").value.toLowerCase();
+    var custVal = document.getElementById("filter-prop-customer").value;
+    var statusVal = document.getElementById("filter-prop-status").value;
+    var filtered = proposalsDataList.filter(function(p) {
+      var projName = p.ProjectName ? String(p.ProjectName).toLowerCase() : "";
+      var scope = p.ScopeOfWork ? String(p.ScopeOfWork).toLowerCase() : "";
+      var propId = p.ProposalID ? String(p.ProposalID).toLowerCase() : "";
+      var matchesSearch = projName.includes(searchVal) || scope.includes(searchVal) || propId.includes(searchVal);
+      
+      var matchesCust = true;
+      if (custVal) {
+        if (custVal.startsWith("CUST:")) {
+          matchesCust = p.CustomerID === custVal.replace("CUST:", "");
+        } else if (custVal.startsWith("LEAD:")) {
+          matchesCust = p.LeadID === custVal.replace("LEAD:", "");
+        } else {
+          matchesCust = (p.CustomerID === custVal || p.LeadID === custVal);
+        }
+      }
+
+      var matchesStatus = !statusVal || p.Status === statusVal;
+      return matchesSearch && matchesCust && matchesStatus;
+    });
+    renderProposals(filtered);
+  }
+
+  function sendProposalWhatsApp(proposalId) {
+    var prop = proposalsDataList.find(function(p) { return p.ProposalID === proposalId; });
+    if (!prop) return;
+
+    var clientName = "Customer";
+    var clientPhone = "";
+    var entityTitle = "";
+
+    if (prop.CustomerID) {
+      var client = clientsCacheList.find(function(c) { return c.CustomerID === prop.CustomerID; });
+      if (client) {
+        clientName = client.CustomerName;
+        clientPhone = client.Mobile;
+        entityTitle = client.CustomerName;
+      }
+    } else if (prop.LeadID) {
+      var lead = leadsCacheList.find(function(l) { return l.LeadID === prop.LeadID; });
+      if (lead) {
+        clientName = lead.CustomerName || lead.LeadName || "Prospect";
+        clientPhone = lead.Mobile || lead.Phone || "";
+        entityTitle = (lead.CustomerName || lead.LeadName) + " (Lead)";
+      }
+    }
+
+    var amountStr = formatCurrency(prop.Amount || 0);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var loggerName = currentUser.fullName || currentUser.FullName || "StudioSpace Team";
+
+    var msg = "Hello, " + clientName + ",\n\n" +
+              "*Proposal Update* (" + entityTitle + ") -\n\n" +
+              "Project Name: " + (prop.ProjectName || "-") + "\n" +
+              "Estimate Amount: " + amountStr + "\n" +
+              "Validity Date: " + (prop.ValidityDate ? formatDate(prop.ValidityDate) : "-") + "\n" +
+              "Scope Summary: " + (prop.ScopeOfWork || "-") + "\n\n" +
+              "Regards,\n" + loggerName;
+
+    openWAShareModal(msg, clientPhone, "", clientName);
+  }
+  window.sendProposalWhatsApp = sendProposalWhatsApp;
+
+  function openProposalModal(propObj) {
+    if (propObj === void 0) {
+      propObj = null;
+    }
+    var form = document.getElementById("proposal-form");
+    form.reset();
+    document.getElementById("prop-id-field").value = "";
+
+    var container = document.getElementById("prop-current-attachments-container");
+    var list = document.getElementById("prop-current-attachments-list");
+    var fileInput = document.getElementById("prop-attachment");
+    if (container) container.style.display = "none";
+    if (list) list.innerHTML = "";
+    if (fileInput) fileInput.value = "";
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isAdmin = currentUser.roleId === "Super Admin" || currentUser.roleId === "Admin";
+    var custSel = document.getElementById("prop-customer-select");
+    var leadSel = document.getElementById("prop-lead-select");
+    var projNameInp = document.getElementById("prop-name-field");
+    if (custSel) custSel.disabled = false;
+    if (leadSel) leadSel.disabled = false;
+    if (projNameInp) projNameInp.disabled = false;
+
+    if (propObj) {
+      document.getElementById("prop-modal-title").innerText = "Edit Proposal " + propObj.ProposalID;
+      document.getElementById("prop-id-field").value = propObj.ProposalID;
+
+      var hasLead = (propObj.LeadID && String(propObj.LeadID).trim() !== "") || (!propObj.CustomerID && propObj.LeadID);
+      if (hasLead) {
+        var leadRadio = document.getElementById("prop-link-lead");
+        if (leadRadio) leadRadio.checked = true;
+        handleProposalLinkTypeChange();
+        if (leadSel) leadSel.value = String(propObj.LeadID || "").trim();
+      } else {
+        var custRadio = document.getElementById("prop-link-customer");
+        if (custRadio) custRadio.checked = true;
+        handleProposalLinkTypeChange();
+        if (custSel) custSel.value = String(propObj.CustomerID || "").trim();
+      }
+
+      document.getElementById("prop-amount-field").value = propObj.Amount || "";
+      document.getElementById("prop-name-field").value = propObj.ProjectName || "";
+      document.getElementById("prop-date-field").value = parseRawDateString(propObj.ProposalDate);
+      document.getElementById("prop-validity-field").value = parseRawDateString(propObj.ValidityDate);
+      document.getElementById("prop-followup-field").value = parseRawDateString(propObj.FollowUpDate);
+      document.getElementById("prop-status-select").value = propObj.Status || "Draft";
+      document.getElementById("prop-scope-field").value = propObj.ScopeOfWork || "";
+      document.getElementById("prop-remarks-field").value = propObj.Remarks || "";
+      document.getElementById("prop-attachments-hidden").value = propObj.Attachments || "";
+
+      if (!isAdmin) {
+        if (custSel) custSel.disabled = true;
+        if (leadSel) leadSel.disabled = true;
+        if (projNameInp) projNameInp.disabled = true;
+      }
+
+      if (propObj.Attachments) {
+        var urls = String(propObj.Attachments).split(",").map(function(u){ return u.trim(); }).filter(function(u){ return u !== ""; });
+        if (urls.length > 0) {
+          if (container) container.style.display = "block";
+          var html = "";
+          for (var j = 0; j < urls.length; j++) {
+            html += '<a href="' + escapeHtml(urls[j]) + '" target="_blank" class="badge badge-completed" style="text-decoration: none;"><i class="fas fa-paperclip"></i> Attachment ' + (j + 1) + '</a>';
+          }
+          list.innerHTML = html;
+        }
+      }
+    } else {
+      document.getElementById("prop-modal-title").innerText = "Record Proposal";
+      document.getElementById("prop-link-customer").checked = true;
+      handleProposalLinkTypeChange();
+      document.getElementById("prop-status-select").value = "Draft";
+      document.getElementById("prop-date-field").value = (new Date()).toISOString().substring(0, 10);
+      var thirtyDaysLater = new Date();
+      thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+      document.getElementById("prop-validity-field").value = thirtyDaysLater.toISOString().substring(0, 10);
+    }
+    document.getElementById("proposal-modal").classList.add("show");
+  }
+
+  function closeProposalModal() {
+    document.getElementById("proposal-modal").classList.remove("show");
+  }
+
+  function editProposal(proposalId) {
+    var prop = proposalsDataList.find(function(p) {
+      return p.ProposalID === proposalId;
+    });
+    if (prop) {
+      openProposalModal(prop);
+    }
+  }
+
+  function handleProposalSubmit(e) {
+    e.preventDefault();
+    var form = document.getElementById("proposal-form");
+    var formData = {};
+    var inputs = form.querySelectorAll("input, select, textarea");
+    inputs.forEach(function(input) {
+      if (input.name) {
+        formData[input.name] = input.value;
+      }
+    });
+
+    var isLeadRadio = document.getElementById("prop-link-lead") ? document.getElementById("prop-link-lead").checked : false;
+    if (isLeadRadio) {
+      formData["CustomerID"] = "";
+      formData["LeadID"] = document.getElementById("prop-lead-select") ? document.getElementById("prop-lead-select").value : "";
+    } else {
+      formData["CustomerID"] = document.getElementById("prop-customer-select") ? document.getElementById("prop-customer-select").value : "";
+      formData["LeadID"] = "";
+    }
+
+    var fileInput = document.getElementById("prop-attachment");
+    var files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+    
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+
+    if (files.length === 0) {
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          closeProposalModal();
+          loadProposalsView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).saveProposal(formData, null, currentUser.userId);
+    } else {
+      var readPromises = files.map(function(file) {
+        return new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function(evt) {
+            var base64 = evt.target.result.split(',')[1];
+            resolve({
+              base64: base64,
+              mimeType: file.type,
+              filename: file.name
+            });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      });
+
+      Promise.all(readPromises).then(function(fileDataList) {
+        google.script.run.withSuccessHandler(function(response) {
+          showLoader(false);
+          if (response.success) {
+            showToast(response.message, "success");
+            if (typeof cacheClearAll === "function") cacheClearAll();
+            closeProposalModal();
+            loadProposalsView(true);
+          } else {
+            showToast(response.message, "error");
+          }
+        }).withFailureHandler(function(err) {
+          showLoader(false);
+          showToast(err.message, "error");
+        }).saveProposal(formData, fileDataList, currentUser.userId);
+      }).catch(function(err) {
+        showLoader(false);
+        showToast("Error reading file attachments: " + err.message, "error");
+      });
+    }
+  }
+
+  function deleteProposal(proposalId) {
+    if (confirm("Are you sure you want to delete Proposal " + proposalId + "?")) {
+      showLoader(true);
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          proposalsDataList = proposalsDataList.filter(function(p) { return p.ProposalID !== proposalId; });
+          renderProposals(proposalsDataList);
+          loadProposalsView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteProposal(proposalId);
+    }
+  }
+
+  window.handleProposalLinkTypeChange = handleProposalLinkTypeChange;
+  window.openProposalModal = openProposalModal;
+  window.closeProposalModal = closeProposalModal;
+  window.editProposal = editProposal;
+  window.deleteProposal = deleteProposal;
+  window.filterProposalsTable = filterProposalsTable;
+  window.handleProposalSubmit = handleProposalSubmit;
+})();
+
+</script>

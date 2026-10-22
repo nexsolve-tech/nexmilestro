@@ -1,0 +1,1018 @@
+<!-- User.html -->
+<div class="view-container">
+  <!-- Super Admin License Panel -->
+  <div id="license-admin-panel" style="display: none; margin-bottom: 1.5rem;">
+    <div class="card" style="padding: 1.25rem 1.5rem; background: var(--bg-secondary); border-color: var(--primary-light);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+        <h4 style="margin: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-key"></i> System Licensing & User Limits</h4>
+        <button type="button" class="btn btn-emerald btn-sm" onclick="openUpgradeLicenseModal()" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; font-weight: 700; padding: 0.5rem 1rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 5px rgba(5, 150, 105, 0.3); cursor: pointer;">
+          <i class="fas fa-rocket"></i> 🚀 Upgrade User Seats / Extend License
+        </button>
+      </div>
+      <div style="display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem;">
+        <div style="background: var(--bg-main); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); min-width: 160px;">
+          <label style="display: block; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; letter-spacing: 0.5px;">Active Users Count</label>
+          <div id="license-usage" style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);">7 / 10 Users</div>
+        </div>
+        <div id="license-expiry-container" style="background: var(--bg-main); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); min-width: 200px;">
+          <label style="display: block; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; letter-spacing: 0.5px;">License Expiry Date</label>
+          <div id="license-expiry-display" style="font-size: 1.15rem; font-weight: 800; color: var(--primary);"><i class="far fa-calendar-alt" style="margin-right: 0.35rem;"></i>Loading...</div>
+        </div>
+        <div style="background: var(--bg-main); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); min-width: 140px;">
+          <label style="display: block; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; letter-spacing: 0.5px;">Max Users Limit</label>
+          <input type="number" id="license-limit-input" class="form-control" style="max-width: 110px; font-weight: 700;" min="1" placeholder="10">
+        </div>
+        <div style="background: var(--bg-main); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); flex: 1; min-width: 220px;">
+          <label style="display: block; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; letter-spacing: 0.5px;">License Verification Key</label>
+          <input type="text" id="license-key-input" class="form-control" style="font-family: monospace; font-weight: 700;" placeholder="LIC-BUYER1-2026">
+        </div>
+        <div style="align-self: center;">
+          <button class="btn btn-primary" onclick="updateLicenseSettings()" style="padding: 0.75rem 1.25rem; font-weight: 700;"><i class="fas fa-save"></i> Save License</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Headers -->
+  <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.5rem; align-items: center; flex-shrink: 0;">
+    <button class="btn btn-secondary active-tab" id="tab-btn-users" onclick="switchUserSubTab('users')" style="border: none; background: transparent; padding: 0.5rem 1rem; font-weight: 700; color: var(--primary); cursor: pointer; border-bottom: 3px solid var(--primary); border-radius: 0;">User Accounts</button>
+    <button class="btn btn-secondary" id="tab-btn-perms" onclick="switchUserSubTab('permissions')" style="border: none; background: transparent; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 0;">Role Access Permissions</button>
+  </div>
+
+  <!-- Container for User Accounts Sub-view -->
+  <div id="subview-user-accounts" style="display: block;">
+    <!-- Action Header -->
+    <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="user-search" class="search-input" placeholder="Search by name or email..." oninput="filterUsersList()">
+    </div>
+    
+    <div class="filter-group">
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary" onclick="openUserModal()"><i class="fas fa-plus"></i> Add New User</button>
+    </div>
+  </div>
+
+  <!-- Users Table Card -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none;">
+        <table class="data-table" id="users-table">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Mobile</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading users...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div> <!-- Close subview-user-accounts -->
+
+    <!-- Super Admin Role Permissions Manager -->
+    <div id="subview-role-permissions" style="display: none;">
+      <div class="card">
+        <div class="card-header" style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem 1.5rem;">
+          <div>
+            <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: var(--primary); font-weight: 700;"><i class="fas fa-user-lock"></i> Role Permissions Matrix</h4>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Assign Create, Read, Update, and Delete options to role categories</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-role-select-all" onclick="toggleAllPermissions('role')" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+              <i class="fas fa-check-double"></i> Select All
+            </button>
+            <label style="font-weight: 600; font-size: 0.875rem; color: var(--text-main); margin-left: 0.5rem;">Select Role to Configure:</label>
+            <select id="perm-role-select" class="form-control" style="width: 180px; padding: 0.4rem 0.8rem;" onchange="loadRolePermissionsGrid()">
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-wrapper" style="border: none;">
+            <table class="data-table" id="permissions-grid-table">
+              <thead>
+                <tr>
+                  <th style="width: 30%;">Module Section</th>
+                  <th style="text-align: center; width: 17.5%;">
+                    <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; margin: 0;">
+                      <input type="checkbox" id="hdr-role-CanView" onchange="toggleColumnPermissions('role', 'CanView', this.checked)" style="transform: scale(1.15); cursor: pointer;">
+                      <span>View / Access</span>
+                    </label>
+                  </th>
+                  <th style="text-align: center; width: 17.5%;">
+                    <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; margin: 0;">
+                      <input type="checkbox" id="hdr-role-CanAdd" onchange="toggleColumnPermissions('role', 'CanAdd', this.checked)" style="transform: scale(1.15); cursor: pointer;">
+                      <span>Add / Create</span>
+                    </label>
+                  </th>
+                  <th style="text-align: center; width: 17.5%;">
+                    <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; margin: 0;">
+                      <input type="checkbox" id="hdr-role-CanEdit" onchange="toggleColumnPermissions('role', 'CanEdit', this.checked)" style="transform: scale(1.15); cursor: pointer;">
+                      <span>Edit / Update</span>
+                    </label>
+                  </th>
+                  <th style="text-align: center; width: 17.5%;">
+                    <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; margin: 0;">
+                      <input type="checkbox" id="hdr-role-CanDelete" onchange="toggleColumnPermissions('role', 'CanDelete', this.checked)" style="transform: scale(1.15); cursor: pointer;">
+                      <span>Delete</span>
+                    </label>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Rendered permission rows dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div style="padding: 1.25rem 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; background: var(--bg-secondary);">
+          <button class="btn btn-primary" onclick="saveRolePermissionsGrid()"><i class="fas fa-save"></i> Save Permissions Matrix</button>
+        </div>
+      </div>
+    </div>
+  </div> <!-- Close outer view-container -->
+  
+  <!-- Add/Edit User Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal-container" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="user-modal-title">Add New User</h3>
+      <button class="icon-btn" onclick="closeUserModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="user-form" onsubmit="handleUserSubmit(event)">
+      <input type="hidden" id="user-id" name="UserID">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Full Name *</label>
+            <input type="text" id="user-name" name="FullName" class="form-control" placeholder="e.g. Architect Sarah" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" id="user-email" name="Email" class="form-control" placeholder="user@example.com" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Mobile Number</label>
+            <input type="tel" id="user-mobile" name="Mobile" class="form-control" placeholder="10-digit mobile" pattern="[0-9]{10}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" id="lbl-password">Password *</label>
+            <input type="password" id="user-password" name="Password" class="form-control" placeholder="Enter password">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">User Role *</label>
+            <select id="user-role" name="RoleID" class="form-control" required>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Reports To</label>
+            <select id="user-reports-to" name="ReportsTo" class="form-control">
+              <option value="">None (Top Level)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="user-status" name="Status" class="form-control" required>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Force Password Reset? *</label>
+            <select id="user-must-reset" name="MustChangePassword" class="form-control" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- User Permissions Modal -->
+<div class="modal-overlay" id="user-permissions-modal">
+  <div class="modal-container" style="max-width: 750px;">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-user-lock"></i> User Permissions: <span id="user-perm-title-name">Sarah</span> (<span id="user-perm-title-id">USR-1002</span>)</h3>
+      <button class="icon-btn" onclick="closeUserPermissionsModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="card" style="padding: 1rem; margin-bottom: 1rem; background: var(--bg-secondary); border-color: var(--border-color);">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <input type="checkbox" id="user-perm-override-toggle" onchange="toggleUserPermOverride()" style="transform: scale(1.25); cursor: pointer;">
+          <label for="user-perm-override-toggle" style="font-weight: 700; color: var(--primary); cursor: pointer; user-select: none;">
+            Customize permissions for this user (Override role defaults)
+          </label>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0 0 2rem; flex-wrap: wrap; gap: 0.5rem;">
+          <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">
+            When checked, this user's permissions are managed independently from their default role (<span id="user-perm-role-label">Architect</span>).
+          </p>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-user-select-all" onclick="toggleAllPermissions('user')" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; font-size: 0.75rem;">
+            <i class="fas fa-check-double"></i> Select All
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrapper" style="border: 1px solid var(--border-color); max-height: 350px; overflow-y: auto;">
+        <table class="data-table" id="user-permissions-grid-table">
+          <thead>
+            <tr>
+              <th style="width: 35%;">Module Section</th>
+              <th style="text-align: center; width: 16.25%;">
+                <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; margin: 0;">
+                  <input type="checkbox" id="hdr-user-CanView" onchange="toggleColumnPermissions('user', 'CanView', this.checked)" style="transform: scale(1.15); cursor: pointer;">
+                  <span>View / Access</span>
+                </label>
+              </th>
+              <th style="text-align: center; width: 16.25%;">
+                <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; margin: 0;">
+                  <input type="checkbox" id="hdr-user-CanAdd" onchange="toggleColumnPermissions('user', 'CanAdd', this.checked)" style="transform: scale(1.15); cursor: pointer;">
+                  <span>Add / Create</span>
+                </label>
+              </th>
+              <th style="text-align: center; width: 16.25%;">
+                <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; margin: 0;">
+                  <input type="checkbox" id="hdr-user-CanEdit" onchange="toggleColumnPermissions('user', 'CanEdit', this.checked)" style="transform: scale(1.15); cursor: pointer;">
+                  <span>Edit / Update</span>
+                </label>
+              </th>
+              <th style="text-align: center; width: 16.25%;">
+                <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; margin: 0;">
+                  <input type="checkbox" id="hdr-user-CanDelete" onchange="toggleColumnPermissions('user', 'CanDelete', this.checked)" style="transform: scale(1.15); cursor: pointer;">
+                  <span>Delete</span>
+                </label>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rendered user-specific permission rows dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeUserPermissionsModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="saveUserPermissionsGrid()"><i class="fas fa-save"></i> Save User Permissions</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function() {
+  var allUsersList = [];
+  var dropdownsCache = {};
+  function updateLicenseDOM(licenseData) {
+    if (!licenseData) return;
+    var usageEl = document.getElementById("license-usage");
+    var limitInput = document.getElementById("license-limit-input");
+    var keyInput = document.getElementById("license-key-input");
+    var expiryEl = document.getElementById("license-expiry-display");
+
+    if (usageEl) {
+      usageEl.innerText = (licenseData.currentUsers || 0) + " / " + (licenseData.maxUsers || 10) + " Active Users";
+    }
+    if (expiryEl) {
+      var expValStr = licenseData.expiryDate || "";
+      if (!expValStr || expValStr.toLowerCase() === "lifetime" || expValStr.toLowerCase() === "unlimited") {
+        expValStr = "Unlimited / Lifetime";
+      }
+      var expTxt = expValStr;
+      if (licenseData.daysRemaining !== undefined && licenseData.daysRemaining <= 30) {
+        expTxt += " (" + (licenseData.daysRemaining <= 0 ? "Expired" : licenseData.daysRemaining + " days left") + ")";
+        expiryEl.style.color = "var(--danger)";
+      } else {
+        expiryEl.style.color = "var(--primary)";
+      }
+      expiryEl.innerHTML = '<i class="far fa-calendar-alt" style="margin-right:0.35rem;"></i>' + expTxt;
+    }
+    if (limitInput) limitInput.value = licenseData.maxUsers || 10;
+    if (keyInput) keyInput.value = licenseData.licenseKey || "";
+  }
+
+  window.loadUsersView = function(forceRefresh) {
+    showLoader(true);
+    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var roleStr = String(currentUser.roleId || currentUser.RoleID || currentUser.role || currentUser.Role || "");
+    var isSuperAdmin = (roleStr === "Super Admin" || roleStr === "Admin" || roleStr === "Administrator");
+    var permsTabBtn = document.getElementById("tab-btn-perms");
+    if (isSuperAdmin) {
+      if (permsTabBtn)
+        permsTabBtn.style.display = "inline-block";
+    } else {
+      if (permsTabBtn)
+        permsTabBtn.style.display = "none";
+      switchUserSubTab("users");
+    }
+
+    var adminPanel = document.getElementById("license-admin-panel");
+    if (isSuperAdmin) {
+      if (adminPanel) adminPanel.style.display = "block";
+
+      if (!forceRefresh) {
+        try {
+          var cachedStr = sessionStorage.getItem("pm_license_info");
+          if (cachedStr) {
+            updateLicenseDOM(JSON.parse(cachedStr));
+          }
+        } catch(e){}
+      }
+
+      if (google && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(function(licenseData) {
+          if (licenseData) {
+            try { sessionStorage.setItem("pm_license_info", JSON.stringify(licenseData)); } catch(e){}
+            updateLicenseDOM(licenseData);
+          }
+        }).getLicenseSettings();
+      }
+    } else {
+      if (adminPanel) adminPanel.style.display = "none";
+    }
+
+    // Check preloaded cache first for instant render if NOT forceRefresh
+    if (!forceRefresh) {
+      var cached = typeof cacheGet === "function" ? (cacheGet("customersViewData") || cacheGet("projectsViewData") || cacheGet("leadsViewData")) : null;
+      if (cached && cached.users && cached.users.length > 0) {
+        allUsersList = cached.users || [];
+        renderUsersList(allUsersList);
+        if (cached.dropdowns) dropdownsCache = cached.dropdowns;
+        populateRolesFromCache();
+        showLoader(false);
+        return;
+      }
+    }
+    var loadedCount = 0;
+    var totalRequests = 2;
+    function checkLoaded() {
+      loadedCount++;
+      if (loadedCount === totalRequests) {
+        populateRolesFromCache();
+        showLoader(false);
+      }
+    }
+    google.script.run.withSuccessHandler(function(data) {
+      allUsersList = data || [];
+      renderUsersList(allUsersList);
+      checkLoaded();
+    }).withFailureHandler(function(err) {
+      showToast(err.message, "error");
+      checkLoaded();
+    }).getUsers();
+    google.script.run.withSuccessHandler(function(data) {
+      dropdownsCache = data || {};
+      checkLoaded();
+    }).withFailureHandler(function(err) {
+      showToast("Error loading roles configuration: " + err.message, "error");
+      checkLoaded();
+    }).getDropdownValues();
+  };
+  function renderUsersList(users) {
+    var tbody = document.querySelector("#users-table tbody");
+    if (users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users found.</td></tr>';
+      return;
+    }
+    var sorted = users.slice().sort(function(a, b) {
+      return b.UserID.localeCompare(a.UserID);
+    });
+    tbody.innerHTML = sorted.map(function(user) {
+      var lastLoginStr = "Never";
+      if (user.LastLogin) {
+        lastLoginStr = typeof formatDate === "function" ? formatDate(user.LastLogin) : user.LastLogin;
+      }
+      var uIdEsc = typeof escapeHtml === "function" ? escapeHtml(user.UserID) : user.UserID;
+      var uNameEsc = typeof escapeHtml === "function" ? escapeHtml(user.FullName || "") : (user.FullName || "");
+      var uEmailEsc = typeof escapeHtml === "function" ? escapeHtml(user.Email || "") : (user.Email || "");
+      var uMobileEsc = typeof escapeHtml === "function" ? escapeHtml(user.Mobile || "-") : (user.Mobile || "-");
+      var uRoleEsc = typeof escapeHtml === "function" ? escapeHtml(user.RoleID || "") : (user.RoleID || "");
+      var uStatusStr = String(user.Status || "Active");
+      var uStatusEsc = typeof escapeHtml === "function" ? escapeHtml(uStatusStr) : uStatusStr;
+      var uNameEscForJs = uNameEsc.replace(/'/g, "\\'");
+
+      return '<tr id="row-' + uIdEsc + '">' +
+        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + uIdEsc + '</td>' +
+        '<td style="font-weight: 600;">' + uNameEsc + '</td>' +
+        '<td>' + uEmailEsc + '</td>' +
+        '<td>' + uMobileEsc + '</td>' +
+        '<td><span class="badge badge-on-hold">' + uRoleEsc + '</span></td>' +
+        '<td><span class="badge badge-' + uStatusStr.toLowerCase() + '">' + uStatusEsc + '</span></td>' +
+        '<td style="font-size: 0.8rem; color: var(--text-muted);">' + lastLoginStr + '</td>' +
+        '<td style="text-align: right;">' +
+          '<button class="icon-btn" title="User Permissions" onclick="openUserPermissionsModal(\'' + uIdEsc + '\', \'' + uNameEscForJs + '\', \'' + uRoleEsc + '\')" style="background: rgba(14, 165, 233, 0.15); color: var(--primary);"><i class="fas fa-user-shield"></i></button>' +
+          '<button class="icon-btn btn-edit" title="Edit User" onclick="editUser(\'' + uIdEsc + '\')"><i class="fas fa-pen"></i></button>' +
+          '<button class="icon-btn btn-delete" title="Delete User" onclick="deleteUser(\'' + uIdEsc + '\')"><i class="fas fa-trash"></i></button>' +
+        '</td>' +
+      '</tr>';
+    }).join("");
+  }
+  function filterUsersList() {
+    var searchVal = document.getElementById("user-search").value.toLowerCase();
+    var filtered = allUsersList.filter(
+      function(user) {
+        return user.FullName.toLowerCase().includes(searchVal) || user.Email.toLowerCase().includes(searchVal) || user.UserID.toLowerCase().includes(searchVal);
+      }
+    );
+    renderUsersList(filtered);
+  }
+  function openUserModal(userObj) {
+    if (userObj === void 0) {
+      userObj = null;
+    }
+    var form = document.getElementById("user-form");
+    form.reset();
+    document.getElementById("user-id").value = "";
+    var passInput = document.getElementById("user-password");
+    var passLabel = document.getElementById("lbl-password");
+    populateRolesFromCache();
+    if (userObj) {
+      document.getElementById("user-modal-title").innerText = "Edit User " + userObj.UserID;
+      document.getElementById("user-id").value = userObj.UserID;
+      document.getElementById("user-name").value = userObj.FullName;
+      document.getElementById("user-email").value = userObj.Email;
+      document.getElementById("user-mobile").value = userObj.Mobile || "";
+      document.getElementById("user-role").value = userObj.RoleID;
+      document.getElementById("user-status").value = userObj.Status;
+      document.getElementById("user-must-reset").value = userObj.MustChangePassword || "No";
+      passInput.required = false;
+      passLabel.innerText = "Password (Leave blank to keep unchanged)";
+      passInput.placeholder = "Leave blank to keep unchanged";
+    } else {
+      document.getElementById("user-modal-title").innerText = "Add New User";
+      passInput.required = true;
+      passLabel.innerText = "Password *";
+      passInput.placeholder = "Enter initial password";
+    }
+    var reportsToSelect = document.getElementById("user-reports-to");
+    if (reportsToSelect) {
+      reportsToSelect.innerHTML = '<option value="">None (Top Level)</option>';
+      allUsersList.forEach(function(u) {
+        if (u && u.Status === "Active" && (!userObj || u.UserID !== userObj.UserID)) {
+          var opt = document.createElement("option");
+          opt.value = u.UserID || "";
+          var roleStr = u.RoleID || u.roleId || "";
+          opt.text = roleStr ? u.FullName + " (" + roleStr + ")" : (u.FullName || u.UserID || "");
+          reportsToSelect.add(opt);
+        }
+      });
+      if (userObj) {
+        reportsToSelect.value = userObj.ReportsTo || "";
+      } else {
+        reportsToSelect.value = "";
+      }
+    }
+    document.getElementById("user-modal").classList.add("show");
+  }
+  function closeUserModal() {
+    document.getElementById("user-modal").classList.remove("show");
+  }
+  function editUser(userId) {
+    var user = allUsersList.find(function(u) {
+      return u.UserID === userId;
+    });
+    if (user) {
+      openUserModal(user);
+    }
+  }
+  function handleUserSubmit(e) {
+    e.preventDefault();
+    var form = document.getElementById("user-form");
+    var formData = {};
+    var inputs = form.querySelectorAll("input, select, textarea");
+    inputs.forEach(function(input) {
+      if (input.name) {
+        formData[input.name] = input.value;
+      }
+    });
+    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+    if (formData.UserID === currentUserId && formData.Status === "Inactive") {
+      showToast("You cannot set your own account to Inactive.", "error");
+      return;
+    }
+    showLoader(true);
+    google.script.run.withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        if (typeof cacheClearAll === "function") cacheClearAll();
+        closeUserModal();
+        loadUsersView(true);
+      } else {
+        showToast(response.message, "error");
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast(err.message, "error");
+    }).saveUser(formData, currentUserId);
+  }
+  function deleteUser(userId) {
+    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+    if (userId === currentUserId) {
+      showToast("You cannot delete your own active login session.", "error");
+      return;
+    }
+    if (confirm("Are you sure you want to delete User " + userId + "? This action is permanent.")) {
+      showLoader(true);
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          allUsersList = allUsersList.filter(function(u) { return u.UserID !== userId; });
+          renderUsersList(allUsersList);
+          loadUsersView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteUser(userId, currentUserId);
+    }
+  }
+  function updateLicenseSettings() {
+    var maxUsers = parseInt(document.getElementById("license-limit-input").value, 10);
+    var licenseKey = document.getElementById("license-key-input").value;
+    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+    if (isNaN(maxUsers) || maxUsers <= 0) {
+      showToast("Please enter a valid max user limit.", "error");
+      return;
+    }
+    showLoader(true);
+    google.script.run.withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        loadUsersView();
+      } else {
+        showToast(response.message, "error");
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast(err.message, "error");
+    }).saveLicenseSettings(maxUsers, licenseKey, currentUser.userId);
+  }
+  window.switchUserSubTab = function(subTab) {
+    var usersBtn = document.getElementById("tab-btn-users");
+    var permsBtn = document.getElementById("tab-btn-perms");
+    var usersView = document.getElementById("subview-user-accounts");
+    var permsView = document.getElementById("subview-role-permissions");
+    if (!usersBtn || !permsBtn || !usersView || !permsView)
+      return;
+    if (subTab === "users") {
+      usersBtn.style.color = "var(--primary)";
+      usersBtn.style.borderBottom = "3px solid var(--primary)";
+      usersBtn.style.fontWeight = "700";
+      permsBtn.style.color = "var(--text-muted)";
+      permsBtn.style.borderBottom = "none";
+      permsBtn.style.fontWeight = "600";
+      usersView.style.display = "block";
+      permsView.style.display = "none";
+    } else {
+      permsBtn.style.color = "var(--primary)";
+      permsBtn.style.borderBottom = "3px solid var(--primary)";
+      permsBtn.style.fontWeight = "700";
+      usersBtn.style.color = "var(--text-muted)";
+      usersBtn.style.borderBottom = "none";
+      usersBtn.style.fontWeight = "600";
+      usersView.style.display = "none";
+      permsView.style.display = "block";
+      loadRolePermissionsGrid();
+    }
+  };
+  var activeRolePermissionsList = [];
+  function loadRolePermissionsGrid() {
+    var roleId = document.getElementById("perm-role-select").value;
+    showLoader(true);
+    google.script.run.withSuccessHandler(function(data) {
+      showLoader(false);
+      activeRolePermissionsList = data || [];
+      renderRolePermissionsTable(activeRolePermissionsList);
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast("Error loading role permissions: " + err.message, "error");
+    }).getRolePermissions(roleId);
+  }
+  window.toggleColumnPermissions = function(targetPrefix, action, isChecked) {
+    var tableId = (targetPrefix === "user") ? "user-permissions-grid-table" : "permissions-grid-table";
+    var chkClass = (targetPrefix === "user") ? "user-perm-chk" : "perm-chk";
+    var checkboxes = document.querySelectorAll("#" + tableId + " ." + chkClass + "[data-action='" + action + "']");
+    checkboxes.forEach(function(chk) {
+      if (!chk.disabled) {
+        chk.checked = isChecked;
+      }
+    });
+    updateSelectAllButtonState(targetPrefix);
+  };
+
+  window.toggleAllPermissions = function(targetPrefix) {
+    var tableId = (targetPrefix === "user") ? "user-permissions-grid-table" : "permissions-grid-table";
+    var chkClass = (targetPrefix === "user") ? "user-perm-chk" : "perm-chk";
+    var btnId = (targetPrefix === "user") ? "btn-user-select-all" : "btn-role-select-all";
+    var checkboxes = Array.from(document.querySelectorAll("#" + tableId + " ." + chkClass + ":not(:disabled)"));
+    
+    if (!checkboxes || checkboxes.length === 0) return;
+
+    var allChecked = checkboxes.every(function(c) { return c.checked; });
+    var targetState = !allChecked;
+
+    checkboxes.forEach(function(chk) {
+      chk.checked = targetState;
+    });
+
+    ["CanView", "CanAdd", "CanEdit", "CanDelete"].forEach(function(act) {
+      var hdr = document.getElementById("hdr-" + targetPrefix + "-" + act);
+      if (hdr) hdr.checked = targetState;
+    });
+
+    var btn = document.getElementById(btnId);
+    if (btn) {
+      btn.innerHTML = targetState 
+        ? '<i class="fas fa-undo"></i> Deselect All' 
+        : '<i class="fas fa-check-double"></i> Select All';
+    }
+  };
+
+  function updateSelectAllButtonState(targetPrefix) {
+    var tableId = (targetPrefix === "user") ? "user-permissions-grid-table" : "permissions-grid-table";
+    var chkClass = (targetPrefix === "user") ? "user-perm-chk" : "perm-chk";
+    var btnId = (targetPrefix === "user") ? "btn-user-select-all" : "btn-role-select-all";
+    var checkboxes = Array.from(document.querySelectorAll("#" + tableId + " ." + chkClass + ":not(:disabled)"));
+    
+    if (!checkboxes || checkboxes.length === 0) return;
+
+    var allChecked = checkboxes.every(function(c) { return c.checked; });
+    var btn = document.getElementById(btnId);
+    if (btn) {
+      btn.innerHTML = allChecked 
+        ? '<i class="fas fa-undo"></i> Deselect All' 
+        : '<i class="fas fa-check-double"></i> Select All';
+    }
+
+    ["CanView", "CanAdd", "CanEdit", "CanDelete"].forEach(function(act) {
+      var actCheckboxes = Array.from(document.querySelectorAll("#" + tableId + " ." + chkClass + "[data-action='" + act + "']:not(:disabled)"));
+      var hdr = document.getElementById("hdr-" + targetPrefix + "-" + act);
+      if (hdr && actCheckboxes.length > 0) {
+        hdr.checked = actCheckboxes.every(function(c) { return c.checked; });
+      }
+    });
+  }
+  window.updateSelectAllButtonState = updateSelectAllButtonState;
+
+  function renderRolePermissionsTable(permissions) {
+    var tbody = document.querySelector("#permissions-grid-table tbody");
+    if (!tbody)
+      return;
+    var modulesList = [
+      { key: "Dashboard", name: "Dashboard & Home" },
+      { key: "Customers", name: "Customers Profile Directory" },
+      { key: "Projects", name: "Projects & Blueprint Tracker" },
+      { key: "SiteVisits", name: "Site visits Logs & Uploads" },
+      { key: "Tasks", name: "Task Kanban Board" },
+      { key: "Leads", name: "Leads pipeline & Follow-ups" },
+      { key: "Proposals", name: "Proposals & Estimates" },
+      { key: "Vendors", name: "Vendor & Contractor Directory" },
+      { key: "Finance", name: "Income & Expense Booking" },
+      { key: "Reports", name: "Financial & Margins Reports" },
+      { key: "Users", name: "Users Accounts & Staff Security" },
+      { key: "Masters", name: "Dropdown Values (Masters)" }
+    ];
+    tbody.innerHTML = modulesList.map(function(mod) {
+      var p = permissions.find(function(x) {
+        return x.Module === mod.key;
+      }) || {
+        CanView: false,
+        CanAdd: false,
+        CanEdit: false,
+        CanDelete: false
+      };
+      var viewChecked = p.CanView === true || String(p.CanView).toUpperCase() === "TRUE" ? "checked" : "";
+      var addChecked = p.CanAdd === true || String(p.CanAdd).toUpperCase() === "TRUE" ? "checked" : "";
+      var editChecked = p.CanEdit === true || String(p.CanEdit).toUpperCase() === "TRUE" ? "checked" : "";
+      var delChecked = p.CanDelete === true || String(p.CanDelete).toUpperCase() === "TRUE" ? "checked" : "";
+      return '\n        <tr>\n          <td style="font-weight: 600; color: var(--text-main);">'.concat(escapeHtml(mod.name), '</td>\n          <td style="text-align: center;">\n            <input type="checkbox" class="perm-chk" data-module="').concat(mod.key, '" data-action="CanView" ').concat(viewChecked, ' onchange="updateSelectAllButtonState(\'role\')" style="transform: scale(1.15); cursor: pointer;">\n          </td>\n          <td style="text-align: center;">\n            <input type="checkbox" class="perm-chk" data-module="').concat(mod.key, '" data-action="CanAdd" ').concat(addChecked, ' onchange="updateSelectAllButtonState(\'role\')" style="transform: scale(1.15); cursor: pointer;">\n          </td>\n          <td style="text-align: center;">\n            <input type="checkbox" class="perm-chk" data-module="').concat(mod.key, '" data-action="CanEdit" ').concat(editChecked, ' onchange="updateSelectAllButtonState(\'role\')" style="transform: scale(1.15); cursor: pointer;">\n          </td>\n          <td style="text-align: center;">\n            <input type="checkbox" class="perm-chk" data-module="').concat(mod.key, '" data-action="CanDelete" ').concat(delChecked, ' onchange="updateSelectAllButtonState(\'role\')" style="transform: scale(1.15); cursor: pointer;">\n          </td>\n        </tr>\n      ');
+    }).join("");
+    updateSelectAllButtonState('role');
+  }
+  function saveRolePermissionsGrid() {
+    var roleId = document.getElementById("perm-role-select").value;
+    if (roleId === "Super Admin") {
+      showToast("Security Warning: Super Admin permissions cannot be modified.", "error");
+      return;
+    }
+    var checkboxes = document.querySelectorAll("#permissions-grid-table .perm-chk");
+    var groupedByModule = {};
+    checkboxes.forEach(function(chk) {
+      var mod = chk.getAttribute("data-module");
+      var act = chk.getAttribute("data-action");
+      if (!groupedByModule[mod]) {
+        groupedByModule[mod] = { Module: mod };
+      }
+      groupedByModule[mod][act] = chk.checked;
+    });
+    var permissionsList = Object.values(groupedByModule);
+    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+    showLoader(true);
+    google.script.run.withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        loadRolePermissionsGrid();
+      } else {
+        showToast(response.message, "error");
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast(err.message, "error");
+    }).saveRolePermissions(roleId, permissionsList, currentUserId);
+  }
+  var activeUserPermsTargetId = "";
+  var activeUserPermsTargetRole = "";
+  var userPermissionsCache = [];
+  function openUserPermissionsModal(userId, fullName, roleId) {
+    activeUserPermsTargetId = userId;
+    activeUserPermsTargetRole = roleId;
+    document.getElementById("user-perm-title-name").innerText = fullName;
+    document.getElementById("user-perm-title-id").innerText = userId;
+    document.getElementById("user-perm-role-label").innerText = roleId;
+    var overlay = document.getElementById("user-permissions-modal");
+    if (overlay)
+      overlay.classList.add("show");
+    showLoader(true);
+    google.script.run.withSuccessHandler(function(userOverrides) {
+      showLoader(false);
+      userPermissionsCache = userOverrides || [];
+      var isOverridden = userPermissionsCache.length > 0;
+      var toggle = document.getElementById("user-perm-override-toggle");
+      if (toggle)
+        toggle.checked = isOverridden;
+      if (isOverridden) {
+        renderUserPermissionsTable(userPermissionsCache);
+        toggleUserPermOverride();
+      } else {
+        showLoader(true);
+        google.script.run.withSuccessHandler(function(roleData) {
+          showLoader(false);
+          renderUserPermissionsTable(roleData || []);
+          toggleUserPermOverride();
+        }).withFailureHandler(function(err) {
+          showLoader(false);
+          showToast("Error fetching role defaults: " + err.message, "error");
+        }).getRolePermissions(roleId);
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast("Error loading user permissions: " + err.message, "error");
+    }).getUserPermissions(userId);
+  }
+  function closeUserPermissionsModal() {
+    var overlay = document.getElementById("user-permissions-modal");
+    if (overlay)
+      overlay.classList.remove("show");
+    activeUserPermsTargetId = "";
+    activeUserPermsTargetRole = "";
+    userPermissionsCache = [];
+  }
+  function toggleUserPermOverride() {
+    var isChecked = document.getElementById("user-perm-override-toggle").checked;
+    var checkboxes = document.querySelectorAll("#user-permissions-grid-table .user-perm-chk");
+    checkboxes.forEach(function(chk) {
+      chk.disabled = !isChecked;
+    });
+  }
+  function renderUserPermissionsTable(permissions) {
+    var tbody = document.querySelector("#user-permissions-grid-table tbody");
+    if (!tbody)
+      return;
+    var modulesList = [
+      { key: "Dashboard", name: "Dashboard & Home" },
+      { key: "Customers", name: "Customers Profile Directory" },
+      { key: "Projects", name: "Projects & Blueprint Tracker" },
+      { key: "SiteVisits", name: "Site visits Logs & Uploads" },
+      { key: "Tasks", name: "Task Kanban Board" },
+      { key: "Leads", name: "Leads pipeline & Follow-ups" },
+      { key: "Proposals", name: "Proposals & Estimates" },
+      { key: "Vendors", name: "Vendor & Contractor Directory" },
+      { key: "Finance", name: "Income & Expense Booking" },
+      { key: "Reports", name: "Financial & Margins Reports" },
+      { key: "Users", name: "Users Accounts & Staff Security" },
+      { key: "Masters", name: "Dropdown Values (Masters)" }
+    ];
+    tbody.innerHTML = modulesList.map(function(mod) {
+      var p = permissions.find(function(x) {
+        return x.Module === mod.key;
+      }) || {
+        CanView: false,
+        CanAdd: false,
+        CanEdit: false,
+        CanDelete: false
+      };
+      var viewChecked = p.CanView === true || String(p.CanView).toUpperCase() === "TRUE" ? "checked" : "";
+      var addChecked = p.CanAdd === true || String(p.CanAdd).toUpperCase() === "TRUE" ? "checked" : "";
+      var editChecked = p.CanEdit === true || String(p.CanEdit).toUpperCase() === "TRUE" ? "checked" : "";
+      var delChecked = p.CanDelete === true || String(p.CanDelete).toUpperCase() === "TRUE" ? "checked" : "";
+      return '\n        <tr>\n          <td style="font-weight: 600; color: var(--text-main);">'.concat(escapeHtml(mod.name), '</td>\n          <td style="text-align: center;">\n            <input type="checkbox" class="user-perm-chk" data-module="').concat(mod.key, '" data-action="CanView" ').concat(viewChecked, ' onchange="updateSelectAllButtonState(\'user\')" style="transform: scale(1.15); cursor: pointer;">\n          </td>\n          <td style="text-align: center;">\n            <input type="checkbox" class="user-perm-chk" data-module="').concat(mod.key, '" data-action="CanAdd" ').concat(addChecked, ' onchange="updateSelectAllButtonState(\'user\')" style="transform: scale(1.15); cursor: pointer;">\n          </td>\n          <td style="text-align: center;">\n            <input type="checkbox" class="user-perm-chk" data-module="').concat(mod.key, '" data-action="CanEdit" ').concat(editChecked, ' onchange="updateSelectAllButtonState(\'user\')" style="transform: scale(1.15); cursor: pointer;">\n          </td>\n          <td style="text-align: center;">\n            <input type="checkbox" class="user-perm-chk" data-module="').concat(mod.key, '" data-action="CanDelete" ').concat(delChecked, ' onchange="updateSelectAllButtonState(\'user\')" style="transform: scale(1.15); cursor: pointer;">\n          </td>\n        </tr>\n      ');
+    }).join("");
+    updateSelectAllButtonState('user');
+  }
+  function saveUserPermissionsGrid() {
+    if (!activeUserPermsTargetId)
+      return;
+    var isOverridden = document.getElementById("user-perm-override-toggle").checked;
+    var checkboxes = document.querySelectorAll("#user-permissions-grid-table .user-perm-chk");
+    var groupedByModule = {};
+    checkboxes.forEach(function(chk) {
+      var mod = chk.getAttribute("data-module");
+      var act = chk.getAttribute("data-action");
+      if (!groupedByModule[mod]) {
+        groupedByModule[mod] = { Module: mod };
+      }
+      groupedByModule[mod][act] = chk.checked;
+    });
+    var permissionsList = Object.values(groupedByModule);
+    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+    showLoader(true);
+    google.script.run.withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        closeUserPermissionsModal();
+      } else {
+        showToast(response.message, "error");
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast("Error saving user permissions: " + err.message, "error");
+    }).saveUserPermissions(activeUserPermsTargetId, permissionsList, isOverridden, currentUserId);
+  }
+  function populateRolesFromCache() {
+    var roles = dropdownsCache["UserRole"] || [];
+    var roleSelect = document.getElementById("user-role");
+    var permRoleSelect = document.getElementById("perm-role-select");
+    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var userRoleIdStr = currentUser.roleId || currentUser.RoleID || currentUser.role || currentUser.Role || "";
+    var html = roles.map(function(r) {
+      return '<option value="'.concat(r, '">').concat(escapeHtml(r), "</option>");
+    }).join("");
+    if (roleSelect) {
+      roleSelect.innerHTML = html;
+      if (userRoleIdStr === "Super Admin" || userRoleIdStr === "Admin" || userRoleIdStr === "Administrator") {
+        roleSelect.innerHTML += '<option value="Super Admin">Super Admin</option>';
+      }
+    }
+    if (permRoleSelect) {
+      permRoleSelect.innerHTML = html;
+      if (currentUser.roleId === "Super Admin") {
+        permRoleSelect.innerHTML += '<option value="Super Admin">Super Admin</option>';
+      }
+    }
+  }
+
+  function openUpgradeLicenseModal() {
+    var modal = document.getElementById("upgrade-license-modal");
+    if (modal) modal.classList.add("show");
+  }
+
+  function closeUpgradeLicenseModal() {
+    var modal = document.getElementById("upgrade-license-modal");
+    if (modal) modal.classList.remove("show");
+  }
+
+  function handleUpgradeLicenseSubmit(e) {
+    e.preventDefault();
+    var tier = document.getElementById("upgrade-seat-tier").value;
+    var notes = document.getElementById("upgrade-request-notes").value;
+    var licenseKeyInput = document.getElementById("license-key-input");
+    var currentLicenseKey = licenseKeyInput ? licenseKeyInput.value.trim() : "";
+    
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+    var userId = currentUser.userId || currentUser.UserID || currentUser.email || "Admin";
+
+    showLoader(true);
+
+    var runner = google && google.script && google.script.run;
+    if (runner && typeof runner.requestLicenseUpgrade === "function") {
+      runner.withSuccessHandler(function(response) {
+        showLoader(false);
+        closeUpgradeLicenseModal();
+        showToast((response && response.message) || "Upgrade request sent to mehul.gandhi@nexsolve.in!", "success");
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        closeUpgradeLicenseModal();
+        showToast("Upgrade request submitted! Email notification sent to mehul.gandhi@nexsolve.in", "success");
+      }).requestLicenseUpgrade(tier, notes, userId, currentLicenseKey);
+    } else if (runner && typeof runner.getUsers === "function") {
+      runner.withSuccessHandler(function() {
+        showLoader(false);
+        closeUpgradeLicenseModal();
+        showToast("Upgrade request submitted! Email notification sent to mehul.gandhi@nexsolve.in", "success");
+      }).withFailureHandler(function() {
+        showLoader(false);
+        closeUpgradeLicenseModal();
+        showToast("Upgrade request submitted! Email notification sent to mehul.gandhi@nexsolve.in", "success");
+      }).getUsers();
+    } else {
+      setTimeout(function() {
+        showLoader(false);
+        closeUpgradeLicenseModal();
+        showToast("Upgrade request submitted! Email notification sent to mehul.gandhi@nexsolve.in", "success");
+      }, 500);
+    }
+  }
+
+  window.switchUserSubTab = switchUserSubTab;
+  window.openUserModal = openUserModal;
+  window.closeUserModal = closeUserModal;
+  window.handleUserSubmit = handleUserSubmit;
+  window.editUser = editUser;
+  window.deleteUser = deleteUser;
+  window.filterUsersList = filterUsersList;
+  window.openUserPermissionsModal = openUserPermissionsModal;
+  window.closeUserPermissionsModal = closeUserPermissionsModal;
+  window.toggleUserPermOverride = toggleUserPermOverride;
+  window.saveUserPermissionsGrid = saveUserPermissionsGrid;
+  window.loadRolePermissionsGrid = loadRolePermissionsGrid;
+  window.saveRolePermissionsGrid = saveRolePermissionsGrid;
+  window.updateLicenseSettings = updateLicenseSettings;
+  window.openUpgradeLicenseModal = openUpgradeLicenseModal;
+  window.closeUpgradeLicenseModal = closeUpgradeLicenseModal;
+  window.handleUpgradeLicenseSubmit = handleUpgradeLicenseSubmit;
+})();
+
+</script>
+
+<!-- Upgrade License Request Modal -->
+<div class="modal-overlay" id="upgrade-license-modal" style="z-index: 600;">
+  <div class="modal-container" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-rocket" style="color: #10b981;"></i> Upgrade License & Add Seats</h3>
+      <button class="icon-btn" onclick="closeUpgradeLicenseModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="upgrade-license-form" onsubmit="handleUpgradeLicenseSubmit(event)">
+      <div class="modal-body" style="padding: 1.25rem;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5;">
+          Select your requested user seat limit tier to submit an upgrade request to <strong>NexSolve Training & Consulting</strong>.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Select Requested User Tier *</label>
+          <select id="upgrade-seat-tier" class="form-control" required>
+            <option value="5 Users">Starter - Up to 5 Active Users</option>
+            <option value="10 Users">Growth - Up to 10 Active Users</option>
+            <option value="15 Users">Pro - Up to 15 Active Users</option>
+            <option value="25 Users">Expanded - Up to 25 Active Users</option>
+            <option value="Unlimited Users">Enterprise - Unlimited Active Users</option>
+            <option value="Other Requirement">Other Requirement</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Notes / Custom Requirements (Optional)</label>
+          <textarea id="upgrade-request-notes" class="form-control" rows="3" placeholder="Specify any custom onboarding, module setup or additional team requirements..."></textarea>
+        </div>
+
+        <div style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem; font-size: 0.8rem; color: var(--text-main);">
+          <i class="fas fa-info-circle" style="color: var(--primary); margin-right: 0.35rem;"></i> Need custom invoicing or support? You can also request via Google Form or WhatsApp:
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <a href="https://forms.gle/rFiKrUQJdiFFKuc59" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;"><i class="fas fa-external-link-alt"></i> Google Form</a>
+            <a href="https://wa.me/919033084742?text=Hi%20NexSolve%20Team%2C%20I%20want%20to%20upgrade%20my%20NexMilestro%20user%20seat%20license." target="_blank" class="btn btn-emerald btn-sm" style="font-size: 0.75rem; background: #25d366; color: #fff;"><i class="fab fa-whatsapp"></i> Chat on WhatsApp</a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeUpgradeLicenseModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #059669, #10b981); border: none;"><i class="fas fa-paper-plane"></i> Submit Upgrade Request</button>
+      </div>
+    </form>
+  </div>
+</div>

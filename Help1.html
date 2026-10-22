@@ -1,0 +1,125 @@
+<!-- User Guide & Support View Template -->
+<style>
+.user-guide-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+@media (max-width: 768px) {
+  .user-guide-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+</style>
+<div class="view-container">
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+    <a href="https://forms.gle/rFiKrUQJdiFFKuc59" target="_blank" class="btn btn-secondary" title="Open Support Portal"><i class="fas fa-external-link-alt"></i> Support Portal</a>
+  </div>
+
+  <div class="user-guide-grid">
+    
+    <!-- Left Column Guides -->
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+
+      <!-- 1. Getting Started & Company Setup -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-building" style="color: var(--primary);"></i> 1. Organization & Company Setup
+        </h3>
+        <p style="font-size: 0.825rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem;">
+          Configure your studio branding, legal tax details, and multiple bank accounts.
+        </p>
+        <ul style="font-size: 0.825rem; color: var(--text-main); line-height: 1.6; padding-left: 1.2rem; margin: 0;">
+          <li><strong>Upload Company Logo</strong>: Select your PNG/SVG logo file. It renders dynamically beside the header text.</li>
+          <li><strong>Tax & Legal Registrations</strong>: Enter official PAN & GSTIN numbers for automated invoice compliance.</li>
+          <li><strong>Multiple Bank Accounts</strong>: Click <em>"Add Bank Account"</em> to add HDFC, ICICI, or SBI accounts with IFSC codes and tag your primary account.</li>
+        </ul>
+      </div>
+
+      <!-- 2. Leads & WhatsApp Automation -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-bullseye" style="color: var(--primary);"></i> 2. Leads & WhatsApp Integration
+        </h3>
+        <p style="font-size: 0.825rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem;">
+          Track prospect leads from initial contact to conversion, with 1-click WhatsApp follow-ups.
+        </p>
+        <ul style="font-size: 0.825rem; color: var(--text-main); line-height: 1.6; padding-left: 1.2rem; margin: 0;">
+          <li><strong>Lead Follow-up Log</strong>: Record follow-up dates, discussion notes, and next action items.</li>
+          <li><strong>Send WhatsApp</strong>: Click <em>"Send WhatsApp"</em> on any follow-up card to auto-draft standardized customer messages.</li>
+          <li><strong>Mobile vs Desktop Routing</strong>: Opens WhatsApp Web on PCs and direct <code>wa.me</code> app on mobile devices.</li>
+          <li><strong>Convert to Customer</strong>: One-click conversion transfers lead data directly to your active customer ledger.</li>
+        </ul>
+      </div>
+
+      <!-- 3. Site Visits & Inspection Logs -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-eye" style="color: var(--primary);"></i> 3. Site Visits & Billable Notes
+        </h3>
+        <p style="font-size: 0.825rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem;">
+          Log site inspections, billable visit charges, and dispatch project updates.
+        </p>
+        <ul style="font-size: 0.825rem; color: var(--text-main); line-height: 1.6; padding-left: 1.2rem; margin: 0;">
+          <li><strong>Visit Purpose & Remarks</strong>: Document site measurements, progress checks, and contractor notes.</li>
+          <li><strong>Billable Visits</strong>: Tag billable inspection charges to auto-populate into Finance Booking.</li>
+          <li><strong>WhatsApp Visit Update</strong>: Send structured <em>"Visit Update"</em> summaries to client project groups.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Right Column Guides -->
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+
+      <!-- 4. Projects & Milestones -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-cubes" style="color: var(--primary);"></i> 4. Projects & Milestones
+        </h3>
+        <p style="font-size: 0.825rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem;">
+          Manage end-to-end client project lifecycles, milestone payments, and vendor costs.
+        </p>
+        <ul style="font-size: 0.825rem; color: var(--text-main); line-height: 1.6; padding-left: 1.2rem; margin: 0;">
+          <li><strong>Milestone Tracking</strong>: Define project phases, due dates, and associate cost allocations.</li>
+          <li><strong>Proposals & Estimates</strong>: Create customer proposals and link approved budgets directly to project milestones.</li>
+          <li><strong>Project Analytics</strong>: Monitor project health, completion status, and profit margins.</li>
+        </ul>
+      </div>
+
+      <!-- 5. Finance Booking & Multi-Bank Linking -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-wallet" style="color: var(--primary);"></i> 5. Finance Booking & Bank Linking
+        </h3>
+        <p style="font-size: 0.825rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem;">
+          Book client receipts, vendor spends, and operational cash flows.
+        </p>
+        <ul style="font-size: 0.825rem; color: var(--text-main); line-height: 1.6; padding-left: 1.2rem; margin: 0;">
+          <li><strong>Non-Project Expense / Income Toggle</strong>: Toggle switch at the top-left of the modal form for general office/overhead spends.</li>
+          <li><strong>Linked Bank Account</strong>: Select configured bank accounts (e.g. HDFC Current, ICICI Savings) for clear audit trails.</li>
+          <li><strong>Bank Ledger Filter</strong>: Filter income and expense transactions by specific bank account.</li>
+        </ul>
+      </div>
+
+      <!-- 6. Licensing & User Seat Management -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-user-shield" style="color: var(--primary);"></i> 6. User Seats & Access Control
+        </h3>
+        <p style="font-size: 0.825rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem;">
+          Control user seats, staff roles, and upgrade license limits.
+        </p>
+        <ul style="font-size: 0.825rem; color: var(--text-main); line-height: 1.6; padding-left: 1.2rem; margin: 0;">
+          <li><strong>Role-Based Access</strong>: Assign Super Admin, Admin, Manager, Designer, or Staff roles.</li>
+          <li><strong>Active Seat Limit</strong>: Enforces active user caps configured in license settings.</li>
+          <li><strong>Upgrade User Seats</strong>: Click <em>"Upgrade User Seats"</em> in <strong>Users & Access</strong> tab to request user limit extensions.</li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+</div>

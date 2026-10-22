@@ -1,0 +1,524 @@
+<!-- Vendor1.html -->
+<div class="view-container">
+  <!-- Action Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="vendor-search-input" class="search-input" placeholder="Search vendors by name, contact..." oninput="filterVendorsTable()">
+    </div>
+    
+    <div class="filter-group">
+      <select id="filter-vendor-type" class="select-filter" onchange="filterVendorsTable()">
+        <option value="">All Categories</option>
+        <option value="Electrical">Electrical</option>
+        <option value="Plumbing">Plumbing</option>
+        <option value="Carpentry">Carpentry</option>
+        <option value="Masonry">Masonry</option>
+        <option value="Material Supply">Material Supply</option>
+        <option value="General Civil">General Civil</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <select id="filter-vendor-status" class="select-filter" onchange="filterVendorsTable()">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+      
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary" id="btn-add-vendor" onclick="openVendorModal()"><i class="fas fa-plus"></i> Add Vendor</button>
+    </div>
+  </div>
+
+  <!-- Vendors Data Table -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none;">
+        <table class="data-table" id="vendors-table">
+          <thead>
+            <tr>
+              <th>Vendor ID</th>
+              <th>Vendor Name</th>
+              <th>Contact Person</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>Category</th>
+              <th>GST Number</th>
+              <th>Status</th>
+              <th>Attachments</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading vendors...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Vendor Modal -->
+<div class="modal-overlay" id="vendor-modal">
+  <div class="modal-container" style="max-width: 650px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="vendor-modal-title">Add Vendor Profile</h3>
+      <button class="icon-btn" onclick="closeVendorModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="vendor-form" onsubmit="handleVendorSubmit(event)">
+      <input type="hidden" id="vendor-id-field" name="VendorID">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Vendor Business Name *</label>
+            <input type="text" id="vendor-name-field" name="VendorName" class="form-control" placeholder="e.g. Apex Electricals" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Contact Person Name</label>
+            <input type="text" id="vendor-contact-field" name="ContactPerson" class="form-control" placeholder="e.g. Ramesh Singh">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Category / Vendor Type *</label>
+            <select id="vendor-type-select" name="VendorType" class="form-control" required>
+              <option value="Electrical">Electrical</option>
+              <option value="Plumbing">Plumbing</option>
+              <option value="Carpentry">Carpentry</option>
+              <option value="Masonry">Masonry</option>
+              <option value="Material Supply">Material Supply</option>
+              <option value="General Civil">General Civil</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mobile Number *</label>
+            <input type="tel" id="vendor-mobile-field" name="Mobile" class="form-control" placeholder="10-digit mobile" required pattern="[0-9]{10}">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="vendor-email-field" name="Email" class="form-control" placeholder="vendor@example.com">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">PAN Card Number</label>
+            <input type="text" id="vendor-pan-field" name="PANNumber" class="form-control" placeholder="10-digit PAN (e.g. ABCDE1234F)" style="text-transform: uppercase;" maxlength="10">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">GST Number</label>
+            <input type="text" id="vendor-gst-field" name="GSTNumber" class="form-control" placeholder="15-digit GSTIN" style="text-transform: uppercase;">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="vendor-status-select" name="Status" class="form-control" required>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Office / Business Address</label>
+            <input type="text" id="vendor-address-field" name="Address" class="form-control" placeholder="Plot, Street name, City...">
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Vendor Notes</label>
+            <textarea id="vendor-notes-field" name="Notes" class="form-control" placeholder="Provide notes on supply quality, pricing structures..."></textarea>
+          </div>
+          
+          <input type="hidden" id="vendor-attachments-hidden" name="Attachments">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Add Attachments / Documents</label>
+            <input type="file" id="vendor-attachment" class="form-control" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Choose one or more files to upload directly to Google Drive. Leave empty to keep existing attachments if editing.</small>
+            <div id="vendor-current-attachments-container" style="margin-top: 0.5rem; display: none;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">Current Attachments:</span>
+              <div id="vendor-current-attachments-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeVendorModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Vendor</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  var vendorsDataList = [];
+  var dropdownsCache = {};
+  window.loadVendorsView = function(forceRefresh) {
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var vendorPerm = perms["Vendors"] || {};
+    var canAdd = isSuperAdmin || vendorPerm.add === true;
+    var addBtn = document.getElementById("btn-add-vendor");
+    if (addBtn)
+      addBtn.style.display = canAdd ? "inline-block" : "none";
+    var loadedCount = 0;
+    var totalRequests = 1;
+    function checkLoaded() {
+      loadedCount++;
+      if (loadedCount === totalRequests) {
+        populateDropdownsFromCache();
+        renderVendors(vendorsDataList);
+        showLoader(false);
+      }
+    }
+
+    function applyVendorsData(result) {
+      vendorsDataList = result.vendors || [];
+      dropdownsCache = result.dropdowns || {};
+      checkLoaded();
+    }
+
+    // Check global cache first if not forceRefresh
+    if (!forceRefresh) {
+      var cached = cacheGet("vendorsViewData");
+      if (cached) {
+        applyVendorsData(cached);
+        return;
+      }
+    }
+
+    if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(result) {
+        if (result && result.success !== false) {
+          cacheSet("vendorsViewData", result);
+          applyVendorsData(result);
+        } else {
+          fetchLegacyVendorsData();
+        }
+      }).withFailureHandler(function(err) {
+        fetchLegacyVendorsData();
+      }).getVendorsViewData();
+    } else {
+      fetchLegacyVendorsData();
+    }
+  };
+
+  function fetchLegacyVendorsData() {
+    var loadedCount = 0;
+    var totalRequests = 2;
+    function checkLegacyLoaded() {
+      loadedCount++;
+      if (loadedCount === totalRequests) {
+        populateDropdownsFromCache();
+        renderVendors(vendorsDataList);
+        showLoader(false);
+      }
+    }
+    google.script.run.withSuccessHandler(function(data) { vendorsDataList = data || []; checkLegacyLoaded(); }).withFailureHandler(function(err) { checkLegacyLoaded(); }).getVendors();
+    google.script.run.withSuccessHandler(function(data) { dropdownsCache = data || {}; checkLegacyLoaded(); }).withFailureHandler(function(err) { checkLegacyLoaded(); }).getDropdownValues();
+  }
+  function populateDropdownsFromCache() {
+    var types = dropdownsCache["VendorType"] || [];
+    var typeSelect = document.getElementById("vendor-type-select");
+    if (typeSelect) {
+      typeSelect.innerHTML = types.map(function(t) {
+        return '<option value="'.concat(t, '">').concat(escapeHtml(t), "</option>");
+      }).join("");
+    }
+    var typeFilter = document.getElementById("filter-vendor-type");
+    if (typeFilter) {
+      typeFilter.innerHTML = '<option value="">All Types</option>' + types.map(function(t) {
+        return '<option value="'.concat(t, '">').concat(escapeHtml(t), "</option>");
+      }).join("");
+    }
+  }
+  function renderVendors(vendors) {
+    var tbody = document.querySelector("#vendors-table tbody");
+    if (vendors.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-truck empty-state-icon"></i>\n          <p class="empty-state-title">No vendors added</p>\n          <p class="empty-state-desc">Establish profiles for material suppliers and sub-contractors.</p>\n        </div>\n      </td></tr>';
+      return;
+    }
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var vendorPerm = perms["Vendors"] || {};
+    var canEdit = isSuperAdmin || vendorPerm.edit === true;
+    var canDelete = isSuperAdmin || vendorPerm.del === true;
+    var sorted = vendors.slice().sort(function(a, b) {
+      var idA = String(a.VendorID || "");
+      var idB = String(b.VendorID || "");
+      return idB.localeCompare(idA);
+    });
+    tbody.innerHTML = sorted.map(function(v) {
+      var actionsHtml = "";
+      if (canEdit) {
+        var vId = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
+        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Vendor" onclick="editVendor(\'' + vId + '\')"><i class="fas fa-pen"></i></button>';
+      }
+      if (canDelete) {
+        var vId = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
+        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Vendor" onclick="deleteVendor(\'' + vId + '\')"><i class="fas fa-trash"></i></button>';
+      }
+      var photosHtml = "-";
+      if (v.Attachments && typeof v.Attachments === "string" && v.Attachments.trim() !== "") {
+        var links = v.Attachments.split(",").map(function(l) {
+          return l.trim();
+        }).filter(function(l) {
+          return l !== "";
+        });
+        if (links.length === 1) {
+          photosHtml = '<a href="' + escapeHtml(links[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View</a>';
+        } else if (links.length > 1) {
+          var vIdEsc = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
+          var itemsHtml = links.map(function(link, idx) {
+            return '<a href="' + escapeHtml(link) + '" target="_blank" style="display: block; padding: 0.35rem 0.75rem; font-size: 0.75rem; color: var(--text-main); text-decoration: none; font-weight: 500;"><i class="fas fa-file" style="margin-right: 0.35rem; color: var(--primary);"></i> Attachment ' + (idx + 1) + '</a>';
+          }).join("");
+          photosHtml = '<div style="position: relative; display: inline-block;">' +
+            '<button class="btn btn-secondary btn-sm dropdown-toggle" onclick="toggleVendorAttachmentsDropdown(event, \'' + vIdEsc + '\')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View (' + links.length + ')</button>' +
+            '<div id="dropdown-' + vIdEsc + '" class="attachments-dropdown-menu" style="display: none; position: absolute; right: 0; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; min-width: 150px; padding: 0.35rem 0;">' +
+              itemsHtml +
+            '</div>' +
+          '</div>';
+        }
+      }
+
+      var vIdEsc = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
+      var vNameEsc = typeof escapeHtml === "function" ? escapeHtml(v.VendorName || "") : (v.VendorName || "");
+      var vContactEsc = typeof escapeHtml === "function" ? escapeHtml(v.ContactPerson || "-") : (v.ContactPerson || "-");
+      var vMobileEsc = typeof escapeHtml === "function" ? escapeHtml(v.Mobile || "") : (v.Mobile || "");
+      var vEmailEsc = typeof escapeHtml === "function" ? escapeHtml(v.Email || "-") : (v.Email || "-");
+      var vTypeEsc = typeof escapeHtml === "function" ? escapeHtml(v.VendorType || "") : (v.VendorType || "");
+      var vGstEsc = typeof escapeHtml === "function" ? escapeHtml(v.GSTNumber || "-") : (v.GSTNumber || "-");
+      var vStatusStr = String(v.Status || "Active");
+
+      return '<tr id="row-' + vIdEsc + '">' +
+        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + vIdEsc + '</td>' +
+        '<td style="font-weight: 600;">' + vNameEsc + '</td>' +
+        '<td>' + vContactEsc + '</td>' +
+        '<td>' + vMobileEsc + '</td>' +
+        '<td>' + vEmailEsc + '</td>' +
+        '<td><span class="badge badge-on-hold">' + vTypeEsc + '</span></td>' +
+        '<td>' + vGstEsc + '</td>' +
+        '<td><span class="badge badge-' + vStatusStr.toLowerCase() + '">' + escapeHtml(vStatusStr) + '</span></td>' +
+        '<td>' + photosHtml + '</td>' +
+        '<td style="text-align: right;">' + actionsHtml + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+  function filterVendorsTable() {
+    var searchVal = document.getElementById("vendor-search-input").value.toLowerCase();
+    var typeVal = document.getElementById("filter-vendor-type").value;
+    var statusVal = document.getElementById("filter-vendor-status").value;
+    var filtered = vendorsDataList.filter(function(v) {
+      var matchesSearch = v.VendorName.toLowerCase().includes(searchVal) || v.ContactPerson && v.ContactPerson.toLowerCase().includes(searchVal) || v.VendorID.toLowerCase().includes(searchVal);
+      var matchesType = !typeVal || v.VendorType === typeVal;
+      var matchesStatus = !statusVal || v.Status === statusVal;
+      return matchesSearch && matchesType && matchesStatus;
+    });
+    renderVendors(filtered);
+  }
+  function openVendorModal(vendorObj) {
+    if (vendorObj === void 0) {
+      vendorObj = null;
+    }
+    var form = document.getElementById("vendor-form");
+    form.reset();
+    document.getElementById("vendor-id-field").value = "";
+    document.getElementById("vendor-attachments-hidden").value = "";
+    var fileInput = document.getElementById("vendor-attachment");
+    if (fileInput)
+      fileInput.value = "";
+    var currentAttachmentsContainer = document.getElementById("vendor-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("vendor-current-attachments-list");
+    if (currentAttachmentsContainer)
+      currentAttachmentsContainer.style.display = "none";
+    if (currentAttachmentsList)
+      currentAttachmentsList.innerHTML = "";
+    if (vendorObj) {
+      document.getElementById("vendor-modal-title").innerText = "Edit Vendor Profile " + vendorObj.VendorID;
+      document.getElementById("vendor-id-field").value = vendorObj.VendorID;
+      document.getElementById("vendor-name-field").value = vendorObj.VendorName;
+      document.getElementById("vendor-contact-field").value = vendorObj.ContactPerson || "";
+      document.getElementById("vendor-type-select").value = vendorObj.VendorType;
+      document.getElementById("vendor-mobile-field").value = vendorObj.Mobile;
+      document.getElementById("vendor-email-field").value = vendorObj.Email || "";
+      document.getElementById("vendor-pan-field").value = vendorObj.PANNumber || vendorObj.PAN || "";
+      document.getElementById("vendor-gst-field").value = vendorObj.GSTNumber || "";
+      document.getElementById("vendor-status-select").value = vendorObj.Status;
+      document.getElementById("vendor-address-field").value = vendorObj.Address || "";
+      document.getElementById("vendor-notes-field").value = vendorObj.Notes || "";
+      document.getElementById("vendor-attachments-hidden").value = vendorObj.Attachments || "";
+      if (vendorObj.Attachments && typeof vendorObj.Attachments === "string" && vendorObj.Attachments.trim() !== "") {
+        if (currentAttachmentsContainer)
+          currentAttachmentsContainer.style.display = "block";
+        var links = vendorObj.Attachments.split(",").map(function(l) {
+          return l.trim();
+        }).filter(function(l) {
+          return l !== "";
+        });
+        if (currentAttachmentsList) {
+          currentAttachmentsList.innerHTML = links.map(function(link, idx) {
+            return '\n            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">\n              <a href="'.concat(escapeHtml(link), '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ').concat(idx + 1, '</a>\n              <button type="button" onclick="removeAttachment(').concat(idx, ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>\n            </div>\n          ');
+          }).join("");
+        }
+      }
+    } else {
+      document.getElementById("vendor-modal-title").innerText = "Add Vendor Profile";
+      document.getElementById("vendor-status-select").value = "Active";
+      document.getElementById("vendor-type-select").value = "Material Supply";
+    }
+    document.getElementById("vendor-modal").classList.add("show");
+  }
+  function closeVendorModal() {
+    document.getElementById("vendor-modal").classList.remove("show");
+  }
+  function editVendor(vendorId) {
+    var vendor = vendorsDataList.find(function(v) {
+      return v.VendorID === vendorId;
+    });
+    if (vendor) {
+      openVendorModal(vendor);
+    }
+  }
+  function handleVendorSubmit(e) {
+    e.preventDefault();
+    var form = document.getElementById("vendor-form");
+    var formData = {};
+    var inputs = form.querySelectorAll("input, select, textarea");
+    inputs.forEach(function(input) {
+      if (input.name) {
+        formData[input.name] = input.value;
+      }
+    });
+    var fileInput = document.getElementById("vendor-attachment");
+    var files = fileInput ? fileInput.files : [];
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    function executeSaveVendor(fileDataArray2) {
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          closeVendorModal();
+          loadVendorsView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).saveVendor(formData, fileDataArray2, currentUser.userId);
+    }
+    if (files.length > 0) {
+      var fileDataArray = [];
+      var loadedFiles = 0;
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var reader = new FileReader();
+        reader.onload = /* @__PURE__ */ function(f) {
+          return function(evt) {
+            var base64Data = evt.target.result.split(",")[1];
+            fileDataArray.push({
+              filename: f.name,
+              mimeType: f.type,
+              base64: base64Data
+            });
+            loadedFiles++;
+            if (loadedFiles === files.length) {
+              executeSaveVendor(fileDataArray);
+            }
+          };
+        }(file);
+        reader.onerror = function() {
+          showLoader(false);
+          showToast("Failed to read one of the selected files.", "error");
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      executeSaveVendor(null);
+    }
+  }
+  function deleteVendor(vendorId) {
+    if (confirm("Are you sure you want to delete Vendor " + vendorId + "? All associated expense transactions linked to this vendor will remain recorded.")) {
+      showLoader(true);
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          vendorsDataList = vendorsDataList.filter(function(v) { return v.VendorID !== vendorId; });
+          renderVendors(vendorsDataList);
+          loadVendorsView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteVendor(vendorId);
+    }
+  }
+  function removeAttachment(index) {
+    var hiddenInput = document.getElementById("vendor-attachments-hidden");
+    var photos = hiddenInput.value;
+    if (!photos)
+      return;
+    var links = photos.split(",").map(function(l) {
+      return l.trim();
+    }).filter(function(l) {
+      return l !== "";
+    });
+    links.splice(index, 1);
+    var updatedPhotos = links.join(", ");
+    hiddenInput.value = updatedPhotos;
+    var currentAttachmentsContainer = document.getElementById("vendor-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("vendor-current-attachments-list");
+    if (updatedPhotos === "") {
+      if (currentAttachmentsContainer)
+        currentAttachmentsContainer.style.display = "none";
+      if (currentAttachmentsList)
+        currentAttachmentsList.innerHTML = "";
+    } else {
+      if (currentAttachmentsList) {
+        currentAttachmentsList.innerHTML = links.map(function(link, idx) {
+          return '\n          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">\n            <a href="'.concat(escapeHtml(link), '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ').concat(idx + 1, '</a>\n            <button type="button" onclick="removeAttachment(').concat(idx, ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>\n          </div>\n        ');
+        }).join("");
+      }
+    }
+  }
+  function toggleVendorAttachmentsDropdown(event, vendorId) {
+    event.stopPropagation();
+    var dropdown = document.getElementById("dropdown-" + vendorId);
+    if (!dropdown)
+      return;
+    var isOpen = dropdown.style.display === "block";
+    document.querySelectorAll(".attachments-dropdown-menu").forEach(function(el) {
+      el.style.display = "none";
+    });
+    if (!isOpen) {
+      dropdown.style.display = "block";
+    }
+  }
+  document.addEventListener("click", function() {
+    document.querySelectorAll(".attachments-dropdown-menu").forEach(function(el) {
+      el.style.display = "none";
+    });
+  });
+  window.openVendorModal = openVendorModal;
+  window.closeVendorModal = closeVendorModal;
+  window.editVendor = editVendor;
+  window.deleteVendor = deleteVendor;
+  window.filterVendorsTable = filterVendorsTable;
+  window.handleVendorSubmit = handleVendorSubmit;
+  window.removeAttachment = removeAttachment;
+  window.toggleVendorAttachmentsDropdown = toggleVendorAttachmentsDropdown;
+})();
+
+</script>

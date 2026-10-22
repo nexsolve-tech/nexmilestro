@@ -1,0 +1,9 @@
+# Files to ignore when pushing to Google Apps Script
+**/*.md
+**/*.txt
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.webp
+.git/
+node_modules/

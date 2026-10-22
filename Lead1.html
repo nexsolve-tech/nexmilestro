@@ -1,0 +1,859 @@
+<!-- Lead1.html -->
+<div class="view-container">
+  <!-- Action Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="lead-search-input" class="search-input" placeholder="Search leads by name, phone, ID..." oninput="filterLeadsTable()">
+    </div>
+    
+    <div class="filter-group">
+      <select id="filter-lead-source" class="select-filter" onchange="filterLeadsTable()">
+        <option value="">All Sources</option>
+      </select>
+
+      <select id="filter-lead-status" class="select-filter" onchange="filterLeadsTable()">
+        <option value="">All Pipeline Statuses</option>
+      </select>
+      
+      <button class="btn btn-secondary" onclick="loadLeadsView(true)" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary" id="btn-add-lead" onclick="openLeadModal()"><i class="fas fa-plus"></i> Add New Lead</button>
+    </div>
+  </div>
+
+  <!-- Leads List Table -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none;">
+        <table class="data-table" id="leads-table">
+          <thead>
+            <tr>
+              <th>Lead ID</th>
+              <th>Date</th>
+              <th>Customer Name</th>
+              <th>Project Type</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>Lead Source</th>
+              <th>Lead Status</th>
+              <th>Next Follow-up Date</th>
+              <th style="text-align: right; width: 140px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading leads...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Lead Modal -->
+<div class="modal-overlay" id="lead-modal">
+  <div class="modal-container" style="max-width: 680px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="lead-modal-title">Add New Lead</h3>
+      <button class="icon-btn" onclick="closeLeadModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="lead-form" onsubmit="handleLeadSubmit(event)">
+      <input type="hidden" id="lead-id-field" name="LeadID">
+      <input type="hidden" id="lead-loss-reason-field" name="LossReason">
+      <div class="modal-body">
+        <div class="form-grid">
+          
+          <div class="form-group">
+            <label class="form-label">Inquiry Date *</label>
+            <input type="date" id="lead-date-field" name="Date" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Customer Name *</label>
+            <input type="text" id="lead-cust-name-field" name="CustomerName" class="form-control" placeholder="e.g. Anil Goyal" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Project Type *</label>
+            <select id="lead-proj-type-select" name="ProjectType" class="form-control" required>
+              <!-- Loaded dynamically from Masters -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Customer Contact No *</label>
+            <input type="tel" id="lead-mobile-field" name="Mobile" class="form-control" placeholder="10-digit contact number" required pattern="[0-9]{10}" maxlength="10" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+            <small style="color:var(--text-muted); font-size:0.75rem;">10-digit numeric only</small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Customer Email ID</label>
+            <input type="email" id="lead-email-field" name="Email" class="form-control" placeholder="email@example.com">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Lead Type *</label>
+            <select id="lead-type-select" name="LeadType" class="form-control" required>
+              <!-- Loaded dynamically from Masters -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Lead Status *</label>
+            <select id="lead-status-select" name="Status" class="form-control" onchange="onLeadStatusFieldChange()" required>
+              <!-- Loaded dynamically from Masters -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Lead Source *</label>
+            <select id="lead-source-select" name="Source" class="form-control" required>
+              <!-- Loaded dynamically from Masters -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Lead By (Employee) *</label>
+            <select id="lead-assigned-select" name="AssignedTo" class="form-control" required>
+              <option value="">Select Staff</option>
+            </select>
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Project Details *</label>
+            <textarea id="lead-details-field" name="ProjectDetails" class="form-control" placeholder="Describe layout space requirements, dimensions, styling..." required></textarea>
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Remarks / Follow-up Notes</label>
+            <textarea id="lead-remarks-field" name="Remarks" class="form-control" placeholder="General discussion pointers..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeLeadModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Lead</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Manage Lead Follow-ups History Modal -->
+<div class="modal-overlay" id="lead-followup-modal">
+  <div class="modal-container" style="max-width: 720px; max-height: 90vh;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="followup-modal-title">Lead Follow-ups</h3>
+      <button class="icon-btn" onclick="closeLeadFollowupModal()"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto;">
+      <!-- Active Lead Summary Card -->
+      <div class="card" style="background: var(--bg-primary); margin: 0; padding: 1.25rem 1.5rem; display: flex; flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; flex-shrink: 0;">
+        <div>
+          <h4 id="followup-lead-name" style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">Anil Goyal</h4>
+          <span id="followup-lead-details" style="font-size: 0.825rem; color: var(--text-muted); font-weight: 500;">Mob: 9898989898 | Email: goyal@gmail.com</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.85rem;" onclick="triggerConvertCurrentFollowupLead()" title="Convert this lead to a customer"><i class="fas fa-user-plus" style="color: var(--primary);"></i> Convert to Customer</button>
+          <button type="button" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.85rem;" onclick="openEmailComposerModal()"><i class="fas fa-envelope"></i> Send Email</button>
+          <button type="button" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.85rem; background: #25D366; color: #fff; border-color: #25D366; font-weight: 600;" onclick="openLeadFollowupWAShareModal()"><i class="fab fa-whatsapp"></i> Send WhatsApp</button>
+        </div>
+      </div>
+
+      <!-- Chronological History -->
+      <div>
+        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em;">Follow-up Logs History</h4>
+        <div id="followups-timeline" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Timeline elements render dynamically -->
+        </div>
+      </div>
+
+      <!-- Log New Follow-up Form -->
+      <form id="lead-followup-form" onsubmit="handleFollowupLogSubmit(event)" style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin: 0; flex-shrink: 0;">
+        <h4 style="margin: 0 0 1rem 0; font-size: 1rem;"><i class="fas fa-plus" style="color: var(--primary);"></i> Log New Follow-up</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Follow-up Date *</label>
+            <input type="date" id="flp-date" required class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Next Follow-up Date *</label>
+            <input type="date" id="flp-next-date" required class="form-control">
+          </div>
+          <div class="form-group form-grid-full">
+            <label class="form-label">Discussion Notes / Remarks *</label>
+            <textarea id="flp-notes" required class="form-control" placeholder="Summarize today's call details, customer concerns..." style="height: 80px;"></textarea>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+          <button type="submit" class="btn btn-primary">Log Follow-up</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Email Composer Modal -->
+<div class="modal-overlay" id="lead-email-modal" style="z-index: 210;">
+  <div class="modal-container" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Compose Follow-up Email</h3>
+      <button class="icon-btn" onclick="closeEmailComposerModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="lead-email-form" onsubmit="handleSendEmailSubmit(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">To *</label>
+          <input type="email" id="email-to" class="form-control" readonly required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject *</label>
+          <input type="text" id="email-subject" class="form-control" required placeholder="Subject Line">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Message *</label>
+          <textarea id="email-body" class="form-control" required placeholder="Write email message..." style="height: 180px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Next Follow-up Date *</label>
+          <input type="date" id="email-next-date" class="form-control" required>
+          <small style="color:var(--text-muted); font-size:0.75rem;">Syncs next schedule date automatically upon sending email.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeEmailComposerModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send & Log</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  var leadsDataList = [];
+  var dropdownsCache = {};
+  var staffCache = [];
+  var activeFollowupLeadId = "";
+  var activeLeadObj = null;
+
+  function populateSelectOptions(selectId, optionsArray, defaultText, selectedVal) {
+    var select = document.getElementById(selectId);
+    if (!select) return;
+    var html = defaultText ? '<option value="">' + escapeHtml(defaultText) + '</option>' : '';
+    (optionsArray || []).forEach(function(opt) {
+      var val = typeof opt === 'object' ? opt.val : opt;
+      var label = typeof opt === 'object' ? opt.label : opt;
+      var isSel = String(val) === String(selectedVal || '') ? ' selected' : '';
+      html += '<option value="' + escapeHtml(val) + '"' + isSel + '>' + escapeHtml(label) + '</option>';
+    });
+    select.innerHTML = html;
+  }
+
+  function checkCompletion() {
+    var sourceOptions = dropdownsCache.LeadSource || [];
+    var statusOptions = dropdownsCache.LeadStatus || [];
+    var projTypeOptions = dropdownsCache.ProjectType || [];
+    var typeOptions = (dropdownsCache.LeadType && dropdownsCache.LeadType.length > 0)
+      ? dropdownsCache.LeadType
+      : ["Hot Lead", "Warm Lead", "Cold Lead", "Inbound Inquiry", "Referral"];
+
+    populateSelectOptions("filter-lead-source", sourceOptions, "All Sources");
+    populateSelectOptions("filter-lead-status", statusOptions, "All Pipeline Statuses");
+    populateSelectOptions("lead-source-select", sourceOptions);
+    populateSelectOptions("lead-status-select", statusOptions);
+    populateSelectOptions("lead-proj-type-select", projTypeOptions);
+    populateSelectOptions("lead-type-select", typeOptions);
+
+    renderLeads(leadsDataList);
+    showLoader(false);
+  }
+
+  function applyLeadsData(result) {
+    staffCache = result.users || [];
+    var staffOpts = staffCache.map(function(u) {
+      return { val: u.FullName, label: u.FullName };
+    });
+    populateSelectOptions("lead-assigned-select", staffOpts, "Select Staff");
+
+    leadsDataList = result.leads || [];
+    dropdownsCache = result.dropdowns || {};
+    checkCompletion();
+  }
+
+  window.loadLeadsView = function(forceRefresh) {
+    if (typeof showLoader === "function") showLoader(true);
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var leadPerm = perms["Leads"] || {};
+    var canAdd = isSuperAdmin || leadPerm.add === true;
+    var addBtn = document.getElementById("btn-add-lead");
+    if (addBtn) {
+      addBtn.style.display = canAdd ? "inline-block" : "none";
+    }
+
+    if (forceRefresh && typeof cacheClear === "function") {
+      cacheClear("leadsViewData");
+    }
+
+    if (!forceRefresh) {
+      var cached = typeof cacheGet === "function" ? cacheGet("leadsViewData") : null;
+      if (cached) {
+        applyLeadsData(cached);
+        return;
+      }
+    }
+
+    if (google.script && google.script.run) {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result && result.success !== false) {
+            if (typeof cacheSet === "function") cacheSet("leadsViewData", result);
+            applyLeadsData(result);
+          } else {
+            fetchLegacyLeadsData();
+          }
+        })
+        .withFailureHandler(function(err) {
+          console.error("getLeadsViewData failure:", err);
+          fetchLegacyLeadsData();
+        })
+        .getLeadsViewData();
+    } else {
+      fetchLegacyLeadsData();
+    }
+  };
+
+  function fetchLegacyLeadsData() {
+    var loadedCount = 0;
+    var totalCalls = 3;
+
+    function checkLegacyCompletion() {
+      loadedCount++;
+      if (loadedCount === totalCalls) {
+        checkCompletion();
+      }
+    }
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+        staffCache = data || [];
+        var staffOpts = staffCache.map(function(u) {
+          return { val: u.FullName, label: u.FullName };
+        });
+        populateSelectOptions("lead-assigned-select", staffOpts, "Select Staff");
+        checkLegacyCompletion();
+      })
+      .withFailureHandler(function() { checkLegacyCompletion(); })
+      .getUsers();
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+        leadsDataList = data || [];
+        checkLegacyCompletion();
+      })
+      .withFailureHandler(function() { checkLegacyCompletion(); })
+      .getLeads();
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+        dropdownsCache = data || {};
+        checkLegacyCompletion();
+      })
+      .withFailureHandler(function() { checkLegacyCompletion(); })
+      .getDropdownValues();
+  }
+
+  function renderLeads(leads) {
+    var tbody = document.querySelector("#leads-table tbody");
+    if (!tbody) return;
+
+    if (!leads || leads.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">' +
+        '<div class="empty-state">' +
+          '<i class="fas fa-bullseye empty-state-icon"></i>' +
+          '<p class="empty-state-title">No leads recorded</p>' +
+          '<p class="empty-state-desc">Input project inquiries and customer prospects.</p>' +
+        '</div>' +
+      '</td></tr>';
+      return;
+    }
+
+    var sorted = leads.slice().sort(function(a, b) {
+      return String(b.LeadID || '').localeCompare(String(a.LeadID || ''));
+    });
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var leadPerm = perms["Leads"] || {};
+    var canEdit = isSuperAdmin || leadPerm.edit === true;
+    var canDelete = isSuperAdmin || leadPerm.del === true;
+
+    var rowsHtml = sorted.map(function(lead) {
+      if (!lead) return "";
+
+      var formattedInquiryDate = lead.Date ? formatDate(lead.Date) : "-";
+      var nextFollowupDate = lead.FollowUpDate ? formatDate(lead.FollowUpDate) : "-";
+
+      var statusStr = lead.Status || "New";
+      var badgeClass = "badge-pending";
+      if (statusStr === "Won") badgeClass = "badge-completed";
+      if (statusStr === "Lost") badgeClass = "badge-inactive";
+      if (statusStr === "Proposal Sent") badgeClass = "badge-on-hold";
+
+      var actionsHtml = "";
+      var leadIdEsc = escapeHtml(lead.LeadID || "");
+      var custNameEsc = escapeHtml(lead.CustomerName || "");
+      var projTypeEsc = escapeHtml(lead.ProjectType || "");
+      var mobileEsc = escapeHtml(lead.Mobile || "");
+      var emailEsc = escapeHtml(lead.Email || "-");
+      var sourceEsc = escapeHtml(lead.Source || "-");
+      var statusEsc = escapeHtml(statusStr);
+
+      if (lead.Mobile) {
+        actionsHtml += '<button type="button" data-lead-id="' + leadIdEsc + '" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Chat with Lead on WhatsApp" onclick="sendLeadWhatsApp(this.getAttribute(\'data-lead-id\'))"><i class="fab fa-whatsapp"></i></button>';
+      }
+
+      if (canEdit) {
+        actionsHtml += '<button class="icon-btn" style="color: var(--primary);" title="Convert to Customer" onclick="triggerConvertLead(\'' + leadIdEsc + '\')"><i class="fas fa-user-plus"></i></button>';
+        actionsHtml += '<button class="icon-btn" style="color: var(--secondary);" title="Manage Follow-ups" onclick="openLeadFollowupModal(\'' + leadIdEsc + '\')"><i class="fas fa-history"></i></button>';
+        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Lead" onclick="editLead(\'' + leadIdEsc + '\')"><i class="fas fa-pen"></i></button>';
+      }
+
+      if (canDelete) {
+        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Lead" onclick="deleteLead(\'' + leadIdEsc + '\')"><i class="fas fa-trash"></i></button>';
+      }
+
+      return '<tr id="row-' + leadIdEsc + '">' +
+        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + leadIdEsc + '</td>' +
+        '<td>' + formattedInquiryDate + '</td>' +
+        '<td style="font-weight: 600;">' + custNameEsc + '</td>' +
+        '<td>' + projTypeEsc + '</td>' +
+        '<td>' + mobileEsc + '</td>' +
+        '<td>' + emailEsc + '</td>' +
+        '<td>' + sourceEsc + '</td>' +
+        '<td><span class="badge ' + badgeClass + '">' + statusEsc + '</span></td>' +
+        '<td style="font-size: 0.85rem; font-weight: 600; color: var(--secondary);">' + nextFollowupDate + '</td>' +
+        '<td style="text-align: right;">' + actionsHtml + '</td>' +
+      '</tr>';
+    }).join("");
+
+    tbody.innerHTML = rowsHtml;
+  }
+
+  function filterLeadsTable() {
+    var searchInput = document.getElementById("lead-search-input");
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+    var sourceSelect = document.getElementById("filter-lead-source");
+    var sourceVal = sourceSelect ? sourceSelect.value : "";
+    var statusSelect = document.getElementById("filter-lead-status");
+    var statusVal = statusSelect ? statusSelect.value : "";
+
+    var filtered = leadsDataList.filter(function(l) {
+      if (!l) return false;
+      var name = l.CustomerName ? String(l.CustomerName).toLowerCase() : "";
+      var phone = l.Mobile ? String(l.Mobile) : "";
+      var id = l.LeadID ? String(l.LeadID).toLowerCase() : "";
+
+      var matchesSearch = name.includes(searchVal) || phone.includes(searchVal) || id.includes(searchVal);
+      var matchesSource = !sourceVal || l.Source === sourceVal;
+      var matchesStatus = !statusVal || l.Status === statusVal;
+
+      return matchesSearch && matchesSource && matchesStatus;
+    });
+
+    renderLeads(filtered);
+  }
+
+  function sendLeadWhatsApp(leadId) {
+    var lead = leadsDataList.find(function(l) { return l.LeadID === leadId; });
+    if (!lead) return;
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var loggerName = currentUser.fullName || currentUser.FullName || "StudioSpace Team";
+
+    var msg = "Hello, " + (lead.CustomerName || "Customer") + ",\n\n" +
+              "*Lead Update* -\n\n" +
+              "Project Type: " + (lead.ProjectType || "-") + "\n" +
+              "Project Details: " + (lead.ProjectDetails || "-") + "\n" +
+              "Status: " + (lead.Status || "New") + "\n\n" +
+              "Regards,\n" + loggerName;
+
+    openWAShareModal(msg, lead.Mobile || "", "", lead.CustomerName || "Customer");
+  }
+
+  function openLeadModal(leadObj) {
+    leadObj = leadObj || null;
+    var form = document.getElementById("lead-form");
+    if (form) form.reset();
+
+    document.getElementById("lead-id-field").value = "";
+    document.getElementById("lead-loss-reason-field").value = "";
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isAdmin = currentUser.roleId === "Super Admin" || currentUser.roleId === "Admin";
+    var custNameInput = document.getElementById("lead-cust-name-field");
+    var projTypeInput = document.getElementById("lead-proj-type-select");
+
+    if (custNameInput) custNameInput.disabled = false;
+    if (projTypeInput) projTypeInput.disabled = false;
+
+    if (leadObj) {
+      document.getElementById("lead-modal-title").innerText = "Edit Lead Details " + leadObj.LeadID;
+      document.getElementById("lead-id-field").value = leadObj.LeadID;
+      document.getElementById("lead-date-field").value = parseRawDateString(leadObj.Date);
+      document.getElementById("lead-cust-name-field").value = leadObj.CustomerName || "";
+      document.getElementById("lead-proj-type-select").value = leadObj.ProjectType || "";
+      document.getElementById("lead-mobile-field").value = leadObj.Mobile || "";
+      document.getElementById("lead-email-field").value = leadObj.Email || "";
+      document.getElementById("lead-type-select").value = leadObj.LeadType || "";
+      document.getElementById("lead-status-select").value = leadObj.Status || "";
+      document.getElementById("lead-source-select").value = leadObj.Source || "";
+      document.getElementById("lead-assigned-select").value = leadObj.AssignedTo || "";
+      document.getElementById("lead-details-field").value = leadObj.ProjectDetails || "";
+      document.getElementById("lead-remarks-field").value = leadObj.Remarks || "";
+      document.getElementById("lead-loss-reason-field").value = leadObj.LossReason || "";
+
+      if (!isAdmin) {
+        if (custNameInput) custNameInput.disabled = true;
+        if (projTypeInput) projTypeInput.disabled = true;
+      }
+    } else {
+      document.getElementById("lead-modal-title").innerText = "Add New Lead";
+      document.getElementById("lead-date-field").value = new Date().toISOString().substring(0, 10);
+      document.getElementById("lead-status-select").value = "New";
+      document.getElementById("lead-assigned-select").value = currentUser.fullName || currentUser.FullName || "";
+    }
+
+    var modal = document.getElementById("lead-modal");
+    if (modal) modal.classList.add("show");
+  }
+
+  function closeLeadModal() {
+    var modal = document.getElementById("lead-modal");
+    if (modal) modal.classList.remove("show");
+  }
+
+  function editLead(leadId) {
+    var lead = leadsDataList.find(function(l) { return l.LeadID === leadId; });
+    if (lead) openLeadModal(lead);
+  }
+
+  function deleteLead(leadId) {
+    var lead = leadsDataList.find(function(l) { return l.LeadID === leadId; });
+    if (!lead) return;
+
+    showCustomConfirm({
+      title: "Delete Lead Record",
+      message: "Are you sure you want to delete Lead <strong>" + escapeHtml(lead.LeadID) + " (" + escapeHtml(lead.CustomerName) + ")</strong>? This action cannot be undone.",
+      confirmText: '<i class="fas fa-trash"></i> Delete Lead',
+      confirmBtnClass: "btn-danger",
+      onConfirm: function() {
+        showLoader(true);
+        var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+        google.script.run
+          .withSuccessHandler(function(response) {
+            showLoader(false);
+            if (response && response.success) {
+              showToast(response.message || "Lead deleted successfully", "success");
+              loadLeadsView(true);
+            } else {
+              showToast((response ? response.message : "Failed to delete lead"), "error");
+            }
+          })
+          .withFailureHandler(function(err) {
+            showLoader(false);
+            showToast("Error deleting lead: " + err.message, "error");
+          })
+          .deleteLead(leadId, currentUser.userId);
+      }
+    });
+  }
+
+  function onLeadStatusFieldChange() {
+    var statusSelect = document.getElementById("lead-status-select");
+    var val = statusSelect ? statusSelect.value : "";
+    if (val === "Lost") {
+      var currentReason = document.getElementById("lead-loss-reason-field").value;
+      var reason = prompt("Please enter the primary reason for losing this lead:", currentReason || "");
+      if (reason !== null) {
+        document.getElementById("lead-loss-reason-field").value = reason.trim();
+      }
+    }
+  }
+
+  function handleLeadSubmit(e) {
+    e.preventDefault();
+    var form = document.getElementById("lead-form");
+    var formData = {};
+    var inputs = form.querySelectorAll("input, select, textarea");
+
+    inputs.forEach(function(input) {
+      if (input.name) {
+        formData[input.name] = input.value;
+      }
+    });
+
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response && response.success) {
+          showToast(response.message || "Lead saved successfully", "success");
+          closeLeadModal();
+          loadLeadsView(true);
+        } else {
+          showToast((response ? response.message : "Failed to save lead"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        showLoader(false);
+        showToast("Error saving lead: " + err.message, "error");
+      })
+      .saveLead(formData, currentUser.userId);
+  }
+
+  function openLeadFollowupModal(leadId) {
+    var lead = leadsDataList.find(function(l) { return l.LeadID === leadId; });
+    if (!lead) return;
+
+    activeFollowupLeadId = leadId;
+    activeLeadObj = lead;
+
+    document.getElementById("followup-modal-title").innerText = "Lead Follow-ups (" + lead.LeadID + ")";
+    document.getElementById("followup-lead-name").innerText = lead.CustomerName || "Unknown Customer";
+    document.getElementById("followup-lead-details").innerText = "Mob: " + (lead.Mobile || "-") + " | Email: " + (lead.Email || "-");
+
+    var flpDate = document.getElementById("flp-date");
+    var flpNextDate = document.getElementById("flp-next-date");
+    var flpNotes = document.getElementById("flp-notes");
+
+    if (flpDate) flpDate.value = new Date().toISOString().substring(0, 10);
+    if (flpNextDate) flpNextDate.value = parseRawDateString(lead.FollowUpDate);
+    if (flpNotes) flpNotes.value = "";
+
+    loadFollowupsTimeline(leadId);
+
+    var modal = document.getElementById("lead-followup-modal");
+    if (modal) modal.classList.add("show");
+  }
+
+  function closeLeadFollowupModal() {
+    var modal = document.getElementById("lead-followup-modal");
+    if (modal) modal.classList.remove("show");
+  }
+
+  function loadFollowupsTimeline(leadId) {
+    var timeline = document.getElementById("followups-timeline");
+    if (!timeline) return;
+    timeline.innerHTML = '<div style="text-align:center; padding:1.5rem; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading timeline...</div>';
+
+    google.script.run
+      .withSuccessHandler(function(followups) {
+        window.currentLeadFollowupLogs = followups || [];
+        if (!followups || followups.length === 0) {
+          timeline.innerHTML = '<div style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.875rem;">No follow-ups logged yet. Add your first entry below.</div>';
+          return;
+        }
+
+        var html = followups.map(function(f) {
+          var dateStr = formatDate(f.FollowupDate);
+          var nextDateStr = f.NextFollowupDate ? formatDate(f.NextFollowupDate) : "Not scheduled";
+          var notesEscaped = escapeHtml(f.DiscussionNotes || "-");
+          var createdByEscaped = escapeHtml(f.CreatedBy || f.LoggedBy || "Staff");
+          var logIdEscaped = escapeHtml(f.FollowupID || f.RowIndex || "");
+
+          return '<div style="background: var(--bg-secondary); border-left: 4px solid var(--primary); padding: 0.85rem 1.15rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; box-shadow: var(--shadow-sm);">' +
+            '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">' +
+              '<span style="font-weight: 700; font-size: 0.85rem; color: var(--text-main);"><i class="far fa-calendar-check" style="color: var(--primary); margin-right: 0.35rem;"></i>' + dateStr + '</span>' +
+              '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+                '<span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;"><i class="far fa-clock" style="margin-right: 0.25rem;"></i>Next: ' + nextDateStr + '</span>' +
+                '<button type="button" class="icon-btn btn-sm" style="color: #25D366;" title="Share Follow-up on WhatsApp" onclick="openLeadFollowupWAShareModal(\'' + logIdEscaped + '\')"><i class="fab fa-whatsapp"></i></button>' +
+              '</div>' +
+            '</div>' +
+            '<p style="margin: 0; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap;">' + notesEscaped + '</p>' +
+            '<div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted); text-align: right;">' +
+              'Logged by ' + createdByEscaped +
+            '</div>' +
+          '</div>';
+        }).join("");
+
+        timeline.innerHTML = html;
+      })
+      .withFailureHandler(function(err) {
+        timeline.innerHTML = '<div style="color:var(--danger); text-align:center; padding:1rem;">Error: ' + (err ? err.message : "Failed to load timeline") + '</div>';
+      })
+      .getLeadFollowups(leadId);
+  }
+
+  function handleFollowupLogSubmit(e) {
+    e.preventDefault();
+    if (!activeFollowupLeadId) return;
+
+    var dateVal = document.getElementById("flp-date").value;
+    var nextDateVal = document.getElementById("flp-next-date").value;
+    var notesVal = document.getElementById("flp-notes").value.trim();
+
+    if (!notesVal) {
+      showToast("Please enter discussion notes", "error");
+      return;
+    }
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var data = {
+      LeadID: activeFollowupLeadId,
+      FollowupDate: dateVal,
+      NextFollowupDate: nextDateVal,
+      DiscussionNotes: notesVal
+    };
+
+    showLoader(true);
+    google.script.run
+      .withSuccessHandler(function(res) {
+        showLoader(false);
+        if (res && res.success) {
+          showToast("Follow-up logged successfully!", "success");
+          document.getElementById("flp-notes").value = "";
+          loadFollowupsTimeline(activeFollowupLeadId);
+          loadLeadsView(true);
+        } else {
+          showToast((res ? res.message : "Failed to log follow-up"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        showLoader(false);
+        showToast("Error logging follow-up: " + err.message, "error");
+      })
+      .saveLeadFollowup(data, currentUser.userId);
+  }
+
+  function openEmailComposerModal() {
+    if (!activeLeadObj) return;
+    document.getElementById("email-to").value = activeLeadObj.Email || "";
+    document.getElementById("email-subject").value = "Follow-up regarding your project inquiry - " + (activeLeadObj.ProjectType || "StudioSpace");
+    document.getElementById("email-body").value = "Hi " + (activeLeadObj.CustomerName || "Customer") + ",\n\nFollowing up on our recent discussion regarding your project requirements. Please let us know a suitable time to discuss next steps.\n\nBest regards,\n" + (activeLeadObj.AssignedTo || "Team");
+    document.getElementById("email-next-date").value = parseRawDateString(activeLeadObj.FollowUpDate);
+
+    var modal = document.getElementById("lead-email-modal");
+    if (modal) modal.classList.add("show");
+  }
+
+  function closeEmailComposerModal() {
+    var modal = document.getElementById("lead-email-modal");
+    if (modal) modal.classList.remove("show");
+  }
+
+  function handleSendEmailSubmit(e) {
+    e.preventDefault();
+    if (!activeLeadObj) return;
+
+    var emailData = {
+      LeadID: activeLeadObj.LeadID,
+      To: document.getElementById("email-to").value,
+      Subject: document.getElementById("email-subject").value,
+      Body: document.getElementById("email-body").value,
+      NextFollowupDate: document.getElementById("email-next-date").value
+    };
+
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        showLoader(false);
+        if (res && res.success) {
+          showToast("Email sent and follow-up logged successfully!", "success");
+          closeEmailComposerModal();
+          loadFollowupsTimeline(activeLeadObj.LeadID);
+          loadLeadsView(true);
+        } else {
+          showToast((res ? res.message : "Failed to send email"), "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        showLoader(false);
+        showToast("Error sending email: " + err.message, "error");
+      })
+      .sendLeadEmail(emailData, currentUser.userId);
+  }
+
+  function openLeadFollowupWAShareModal(logId) {
+    if (!activeLeadObj) return;
+    var notes = document.getElementById("flp-notes") ? document.getElementById("flp-notes").value.trim() : "";
+    var nextDate = document.getElementById("flp-next-date") ? document.getElementById("flp-next-date").value : "";
+
+    if (logId && window.currentLeadFollowupLogs) {
+      var foundLog = window.currentLeadFollowupLogs.find(function(l) { return String(l.FollowupID) === String(logId) || String(l.RowIndex) === String(logId); });
+      if (foundLog) {
+        notes = foundLog.DiscussionNotes;
+        nextDate = foundLog.NextFollowupDate;
+      }
+    }
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var loggerName = currentUser.fullName || currentUser.FullName || "StudioSpace Team";
+
+    var msg = "Hello " + (activeLeadObj.CustomerName || "Customer") + ",\n\n" +
+              "*Follow-up Update* -\n" +
+              "Discussion: " + (notes || "-") + "\n" +
+              "Next Scheduled Date: " + (nextDate ? formatDate(nextDate) : "-") + "\n\n" +
+              "Regards,\n" + loggerName;
+
+    openWAShareModal(msg, activeLeadObj.Mobile || "", "", activeLeadObj.CustomerName || "Customer");
+  }
+
+  function parseRawDateString(dateVal) {
+    if (!dateVal) return "";
+    var d = new Date(dateVal);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().substring(0, 10);
+  }
+
+  function triggerConvertLead(leadId) {
+    var lead = leadsDataList.find(function(l) { return l.LeadID === leadId; });
+    if (!lead) return;
+
+    closeLeadFollowupModal();
+    closeLeadModal();
+
+    if (window.appRouter) {
+      window.appRouter.navigate("customers");
+    }
+    setTimeout(function() {
+      if (typeof window.openCustomerModalWithLead === "function") {
+        window.openCustomerModalWithLead(lead);
+      }
+    }, 350);
+  }
+
+  function triggerConvertCurrentFollowupLead() {
+    if (activeFollowupLeadId) {
+      triggerConvertLead(activeFollowupLeadId);
+    }
+  }
+
+  // Export handlers to global scope for HTML onclick attributes
+  window.filterLeadsTable = filterLeadsTable;
+  window.editLead = editLead;
+  window.deleteLead = deleteLead;
+  window.openLeadModal = openLeadModal;
+  window.closeLeadModal = closeLeadModal;
+  window.onLeadStatusFieldChange = onLeadStatusFieldChange;
+  window.handleLeadSubmit = handleLeadSubmit;
+  window.openLeadFollowupModal = openLeadFollowupModal;
+  window.closeLeadFollowupModal = closeLeadFollowupModal;
+  window.openEmailComposerModal = openEmailComposerModal;
+  window.closeEmailComposerModal = closeEmailComposerModal;
+  window.handleFollowupLogSubmit = handleFollowupLogSubmit;
+  window.handleSendEmailSubmit = handleSendEmailSubmit;
+  window.sendLeadWhatsApp = sendLeadWhatsApp;
+  window.triggerConvertLead = triggerConvertLead;
+  window.triggerConvertCurrentFollowupLead = triggerConvertCurrentFollowupLead;
+  window.openLeadFollowupWAShareModal = openLeadFollowupWAShareModal;
+
+})();
+</script>

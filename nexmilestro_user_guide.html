@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexMilestro - User Guide & Operational Manual</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: var(--text-main);
+      background-color: var(--bg-main);
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      padding: 3rem;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+    }
+
+    .header-branding {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .header-branding img {
+      max-height: 80px;
+      width: auto;
+    }
+
+    .header-title-block h1 {
+      margin: 0;
+      font-size: 2.2rem;
+      color: var(--primary-dark);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .header-title-block p {
+      margin: 0.25rem 0 0 0;
+      font-size: 1rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .meta-box {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .meta-item strong {
+      color: var(--primary-dark);
+    }
+
+    .toc-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.5rem 2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .toc-box h2 {
+      margin-top: 0;
+      font-size: 1.3rem;
+      color: var(--primary-dark);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .toc-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    .toc-list li {
+      margin-bottom: 0.5rem;
+    }
+
+    .toc-list a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .toc-list a:hover {
+      text-decoration: underline;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      color: var(--primary-dark);
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 0.4rem;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .sub-section-title {
+      font-size: 1.15rem;
+      color: var(--text-main);
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-list {
+      padding-left: 1.25rem;
+    }
+
+    .step-list li {
+      margin-bottom: 0.5rem;
+    }
+
+    .highlight-box {
+      background: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-size: 0.9rem;
+    }
+
+    .footer-branding {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; border: none; max-width: 100%; padding: 0; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Branding Header -->
+    <div class="header-branding">
+      <div class="header-title-block">
+        <h1>NexMilestro</h1>
+        <p>User Guide & Operational Manual</p>
+      </div>
+      <div>
+        <img src="https://i.ibb.co/6P0s7K9/nexsolve-logo.png" alt="NexSolve Training & Consulting Logo" onerror="this.style.display='none'">
+      </div>
+    </div>
+
+    <!-- Metadata Panel -->
+    <div class="meta-box">
+      <div class="meta-item"><strong>Document Version:</strong> 2.5</div>
+      <div class="meta-item"><strong>Application Name:</strong> NexMilestro Project Suite</div>
+      <div class="meta-item"><strong>Prepared By:</strong> NexSolve Training & Consulting</div>
+      <div class="meta-item"><strong>Target Audience:</strong> Studio Owners, Project Managers & Admins</div>
+    </div>
+
+    <!-- Table of Contents (Index) -->
+    <div class="toc-box">
+      <h2>📑 Table of Contents (Index)</h2>
+      <ol class="toc-list">
+        <li><a href="#sec-1">1. Executive Summary & Value Proposition</a></li>
+        <li><a href="#sec-2">2. Architecture & Data Ownership</a></li>
+        <li><a href="#sec-3">3. Module 1: Organization & Company Setup (Branding, Tax IDs, Multi-Bank Accounts)</a></li>
+        <li><a href="#sec-4">4. Module 2: Lead Management & 1-Click WhatsApp Integration</a></li>
+        <li><a href="#sec-5">5. Module 3: Site Visits & Billable Inspection Logs</a></li>
+        <li><a href="#sec-6">6. Module 4: Projects & Milestone Lifecycles</a></li>
+        <li><a href="#sec-7">7. Module 5: Commercial Proposals & Estimates</a></li>
+        <li><a href="#sec-8">8. Module 6: Vendor & Associate Directories</a></li>
+        <li><a href="#sec-9">9. Module 7: Finance Booking & Cash Flow Ledger (Non-Project Toggle & Bank Linking)</a></li>
+        <li><a href="#sec-10">10. Module 8: Analytics & Financial Reports</a></li>
+        <li><a href="#sec-11">11. Module 9: User Seats, Role Access & License Upgrades</a></li>
+        <li><a href="#sec-12">12. Module 10: Masters Configuration</a></li>
+        <li><a href="#sec-13">13. Support & Technical Contact</a></li>
+      </ol>
+    </div>
+
+    <!-- Content Sections -->
+    <h2 class="section-title" id="sec-1">1. Executive Summary & Value Proposition</h2>
+    <p><strong>NexMilestro</strong> is an enterprise-grade project and business operations suite engineered by <strong>NexSolve Training & Consulting</strong>. It unifies prospect lead tracking, field site inspections, milestone lifecycles, and multi-bank accounting under a single web application.</p>
+
+    <h2 class="section-title" id="sec-2">2. Architecture & Data Ownership</h2>
+    <p>NexMilestro runs 100% inside your organization's Google Workspace environment. All data is saved inside your private Google Sheet database and Google Drive with zero external server hosting fees.</p>
+
+    <h2 class="section-title" id="sec-3">3. Module 1: Organization & Company Setup</h2>
+    <h3 class="sub-section-title">3.1 Company Branding & Logo Upload</h3>
+    <ol class="step-list">
+      <li>Navigate to <strong>Administration → Company Setup</strong>.</li>
+      <li>Click <strong>Choose File</strong> under <em>Company Logo & Branding</em>.</li>
+      <li>Select your PNG or SVG logo file and click <strong>Save Company Setup</strong>.</li>
+    </ol>
+    <h3 class="sub-section-title">3.2 Multi-Bank Accounts Management</h3>
+    <ol class="step-list">
+      <li>Click <strong>+ Add Bank Account</strong>.</li>
+      <li>Enter Bank Name, Account Number, IFSC code, and branch details.</li>
+      <li>Set primary account tag. Configured banks automatically link across Finance ledgers.</li>
+    </ol>
+
+    <h2 class="section-title" id="sec-4">4. Module 2: Lead Management & 1-Click WhatsApp</h2>
+    <p>Track customer inquiries from lead capture to conversion.</p>
+    <div class="highlight-box">
+      <strong>⚡ One-Click "Convert to Customer":</strong> Click the blue <em>User-Plus icon</em> on any lead row to automatically create an active customer record and transfer all inquiry notes into your Customer ledger instantly!
+    </div>
+
+    <h2 class="section-title" id="sec-5">5. Module 3: Site Visits & Billable Inspection Logs</h2>
+    <p>Log site visits, mark billable inspection fees, and dispatch formatted WhatsApp visit summary updates to client groups in one tap.</p>
+
+    <h2 class="section-title" id="sec-6">6. Module 4: Projects & Milestone Lifecycles</h2>
+    <p>Track project timelines, client budgets, milestone completion progress bars, and vendor allocations.</p>
+
+    <h2 class="section-title" id="sec-7">7. Module 5: Commercial Proposals & Estimates</h2>
+    <p>Prepare client quotes and link approved estimates directly to project milestone budgets.</p>
+
+    <h2 class="section-title" id="sec-8">8. Module 6: Vendor & Associate Directories</h2>
+    <p>Maintain contact records and supply lines for contractors, tradespeople, and independent specialists.</p>
+
+    <h2 class="section-title" id="sec-9">9. Module 7: Finance Booking & Cash Flow Ledger</h2>
+    <h3 class="sub-section-title">9.1 Non-Project Expense / Income Toggle</h3>
+    <p>Use the toggle switch at top-left of the booking form to book office overheads (Rent, Salaries, Utilities) without linking a project.</p>
+    <h3 class="sub-section-title">9.2 Dynamic Masters Categories</h3>
+    <p>Categories dynamically populate based on your Masters tab configuration for <em>Income Category (Project)</em>, <em>Income Category (Non-Project)</em>, <em>Expense Category (Project)</em>, and <em>Expense Category (Non-Project)</em>.</p>
+
+    <h2 class="section-title" id="sec-10">10. Module 8: Analytics & Financial Reports</h2>
+    <p>Monitor real-time income, operational expenses, project profit margins, and lead conversion rates.</p>
+
+    <h2 class="section-title" id="sec-11">11. Module 9: User Seats, Roles & License Upgrades</h2>
+    <p>Enforce active user seat limits and submit instant 1-click license extension requests directly to <strong>NexSolve Training & Consulting</strong>.</p>
+
+    <h2 class="section-title" id="sec-12">12. Module 10: Masters Configuration</h2>
+    <p>Manage all dropdown options centrally under Administration → Masters.</p>
+
+    <h2 class="section-title" id="sec-13">13. Support & Technical Contact</h2>
+    <p>For custom workflow consulting or license upgrades:</p>
+    <p><strong>NexSolve Training & Consulting</strong><br>
+    <em>Support Portal: Accessible directly from your NexMilestro application sidebar.</em></p>
+
+    <!-- Footer Branding -->
+    <div class="footer-branding">
+      Powered by <strong>NexSolve Training & Consulting</strong> — All Rights Reserved.
+    </div>
+
+  </div>
+
+</body>
+</html>

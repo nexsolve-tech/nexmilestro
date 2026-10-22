@@ -1,0 +1,1026 @@
+<!-- Project.html -->
+<div class="view-container">
+  <!-- Filter & Search Bar -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="proj-search" class="search-input" placeholder="Search projects by name, location..." oninput="filterProjects()">
+    </div>
+    
+    <div class="filter-group">
+      <select id="filter-proj-customer" class="select-filter" style="max-width: 180px;" onchange="filterProjects()">
+        <option value="">All Customers</option>
+      </select>
+
+      <select id="filter-proj-type" class="select-filter" onchange="filterProjects()">
+        <option value="">All Types</option>
+        <option value="Interior Design">Interior Design</option>
+        <option value="Architecture">Architecture</option>
+        <option value="Civil Engineering">Civil Engineering</option>
+        <option value="Renovation">Renovation</option>
+      </select>
+
+      <select id="filter-proj-status" class="select-filter" onchange="filterProjects()">
+        <option value="">All Statuses</option>
+        <option value="Proposed">Proposed</option>
+        <option value="In Progress">In Progress</option>
+        <option value="On Hold">On Hold</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-primary" id="btn-add-project" onclick="openProjectModal()"><i class="fas fa-plus"></i> Add Project</button>
+    </div>
+  </div>
+
+  <!-- Projects List View -->
+  <div class="card">
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none;">
+        <table class="data-table" id="projects-table">
+          <thead>
+            <tr>
+              <th>Project ID</th>
+              <th>Project Name</th>
+              <th>Customer</th>
+              <th>Type</th>
+              <th>Value</th>
+              <th>Dates (Start - Exp)</th>
+              <th>Status</th>
+              <th>Attachments</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading projects list...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Project Modal -->
+<div class="modal-overlay" id="project-modal">
+  <div class="modal-container" style="max-width: 700px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="proj-modal-title">Add New Project</h3>
+      <button class="icon-btn" onclick="closeProjectModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="project-form" onsubmit="handleProjectSubmit(event)">
+      <input type="hidden" id="proj-id" name="ProjectID">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Project Name *</label>
+            <input type="text" id="proj-name" name="ProjectName" class="form-control" placeholder="e.g. Villa Restoration" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Customer *</label>
+            <select id="proj-customer-id" name="CustomerID" class="form-control" required>
+              <option value="">Select Customer</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Project Type *</label>
+            <select id="proj-type" name="ProjectType" class="form-control" required>
+              <option value="Interior Design">Interior Design</option>
+              <option value="Architecture">Architecture</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+              <option value="Renovation">Renovation</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Project Value (Amount) *</label>
+            <input type="number" id="proj-value" name="ProjectValue" class="form-control" placeholder="e.g. 500000" min="0" step="0.01" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Inquiry ID (Optional)</label>
+            <input type="text" id="proj-inquiry" name="InquiryID" class="form-control" placeholder="Inquiry Code">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Start Date *</label>
+            <input type="date" id="proj-start-date" name="StartDate" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Expected Completion Date *</label>
+            <input type="date" id="proj-expected-date" name="ExpectedCompletionDate" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Actual Completion Date</label>
+            <input type="date" id="proj-actual-date" name="ActualCompletionDate" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="proj-status" name="Status" class="form-control" required>
+              <option value="Proposed">Proposed</option>
+              <option value="In Progress">In Progress</option>
+              <option value="On Hold">On Hold</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Location / Site Address</label>
+            <input type="text" id="proj-location" name="Location" class="form-control" placeholder="Project Site Location">
+          </div>
+          
+          <div class="form-group form-grid-full">
+            <label class="form-label">Notes / Scope of Work</label>
+            <textarea id="proj-notes" name="Notes" class="form-control" placeholder="Details about materials, requirements, designs..."></textarea>
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label class="form-label">Project WhatsApp Group Link (Optional)</label>
+            <input type="url" id="proj-whatsapp-group" name="WhatsAppGroupLink" class="form-control" placeholder="https://chat.whatsapp.com/...">
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Direct invite link to the Project WhatsApp Group for 1-click sharing of site visit logs & updates.</small>
+          </div>
+          
+          <input type="hidden" id="proj-attachments-hidden" name="Attachments">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Add Attachments / Documents</label>
+            <input type="file" id="proj-attachment" class="form-control" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Choose one or more files to upload directly to Google Drive. Leave empty to keep existing attachments if editing.</small>
+            <div id="proj-current-attachments-container" style="margin-top: 0.5rem; display: none;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">Current Attachments:</span>
+              <div id="proj-current-attachments-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+        <button type="button" class="btn btn-secondary" id="btn-project-milestones" style="display:none;" onclick="openMilestonesModalFromProjectForm()">Manage Milestones</button>
+        <button type="submit" class="btn btn-primary">Save Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Milestones Modal -->
+<div id="milestones-modal" class="modal-overlay">
+  <div class="modal-container" style="max-width: 950px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="milestones-modal-title">Manage Project Milestones</h3>
+      <button class="icon-btn" onclick="closeMilestonesModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" style="padding-top: 0.5rem;">
+      <!-- Project Progress Visual Card -->
+      <div style="background: var(--bg-secondary); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">
+          <span style="color: var(--text-muted);"><i class="fas fa-chart-line" style="margin-right:0.35rem; color: var(--primary);"></i>Milestone Completion Progress</span>
+          <span id="milestones-progress-pct" style="color: var(--primary); font-family: 'Outfit'; font-weight: 700;">0% (0/0)</span>
+        </div>
+        <div style="height: 12px; background: #e2e8f0; border-radius: 10px; overflow: hidden;">
+          <div id="milestones-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(135deg, var(--primary-light), var(--primary)); transition: width 0.4s ease-in-out;"></div>
+        </div>
+      </div>
+
+      <!-- Add Milestone Form (Inline-styled grid) -->
+      <form id="milestone-add-form" onsubmit="handleMilestoneSubmit(event)" style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-md); border: 1px dashed var(--primary-light); margin-bottom: 1.5rem;">
+        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: var(--primary); font-weight: 600;"><i class="fas fa-plus-circle" style="margin-right:0.35rem;"></i>Create / Edit Milestone</h4>
+        <input type="hidden" id="ms-project-id" name="ProjectID">
+        <input type="hidden" id="ms-id" name="MilestoneID">
+        
+        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Milestone Name *</label>
+            <input type="text" id="ms-name" name="MilestoneName" class="form-control" placeholder="e.g. Tile Laying Completed" required>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Due Date *</label>
+            <input type="date" id="ms-due-date" name="DueDate" class="form-control" required>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Status *</label>
+            <select id="ms-status" name="Status" class="form-control" onchange="onMilestoneStatusChange()" required>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+          <div id="ms-completion-date-group" style="display: none;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Actual Comp. Date</label>
+            <input type="date" id="ms-completion-date" name="CompletionDate" class="form-control">
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 2fr auto; gap: 0.75rem; align-items: flex-end;">
+          <div>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Assign Type</label>
+            <select id="ms-associate-type" name="AssociateType" class="form-control" onchange="handleMilestoneTypeChange()">
+              <option value="">Unassigned</option>
+              <option value="Staff">Internal Staff</option>
+              <option value="Vendor">Vendor</option>
+              <option value="Associate">Associate</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Assignee Name</label>
+            <select id="ms-associate-name" name="AssociateName" class="form-control">
+              <option value="">Unassigned</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Associate Cost (₹)</label>
+            <input type="number" id="ms-associate-cost" name="AssociateCost" class="form-control" placeholder="e.g. 15000" min="0" step="0.01">
+          </div>
+          
+          <div>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Remarks / Notes (Optional)</label>
+            <input type="text" id="ms-remarks" name="Remarks" class="form-control" placeholder="e.g. Waiting on marble shipment arrival">
+          </div>
+
+          <div>
+            <button type="submit" class="btn btn-primary" style="height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.85rem;">
+              <i class="fas fa-save"></i> Save
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Milestones List Table -->
+      <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-list-ul" style="margin-right:0.35rem; color:var(--text-muted);"></i>Milestones Ledger</h4>
+      <div class="table-wrapper" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color);">
+        <table class="data-table" id="milestones-table" style="font-size: 0.825rem;">
+          <thead>
+            <tr>
+              <th>Milestone Name</th>
+              <th>Due Date</th>
+              <th>Comp. Date</th>
+              <th>Status</th>
+              <th>Assignee Type</th>
+              <th>Assignee / Vendor</th>
+              <th>Cost (₹)</th>
+              <th>Remarks</th>
+              <th style="text-align: right; width: 100px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading milestones ledger...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var allProjects = [];
+  var customersCache = [];
+  var milestonesCacheList = [];
+  var associatesCache = [];
+  var vendorsCache = [];
+  var staffCacheList = [];
+  var dropdownsCache = {};
+  window.loadProjectsView = function(forceRefresh) {
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+    var perms = currentUser.permissions || {};
+    var projectPerm = perms["Projects"] || {};
+    var canAdd = isSuperAdmin || projectPerm.add === true;
+    var addBtn = document.getElementById("btn-add-project");
+    if (addBtn)
+      addBtn.style.display = canAdd ? "inline-block" : "none";
+
+    // Check global cache first for instant render
+    var cached = cacheGet("projectsViewData");
+    if (!forceRefresh && cached) {
+      applyProjectsAggregatedData(cached);
+      return;
+    }
+
+    showLoader(true);
+    if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(res) {
+        if (res && res.success !== false) {
+          cacheSet("projectsViewData", res);
+          applyProjectsAggregatedData(res);
+          showLoader(false);
+        } else {
+          fetchLegacyProjectsData();
+        }
+      }).withFailureHandler(function(err) {
+        fetchLegacyProjectsData();
+      }).getProjectsViewData();
+    } else {
+      fetchLegacyProjectsData();
+    }
+  };
+
+  function applyProjectsAggregatedData(res) {
+    allProjects = res.projects || [];
+    customersCache = res.customers || [];
+    milestonesCacheList = res.milestones || [];
+    associatesCache = res.associates || [];
+    vendorsCache = res.vendors || [];
+    staffCacheList = res.users || [];
+    window.usersCacheList = res.users || [];
+    dropdownsCache = res.dropdowns || {};
+
+    var select = document.getElementById("proj-customer-id");
+    if (select) {
+      select.innerHTML = '<option value="">Select Customer</option>' + customersCache.filter(function(c) {
+        return c && c.Status === "Active";
+      }).map(function(c) {
+        return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), " (").concat(c.CustomerID, ")</option>");
+      }).join("");
+    }
+
+    populateDropdownsFromCache();
+    populateFilters();
+    renderProjects(allProjects);
+  }
+
+  function fetchLegacyProjectsData() {
+    showLoader(true);
+    var loadedCount = 0;
+    var totalRequests = 7;
+    function checkLoaded() {
+      loadedCount++;
+      if (loadedCount === totalRequests) {
+        populateDropdownsFromCache();
+        populateFilters();
+        renderProjects(allProjects);
+        showLoader(false);
+      }
+    }
+    google.script.run.withSuccessHandler(function(data) {
+      staffCacheList = data || [];
+      window.usersCacheList = data || [];
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getUsers();
+    google.script.run.withSuccessHandler(function(data) {
+      customersCache = data || [];
+      var select = document.getElementById("proj-customer-id");
+      if (select) {
+        select.innerHTML = '<option value="">Select Customer</option>' + customersCache.filter(function(c) {
+          return c && c.Status === "Active";
+        }).map(function(c) {
+          return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), " (").concat(c.CustomerID, ")</option>");
+        }).join("");
+      }
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getCustomers();
+    google.script.run.withSuccessHandler(function(data) {
+      allProjects = data || [];
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getProjects();
+    google.script.run.withSuccessHandler(function(data) {
+      dropdownsCache = data || {};
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getDropdownValues();
+    google.script.run.withSuccessHandler(function(data) {
+      milestonesCacheList = data || [];
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getMilestones();
+    google.script.run.withSuccessHandler(function(data) {
+      associatesCache = data || [];
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getAssociates();
+    google.script.run.withSuccessHandler(function(data) {
+      vendorsCache = data || [];
+      checkLoaded();
+    }).withFailureHandler(function(err) { checkLoaded(); }).getVendors();
+  }
+  function populateDropdownsFromCache() {
+    var types = dropdownsCache["ProjectType"] || [];
+    var typeSelect = document.getElementById("proj-type");
+    if (typeSelect) {
+      typeSelect.innerHTML = types.map(function(t) {
+        return '<option value="'.concat(t, '">').concat(escapeHtml(t), "</option>");
+      }).join("");
+    }
+    var typeFilter = document.getElementById("filter-proj-type");
+    if (typeFilter) {
+      typeFilter.innerHTML = '<option value="">All Types</option>' + types.map(function(t) {
+        return '<option value="'.concat(t, '">').concat(escapeHtml(t), "</option>");
+      }).join("");
+    }
+    var statuses = dropdownsCache["ProjectStatus"] || [];
+    var statusSelect = document.getElementById("proj-status");
+    if (statusSelect) {
+      statusSelect.innerHTML = statuses.map(function(s) {
+        return '<option value="'.concat(s, '">').concat(escapeHtml(s), "</option>");
+      }).join("");
+    }
+    var statusFilter = document.getElementById("filter-proj-status");
+    if (statusFilter) {
+      statusFilter.innerHTML = '<option value="">All Statuses</option>' + statuses.map(function(s) {
+        return '<option value="'.concat(s, '">').concat(escapeHtml(s), "</option>");
+      }).join("");
+    }
+  }
+  function populateFilters() {
+    var filterSelect = document.getElementById("filter-proj-customer");
+    filterSelect.innerHTML = '<option value="">All Customers</option>' + customersCache.map(function(c) {
+      return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), "</option>");
+    }).join("");
+  }
+  function renderProjects(projects) {
+    var tbody = document.querySelector("#projects-table tbody");
+    if (projects.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-folder-open empty-state-icon"></i>\n          <p class="empty-state-title">No projects found</p>\n          <p class="empty-state-desc">Establish a new project mapping for your interior, architectural, or civil work.</p>\n        </div>\n      </td></tr>';
+      return;
+    }
+    var sorted = projects.slice().sort(function(a, b) {
+      var idA = String(a.ProjectID || "");
+      var idB = String(b.ProjectID || "");
+      return idB.localeCompare(idA);
+    });
+    tbody.innerHTML = sorted.map(function(proj) {
+      var cust = customersCache.find(function(c) {
+        return c.CustomerID === proj.CustomerID;
+      });
+      var custName = cust ? cust.CustomerName : "Unknown (".concat(proj.CustomerID, ")");
+      var formattedVal = formatCurrency(proj.ProjectValue || 0);
+      var start = proj.StartDate ? formatDate(proj.StartDate) : "-";
+      var expected = proj.ExpectedCompletionDate ? formatDate(proj.ExpectedCompletionDate) : "-";
+      var statusStr = proj.Status || "Proposed";
+      var statusClass = statusStr.toLowerCase().replace(/\s+/g, "-");
+      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      var isSuperAdmin = currentUser.roleId === "Super Admin";
+      var perms = currentUser.permissions || {};
+      var projectPerm = perms["Projects"] || {};
+      var taskPerm = perms["Tasks"] || {};
+      var canEdit = isSuperAdmin || projectPerm.edit === true;
+      var canDelete = isSuperAdmin || projectPerm.del === true;
+      var canAddTask = isSuperAdmin || taskPerm.add === true;
+      var actionsHtml = "";
+      actionsHtml += '<button type="button" data-proj-id="' + escapeHtml(proj.ProjectID) + '" onclick="event.stopPropagation(); sendProjectWhatsApp(this.getAttribute(\'data-proj-id\'))" class="icon-btn" style="color: #25D366;" title="Share Project Update on WhatsApp"><i class="fab fa-whatsapp"></i></button>';
+      if (canAddTask) {
+        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
+        actionsHtml += '<button class="icon-btn" style="color: var(--success);" title="Add Task" onclick="addTaskForProject(\'' + pjId + '\')"><i class="fas fa-tasks"></i></button>';
+      }
+      if (canEdit) {
+        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
+        var pjNameEscaped = escapeHtml((proj.ProjectName || "").replace(/'/g, "\\'"));
+        actionsHtml += '<button class="icon-btn" style="color: var(--warning);" title="Manage Milestones" onclick="openMilestonesModal(\'' + pjId + '\', \'' + pjNameEscaped + '\')"><i class="fas fa-flag"></i></button>';
+        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Project" onclick="editProject(\'' + pjId + '\')"><i class="fas fa-pen"></i></button>';
+      }
+      if (canDelete) {
+        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
+        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Project" onclick="deleteProject(\'' + pjId + '\')"><i class="fas fa-trash"></i></button>';
+      }
+      var photosHtml = "-";
+      if (proj.Attachments && typeof proj.Attachments === "string" && proj.Attachments.trim() !== "") {
+        var links = proj.Attachments.split(",").map(function(l) {
+          return l.trim();
+        }).filter(function(l) {
+          return l !== "";
+        });
+        if (links.length === 1) {
+          photosHtml = '<a href="' + escapeHtml(links[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View</a>';
+        } else if (links.length > 1) {
+          var pjIdEsc = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
+          var itemsHtml = links.map(function(link, idx) {
+            return '<a href="' + escapeHtml(link) + '" target="_blank" style="display: block; padding: 0.35rem 0.75rem; font-size: 0.75rem; color: var(--text-main); text-decoration: none; font-weight: 500;"><i class="fas fa-file" style="margin-right: 0.35rem; color: var(--primary);"></i> Attachment ' + (idx + 1) + '</a>';
+          }).join("");
+          photosHtml = '<div style="position: relative; display: inline-block;">' +
+            '<button class="btn btn-secondary btn-sm dropdown-toggle" onclick="toggleProjAttachmentsDropdown(event, \'' + pjIdEsc + '\')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View (' + links.length + ')</button>' +
+            '<div id="dropdown-' + pjIdEsc + '" class="attachments-dropdown-menu" style="display: none; position: absolute; right: 0; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; min-width: 150px; padding: 0.35rem 0;">' +
+              itemsHtml +
+            '</div>' +
+          '</div>';
+        }
+      }
+
+      var pjIdEsc = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
+      var pjNameEsc = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectName || "") : (proj.ProjectName || "");
+      var pjCustEsc = typeof escapeHtml === "function" ? escapeHtml(custName || "") : (custName || "");
+      var pjTypeEsc = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectType || "") : (proj.ProjectType || "");
+
+      return '<tr id="row-' + pjIdEsc + '">' +
+        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + pjIdEsc + '</td>' +
+        '<td style="font-weight: 600;">' + pjNameEsc + '</td>' +
+        '<td>' + pjCustEsc + '</td>' +
+        '<td>' + pjTypeEsc + '</td>' +
+        '<td style="font-family: monospace; font-weight: 500;">' + formattedVal + '</td>' +
+        '<td style="font-size: 0.8rem;"><div><strong>S:</strong> ' + start + '</div><div><strong>E:</strong> ' + expected + '</div></td>' +
+        '<td><span class="badge badge-' + statusClass + '">' + statusStr + '</span></td>' +
+        '<td>' + photosHtml + '</td>' +
+        '<td style="text-align: right;">' + actionsHtml + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+  function filterProjects() {
+    var searchInput = document.getElementById("proj-search");
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+    var custVal = document.getElementById("filter-proj-customer").value;
+    var typeVal = document.getElementById("filter-proj-type").value;
+    var statusVal = document.getElementById("filter-proj-status").value;
+    var filtered = allProjects.filter(function(p) {
+      var projName = p.ProjectName ? String(p.ProjectName).toLowerCase() : "";
+      var location = p.Location ? String(p.Location).toLowerCase() : "";
+      var projId = p.ProjectID ? String(p.ProjectID).toLowerCase() : "";
+      var matchesSearch = projName.includes(searchVal) || location.includes(searchVal) || projId.includes(searchVal);
+      var matchesCust = !custVal || p.CustomerID === custVal;
+      var matchesType = !typeVal || p.ProjectType === typeVal;
+      var matchesStatus = !statusVal || p.Status === statusVal;
+      return matchesSearch && matchesCust && matchesType && matchesStatus;
+    });
+    renderProjects(filtered);
+  }
+
+  function sendProjectWhatsApp(projId) {
+    var proj = allProjects.find(function(p) { return p.ProjectID === projId; });
+    if (!proj) return;
+    var custName = "Customer";
+    var custPhone = "";
+    var custList = customersCache || window.customersCacheList || [];
+    if (proj.CustomerID) {
+      var cust = custList.find(function(c) { return c.CustomerID === proj.CustomerID; });
+      if (cust) {
+        custName = cust.CustomerName;
+        custPhone = cust.Mobile;
+      }
+    }
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var loggerName = currentUser.fullName || currentUser.FullName || "StudioSpace Team";
+
+    var msg = "Hello, " + custName + ",\n\n" +
+              "*Project Update* -\n\n" +
+              "Project Name: " + (proj.ProjectName || "-") + "\n" +
+              "Type: " + (proj.ProjectType || "-") + "\n" +
+              "Status: " + (proj.Status || "Active") + "\n" +
+              "Start Date: " + (proj.StartDate ? formatDate(proj.StartDate) : "-") + "\n" +
+              "Expected Completion: " + (proj.ExpectedCompletionDate ? formatDate(proj.ExpectedCompletionDate) : "-") + "\n\n" +
+              "Regards,\n" + loggerName;
+
+    openWAShareModal(msg, custPhone, proj.WhatsAppGroupLink || "", custName);
+  }
+  window.sendProjectWhatsApp = sendProjectWhatsApp;
+  function openProjectModal(projObj) {
+    if (projObj === void 0) {
+      projObj = null;
+    }
+    var form = document.getElementById("project-form");
+    form.reset();
+    document.getElementById("proj-id").value = "";
+    document.getElementById("proj-attachments-hidden").value = "";
+    var fileInput = document.getElementById("proj-attachment");
+    if (fileInput)
+      fileInput.value = "";
+    var currentAttachmentsContainer = document.getElementById("proj-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("proj-current-attachments-list");
+    if (currentAttachmentsContainer)
+      currentAttachmentsContainer.style.display = "none";
+    if (currentAttachmentsList)
+      currentAttachmentsList.innerHTML = "";
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isAdmin = currentUser.roleId === "Super Admin" || currentUser.roleId === "Admin";
+    var projNameElem = document.getElementById("proj-name");
+    var projCustElem = document.getElementById("proj-customer-id");
+    var projTypeElem = document.getElementById("proj-type");
+    var projValElem = document.getElementById("proj-value");
+
+    if (projNameElem) projNameElem.disabled = false;
+    if (projCustElem) projCustElem.disabled = false;
+    if (projTypeElem) projTypeElem.disabled = false;
+    if (projValElem) projValElem.disabled = false;
+
+    if (projObj) {
+      document.getElementById("proj-modal-title").innerText = "Edit Project " + projObj.ProjectID;
+      document.getElementById("proj-id").value = projObj.ProjectID;
+      document.getElementById("proj-name").value = projObj.ProjectName;
+      document.getElementById("proj-customer-id").value = projObj.CustomerID;
+      document.getElementById("proj-type").value = projObj.ProjectType;
+      document.getElementById("proj-value").value = projObj.ProjectValue;
+      document.getElementById("proj-inquiry").value = projObj.InquiryID || "";
+      document.getElementById("proj-start-date").value = parseRawDateString(projObj.StartDate);
+      document.getElementById("proj-expected-date").value = parseRawDateString(projObj.ExpectedCompletionDate);
+      document.getElementById("proj-actual-date").value = parseRawDateString(projObj.ActualCompletionDate);
+      document.getElementById("proj-status").value = projObj.Status;
+      document.getElementById("proj-location").value = projObj.Location || "";
+      document.getElementById("proj-notes").value = projObj.Notes || "";
+      var waField = document.getElementById("proj-whatsapp-group");
+      if (waField) waField.value = projObj.WhatsAppGroupLink || "";
+      document.getElementById("proj-attachments-hidden").value = projObj.Attachments || "";
+      document.getElementById("btn-project-milestones").style.display = "inline-block";
+
+      if (!isAdmin) {
+        if (projNameElem) projNameElem.disabled = true;
+        if (projCustElem) projCustElem.disabled = true;
+        if (projTypeElem) projTypeElem.disabled = true;
+        if (projValElem) projValElem.disabled = true;
+      }
+
+      if (projObj.Attachments && typeof projObj.Attachments === "string" && projObj.Attachments.trim() !== "") {
+        if (currentAttachmentsContainer)
+          currentAttachmentsContainer.style.display = "block";
+        var links = projObj.Attachments.split(",").map(function(l) {
+          return l.trim();
+        }).filter(function(l) {
+          return l !== "";
+        });
+        if (currentAttachmentsList) {
+          currentAttachmentsList.innerHTML = links.map(function(link, idx) {
+            return '\n            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">\n              <a href="'.concat(escapeHtml(link), '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ').concat(idx + 1, '</a>\n              <button type="button" onclick="removeAttachment(').concat(idx, ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>\n            </div>\n          ');
+          }).join("");
+        }
+      }
+    } else {
+      document.getElementById("proj-modal-title").innerText = "Add New Project";
+      document.getElementById("proj-status").value = "";
+      document.getElementById("proj-type").value = "";
+      document.getElementById("btn-project-milestones").style.display = "none";
+    }
+    document.getElementById("project-modal").classList.add("show");
+  }
+  function parseRawDateString(isoString) {
+    if (!isoString)
+      return "";
+    return isoString.substring(0, 10);
+  }
+  function closeProjectModal() {
+    document.getElementById("project-modal").classList.remove("show");
+  }
+  function editProject(projectId) {
+    var proj = allProjects.find(function(p) {
+      return p.ProjectID === projectId;
+    });
+    if (proj) {
+      openProjectModal(proj);
+    }
+  }
+  function handleProjectSubmit(e) {
+    e.preventDefault();
+    var form = document.getElementById("project-form");
+    var formData = {};
+    var inputs = form.querySelectorAll("input, select, textarea");
+    inputs.forEach(function(input) {
+      if (input.name) {
+        formData[input.name] = input.value;
+      }
+    });
+    var fileInput = document.getElementById("proj-attachment");
+    var files = fileInput ? fileInput.files : [];
+    showLoader(true);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    function executeSaveProject(fileDataArray2) {
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          closeProjectModal();
+          loadProjectsView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).saveProject(formData, fileDataArray2, currentUser.userId);
+    }
+    if (files.length > 0) {
+      var fileDataArray = [];
+      var loadedFiles = 0;
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var reader = new FileReader();
+        reader.onload = /* @__PURE__ */ function(f) {
+          return function(evt) {
+            var base64Data = evt.target.result.split(",")[1];
+            fileDataArray.push({
+              filename: f.name,
+              mimeType: f.type,
+              base64: base64Data
+            });
+            loadedFiles++;
+            if (loadedFiles === files.length) {
+              executeSaveProject(fileDataArray);
+            }
+          };
+        }(file);
+        reader.onerror = function() {
+          showLoader(false);
+          showToast("Failed to read one of the selected files.", "error");
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      executeSaveProject(null);
+    }
+  }
+  function deleteProject(projectId) {
+    if (confirm("Are you sure you want to delete Project " + projectId + "? All tasks and site visits mapped to this project will remain in their respective databases.")) {
+      showLoader(true);
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          if (typeof cacheClearAll === "function") cacheClearAll();
+          allProjects = allProjects.filter(function(p) { return p.ProjectID !== projectId; });
+          renderProjects(allProjects);
+          loadProjectsView(true);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteProject(projectId);
+    }
+  }
+  window.onMilestoneStatusChange = function() {
+    var status = document.getElementById("ms-status").value;
+    var group = document.getElementById("ms-completion-date-group");
+    var input = document.getElementById("ms-completion-date");
+    if (status === "Completed") {
+      if (group) group.style.display = "block";
+      if (input && !input.value) {
+        input.value = (new Date()).toISOString().substring(0, 10);
+      }
+    } else {
+      if (group) group.style.display = "none";
+    }
+  };
+
+  function openMilestonesModal(projectId, projName) {
+    document.getElementById("milestones-modal-title").innerText = "Milestones for " + projName;
+    document.getElementById("ms-project-id").value = projectId;
+    resetMilestoneForm();
+    renderMilestonesTable(projectId);
+    document.getElementById("milestones-modal").classList.add("show");
+  }
+  function closeMilestonesModal() {
+    document.getElementById("milestones-modal").classList.remove("show");
+  }
+  function resetMilestoneForm() {
+    document.getElementById("ms-id").value = "";
+    document.getElementById("ms-name").value = "";
+    document.getElementById("ms-due-date").value = "";
+    document.getElementById("ms-completion-date").value = "";
+    document.getElementById("ms-status").value = "Pending";
+    onMilestoneStatusChange();
+    document.getElementById("ms-remarks").value = "";
+    document.getElementById("ms-associate-type").value = "";
+    handleMilestoneTypeChange();
+    document.getElementById("ms-associate-name").value = "";
+    document.getElementById("ms-associate-cost").value = "";
+  }
+  function renderMilestonesTable(projectId) {
+    var tbody = document.querySelector("#milestones-table tbody");
+    var projectMs = milestonesCacheList.filter(function(m) {
+      return m.ProjectID === projectId;
+    });
+    projectMs.sort(function(a, b) {
+      return new Date(a.DueDate) - new Date(b.DueDate);
+    });
+    var total = projectMs.length;
+    var completed = projectMs.filter(function(m) {
+      return m.Status === "Completed";
+    }).length;
+    var pct = total > 0 ? Math.round(completed / total * 100) : 0;
+    document.getElementById("milestones-progress-pct").innerText = "".concat(pct, "% (").concat(completed, "/").concat(total, ")");
+    document.getElementById("milestones-progress-bar").style.width = "".concat(pct, "%");
+    if (projectMs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No milestones defined for this project.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = projectMs.map(function(m) {
+      var formattedDate = m.DueDate ? formatDate(m.DueDate) : "No Date";
+      var compDate = m.CompletionDate ? formatDate(m.CompletionDate) : "-";
+      var statusClass = m.Status ? m.Status.toLowerCase().replace(/\s+/g, "-") : "pending";
+      var assocType = m.AssociateType ? escapeHtml(m.AssociateType) : "-";
+      var assocName = m.AssociateName ? escapeHtml(m.AssociateName) : "-";
+      var assocCost = m.AssociateCost ? formatCurrency(m.AssociateCost) : "-";
+      var mIdEscaped = escapeHtml(m.MilestoneID || "");
+      return '\n        <tr>\n          <td style="font-weight:600;">'.concat(escapeHtml(m.MilestoneName || ""), "</td>\n          <td>").concat(formattedDate, '</td>\n          <td style="font-size:0.8rem; font-weight:600; color:var(--success);">').concat(compDate, '</td>\n          <td><span class="badge badge-').concat(statusClass, '">').concat(escapeHtml(m.Status || "Pending"), "</span></td>\n          <td>").concat(assocType, "</td>\n          <td>").concat(assocName, "</td>\n          <td>").concat(assocCost, '</td>\n          <td style="color:var(--text-muted); font-size:0.75rem;">').concat(escapeHtml(m.Remarks || "-"), '</td>\n          <td style="text-align: right;">\n            <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'').concat(mIdEscaped, '\')"><i class="fas fa-pen"></i></button>\n            <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'').concat(mIdEscaped, '\')"><i class="fas fa-trash"></i></button>\n          </td>\n        </tr>\n      ');
+    }).join("");
+  }
+  function editMilestoneById(milestoneId) {
+    var m = milestonesCacheList.find(function(item) { return item.MilestoneID === milestoneId; });
+    if (!m) return;
+    document.getElementById("ms-id").value = m.MilestoneID || "";
+    document.getElementById("ms-name").value = m.MilestoneName || "";
+    document.getElementById("ms-due-date").value = parseRawDateString(m.DueDate);
+    document.getElementById("ms-status").value = m.Status || "Pending";
+    document.getElementById("ms-completion-date").value = parseRawDateString(m.CompletionDate);
+    onMilestoneStatusChange();
+    document.getElementById("ms-remarks").value = m.Remarks || "";
+    document.getElementById("ms-associate-type").value = m.AssociateType || "";
+    handleMilestoneTypeChange();
+    document.getElementById("ms-associate-name").value = m.AssociateName || "";
+    document.getElementById("ms-associate-cost").value = m.AssociateCost || "";
+  }
+  window.editMilestoneById = editMilestoneById;
+
+  function editMilestone(id, name, dueDate, status, remarks, associateName, associateCost, associateType, completionDate) {
+    editMilestoneById(id);
+  }
+  function handleMilestoneSubmit(e) {
+    e.preventDefault();
+    showLoader(true);
+    var projectId = document.getElementById("ms-project-id").value;
+    var formData = {
+      ProjectID: projectId,
+      MilestoneID: document.getElementById("ms-id").value,
+      MilestoneName: document.getElementById("ms-name").value,
+      DueDate: document.getElementById("ms-due-date").value,
+      CompletionDate: document.getElementById("ms-completion-date").value,
+      Status: document.getElementById("ms-status").value,
+      Remarks: document.getElementById("ms-remarks").value,
+      AssociateType: document.getElementById("ms-associate-type").value,
+      AssociateName: document.getElementById("ms-associate-name").value,
+      AssociateCost: document.getElementById("ms-associate-cost").value
+    };
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    google.script.run.withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.success) {
+        showToast(response.message, "success");
+        resetMilestoneForm();
+        google.script.run.withSuccessHandler(function(data) {
+          milestonesCacheList = data || [];
+          renderMilestonesTable(projectId);
+        }).getMilestones();
+      } else {
+        showToast(response.message, "error");
+      }
+    }).withFailureHandler(function(err) {
+      showLoader(false);
+      showToast(err.message, "error");
+    }).saveMilestone(formData, currentUser.userId);
+  }
+  function deleteMilestone(milestoneId) {
+    if (confirm("Are you sure you want to delete this milestone?")) {
+      showLoader(true);
+      var projectId = document.getElementById("ms-project-id").value;
+      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      google.script.run.withSuccessHandler(function(response) {
+        showLoader(false);
+        if (response.success) {
+          showToast(response.message, "success");
+          google.script.run.withSuccessHandler(function(data) {
+            milestonesCacheList = data || [];
+            renderMilestonesTable(projectId);
+          }).getMilestones();
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showLoader(false);
+        showToast(err.message, "error");
+      }).deleteMilestone(milestoneId, currentUser.userId);
+    }
+  }
+  function addTaskForProject(projectId) {
+    localStorage.setItem("pending_add_task_project_id", projectId);
+    appRouter.navigate("tasks");
+  }
+  function handleMilestoneTypeChange() {
+    var type = document.getElementById("ms-associate-type").value;
+    var select = document.getElementById("ms-associate-name");
+    if (!select)
+      return;
+    var listToUse = (staffCacheList && staffCacheList.length > 0) ? staffCacheList : (window.usersCacheList || []);
+    if (type === "Staff") {
+      select.innerHTML = '<option value="">Select Internal Staff</option>' + listToUse.map(function(u) {
+        return '<option value="'.concat(escapeHtml(u.FullName), '">').concat(escapeHtml(u.FullName), "</option>");
+      }).join("");
+    } else if (type === "Vendor") {
+      select.innerHTML = '<option value="">Select Vendor</option>' + vendorsCache.filter(function(v) {
+        return v && (!v.Status || String(v.Status).trim().toLowerCase() === "active" || String(v.Status).trim() === "");
+      }).map(function(v) {
+        return '<option value="'.concat(escapeHtml(v.VendorName), '">').concat(escapeHtml(v.VendorName), "</option>");
+      }).join("");
+    } else if (type === "Associate") {
+      select.innerHTML = '<option value="">Select Associate</option>' + associatesCache.filter(function(a) {
+        return a && (!a.Status || String(a.Status).trim().toLowerCase() === "active" || String(a.Status).trim() === "");
+      }).map(function(a) {
+        return '<option value="'.concat(escapeHtml(a.AssociateName), '">').concat(escapeHtml(a.AssociateName), "</option>");
+      }).join("");
+    } else {
+      select.innerHTML = '<option value="">Unassigned</option>';
+    }
+  }
+  function removeAttachment(index) {
+    var hiddenInput = document.getElementById("proj-attachments-hidden");
+    var photos = hiddenInput.value;
+    if (!photos)
+      return;
+    var links = photos.split(",").map(function(l) {
+      return l.trim();
+    }).filter(function(l) {
+      return l !== "";
+    });
+    links.splice(index, 1);
+    var updatedPhotos = links.join(", ");
+    hiddenInput.value = updatedPhotos;
+    var currentAttachmentsContainer = document.getElementById("proj-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("proj-current-attachments-list");
+    if (updatedPhotos === "") {
+      if (currentAttachmentsContainer)
+        currentAttachmentsContainer.style.display = "none";
+      if (currentAttachmentsList)
+        currentAttachmentsList.innerHTML = "";
+    } else {
+      if (currentAttachmentsList) {
+        currentAttachmentsList.innerHTML = links.map(function(link, idx) {
+          return '\n          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">\n            <a href="'.concat(escapeHtml(link), '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ').concat(idx + 1, '</a>\n            <button type="button" onclick="removeAttachment(').concat(idx, ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>\n          </div>\n        ');
+        }).join("");
+      }
+    }
+  }
+  function toggleProjAttachmentsDropdown(event, projectId) {
+    event.stopPropagation();
+    var dropdown = document.getElementById("dropdown-" + projectId);
+    if (!dropdown)
+      return;
+    var isOpen = dropdown.style.display === "block";
+    document.querySelectorAll(".attachments-dropdown-menu").forEach(function(el) {
+      el.style.display = "none";
+    });
+    if (!isOpen) {
+      dropdown.style.display = "block";
+    }
+  }
+  document.addEventListener("click", function() {
+    document.querySelectorAll(".attachments-dropdown-menu").forEach(function(el) {
+      el.style.display = "none";
+    });
+  });
+  window.openProjectModal = openProjectModal;
+  window.closeProjectModal = closeProjectModal;
+  window.editProject = editProject;
+  window.deleteProject = deleteProject;
+  window.filterProjects = filterProjects;
+  window.handleProjectSubmit = handleProjectSubmit;
+  window.addTaskForProject = addTaskForProject;
+  window.removeAttachment = removeAttachment;
+  window.toggleProjAttachmentsDropdown = toggleProjAttachmentsDropdown;
+  window.openMilestonesModal = openMilestonesModal;
+  window.closeMilestonesModal = closeMilestonesModal;
+  window.handleMilestoneSubmit = handleMilestoneSubmit;
+  window.editMilestone = editMilestone;
+  window.deleteMilestone = deleteMilestone;
+  window.handleMilestoneTypeChange = handleMilestoneTypeChange;
+  window.openMilestonesModalFromProjectForm = function() {
+    var projId = document.getElementById("proj-id").value;
+    var projName = document.getElementById("proj-name").value;
+    if (projId) {
+      closeProjectModal();
+      openMilestonesModal(projId, projName);
+    }
+  };
+  window.openProjectModalWithCustomer = function(customerId) {
+    showLoader(true);
+    var loadedCount = 0;
+    var totalCalls = 3;
+    function checkLoaded() {
+      loadedCount++;
+      if (loadedCount === totalCalls) {
+        populateFilters();
+        var select = document.getElementById("proj-customer-id");
+        select.innerHTML = '<option value="">Select Customer *</option>' + customersCache.map(function(c) {
+          return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), "</option>");
+        }).join("");
+        renderProjects(allProjects);
+        showLoader(false);
+        openProjectModal();
+        document.getElementById("proj-customer-id").value = customerId;
+      }
+    }
+    google.script.run.withSuccessHandler(function(data) {
+      customersCache = data;
+      checkLoaded();
+    }).withFailureHandler(function(err) {
+      showToast(err.message, "error");
+      showLoader(false);
+    }).getCustomers();
+    google.script.run.withSuccessHandler(function(data) {
+      allProjects = data;
+      checkLoaded();
+    }).withFailureHandler(function(err) {
+      showToast(err.message, "error");
+      showLoader(false);
+    }).getProjects();
+    google.script.run.withSuccessHandler(function(data) {
+      milestonesCacheList = data || [];
+      checkLoaded();
+    }).getMilestones();
+  };
+})();
+
+</script>
