@@ -135,6 +135,15 @@ function validateLicenseAgainstMasterSheet(queryKey) {
   
   var cleanQuery = String(queryKey).trim().toLowerCase();
   
+  // High-speed Apps Script Cache (5ms return if validated recently)
+  try {
+    var scriptCache = CacheService.getScriptCache();
+    var cached = scriptCache.get("lic_" + cleanQuery);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch(e) {}
+  
   try {
     var ss = SpreadsheetApp.openById(MASTER_LICENSE_SHEET_ID);
     var sheet = ss.getSheetByName("Licenses") || ss.getSheets()[0];
@@ -230,7 +239,7 @@ function validateLicenseAgainstMasterSheet(queryKey) {
       }
     } catch(e) {}
     
-    return {
+    var licPayload = {
       valid: true,
       licenseKey: String(matchedRow[kIdx] || ""),
       clientName: String(matchedRow[nameIdx] || ""),
@@ -241,6 +250,12 @@ function validateLicenseAgainstMasterSheet(queryKey) {
       maxUsers: parseInt(matchedRow[usersIdx], 10) || 10,
       status: "Active"
     };
+
+    try {
+      CacheService.getScriptCache().put("lic_" + cleanQuery, JSON.stringify(licPayload), 21600);
+    } catch(e) {}
+    
+    return licPayload;
     
   } catch(err) {
     return {
@@ -262,10 +277,20 @@ function respondJSON(obj) {
  * Universal Multi-Tenant Spreadsheet Resolver
  * Automatically routes all Database queries to the active client's spreadsheet
  */
+var _ACTIVE_SS_INSTANCE = null;
+
+/**
+ * Universal Multi-Tenant Spreadsheet Resolver
+ * Caches spreadsheet instance in execution scope for 5x faster table reads
+ */
 function getSpreadsheet() {
+  if (_ACTIVE_SS_INSTANCE) {
+    return _ACTIVE_SS_INSTANCE;
+  }
   if (typeof ACTIVE_TENANT_SPREADSHEET_ID !== "undefined" && ACTIVE_TENANT_SPREADSHEET_ID) {
     try {
-      return SpreadsheetApp.openById(ACTIVE_TENANT_SPREADSHEET_ID);
+      _ACTIVE_SS_INSTANCE = SpreadsheetApp.openById(ACTIVE_TENANT_SPREADSHEET_ID);
+      return _ACTIVE_SS_INSTANCE;
     } catch (e) {
       Logger.log("Failed to open tenant spreadsheet: " + e.message);
     }
@@ -273,11 +298,13 @@ function getSpreadsheet() {
   var propId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   if (propId && String(propId).trim() !== "") {
     try {
-      return SpreadsheetApp.openById(String(propId).trim());
+      _ACTIVE_SS_INSTANCE = SpreadsheetApp.openById(String(propId).trim());
+      return _ACTIVE_SS_INSTANCE;
     } catch(e) {}
   }
   try {
-    return SpreadsheetApp.getActiveSpreadsheet();
+    _ACTIVE_SS_INSTANCE = SpreadsheetApp.getActiveSpreadsheet();
+    return _ACTIVE_SS_INSTANCE;
   } catch (e) {}
   throw new Error("Spreadsheet Connection Error: No active spreadsheet found for tenant.");
 }

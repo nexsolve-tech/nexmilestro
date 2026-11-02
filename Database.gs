@@ -94,10 +94,16 @@ const ID_PREFIXES = {
  * Multi-Tenant Router: Automatically connects to the verified client's spreadsheet
  * identified via Central Master License Sheet (or falls back to bound sheet).
  */
+var _CACHED_SPREADSHEET_REF = null;
+
 function getSpreadsheet() {
+  if (_CACHED_SPREADSHEET_REF) {
+    return _CACHED_SPREADSHEET_REF;
+  }
   if (typeof ACTIVE_TENANT_SPREADSHEET_ID !== "undefined" && ACTIVE_TENANT_SPREADSHEET_ID) {
     try {
-      return SpreadsheetApp.openById(ACTIVE_TENANT_SPREADSHEET_ID);
+      _CACHED_SPREADSHEET_REF = SpreadsheetApp.openById(ACTIVE_TENANT_SPREADSHEET_ID);
+      return _CACHED_SPREADSHEET_REF;
     } catch(e) {
       Logger.log("Failed to open tenant spreadsheet (" + ACTIVE_TENANT_SPREADSHEET_ID + "): " + e.message);
     }
@@ -119,6 +125,7 @@ function getSpreadsheet() {
                     "Please bind this script to a Google Sheet (Extensions > Apps Script inside the sheet), " +
                     "or set the SPREADSHEET_ID script property under Settings > Script Properties.");
   }
+  _CACHED_SPREADSHEET_REF = ss;
   return ss;
 }
 

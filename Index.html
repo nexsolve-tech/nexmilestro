@@ -10446,10 +10446,43 @@ window.NEXMILESTRO_API_URL = "https://script.google.com/macros/s/AKfycbyervSpXP1
 
 async function callAppsScriptApi(fnName, args, successCb, failCb) {
   var baseUrl = window.NEXMILESTRO_API_URL;
+  args = args || [];
+
+  var isGetter = (fnName.indexOf("get") === 0 || fnName.indexOf("fetch") === 0 || fnName.indexOf("read") === 0);
+  var isWriter = (fnName.indexOf("save") === 0 || fnName.indexOf("delete") === 0 || 
+                  fnName.indexOf("update") === 0 || fnName.indexOf("remove") === 0 || 
+                  fnName.indexOf("mark") === 0 || fnName.indexOf("create") === 0 ||
+                  fnName.indexOf("setup") === 0 || fnName.indexOf("authenticate") === 0);
+
+  var cacheKey = "api_" + fnName + "_" + JSON.stringify(args);
+
+  // 1. FAST SWR (Stale-While-Revalidate): Return cached data immediately (0ms)
+  var cachedData = null;
+  if (isGetter && typeof cacheGet === "function") {
+    cachedData = cacheGet(cacheKey);
+    if (cachedData !== null && cachedData !== undefined) {
+      if (typeof successCb === "function") {
+        setTimeout(function() {
+          successCb(cachedData);
+        }, 0);
+      }
+      // If data is very fresh (< 90 seconds), skip network call to keep app lightning fast
+      var ts = window._dataCacheTimestamps ? window._dataCacheTimestamps[cacheKey] : 0;
+      if (ts && (Date.now() - ts) < 90000) {
+        return;
+      }
+    }
+  }
+
+  // 2. Clear caches on mutation / write
+  if (isWriter && typeof cacheClear === "function") {
+    cacheClear();
+  }
+
   var payload = {
     action: "execute",
     functionName: fnName,
-    args: args || [],
+    args: args,
     licenseKey: localStorage.getItem("nexmilestro_license_key") || "",
     spreadsheetId: localStorage.getItem("nexmilestro_spreadsheet_id") || ""
   };
@@ -10463,8 +10496,17 @@ async function callAppsScriptApi(fnName, args, successCb, failCb) {
     });
     var json = await res.json();
     if (json && json.success) {
-      if (typeof successCb === "function") {
-        successCb(json.data !== undefined ? json.data : json);
+      var resData = json.data !== undefined ? json.data : json;
+      if (isGetter && typeof cacheSet === "function") {
+        cacheSet(cacheKey, resData);
+      }
+      // Only invoke callback if we didn't already deliver identical cached data
+      if (!cachedData && typeof successCb === "function") {
+        successCb(resData);
+      } else if (cachedData && JSON.stringify(cachedData) !== JSON.stringify(resData)) {
+        if (typeof successCb === "function") {
+          successCb(resData);
+        }
       }
     } else {
       var errMsg = (json && (json.error || json.message)) ? (json.error || json.message) : ("Server error executing " + fnName);
@@ -10476,11 +10518,13 @@ async function callAppsScriptApi(fnName, args, successCb, failCb) {
     }
   } catch (netErr) {
     console.error("Network error calling " + fnName + ":", netErr);
-    var errObj = new Error("Network connection error: " + netErr.message);
-    if (typeof failCb === "function") {
-      failCb(errObj);
-    } else if (typeof successCb === "function") {
-      successCb({ success: false, message: errObj.message });
+    if (!cachedData) {
+      var errObj = new Error("Network connection error: " + netErr.message);
+      if (typeof failCb === "function") {
+        failCb(errObj);
+      } else if (typeof successCb === "function") {
+        successCb({ success: false, message: errObj.message });
+      }
     }
   }
 }
@@ -10650,30 +10694,59 @@ window.onerror = function(message, source, lineno, colno, error) {
 
 /**
  * ============================================================
- * GLOBAL DATA CACHE — Performance Optimization
- * Caches server data in-memory to avoid redundant google.script.run
- * calls when switching between tabs. 5-minute TTL with write-through
- * invalidation on save/delete operations.
+ * HIGH-PERFORMANCE CLIENT DATA CACHE (PERSISTENT & IN-MEMORY)
+ * Matches Field Force Management (Nexallot) architecture:
+ * Instant 0ms hydration from localStorage + Stale-While-Revalidate
  * ============================================================
  */
 window._dataCache = {};
 window._dataCacheTimestamps = {};
-var CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 Hours (Full Session Cache)
+var CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 Hours Persistent Cache
+
+// Hydrate in-memory cache immediately from localStorage on script evaluation (0ms boot)
+(function hydrateCacheFromStorage() {
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf("nm_cache_") === 0) {
+        var cleanKey = k.substring("nm_cache_".length);
+        var item = JSON.parse(localStorage.getItem(k));
+        if (item && item.ts && (Date.now() - item.ts) < CACHE_TTL_MS) {
+          window._dataCache[cleanKey] = item.data;
+          window._dataCacheTimestamps[cleanKey] = item.ts;
+        }
+      }
+    }
+  } catch (e) {}
+})();
 
 /**
- * Store data in cache with current timestamp
+ * Store data in memory and persistent localStorage
  */
 function cacheSet(key, data) {
+  if (data === undefined) return;
   window._dataCache[key] = data;
   window._dataCacheTimestamps[key] = Date.now();
+  try {
+    localStorage.setItem("nm_cache_" + key, JSON.stringify({
+      ts: Date.now(),
+      data: data
+    }));
+  } catch (e) {
+    // Quota exceeded: clean old entries
+    try {
+      for (var i = 0; i < 10 && i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf("nm_cache_") === 0) localStorage.removeItem(k);
+      }
+      localStorage.setItem("nm_cache_" + key, JSON.stringify({ ts: Date.now(), data: data }));
+    } catch(err) {}
+  }
 }
 window.cacheSet = cacheSet;
 
 /**
- * Retrieve cached data if it exists and is within TTL
- * @param {string} key - Cache key
- * @param {number} [maxAgeMs] - Custom TTL override (default 5 min)
- * @returns {*} Cached data or null if expired/missing
+ * Retrieve cached data if valid
  */
 function cacheGet(key, maxAgeMs) {
   var ttl = maxAgeMs || CACHE_TTL_MS;
@@ -10681,43 +10754,60 @@ function cacheGet(key, maxAgeMs) {
   if (ts && (Date.now() - ts) < ttl && window._dataCache[key] !== undefined) {
     return window._dataCache[key];
   }
+  try {
+    var raw = localStorage.getItem("nm_cache_" + key);
+    if (raw) {
+      var item = JSON.parse(raw);
+      if (item && item.ts && (Date.now() - item.ts) < ttl && item.data !== undefined) {
+        window._dataCache[key] = item.data;
+        window._dataCacheTimestamps[key] = item.ts;
+        return item.data;
+      }
+    }
+  } catch (e) {}
   return null;
 }
 window.cacheGet = cacheGet;
 
 /**
  * Invalidate ALL cached data across all modules whenever any write operation occurs
- * This ensures newly added Leads, Customers, Projects, Vendors, Site Visits, etc.
- * immediately reflect across all tabs, dropdowns, and modals app-wide.
- * @param {string|string[]} [keys] - Optional keys (ignored, full cache wiped)
  */
 function cacheClear(keys) {
   window._dataCache = {};
   window._dataCacheTimestamps = {};
+  try {
+    var keysToRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf("nm_cache_") === 0) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
+  } catch (e) {}
   if (typeof window.preloadAllAppData === "function") {
     setTimeout(function() {
       window.preloadAllAppData();
-    }, 100);
+    }, 150);
   }
 }
 window.cacheClear = cacheClear;
 
 /**
- * Invalidate ALL cached data (e.g., on logout or full refresh)
+ * Full cache purge
  */
 function cacheClearAll() {
-  window._dataCache = {};
-  window._dataCacheTimestamps = {};
+  cacheClear();
 }
 window.cacheClearAll = cacheClearAll;
 
 /**
- * Populate all view caches simultaneously from a single master data object
+ * Populate all view and API caches simultaneously from a single master data payload
  */
 function populateAllCaches(data) {
   if (!data || data.success === false) return;
   
-  // Dashboard
+  // 1. View-Aggregated Caches (For immediate 0ms tab switching)
   cacheSet("dashboardData", {
     customers: data.customers || [],
     projects: data.projects || [],
@@ -10728,7 +10818,6 @@ function populateAllCaches(data) {
     transactions: data.transactions || []
   });
 
-  // Projects View
   cacheSet("projectsViewData", {
     users: data.users || [],
     customers: data.customers || [],
@@ -10739,7 +10828,6 @@ function populateAllCaches(data) {
     vendors: data.vendors || []
   });
 
-  // Tasks View
   cacheSet("tasksViewData", {
     projects: data.projects || [],
     users: data.users || [],
@@ -10749,7 +10837,6 @@ function populateAllCaches(data) {
     associates: data.associates || []
   });
 
-  // Site Visits View
   cacheSet("siteVisitsViewData", {
     customers: data.customers || [],
     projects: data.projects || [],
@@ -10760,14 +10847,12 @@ function populateAllCaches(data) {
     associates: data.associates || []
   });
 
-  // Leads View
   cacheSet("leadsViewData", {
     users: data.users || [],
     leads: data.leads || [],
     dropdowns: data.dropdowns || {}
   });
 
-  // Proposals View
   cacheSet("proposalsViewData", {
     customers: data.customers || [],
     leads: data.leads || [],
@@ -10775,18 +10860,45 @@ function populateAllCaches(data) {
     dropdowns: data.dropdowns || {}
   });
 
-  // Customers View
   cacheSet("customersViewData", {
     customers: data.customers || [],
     users: data.users || [],
     dropdowns: data.dropdowns || {}
   });
 
-  // Vendors View
   cacheSet("vendorsViewData", {
     vendors: data.vendors || [],
     dropdowns: data.dropdowns || {}
   });
+
+  cacheSet("associatesViewData", {
+    associates: data.associates || [],
+    dropdowns: data.dropdowns || {}
+  });
+
+  cacheSet("financeViewData", {
+    transactions: data.transactions || [],
+    projects: data.projects || [],
+    vendors: data.vendors || [],
+    associates: data.associates || [],
+    company: data.company || {}
+  });
+
+  // 2. Direct Module API Caches (For any modal, dropdown, or subcomponent)
+  cacheSet("api_getCustomers_[]", data.customers || []);
+  cacheSet("api_getProjects_[]", data.projects || []);
+  cacheSet("api_getTasks_[]", data.tasks || []);
+  cacheSet("api_getSiteVisits_[]", data.siteVisits || []);
+  cacheSet("api_getLeads_[]", data.leads || []);
+  cacheSet("api_getProposals_[]", data.proposals || []);
+  cacheSet("api_getVendors_[]", data.vendors || []);
+  cacheSet("api_getAssociates_[]", data.associates || []);
+  cacheSet("api_getMilestones_[]", data.milestones || []);
+  cacheSet("api_getTransactions_[]", data.transactions || []);
+  cacheSet("api_getFinanceTransactions_[]", data.transactions || []);
+  cacheSet("api_getDropdownValues_[]", data.dropdowns || {});
+  cacheSet("api_getUsers_[]", data.users || []);
+  cacheSet("api_getAllAppData_[]", data);
 }
 window.populateAllCaches = populateAllCaches;
 
