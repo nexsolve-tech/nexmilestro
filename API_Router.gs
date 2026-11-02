@@ -10,6 +10,9 @@
 // ── CENTRAL MASTER LICENSE SPREADSHEET ID ──────────────────────────────
 var MASTER_LICENSE_SHEET_ID = "1U5Frv47SDdASeKqVR_ZCiXJrCnBGvRAILYqC0yljcnc";
 
+// ── ACTIVE TENANT CONTEXT (Resolved dynamically per request) ───────────
+var ACTIVE_TENANT_SPREADSHEET_ID = null;
+
 /**
  * Main HTTP POST handler (receives API calls from GitHub Pages)
  */
@@ -62,6 +65,16 @@ function handleUniversalApiRequest(params) {
     var licenseKey = params.licenseKey || params.orgCode || params.key || "";
     var res = validateLicenseAgainstMasterSheet(licenseKey);
     return respondJSON(res);
+  }
+  
+  // Dynamically resolve and bind the active tenant's spreadsheet for this execution
+  if (params.spreadsheetId && String(params.spreadsheetId).trim()) {
+    ACTIVE_TENANT_SPREADSHEET_ID = String(params.spreadsheetId).trim();
+  } else if (params.licenseKey && String(params.licenseKey).trim()) {
+    var lic = validateLicenseAgainstMasterSheet(params.licenseKey);
+    if (lic && lic.valid && lic.spreadsheetId) {
+      ACTIVE_TENANT_SPREADSHEET_ID = lic.spreadsheetId;
+    }
   }
   
   // 2. Function Execution Request (from Universal google.script.run Bridge)
@@ -244,3 +257,37 @@ function respondJSON(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+/**
+ * Universal Multi-Tenant Spreadsheet Resolver
+ * Automatically routes all Database queries to the active client's spreadsheet
+ */
+function getSpreadsheet() {
+  if (typeof ACTIVE_TENANT_SPREADSHEET_ID !== "undefined" && ACTIVE_TENANT_SPREADSHEET_ID) {
+    try {
+      return SpreadsheetApp.openById(ACTIVE_TENANT_SPREADSHEET_ID);
+    } catch (e) {
+      Logger.log("Failed to open tenant spreadsheet: " + e.message);
+    }
+  }
+  var propId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (propId && String(propId).trim() !== "") {
+    try {
+      return SpreadsheetApp.openById(String(propId).trim());
+    } catch(e) {}
+  }
+  try {
+    return SpreadsheetApp.getActiveSpreadsheet();
+  } catch (e) {}
+  throw new Error("Spreadsheet Connection Error: No active spreadsheet found for tenant.");
+}
+
+/**
+ * Diagnostic function to test Master License Sheet connection in Apps Script Editor
+ */
+function testMasterLicenseConnection() {
+  var res = validateLicenseAgainstMasterSheet("LIC-BUYER3-2026");
+  Logger.log("Diagnostic Test Result: " + JSON.stringify(res, null, 2));
+  return res;
+}
+

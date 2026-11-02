@@ -10449,7 +10449,9 @@ async function callAppsScriptApi(fnName, args, successCb, failCb) {
   var payload = {
     action: "execute",
     functionName: fnName,
-    args: args || []
+    args: args || [],
+    licenseKey: localStorage.getItem("nexmilestro_license_key") || "",
+    spreadsheetId: localStorage.getItem("nexmilestro_spreadsheet_id") || ""
   };
 
   try {
@@ -10620,6 +10622,7 @@ async function checkAndEnforceLicense() {
     
     localStorage.setItem("nexmilestro_license_key", licData.licenseKey || activeLic);
     localStorage.setItem("nexmilestro_client_name", licData.clientName || "");
+    localStorage.setItem("nexmilestro_spreadsheet_id", licData.spreadsheetId || "");
     localStorage.setItem("nexmilestro_plan", licData.plan || "");
     localStorage.setItem("nexmilestro_expiry", licData.expiryDate || "");
     

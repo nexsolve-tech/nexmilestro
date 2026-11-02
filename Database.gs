@@ -91,9 +91,17 @@ const ID_PREFIXES = {
 
 /**
  * Safe spreadsheet acquisition utility.
- * Supports container-bound connections and falls back to SPREADSHEET_ID script property.
+ * Multi-Tenant Router: Automatically connects to the verified client's spreadsheet
+ * identified via Central Master License Sheet (or falls back to bound sheet).
  */
 function getSpreadsheet() {
+  if (typeof ACTIVE_TENANT_SPREADSHEET_ID !== "undefined" && ACTIVE_TENANT_SPREADSHEET_ID) {
+    try {
+      return SpreadsheetApp.openById(ACTIVE_TENANT_SPREADSHEET_ID);
+    } catch(e) {
+      Logger.log("Failed to open tenant spreadsheet (" + ACTIVE_TENANT_SPREADSHEET_ID + "): " + e.message);
+    }
+  }
   let ss = null;
   const propId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   if (propId && String(propId).trim() !== "") {
