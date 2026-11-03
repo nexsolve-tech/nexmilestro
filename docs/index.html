@@ -12526,6 +12526,14 @@ document.addEventListener("click", function() {
     function getActiveLicenseKey() {
       var params = new URLSearchParams(window.location.search);
       var qKey = params.get("lic") || params.get("license") || params.get("key");
+      if (qKey && (qKey.toLowerCase() === "reset" || qKey.toLowerCase() === "clear" || qKey.toLowerCase() === "logout")) {
+        localStorage.removeItem("nexmilestro_license_key");
+        localStorage.removeItem("nexmilestro_spreadsheet_id");
+        localStorage.removeItem("nexmilestro_client_name");
+        localStorage.removeItem("pm_user");
+        sessionStorage.clear();
+        return "";
+      }
       if (qKey && qKey.trim()) {
         var cleanKey = qKey.trim().toUpperCase();
         localStorage.setItem("nexmilestro_license_key", cleanKey);
@@ -12559,9 +12567,19 @@ document.addEventListener("click", function() {
     window.showLicenseGateModal = showLicenseGateModal;
 
     function openLicenseGateModalManual() {
+      localStorage.removeItem("nexmilestro_license_key");
+      localStorage.removeItem("nexmilestro_spreadsheet_id");
+      localStorage.removeItem("nexmilestro_client_name");
+      localStorage.removeItem("pm_user");
+      sessionStorage.clear();
       showLoginOverlay(false);
       var inp = document.getElementById("license-gate-input");
-      if (inp) inp.value = getActiveLicenseKey();
+      if (inp) {
+        inp.value = "";
+        inp.focus();
+      }
+      var feedback = document.getElementById("license-gate-feedback");
+      if (feedback) feedback.style.display = "none";
       showLicenseGateModal(true);
     }
     window.openLicenseGateModalManual = openLicenseGateModalManual;
