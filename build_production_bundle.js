@@ -76,5 +76,7 @@ console.log(`✓ SUCCESS: Created dist/index.html (${docsSizeKb} KB)`);
 const cnameContent = 'nexmilestro.nexsolve.in\n';
 fs.writeFileSync(path.join(baseDir, 'CNAME'), cnameContent, 'utf8');
 fs.writeFileSync(path.join(docsDir, 'CNAME'), cnameContent, 'utf8');
-console.log('✓ Verified CNAME (nexmilestro.nexsolve.in) in root and docs/');
+fs.writeFileSync(path.join(baseDir, '.nojekyll'), '', 'utf8');
+fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf8');
+console.log('✓ Verified CNAME (nexmilestro.nexsolve.in) and .nojekyll in root and docs/');
 console.log('=== BUILD COMPLETE ===');
