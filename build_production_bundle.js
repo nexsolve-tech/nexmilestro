@@ -4,14 +4,13 @@ const path = require('path');
 console.log('=== BUILDING PRODUCTION BUNDLE FOR NEXMILESTRO (V2) ===');
 
 const baseDir = __dirname;
-const indexFile = path.join(baseDir, 'Index.html');
+const templateFile = fs.existsSync(path.join(baseDir, 'Index_Template.html')) 
+  ? path.join(baseDir, 'Index_Template.html')
+  : path.join(baseDir, 'Index.html');
 
-if (!fs.existsSync(indexFile)) {
-  console.error('Error: Index.html not found in', baseDir);
-  process.exit(1);
-}
+console.log(`Source template: ${path.basename(templateFile)}`);
 
-let content = fs.readFileSync(indexFile, 'utf8');
+let content = fs.readFileSync(templateFile, 'utf8');
 
 // Function to recursively replace <?!= include('NAME'); ?>
 function inlineIncludes(html, depth = 0) {
@@ -19,7 +18,6 @@ function inlineIncludes(html, depth = 0) {
   const includeRegex = /<\?!\s*=\s*include\(['"]([^'"]+)['"]\);\s*\?>/g;
   
   return html.replace(includeRegex, (match, fileName) => {
-    // Candidates to search
     const candidates = [
       path.join(baseDir, `${fileName}.html`),
       path.join(baseDir, fileName),
@@ -49,26 +47,32 @@ if (remainingIncludes) {
   console.log('✓ All include tags resolved successfully!');
 }
 
-// 1. Output to dist/index.html
-const distDir = path.join(baseDir, 'dist');
-if (!fs.existsSync(distDir)) {
-  fs.mkdirSync(distDir, { recursive: true });
-}
-const distPath = path.join(distDir, 'index.html');
-fs.writeFileSync(distPath, bundled, 'utf8');
-const sizeKb = (fs.statSync(distPath).size / 1024).toFixed(2);
-console.log(`✓ SUCCESS: Created dist/index.html (${sizeKb} KB)`);
+// 1. Output to root index.html (in case GitHub Pages serves from root)
+const rootPath = path.join(baseDir, 'index.html');
+fs.writeFileSync(rootPath, bundled, 'utf8');
+const rootSizeKb = (fs.statSync(rootPath).size / 1024).toFixed(2);
+console.log(`✓ SUCCESS: Created root index.html (${rootSizeKb} KB)`);
 
-// 2. Output to docs/index.html for GitHub Pages
+// 2. Output to docs/index.html (in case GitHub Pages serves from docs)
 const docsDir = path.join(baseDir, 'docs');
 if (!fs.existsSync(docsDir)) {
   fs.mkdirSync(docsDir, { recursive: true });
 }
 const docsPath = path.join(docsDir, 'index.html');
 fs.writeFileSync(docsPath, bundled, 'utf8');
-console.log(`✓ SUCCESS: Created docs/index.html (${sizeKb} KB)`);
+const docsSizeKb = (fs.statSync(docsPath).size / 1024).toFixed(2);
+console.log(`✓ SUCCESS: Created docs/index.html (${docsSizeKb} KB)`);
 
-// 3. Ensure CNAME is present in both root and docs
+// 3. Output to dist/index.html
+const distDir = path.join(baseDir, 'dist');
+if (!fs.existsSync(distDir)) {
+  fs.mkdirSync(distDir, { recursive: true });
+}
+const distPath = path.join(distDir, 'index.html');
+fs.writeFileSync(distPath, bundled, 'utf8');
+console.log(`✓ SUCCESS: Created dist/index.html (${docsSizeKb} KB)`);
+
+// 4. Ensure CNAME is in both root and docs
 const cnameContent = 'nexmilestro.nexsolve.in\n';
 fs.writeFileSync(path.join(baseDir, 'CNAME'), cnameContent, 'utf8');
 fs.writeFileSync(path.join(docsDir, 'CNAME'), cnameContent, 'utf8');
