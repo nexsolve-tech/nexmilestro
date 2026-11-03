@@ -3591,7 +3591,12 @@ async function handleSaveCompany(e) {
         <i class="fas fa-layer-group"></i>
       </div>
       <h3 style="font-family:var(--font-heading);font-size:1.35rem;font-weight:800;color:var(--text-main);margin-bottom:4px;">Sign In to Workspace</h3>
-      <p style="font-size:0.825rem;color:var(--text-muted);margin-bottom:24px;" id="login-org-name">NexMilestro Enterprise</p>
+      <p style="font-size:0.825rem;color:var(--text-muted);margin-bottom:8px;" id="login-org-name">NexMilestro Enterprise</p>
+      <div style="margin-bottom:20px;">
+        <a href="javascript:void(0)" onclick="handleChangeOrganization()" style="font-size:0.75rem;color:var(--primary);text-decoration:none;font-weight:600;">
+          <i class="fas fa-exchange-alt"></i> Change Organization / License
+        </a>
+      </div>
       
       <form onsubmit="handleLoginSubmit(event)" style="text-align:left;">
         <div class="form-group">
@@ -3638,10 +3643,25 @@ function showLoginModal(show) {
   const modal = document.getElementById("modal-login");
   if (!modal) return;
   if (show) {
+    const comp = JSON.parse(localStorage.getItem("nexmilestro_company") || "{}");
+    const activeLic = localStorage.getItem("nexmilestro_license_key") || "";
+    const orgEl = document.getElementById("login-org-name");
+    if (orgEl && comp.name) {
+      orgEl.textContent = comp.name + (activeLic ? " (" + activeLic + ")" : "");
+    }
     modal.classList.add("show");
   } else {
     modal.classList.remove("show");
   }
+}
+
+function handleChangeOrganization() {
+  localStorage.removeItem("nexmilestro_license_key");
+  localStorage.removeItem("nexmilestro_company");
+  localStorage.removeItem("nexmilestro_user");
+  window.state.currentUser = null;
+  showLoginModal(false);
+  showLicenseModal(true);
 }
 
 async function handleVerifyLicenseSubmit(e) {
@@ -3711,7 +3731,7 @@ async function handleLoginSubmit(e) {
 window.NEXMILESTRO_CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbysDwrVaFVANBqslv_0o3rc82vw6Nn6K4w78Mr6AOVCUIFHbEt9lhruPVMNZESqg_50/exec",
   APP_NAME: "NexMilestro",
-  DEFAULT_ORG: "LIC-BUYER1-2026"
+  DEFAULT_ORG: ""
 };
 
 /**
@@ -3719,7 +3739,7 @@ window.NEXMILESTRO_CONFIG = {
  */
 async function apiCall(action, payload) {
   payload = payload || {};
-  const activeLic = localStorage.getItem("nexmilestro_license_key") || window.NEXMILESTRO_CONFIG.DEFAULT_ORG;
+  const activeLic = (payload.licenseKey) || localStorage.getItem("nexmilestro_license_key") || window.NEXMILESTRO_CONFIG.DEFAULT_ORG;
   const currentUser = JSON.parse(localStorage.getItem("nexmilestro_user") || "{}");
 
   const bodyData = {
@@ -4040,15 +4060,24 @@ function formatDate(val) {
    * Application Boot Sequence (Field Force Architecture)
    */
   async function bootApplication() {
-    const activeLic = localStorage.getItem("nexmilestro_license_key") || window.NEXMILESTRO_CONFIG.DEFAULT_ORG;
+    // 1. Auto-detect license from URL (?lic=... or ?org=...)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const licFromUrl = urlParams.get('lic') || urlParams.get('license') || urlParams.get('org');
+      if (licFromUrl) {
+        localStorage.setItem("nexmilestro_license_key", licFromUrl.trim());
+      }
+    } catch(e) {}
 
-    // 1. License Check
+    const activeLic = localStorage.getItem("nexmilestro_license_key");
+
+    // 2. License Check: If no license stored, prompt for License Key
     if (!activeLic) {
       showLicenseModal(true);
       return;
     }
 
-    // 2. User Authentication Check
+    // 3. User Authentication Check: If not logged in, prompt for credentials
     const user = window.state.currentUser;
     if (!user) {
       showLoginModal(true);
@@ -4057,10 +4086,10 @@ function formatDate(val) {
 
     updateNavUserProfile();
 
-    // 3. Instant 0ms Render from local memory
+    // 4. Instant 0ms Render from local memory
     switchView("dashboard");
 
-    // 4. Background Sync: fetch fresh data from Google Apps Script silently
+    // 5. Background Sync: fetch fresh data from Google Apps Script silently
     syncAppData(false);
   }
 
