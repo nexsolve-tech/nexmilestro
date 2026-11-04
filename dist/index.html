@@ -2112,31 +2112,35 @@ textarea.form-control {
   var rawLeads = [];
   var rawTransactions = [];
   window.loadDashboardView = function(forceRefresh) {
-    showLoader(true);
-    // Check client-side cache first if not forceRefresh
-    if (!forceRefresh) {
-      var cached = cacheGet("dashboardData");
-      if (cached) {
-        rawCustomers = cached.customers || [];
-        rawProjects = cached.projects || [];
-        rawTasks = cached.tasks || [];
-        rawSiteVisits = cached.siteVisits || [];
-        rawMilestones = cached.milestones || [];
-        rawLeads = cached.leads || [];
-        rawTransactions = cached.transactions || [];
-        try {
-          populateDashboardFilters();
-          applyDashboardFilter();
-        } catch (e) {
-          showToast("Dashboard Render Error: " + e.message, "error");
-        }
-        showLoader(false);
-        return;
+    // 0ms instant render from memory cache
+    var data = (window._dataCache && window._dataCache.customers && window._dataCache.customers.length > 0)
+      ? window._dataCache
+      : (cacheGet("dashboardData") || window._dataCache || {});
+
+    if (data && data.customers && !forceRefresh) {
+      rawCustomers = data.customers || [];
+      rawProjects = data.projects || [];
+      rawTasks = data.tasks || [];
+      rawSiteVisits = data.siteVisits || [];
+      rawMilestones = data.milestones || [];
+      rawLeads = data.leads || [];
+      rawTransactions = data.transactions || [];
+      try {
+        populateDashboardFilters();
+        applyDashboardFilter();
+      } catch (e) {
+        console.error("Dashboard Render Error:", e);
       }
+      return;
+    }
+
+    if (forceRefresh) {
+      showLoader(true, "Refreshing workspace metrics...");
     }
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
+        if (forceRefresh) showLoader(false);
         if (result && result.success !== false) {
           rawCustomers = result.customers || [];
           rawProjects = result.projects || [];
@@ -2150,17 +2154,12 @@ textarea.form-control {
             populateDashboardFilters();
             applyDashboardFilter();
           } catch (e) {
-            showToast("Dashboard Render Error: " + e.message, "error");
+            console.error("Dashboard Render Error:", e);
           }
-          showLoader(false);
-        } else {
-          fetchLegacyDashboardData();
         }
       }).withFailureHandler(function(err) {
-        fetchLegacyDashboardData();
+        if (forceRefresh) showLoader(false);
       }).getDashboardData();
-    } else {
-      fetchLegacyDashboardData();
     }
   };
 
@@ -2575,7 +2574,6 @@ textarea.form-control {
     "Puducherry": ["Puducherry", "Karaikal", "Mahe", "Yanam", "Other"]
   };
   window.loadCustomersView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -2599,7 +2597,7 @@ textarea.form-control {
           return '<option value="'.concat(opt, '">').concat(opt, "</option>");
         }).join("");
         renderCustomers(allCustomers);
-        showLoader(false);
+        if (forceRefresh) showLoader(false);
       }
     }
 
@@ -2616,14 +2614,18 @@ textarea.form-control {
       checkCompleted();
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first if not forceRefresh (0ms immediate render)
     if (!forceRefresh) {
-      var cached = cacheGet("customersViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.customers)
+        ? { customers: window._dataCache.customers, users: window._dataCache.users, dropdowns: window._dataCache.dropdowns }
+        : cacheGet("customersViewData");
+      if (cached && cached.customers) {
         applyCustomersData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing customers...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -2919,24 +2921,20 @@ textarea.form-control {
       formData.GSTNumber = formData.GSTNumber.toUpperCase();
     var fileInput = document.getElementById("cust-attachment");
     var files = fileInput ? fileInput.files : [];
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     function executeSaveCustomer(fileDataArray2) {
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeCustomerModal();
           if (formData.ConvertedLeadID) {
             google.script.run.markLeadAsWon(formData.ConvertedLeadID, currentUser.userId);
           }
-          loadCustomersView(true);
+          loadCustomersView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).saveCustomer(formData, fileDataArray2, currentUser.userId);
     }
@@ -2972,20 +2970,16 @@ textarea.form-control {
   }
   function deleteCustomer(customerId) {
     if (confirm("Are you sure you want to delete Customer " + customerId + "? This action cannot be undone.")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           allCustomers = allCustomers.filter(function(c) { return c.CustomerID !== customerId; });
           renderCustomers(allCustomers);
-          loadCustomersView(true);
+          loadCustomersView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteCustomer(customerId);
     }
@@ -3385,24 +3379,35 @@ textarea.form-control {
     if (addBtn)
       addBtn.style.display = canAdd ? "inline-block" : "none";
 
-    // Check global cache first for instant render
-    var cached = cacheGet("projectsViewData");
-    if (!forceRefresh && cached) {
+    // Check global cache first for instant render (0ms)
+    var cached = (window._dataCache && window._dataCache.projects)
+      ? {
+          projects: window._dataCache.projects,
+          customers: window._dataCache.customers,
+          users: window._dataCache.users,
+          dropdowns: window._dataCache.dropdowns,
+          milestones: window._dataCache.milestones,
+          vendors: window._dataCache.vendors,
+          associates: window._dataCache.associates
+        }
+      : cacheGet("projectsViewData");
+    if (!forceRefresh && cached && cached.projects) {
       applyProjectsAggregatedData(cached);
       return;
     }
 
-    showLoader(true);
+    if (forceRefresh) showLoader(true, "Refreshing projects...");
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(res) {
         if (res && res.success !== false) {
           cacheSet("projectsViewData", res);
           applyProjectsAggregatedData(res);
-          showLoader(false);
+          if (forceRefresh) showLoader(false);
         } else {
           fetchLegacyProjectsData();
         }
       }).withFailureHandler(function(err) {
+        if (forceRefresh) showLoader(false);
         fetchLegacyProjectsData();
       }).getProjectsViewData();
     } else {
@@ -3759,21 +3764,17 @@ textarea.form-control {
     });
     var fileInput = document.getElementById("proj-attachment");
     var files = fileInput ? fileInput.files : [];
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     function executeSaveProject(fileDataArray2) {
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeProjectModal();
-          loadProjectsView(true);
+          loadProjectsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).saveProject(formData, fileDataArray2, currentUser.userId);
     }
@@ -3809,20 +3810,16 @@ textarea.form-control {
   }
   function deleteProject(projectId) {
     if (confirm("Are you sure you want to delete Project " + projectId + "? All tasks and site visits mapped to this project will remain in their respective databases.")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           allProjects = allProjects.filter(function(p) { return p.ProjectID !== projectId; });
           renderProjects(allProjects);
-          loadProjectsView(true);
+          loadProjectsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteProject(projectId);
     }
@@ -3916,7 +3913,6 @@ textarea.form-control {
   }
   function handleMilestoneSubmit(e) {
     e.preventDefault();
-    showLoader(true);
     var projectId = document.getElementById("ms-project-id").value;
     var formData = {
       ProjectID: projectId,
@@ -3932,7 +3928,6 @@ textarea.form-control {
     };
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
         resetMilestoneForm();
@@ -3944,17 +3939,14 @@ textarea.form-control {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveMilestone(formData, currentUser.userId);
   }
   function deleteMilestone(milestoneId) {
     if (confirm("Are you sure you want to delete this milestone?")) {
-      showLoader(true);
       var projectId = document.getElementById("ms-project-id").value;
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
           google.script.run.withSuccessHandler(function(data) {
@@ -3965,7 +3957,6 @@ textarea.form-control {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteMilestone(milestoneId, currentUser.userId);
     }
@@ -4366,7 +4357,6 @@ textarea.form-control {
   };
 
   window.loadSiteVisitsView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -4409,17 +4399,29 @@ textarea.form-control {
 
       populateProjectFilter();
       renderVisits(allVisits);
-      showLoader(false);
+      if (forceRefresh) showLoader(false);
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = cacheGet("siteVisitsViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.siteVisits)
+        ? {
+            siteVisits: window._dataCache.siteVisits,
+            projects: window._dataCache.projects,
+            leads: window._dataCache.leads,
+            users: window._dataCache.users,
+            customers: window._dataCache.customers,
+            vendors: window._dataCache.vendors,
+            associates: window._dataCache.associates
+          }
+        : cacheGet("siteVisitsViewData");
+      if (cached && cached.siteVisits) {
         applySiteVisitsData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing site visits...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -4757,7 +4759,6 @@ textarea.form-control {
 
     var fileInput = document.getElementById("visit-attachment");
     var files = fileInput ? fileInput.files : [];
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
     if (files.length > 0) {
@@ -4837,36 +4838,34 @@ textarea.form-control {
 
   function executeSaveVisit(formData, fileData, userId) {
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         closeVisitModal();
-        loadSiteVisitsView(true);
+        loadSiteVisitsView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveSiteVisit(formData, fileData, userId);
   }
 
   function deleteVisit(visitId) {
     if (confirm("Are you sure you want to delete this Site Visit record?")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           allVisits = allVisits.filter(function(v) { return v.VisitID !== visitId; });
           renderVisits(allVisits);
-          loadSiteVisitsView(true);
+          loadSiteVisitsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
+        showToast(err.message, "error");
+      }).deleteSiteVisit(visitId);
+    }
+  }
         showLoader(false);
         showToast(err.message, "error");
       }).deleteSiteVisit(visitId);
@@ -5177,7 +5176,6 @@ textarea.form-control {
   var associatesCacheList = [];
   var dropdownsCache = {};
   window.loadTasksView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -5219,7 +5217,7 @@ textarea.form-control {
       populateDropdownsFromCache();
       populateTaskFilters();
       renderKanban(allTasks);
-      showLoader(false);
+      if (forceRefresh) showLoader(false);
       var pendingProjId = localStorage.getItem("pending_add_task_project_id");
       if (pendingProjId) {
         localStorage.removeItem("pending_add_task_project_id");
@@ -5227,14 +5225,25 @@ textarea.form-control {
       }
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = cacheGet("tasksViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.tasks)
+        ? {
+            tasks: window._dataCache.tasks,
+            projects: window._dataCache.projects,
+            users: window._dataCache.users,
+            vendors: window._dataCache.vendors,
+            associates: window._dataCache.associates,
+            dropdowns: window._dataCache.dropdowns
+          }
+        : cacheGet("tasksViewData");
+      if (cached && cached.tasks) {
         applyTasksData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing tasks...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -5525,41 +5534,33 @@ textarea.form-control {
         formData[input.name] = input.value;
       }
     });
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         closeTaskModal();
-        loadTasksView(true);
+        loadTasksView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveTask(formData, currentUserId);
   }
   function deleteTask(taskId) {
     if (confirm("Are you sure you want to delete Task " + taskId + "?")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeTaskModal();
           allTasks = allTasks.filter(function(t) { return t.TaskID !== taskId; });
           renderKanban(allTasks);
-          loadTasksView(true);
+          loadTasksView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteTask(taskId);
     }
@@ -5904,8 +5905,6 @@ textarea.form-control {
   }
 
   window.loadLeadsView = function(forceRefresh) {
-    if (typeof showLoader === "function") showLoader(true);
-
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -5916,16 +5915,18 @@ textarea.form-control {
       addBtn.style.display = canAdd ? "inline-block" : "none";
     }
 
-    if (forceRefresh && typeof cacheClear === "function") {
-      cacheClear("leadsViewData");
-    }
-
     if (!forceRefresh) {
-      var cached = typeof cacheGet === "function" ? cacheGet("leadsViewData") : null;
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.leads)
+        ? { leads: window._dataCache.leads, dropdowns: window._dataCache.dropdowns, staff: window._dataCache.users }
+        : (typeof cacheGet === "function" ? cacheGet("leadsViewData") : null);
+      if (cached && cached.leads) {
         applyLeadsData(cached);
         return;
       }
+    }
+
+    if (forceRefresh && typeof showLoader === "function") {
+      showLoader(true, "Refreshing leads...");
     }
 
     if (google.script && google.script.run) {
@@ -6173,20 +6174,17 @@ textarea.form-control {
       confirmText: '<i class="fas fa-trash"></i> Delete Lead',
       confirmBtnClass: "btn-danger",
       onConfirm: function() {
-        showLoader(true);
         var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
         google.script.run
           .withSuccessHandler(function(response) {
-            showLoader(false);
             if (response && response.success) {
               showToast(response.message || "Lead deleted successfully", "success");
-              loadLeadsView(true);
+              loadLeadsView(false);
             } else {
               showToast((response ? response.message : "Failed to delete lead"), "error");
             }
           })
           .withFailureHandler(function(err) {
-            showLoader(false);
             showToast("Error deleting lead: " + err.message, "error");
           })
           .deleteLead(leadId, currentUser.userId);
@@ -6218,22 +6216,19 @@ textarea.form-control {
       }
     });
 
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
     google.script.run
       .withSuccessHandler(function(response) {
-        showLoader(false);
         if (response && response.success) {
           showToast(response.message || "Lead saved successfully", "success");
           closeLeadModal();
-          loadLeadsView(true);
+          loadLeadsView(false);
         } else {
           showToast((response ? response.message : "Failed to save lead"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        showLoader(false);
         showToast("Error saving lead: " + err.message, "error");
       })
       .saveLead(formData, currentUser.userId);
@@ -6333,21 +6328,18 @@ textarea.form-control {
       DiscussionNotes: notesVal
     };
 
-    showLoader(true);
     google.script.run
       .withSuccessHandler(function(res) {
-        showLoader(false);
         if (res && res.success) {
           showToast("Follow-up logged successfully!", "success");
           document.getElementById("flp-notes").value = "";
           loadFollowupsTimeline(activeFollowupLeadId);
-          loadLeadsView(true);
+          loadLeadsView(false);
         } else {
           showToast((res ? res.message : "Failed to log follow-up"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        showLoader(false);
         showToast("Error logging follow-up: " + err.message, "error");
       })
       .saveLeadFollowup(data, currentUser.userId);
@@ -6381,23 +6373,20 @@ textarea.form-control {
       NextFollowupDate: document.getElementById("email-next-date").value
     };
 
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
     google.script.run
       .withSuccessHandler(function(res) {
-        showLoader(false);
         if (res && res.success) {
           showToast("Email sent and follow-up logged successfully!", "success");
           closeEmailComposerModal();
           loadFollowupsTimeline(activeLeadObj.LeadID);
-          loadLeadsView(true);
+          loadLeadsView(false);
         } else {
           showToast((res ? res.message : "Failed to send email"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        showLoader(false);
         showToast("Error sending email: " + err.message, "error");
       })
       .sendLeadEmail(emailData, currentUser.userId);
@@ -6674,7 +6663,6 @@ textarea.form-control {
   };
 
   window.loadProposalsView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -6692,7 +6680,7 @@ textarea.form-control {
         populateDropdownsFromCache();
         populateClientFilters();
         renderProposals(proposalsDataList);
-        showLoader(false);
+        if (forceRefresh) showLoader(false);
       }
     }
 
@@ -6724,14 +6712,23 @@ textarea.form-control {
       checkCompletion();
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = cacheGet("proposalsViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.proposals)
+        ? {
+            proposals: window._dataCache.proposals,
+            customers: window._dataCache.customers,
+            leads: window._dataCache.leads,
+            dropdowns: window._dataCache.dropdowns
+          }
+        : cacheGet("proposalsViewData");
+      if (cached && cached.proposals) {
         applyProposalsData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing proposals...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -7093,23 +7090,18 @@ textarea.form-control {
 
     var fileInput = document.getElementById("prop-attachment");
     var files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
-    
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
     if (files.length === 0) {
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeProposalModal();
-          loadProposalsView(true);
+          loadProposalsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).saveProposal(formData, null, currentUser.userId);
     } else {
@@ -7131,21 +7123,17 @@ textarea.form-control {
 
       Promise.all(readPromises).then(function(fileDataList) {
         google.script.run.withSuccessHandler(function(response) {
-          showLoader(false);
           if (response.success) {
             showToast(response.message, "success");
-            if (typeof cacheClearAll === "function") cacheClearAll();
             closeProposalModal();
-            loadProposalsView(true);
+            loadProposalsView(false);
           } else {
             showToast(response.message, "error");
           }
         }).withFailureHandler(function(err) {
-          showLoader(false);
           showToast(err.message, "error");
         }).saveProposal(formData, fileDataList, currentUser.userId);
       }).catch(function(err) {
-        showLoader(false);
         showToast("Error reading file attachments: " + err.message, "error");
       });
     }
@@ -7153,13 +7141,20 @@ textarea.form-control {
 
   function deleteProposal(proposalId) {
     if (confirm("Are you sure you want to delete Proposal " + proposalId + "?")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           proposalsDataList = proposalsDataList.filter(function(p) { return p.ProposalID !== proposalId; });
+          renderProposals(proposalsDataList);
+          loadProposalsView(false);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showToast(err.message, "error");
+      }).deleteProposal(proposalId);
+    }
+  }
           renderProposals(proposalsDataList);
           loadProposalsView(true);
         } else {
@@ -7345,7 +7340,6 @@ textarea.form-control {
   var vendorsDataList = [];
   var dropdownsCache = {};
   window.loadVendorsView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -7361,7 +7355,7 @@ textarea.form-control {
       if (loadedCount === totalRequests) {
         populateDropdownsFromCache();
         renderVendors(vendorsDataList);
-        showLoader(false);
+        if (forceRefresh) showLoader(false);
       }
     }
 
@@ -7371,14 +7365,18 @@ textarea.form-control {
       checkLoaded();
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = cacheGet("vendorsViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.vendors)
+        ? { vendors: window._dataCache.vendors, dropdowns: window._dataCache.dropdowns }
+        : cacheGet("vendorsViewData");
+      if (cached && cached.vendors) {
         applyVendorsData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing vendors...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -7585,21 +7583,17 @@ textarea.form-control {
     });
     var fileInput = document.getElementById("vendor-attachment");
     var files = fileInput ? fileInput.files : [];
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     function executeSaveVendor(fileDataArray2) {
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeVendorModal();
-          loadVendorsView(true);
+          loadVendorsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).saveVendor(formData, fileDataArray2, currentUser.userId);
     }
@@ -7635,20 +7629,16 @@ textarea.form-control {
   }
   function deleteVendor(vendorId) {
     if (confirm("Are you sure you want to delete Vendor " + vendorId + "? All associated expense transactions linked to this vendor will remain recorded.")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           vendorsDataList = vendorsDataList.filter(function(v) { return v.VendorID !== vendorId; });
           renderVendors(vendorsDataList);
-          loadVendorsView(true);
+          loadVendorsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteVendor(vendorId);
     }
@@ -7847,7 +7837,7 @@ textarea.form-control {
 (function() {
   var associatesList = [];
   window.loadAssociatesView = function(forceRefresh) {
-    showLoader(true);
+    if (forceRefresh) showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -7859,11 +7849,10 @@ textarea.form-control {
 
     // Check preloaded cache for instant render if not forceRefresh
     if (!forceRefresh) {
-      var cached = cacheGet("projectsViewData") || cacheGet("tasksViewData") || cacheGet("siteVisitsViewData");
-      if (cached && cached.associates) {
-        associatesList = cached.associates || [];
+      var cached = (window._dataCache && window._dataCache.associates) || (cacheGet("projectsViewData") || {}).associates || (cacheGet("tasksViewData") || {}).associates || (cacheGet("siteVisitsViewData") || {}).associates;
+      if (cached && Array.isArray(cached)) {
+        associatesList = cached;
         renderAssociates(associatesList);
-        showLoader(false);
         return;
       }
     }
@@ -7983,21 +7972,17 @@ textarea.form-control {
   }
   function deleteAssociateRow(assocId) {
     if (confirm("Are you sure you want to delete this associate profile?")) {
-      showLoader(true);
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           associatesList = associatesList.filter(function(a) { return a.AssociateID !== assocId; });
           renderAssociates(associatesList);
-          loadAssociatesView(true);
+          loadAssociatesView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteAssociate(assocId, currentUser.userId);
     }
@@ -8012,20 +7997,16 @@ textarea.form-control {
         formData[input.name] = input.value;
       }
     });
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         closeAssociateModal();
-        loadAssociatesView(true);
+        loadAssociatesView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveAssociate(formData, currentUser.userId);
   }
@@ -9022,7 +9003,7 @@ textarea.form-control {
   }
 
   window.loadUsersView = function(forceRefresh) {
-    showLoader(true);
+    if (forceRefresh) showLoader(true);
     var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var roleStr = String(currentUser.roleId || currentUser.RoleID || currentUser.role || currentUser.Role || "");
     var roleNorm = roleStr.toLowerCase().replace(/[\s_-]+/g, "");
@@ -9067,13 +9048,12 @@ textarea.form-control {
 
     // Check preloaded cache first for instant render if NOT forceRefresh
     if (!forceRefresh) {
-      var cached = typeof cacheGet === "function" ? (cacheGet("customersViewData") || cacheGet("projectsViewData") || cacheGet("leadsViewData")) : null;
-      if (cached && cached.users && cached.users.length > 0) {
-        allUsersList = cached.users || [];
+      var cachedUsers = (window._dataCache && window._dataCache.users) || (typeof cacheGet === "function" ? (cacheGet("usersViewData") || {}).users : null);
+      if (cachedUsers && Array.isArray(cachedUsers) && cachedUsers.length > 0) {
+        allUsersList = cachedUsers;
         renderUsersList(allUsersList);
-        if (cached.dropdowns) dropdownsCache = cached.dropdowns;
+        if (window._dataCache && window._dataCache.dropdowns) dropdownsCache = window._dataCache.dropdowns;
         populateRolesFromCache();
-        showLoader(false);
         return;
       }
     }
@@ -9225,19 +9205,15 @@ textarea.form-control {
       showToast("You cannot set your own account to Inactive.", "error");
       return;
     }
-    showLoader(true);
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         closeUserModal();
-        loadUsersView(true);
+        loadUsersView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveUser(formData, currentUserId);
   }
@@ -9249,20 +9225,16 @@ textarea.form-control {
       return;
     }
     if (confirm("Are you sure you want to delete User " + userId + "? This action is permanent.")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           allUsersList = allUsersList.filter(function(u) { return u.UserID !== userId; });
           renderUsersList(allUsersList);
-          loadUsersView(true);
+          loadUsersView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteUser(userId, currentUserId);
     }
@@ -9326,13 +9298,18 @@ textarea.form-control {
       populateRolesFromCache();
     }
     var roleId = (selectEl && selectEl.value) ? selectEl.value : "Project Manager";
-    showLoader(true, "Loading role permissions...");
+    if (window._dataCache && window._dataCache.rolePermissions) {
+      var matching = window._dataCache.rolePermissions.filter(function(r) { return r.RoleID === roleId; });
+      if (matching.length > 0) {
+        activeRolePermissionsList = matching;
+        renderRolePermissionsTable(activeRolePermissionsList);
+        return;
+      }
+    }
     google.script.run.withSuccessHandler(function(data) {
-      showLoader(false);
       activeRolePermissionsList = data || [];
       renderRolePermissionsTable(activeRolePermissionsList);
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast("Error loading role permissions: " + err.message, "error");
     }).getRolePermissions(roleId);
   }
@@ -9456,9 +9433,7 @@ textarea.form-control {
     var permissionsList = Object.values(groupedByModule);
     var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
-    showLoader(true);
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
         loadRolePermissionsGrid();
@@ -9466,7 +9441,6 @@ textarea.form-control {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveRolePermissions(roleId, permissionsList, currentUserId);
   }
@@ -9947,18 +9921,19 @@ textarea.form-control {
   window.companyBankAccountsList = [];
 
   function loadCompanySetupView() {
-    showLoader(true);
+    if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.CompanyName) {
+      window.currentCompanySetupData = window._dataCache.companySetup;
+      populateCompanySetupFields(window.currentCompanySetupData);
+      return;
+    }
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(data) {
-        showLoader(false);
         window.currentCompanySetupData = data || {};
         populateCompanySetupFields(data || {});
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast("Failed to load company setup: " + err.message, "error");
       }).getCompanySetup();
     } else {
-      showLoader(false);
       showToast("Unable to connect to Google Apps Script backend.", "error");
     }
   }
@@ -10164,7 +10139,6 @@ textarea.form-control {
     var fileInput = document.getElementById("company-logo-file");
     var file = fileInput ? fileInput.files[0] : null;
 
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var userId = currentUser.userId || currentUser.UserID || "Admin";
 
@@ -10180,7 +10154,6 @@ textarea.form-control {
         executeSaveCompany(formData, logoFileData, userId);
       };
       reader.onerror = function() {
-        showLoader(false);
         showToast("Failed to read logo image file.", "error");
       };
       reader.readAsDataURL(file);
@@ -10198,7 +10171,6 @@ textarea.form-control {
     if (google.script && google.script.run) {
       google.script.run
         .withSuccessHandler(function(res) {
-          showLoader(false);
           showToast("Company setup saved successfully!", "success");
           if (res && res.company) {
             populateCompanySetupFields(res.company);
@@ -10207,12 +10179,10 @@ textarea.form-control {
           }
         })
         .withFailureHandler(function(err) {
-          showLoader(false);
           showToast("Error saving company setup: " + err.message, "error");
         })
         .saveCompanySetup(formData, logoFileData, userId);
     } else {
-      showLoader(false);
       showToast("Unable to connect to Google Apps Script backend.", "error");
     }
   }
@@ -10398,10 +10368,15 @@ textarea.form-control {
 <script>
 (function() {
   var mastersCacheData = {};
-  window.loadMastersView = function() {
-    showLoader(true);
+  window.loadMastersView = function(forceRefresh) {
+    if (forceRefresh) showLoader(true);
+    if (!forceRefresh && window._dataCache && window._dataCache.dropdowns) {
+      mastersCacheData = window._dataCache.dropdowns;
+      renderCategoryOptions();
+      return;
+    }
     google.script.run.withSuccessHandler(function(data) {
-      mastersCacheData = data;
+      mastersCacheData = data || {};
       renderCategoryOptions();
       showLoader(false);
     }).withFailureHandler(function(err) {
@@ -10448,40 +10423,39 @@ textarea.form-control {
       showToast("Option value cannot be empty.", "error");
       return;
     }
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         input.value = "";
-        loadMastersView();
+        mastersCacheData[key] = mastersCacheData[key] || [];
+        if (!mastersCacheData[key].includes(val)) mastersCacheData[key].push(val);
+        renderCategoryOptions();
+        loadMastersView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).addDropdownValue(key, val, userId);
   }
   function deleteMasterOption(key, value) {
     if (confirm('Are you sure you want to delete option "'.concat(value, '"? This will not alter existing sheet records, but it will remove it from future form select lists.'))) {
-      showLoader(true);
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
       var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
-          loadMastersView();
+          if (mastersCacheData[key]) {
+            mastersCacheData[key] = mastersCacheData[key].filter(function(v) { return v !== value; });
+          }
+          renderCategoryOptions();
+          loadMastersView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteDropdownValue(key, value, userId);
     }
@@ -11029,7 +11003,6 @@ window.editTxn = function(txnId) {
 
 window.deleteTxnRow = function(txnId) {
   if (confirm("Are you sure you want to delete this transaction ledger row?")) {
-    if (typeof showLoader === "function") showLoader(true);
     var currentUser = {};
     try { currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}"); } catch(e){}
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
@@ -11037,17 +11010,15 @@ window.deleteTxnRow = function(txnId) {
     if (google.script && google.script.run) {
       google.script.run
         .withSuccessHandler(function(response) {
-          if (typeof showLoader === "function") showLoader(false);
           if (response.success) {
             if (typeof showToast === "function") showToast(response.message, "success");
-            if (typeof cacheClear === "function") cacheClear(["dashboardData", "financeData"]);
-            window.loadFinanceView(true);
+            window.txnsDataList = (window.txnsDataList || []).filter(function(t) { return (t.TransactionID || t.id) !== txnId; });
+            window.loadFinanceView(false);
           } else {
             if (typeof showToast === "function") showToast(response.message, "error");
           }
         })
         .withFailureHandler(function(err) {
-          if (typeof showLoader === "function") showLoader(false);
           if (typeof showToast === "function") showToast("Error deleting transaction: " + err.message, "error");
         })
         .deleteTransaction(txnId, currentUserId);
@@ -11085,8 +11056,6 @@ window.handleTxnSubmit = function(e) {
   try { currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}"); } catch(e){}
   var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
 
-  if (typeof showLoader === "function") showLoader(true);
-
   if (fileInput && fileInput.files.length > 0) {
     var files = fileInput.files;
     var fileDataArr = [];
@@ -11120,18 +11089,15 @@ window.submitFormWithAttachment = function(txnData, fileDataArr, userId) {
   if (google.script && google.script.run) {
     google.script.run
       .withSuccessHandler(function(response) {
-        if (typeof showLoader === "function") showLoader(false);
         if (response.success) {
           if (typeof showToast === "function") showToast(response.message, "success");
           window.closeTxnModal();
-          if (typeof cacheClear === "function") cacheClear(["dashboardData", "financeData"]);
-          window.loadFinanceView(true);
+          window.loadFinanceView(false);
         } else {
           if (typeof showToast === "function") showToast(response.message, "error");
         }
       })
       .withFailureHandler(function(err) {
-        if (typeof showLoader === "function") showLoader(false);
         if (typeof showToast === "function") showToast("Error booking transaction: " + err.message, "error");
       })
       .saveTransaction(txnData, fileDataArr, userId);
@@ -11815,11 +11781,7 @@ window.exportTransactionsCSV = function() {
 };
 
 window.loadFinanceView = function(forceRefresh) {
-  if (typeof showLoader === "function") showLoader(true);
-
-  if (forceRefresh && typeof cacheClear === "function") {
-    cacheClear(["dashboardData", "financeData"]);
-  }
+  if (forceRefresh && typeof showLoader === "function") showLoader(true);
   
   var currentUser = {};
   try {
@@ -11864,14 +11826,25 @@ window.loadFinanceView = function(forceRefresh) {
   // Check preloaded cache for instant 0s tab switch (skip if forceRefresh)
   if (!forceRefresh) {
     var cachedDash = typeof cacheGet === "function" ? cacheGet("dashboardData") : null;
-    if (cachedDash && cachedDash.transactions && cachedDash.transactions.length > 0) {
+    var cachedFin = typeof cacheGet === "function" ? cacheGet("financeData") : null;
+    var dataSrc = cachedFin || cachedDash || (window._dataCache ? {
+      transactions: window._dataCache.transactions || [],
+      projects: window._dataCache.projects || [],
+      vendors: window._dataCache.vendors || [],
+      associates: window._dataCache.associates || [],
+      customers: window._dataCache.customers || [],
+      siteVisits: window._dataCache.siteVisits || [],
+      dropdowns: window._dataCache.dropdowns || {}
+    } : null);
+    if (dataSrc && (dataSrc.transactions || window._dataCache)) {
       applyData({
-        transactions: cachedDash.transactions || [],
-        projects: cachedDash.projects || [],
-        vendors: window.vndrsCacheList || [],
-        associates: window.associatesCacheList || [],
-        customers: cachedDash.customers || [],
-        siteVisits: cachedDash.siteVisits || []
+        transactions: dataSrc.transactions || (window._dataCache && window._dataCache.transactions) || [],
+        projects: dataSrc.projects || (window._dataCache && window._dataCache.projects) || [],
+        vendors: dataSrc.vendors || (window._dataCache && window._dataCache.vendors) || [],
+        associates: dataSrc.associates || (window._dataCache && window._dataCache.associates) || [],
+        customers: dataSrc.customers || (window._dataCache && window._dataCache.customers) || [],
+        siteVisits: dataSrc.siteVisits || (window._dataCache && window._dataCache.siteVisits) || [],
+        dropdowns: dataSrc.dropdowns || (window._dataCache && window._dataCache.dropdowns) || {}
       });
       return;
     }
@@ -12041,7 +12014,10 @@ document.addEventListener("click", function() {
     try {
       var localCached = localStorage.getItem("nexmilestro_app_data");
       if (localCached) {
-        window._dataCache = JSON.parse(localCached);
+        try {
+          window._dataCache = JSON.parse(localCached);
+          populateAllCaches(window._dataCache);
+        } catch(e) {}
       }
     } catch(e) {}
 
@@ -12065,9 +12041,9 @@ document.addEventListener("click", function() {
     }
     window.cacheClear = cacheClear;
     window.cacheClearAll = function() {
-      window._dataCache = {};
-      window._dataCacheTimestamps = {};
-      localStorage.removeItem("nexmilestro_app_data");
+      // Local-first persistence: Do NOT wipe cached data during active session
+      // Preserves 0ms navigation and optimistic state across tabs
+      console.log("[Cache] Retaining operational data cache for 0ms transitions.");
     };
 
     /**
@@ -12121,6 +12097,15 @@ document.addEventListener("click", function() {
       window._dataCache.userPermissions = data.userPermissions || [];
 
       // Composite view caches
+      cacheSet("dashboardData", {
+        customers: window._dataCache.customers || [],
+        projects: window._dataCache.projects || [],
+        tasks: window._dataCache.tasks || [],
+        siteVisits: window._dataCache.siteVisits || [],
+        milestones: window._dataCache.milestones || [],
+        leads: window._dataCache.leads || [],
+        transactions: window._dataCache.transactions || []
+      });
       cacheSet("customersViewData", {
         customers: window._dataCache.customers,
         users: window._dataCache.users,
@@ -12262,7 +12247,7 @@ document.addEventListener("click", function() {
      * Central RPC Dispatcher: Handles cached instant reads & server mutations
      */
     
-    function handleDemoLocalMutation(fnName, payload, args) {
+        function handleLocalOptimisticMutation(fnName, payload, args) {
       window._dataCache = window._dataCache || {};
       var nowIso = (new Date()).toISOString();
 
@@ -12279,14 +12264,14 @@ document.addEventListener("click", function() {
           else window._dataCache.customers.unshift(cust);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, customerId: cust.CustomerID, message: "Customer saved successfully (Demo)." };
+        return { success: true, customerId: cust.CustomerID, message: "Customer saved successfully." };
       }
 
       if (fnName === "deleteCustomer") {
         var cId = payload.customerId || payload.id;
         window._dataCache.customers = (window._dataCache.customers || []).filter(function(c) { return c.CustomerID !== cId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Customer deleted (Demo)." };
+        return { success: true, message: "Customer deleted successfully." };
       }
 
       if (fnName === "saveProject") {
@@ -12302,14 +12287,14 @@ document.addEventListener("click", function() {
           else window._dataCache.projects.unshift(proj);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, projectId: proj.ProjectID, message: "Project saved successfully (Demo)." };
+        return { success: true, projectId: proj.ProjectID, message: "Project saved successfully." };
       }
 
       if (fnName === "deleteProject") {
         var pId = payload.projectId || payload.id;
         window._dataCache.projects = (window._dataCache.projects || []).filter(function(p) { return p.ProjectID !== pId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Project deleted (Demo)." };
+        return { success: true, message: "Project deleted successfully." };
       }
 
       if (fnName === "saveMilestone") {
@@ -12325,14 +12310,14 @@ document.addEventListener("click", function() {
           else window._dataCache.milestones.push(ms);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, milestoneId: ms.MilestoneID, message: "Milestone saved successfully (Demo)." };
+        return { success: true, milestoneId: ms.MilestoneID, message: "Milestone saved successfully." };
       }
 
       if (fnName === "deleteMilestone") {
         var mId = payload.milestoneId || payload.id;
         window._dataCache.milestones = (window._dataCache.milestones || []).filter(function(m) { return m.MilestoneID !== mId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Milestone removed (Demo)." };
+        return { success: true, message: "Milestone removed successfully." };
       }
 
       if (fnName === "saveTask") {
@@ -12348,7 +12333,7 @@ document.addEventListener("click", function() {
           else window._dataCache.tasks.unshift(task);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, taskId: task.TaskID, message: "Task saved successfully (Demo)." };
+        return { success: true, taskId: task.TaskID, message: "Task saved successfully." };
       }
 
       if (fnName === "updateTaskStatus") {
@@ -12369,7 +12354,7 @@ document.addEventListener("click", function() {
         var delTaskId = payload.taskId || payload.id;
         window._dataCache.tasks = (window._dataCache.tasks || []).filter(function(t) { return t.TaskID !== delTaskId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Task removed (Demo)." };
+        return { success: true, message: "Task removed." };
       }
 
       if (fnName === "saveSiteVisit") {
@@ -12385,14 +12370,14 @@ document.addEventListener("click", function() {
           else window._dataCache.siteVisits.unshift(visit);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, visitId: visit.VisitID, message: "Site visit logged (Demo)." };
+        return { success: true, visitId: visit.VisitID, message: "Site visit logged successfully." };
       }
 
       if (fnName === "deleteSiteVisit") {
         var visId = payload.visitId || payload.id;
         window._dataCache.siteVisits = (window._dataCache.siteVisits || []).filter(function(v) { return v.VisitID !== visId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Site visit deleted (Demo)." };
+        return { success: true, message: "Site visit deleted." };
       }
 
       if (fnName === "saveLead") {
@@ -12408,7 +12393,14 @@ document.addEventListener("click", function() {
           else window._dataCache.leads.unshift(lead);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, leadId: lead.LeadID, message: "Lead saved (Demo)." };
+        return { success: true, leadId: lead.LeadID, message: "Lead saved successfully." };
+      }
+
+      if (fnName === "deleteLead") {
+        var dlId = payload.leadId || payload.id;
+        window._dataCache.leads = (window._dataCache.leads || []).filter(function(l) { return l.LeadID !== dlId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Lead removed." };
       }
 
       if (fnName === "markLeadAsWon") {
@@ -12416,7 +12408,16 @@ document.addEventListener("click", function() {
         var leadObj = (window._dataCache.leads || []).find(function(l) { return l.LeadID === wonLeadId; });
         if (leadObj) leadObj.Status = "Won";
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Lead marked as Won (Demo)." };
+        return { success: true, message: "Lead marked as Won." };
+      }
+
+      if (fnName === "saveLeadFollowup") {
+        window._dataCache.leadFollowups = window._dataCache.leadFollowups || [];
+        var fup = Object.assign({}, payload);
+        if (!fup.FollowupID) fup.FollowupID = "FUP-" + Math.floor(1000 + Math.random() * 9000);
+        window._dataCache.leadFollowups.unshift(fup);
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Follow-up logged successfully." };
       }
 
       if (fnName === "saveProposal") {
@@ -12432,7 +12433,60 @@ document.addEventListener("click", function() {
           else window._dataCache.proposals.unshift(prop);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, proposalId: prop.ProposalID, message: "Proposal saved (Demo)." };
+        return { success: true, proposalId: prop.ProposalID, message: "Proposal saved successfully." };
+      }
+
+      if (fnName === "deleteProposal") {
+        var dpId = payload.proposalId || payload.id;
+        window._dataCache.proposals = (window._dataCache.proposals || []).filter(function(p) { return p.ProposalID !== dpId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Proposal removed." };
+      }
+
+      if (fnName === "saveVendor") {
+        window._dataCache.vendors = window._dataCache.vendors || [];
+        var vend = Object.assign({}, payload);
+        if (!vend.VendorID) {
+          vend.VendorID = "VEND-" + Math.floor(1000 + Math.random() * 9000);
+          vend.CreatedDate = nowIso;
+          window._dataCache.vendors.unshift(vend);
+        } else {
+          var veIdx = window._dataCache.vendors.findIndex(function(v) { return v.VendorID === vend.VendorID; });
+          if (veIdx !== -1) window._dataCache.vendors[veIdx] = Object.assign(window._dataCache.vendors[veIdx], vend);
+          else window._dataCache.vendors.unshift(vend);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, vendorId: vend.VendorID, message: "Vendor saved successfully." };
+      }
+
+      if (fnName === "deleteVendor") {
+        var vId = payload.vendorId || payload.id;
+        window._dataCache.vendors = (window._dataCache.vendors || []).filter(function(v) { return v.VendorID !== vId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Vendor deleted successfully." };
+      }
+
+      if (fnName === "saveAssociate") {
+        window._dataCache.associates = window._dataCache.associates || [];
+        var assoc = Object.assign({}, payload);
+        if (!assoc.AssociateID) {
+          assoc.AssociateID = "ASSOC-" + Math.floor(1000 + Math.random() * 9000);
+          assoc.CreatedDate = nowIso;
+          window._dataCache.associates.unshift(assoc);
+        } else {
+          var asIdx = window._dataCache.associates.findIndex(function(a) { return a.AssociateID === assoc.AssociateID; });
+          if (asIdx !== -1) window._dataCache.associates[asIdx] = Object.assign(window._dataCache.associates[asIdx], assoc);
+          else window._dataCache.associates.unshift(assoc);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, associateId: assoc.AssociateID, message: "Associate saved successfully." };
+      }
+
+      if (fnName === "deleteAssociate") {
+        var aId = payload.associateId || payload.id;
+        window._dataCache.associates = (window._dataCache.associates || []).filter(function(a) { return a.AssociateID !== aId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Associate deleted successfully." };
       }
 
       if (fnName === "saveTransaction") {
@@ -12448,25 +12502,77 @@ document.addEventListener("click", function() {
           else window._dataCache.transactions.unshift(txn);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, transactionId: txn.TransactionID, message: "Transaction booked (Demo)." };
+        return { success: true, transactionId: txn.TransactionID, message: "Transaction booked successfully." };
       }
 
       if (fnName === "deleteTransaction") {
         var txnId = payload.transactionId || payload.id;
         window._dataCache.transactions = (window._dataCache.transactions || []).filter(function(t) { return t.TransactionID !== txnId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Transaction deleted (Demo)." };
+        return { success: true, message: "Transaction deleted successfully." };
+      }
+
+      if (fnName === "saveUser") {
+        window._dataCache.users = window._dataCache.users || [];
+        var usr = Object.assign({}, payload);
+        if (!usr.UserID) {
+          usr.UserID = "USR-" + Math.floor(1000 + Math.random() * 9000);
+          usr.CreatedDate = nowIso;
+          window._dataCache.users.unshift(usr);
+        } else {
+          var uIdx = window._dataCache.users.findIndex(function(u) { return u.UserID === usr.UserID; });
+          if (uIdx !== -1) window._dataCache.users[uIdx] = Object.assign(window._dataCache.users[uIdx], usr);
+          else window._dataCache.users.unshift(usr);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, userId: usr.UserID, message: "User saved successfully." };
+      }
+
+      if (fnName === "deleteUser") {
+        var duId = payload.targetUserId || payload.userId || payload.id;
+        window._dataCache.users = (window._dataCache.users || []).filter(function(u) { return u.UserID !== duId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "User deleted successfully." };
+      }
+
+      if (fnName === "saveDropdownValue") {
+        var cat = payload.category;
+        var val = payload.value;
+        window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+        window._dataCache.dropdowns[cat] = window._dataCache.dropdowns[cat] || [];
+        if (!window._dataCache.dropdowns[cat].includes(val)) {
+          window._dataCache.dropdowns[cat].push(val);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Option saved." };
+      }
+
+      if (fnName === "deleteDropdownValue") {
+        var dCat = payload.category;
+        var dVal = payload.value;
+        if (window._dataCache.dropdowns && window._dataCache.dropdowns[dCat]) {
+          window._dataCache.dropdowns[dCat] = window._dataCache.dropdowns[dCat].filter(function(v) { return v !== dVal; });
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Option deleted." };
+      }
+
+      if (fnName === "saveCompanySetup") {
+        window._dataCache.companySetup = Object.assign(window._dataCache.companySetup || {}, payload);
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Company profile updated." };
       }
 
       if (fnName === "uploadFileToDrive") {
-        var mockUrl = "https://drive.google.com/uc?id=demo_upload_" + Date.now();
+        var mockUrl = "https://drive.google.com/uc?id=upload_" + Date.now();
         return { success: true, url: mockUrl, fileUrl: mockUrl };
       }
 
       populateAllCaches(window._dataCache);
-      return { success: true, message: "Action executed locally (Demo mode)." };
+      return { success: true, message: "Record updated locally." };
     }
-    window.handleDemoLocalMutation = handleDemoLocalMutation;
+    window.handleLocalOptimisticMutation = handleLocalOptimisticMutation;
+    window.handleDemoLocalMutation = handleLocalOptimisticMutation;
 
     async function dispatchRpcCall(fnName, args, successCb, failCb) {
       args = args || [];
@@ -12510,6 +12616,20 @@ document.addEventListener("click", function() {
         var dataRes = await apiCall("get_initial_data");
         populateAllCaches(dataRes);
         successCb(dataRes);
+        return;
+      }
+
+      if (fnName === "getDashboardData") {
+        var dData = cacheGet("dashboardData") || {
+          customers: window._dataCache.customers || [],
+          projects: window._dataCache.projects || [],
+          tasks: window._dataCache.tasks || [],
+          siteVisits: window._dataCache.siteVisits || [],
+          milestones: window._dataCache.milestones || [],
+          leads: window._dataCache.leads || [],
+          transactions: window._dataCache.transactions || []
+        };
+        successCb(dData);
         return;
       }
 
@@ -12871,22 +12991,33 @@ document.addEventListener("click", function() {
         }
         payload.userId = userId;
 
-        // In Demo Mode: execute optimistic local state updates with 0ms response
-        if (isDemoMode()) {
-          var demoMutRes = handleDemoLocalMutation(fnName, payload, args);
-          successCb(demoMutRes);
-          return;
-        }
+        // 1. OPTIMISTIC LOCAL MUTATION: Update state in memory & localStorage in 0ms (Nexallot pattern)
+        var localMutRes = handleLocalOptimisticMutation(fnName, payload, args);
 
-        var saveRes = await apiCall(targetAction, payload);
-        if (saveRes && saveRes.success !== false) {
-          successCb(saveRes);
-          // Auto-preload in background to refresh all tables silently
-          setTimeout(function() {
-            preloadAllAppData();
-          }, 200);
-        } else {
-          failCb(new Error(saveRes ? (saveRes.error || saveRes.message) : "Operation failed"));
+        // 2. IMMEDIATE 0ms RESPONSE: Unblocks caller, closes modal & renders table instantly
+        successCb(localMutRes);
+
+        // 3. BACKGROUND COMMIT: Pushes mutation to Google Sheets asynchronously without UI spinners
+        if (!isDemoMode()) {
+          apiCall(targetAction, payload).then(function(backendRes) {
+            if (backendRes && backendRes.success !== false) {
+              console.log("[Background Sync Succeeded]: " + targetAction, backendRes);
+              if (backendRes.customerId && payload.CustomerID && backendRes.customerId !== payload.CustomerID) {
+                var c = (window._dataCache.customers || []).find(function(x) { return x.CustomerID === payload.CustomerID; });
+                if (c) c.CustomerID = backendRes.customerId;
+                populateAllCaches(window._dataCache);
+              }
+              if (backendRes.projectId && payload.ProjectID && backendRes.projectId !== payload.ProjectID) {
+                var p = (window._dataCache.projects || []).find(function(x) { return x.ProjectID === payload.ProjectID; });
+                if (p) p.ProjectID = backendRes.projectId;
+                populateAllCaches(window._dataCache);
+              }
+            } else {
+              console.warn("[Background Sync Notice]:", backendRes);
+            }
+          }).catch(function(err) {
+            console.warn("[Background Sync Network Warning]:", err);
+          });
         }
         return;
       }

@@ -131,7 +131,7 @@
 (function() {
   var associatesList = [];
   window.loadAssociatesView = function(forceRefresh) {
-    showLoader(true);
+    if (forceRefresh) showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -143,11 +143,10 @@
 
     // Check preloaded cache for instant render if not forceRefresh
     if (!forceRefresh) {
-      var cached = cacheGet("projectsViewData") || cacheGet("tasksViewData") || cacheGet("siteVisitsViewData");
-      if (cached && cached.associates) {
-        associatesList = cached.associates || [];
+      var cached = (window._dataCache && window._dataCache.associates) || (cacheGet("projectsViewData") || {}).associates || (cacheGet("tasksViewData") || {}).associates || (cacheGet("siteVisitsViewData") || {}).associates;
+      if (cached && Array.isArray(cached)) {
+        associatesList = cached;
         renderAssociates(associatesList);
-        showLoader(false);
         return;
       }
     }
@@ -267,21 +266,17 @@
   }
   function deleteAssociateRow(assocId) {
     if (confirm("Are you sure you want to delete this associate profile?")) {
-      showLoader(true);
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           associatesList = associatesList.filter(function(a) { return a.AssociateID !== assocId; });
           renderAssociates(associatesList);
-          loadAssociatesView(true);
+          loadAssociatesView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteAssociate(assocId, currentUser.userId);
     }
@@ -296,20 +291,16 @@
         formData[input.name] = input.value;
       }
     });
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         closeAssociateModal();
-        loadAssociatesView(true);
+        loadAssociatesView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveAssociate(formData, currentUser.userId);
   }

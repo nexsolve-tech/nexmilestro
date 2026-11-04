@@ -179,7 +179,6 @@
   var associatesCacheList = [];
   var dropdownsCache = {};
   window.loadTasksView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -221,7 +220,7 @@
       populateDropdownsFromCache();
       populateTaskFilters();
       renderKanban(allTasks);
-      showLoader(false);
+      if (forceRefresh) showLoader(false);
       var pendingProjId = localStorage.getItem("pending_add_task_project_id");
       if (pendingProjId) {
         localStorage.removeItem("pending_add_task_project_id");
@@ -229,14 +228,25 @@
       }
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = cacheGet("tasksViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.tasks)
+        ? {
+            tasks: window._dataCache.tasks,
+            projects: window._dataCache.projects,
+            users: window._dataCache.users,
+            vendors: window._dataCache.vendors,
+            associates: window._dataCache.associates,
+            dropdowns: window._dataCache.dropdowns
+          }
+        : cacheGet("tasksViewData");
+      if (cached && cached.tasks) {
         applyTasksData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing tasks...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -527,41 +537,33 @@
         formData[input.name] = input.value;
       }
     });
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         closeTaskModal();
-        loadTasksView(true);
+        loadTasksView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveTask(formData, currentUserId);
   }
   function deleteTask(taskId) {
     if (confirm("Are you sure you want to delete Task " + taskId + "?")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeTaskModal();
           allTasks = allTasks.filter(function(t) { return t.TaskID !== taskId; });
           renderKanban(allTasks);
-          loadTasksView(true);
+          loadTasksView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteTask(taskId);
     }

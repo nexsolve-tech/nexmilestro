@@ -157,7 +157,6 @@
   var vendorsDataList = [];
   var dropdownsCache = {};
   window.loadVendorsView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -173,7 +172,7 @@
       if (loadedCount === totalRequests) {
         populateDropdownsFromCache();
         renderVendors(vendorsDataList);
-        showLoader(false);
+        if (forceRefresh) showLoader(false);
       }
     }
 
@@ -183,14 +182,18 @@
       checkLoaded();
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = cacheGet("vendorsViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.vendors)
+        ? { vendors: window._dataCache.vendors, dropdowns: window._dataCache.dropdowns }
+        : cacheGet("vendorsViewData");
+      if (cached && cached.vendors) {
         applyVendorsData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing vendors...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -397,21 +400,17 @@
     });
     var fileInput = document.getElementById("vendor-attachment");
     var files = fileInput ? fileInput.files : [];
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     function executeSaveVendor(fileDataArray2) {
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeVendorModal();
-          loadVendorsView(true);
+          loadVendorsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).saveVendor(formData, fileDataArray2, currentUser.userId);
     }
@@ -447,20 +446,16 @@
   }
   function deleteVendor(vendorId) {
     if (confirm("Are you sure you want to delete Vendor " + vendorId + "? All associated expense transactions linked to this vendor will remain recorded.")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           vendorsDataList = vendorsDataList.filter(function(v) { return v.VendorID !== vendorId; });
           renderVendors(vendorsDataList);
-          loadVendorsView(true);
+          loadVendorsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteVendor(vendorId);
     }

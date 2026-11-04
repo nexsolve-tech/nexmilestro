@@ -189,7 +189,6 @@
   };
 
   window.loadProposalsView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -207,7 +206,7 @@
         populateDropdownsFromCache();
         populateClientFilters();
         renderProposals(proposalsDataList);
-        showLoader(false);
+        if (forceRefresh) showLoader(false);
       }
     }
 
@@ -239,14 +238,23 @@
       checkCompletion();
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = cacheGet("proposalsViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.proposals)
+        ? {
+            proposals: window._dataCache.proposals,
+            customers: window._dataCache.customers,
+            leads: window._dataCache.leads,
+            dropdowns: window._dataCache.dropdowns
+          }
+        : cacheGet("proposalsViewData");
+      if (cached && cached.proposals) {
         applyProposalsData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing proposals...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -608,23 +616,18 @@
 
     var fileInput = document.getElementById("prop-attachment");
     var files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
-    
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
     if (files.length === 0) {
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeProposalModal();
-          loadProposalsView(true);
+          loadProposalsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).saveProposal(formData, null, currentUser.userId);
     } else {
@@ -646,21 +649,17 @@
 
       Promise.all(readPromises).then(function(fileDataList) {
         google.script.run.withSuccessHandler(function(response) {
-          showLoader(false);
           if (response.success) {
             showToast(response.message, "success");
-            if (typeof cacheClearAll === "function") cacheClearAll();
             closeProposalModal();
-            loadProposalsView(true);
+            loadProposalsView(false);
           } else {
             showToast(response.message, "error");
           }
         }).withFailureHandler(function(err) {
-          showLoader(false);
           showToast(err.message, "error");
         }).saveProposal(formData, fileDataList, currentUser.userId);
       }).catch(function(err) {
-        showLoader(false);
         showToast("Error reading file attachments: " + err.message, "error");
       });
     }
@@ -668,13 +667,20 @@
 
   function deleteProposal(proposalId) {
     if (confirm("Are you sure you want to delete Proposal " + proposalId + "?")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           proposalsDataList = proposalsDataList.filter(function(p) { return p.ProposalID !== proposalId; });
+          renderProposals(proposalsDataList);
+          loadProposalsView(false);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showToast(err.message, "error");
+      }).deleteProposal(proposalId);
+    }
+  }
           renderProposals(proposalsDataList);
           loadProposalsView(true);
         } else {

@@ -300,24 +300,35 @@
     if (addBtn)
       addBtn.style.display = canAdd ? "inline-block" : "none";
 
-    // Check global cache first for instant render
-    var cached = cacheGet("projectsViewData");
-    if (!forceRefresh && cached) {
+    // Check global cache first for instant render (0ms)
+    var cached = (window._dataCache && window._dataCache.projects)
+      ? {
+          projects: window._dataCache.projects,
+          customers: window._dataCache.customers,
+          users: window._dataCache.users,
+          dropdowns: window._dataCache.dropdowns,
+          milestones: window._dataCache.milestones,
+          vendors: window._dataCache.vendors,
+          associates: window._dataCache.associates
+        }
+      : cacheGet("projectsViewData");
+    if (!forceRefresh && cached && cached.projects) {
       applyProjectsAggregatedData(cached);
       return;
     }
 
-    showLoader(true);
+    if (forceRefresh) showLoader(true, "Refreshing projects...");
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(res) {
         if (res && res.success !== false) {
           cacheSet("projectsViewData", res);
           applyProjectsAggregatedData(res);
-          showLoader(false);
+          if (forceRefresh) showLoader(false);
         } else {
           fetchLegacyProjectsData();
         }
       }).withFailureHandler(function(err) {
+        if (forceRefresh) showLoader(false);
         fetchLegacyProjectsData();
       }).getProjectsViewData();
     } else {
@@ -674,21 +685,17 @@
     });
     var fileInput = document.getElementById("proj-attachment");
     var files = fileInput ? fileInput.files : [];
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     function executeSaveProject(fileDataArray2) {
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeProjectModal();
-          loadProjectsView(true);
+          loadProjectsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).saveProject(formData, fileDataArray2, currentUser.userId);
     }
@@ -724,20 +731,16 @@
   }
   function deleteProject(projectId) {
     if (confirm("Are you sure you want to delete Project " + projectId + "? All tasks and site visits mapped to this project will remain in their respective databases.")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           allProjects = allProjects.filter(function(p) { return p.ProjectID !== projectId; });
           renderProjects(allProjects);
-          loadProjectsView(true);
+          loadProjectsView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteProject(projectId);
     }
@@ -831,7 +834,6 @@
   }
   function handleMilestoneSubmit(e) {
     e.preventDefault();
-    showLoader(true);
     var projectId = document.getElementById("ms-project-id").value;
     var formData = {
       ProjectID: projectId,
@@ -847,7 +849,6 @@
     };
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
         resetMilestoneForm();
@@ -859,17 +860,14 @@
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveMilestone(formData, currentUser.userId);
   }
   function deleteMilestone(milestoneId) {
     if (confirm("Are you sure you want to delete this milestone?")) {
-      showLoader(true);
       var projectId = document.getElementById("ms-project-id").value;
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
           google.script.run.withSuccessHandler(function(data) {
@@ -880,7 +878,6 @@
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteMilestone(milestoneId, currentUser.userId);
     }

@@ -316,7 +316,7 @@
   }
 
   window.loadUsersView = function(forceRefresh) {
-    showLoader(true);
+    if (forceRefresh) showLoader(true);
     var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var roleStr = String(currentUser.roleId || currentUser.RoleID || currentUser.role || currentUser.Role || "");
     var roleNorm = roleStr.toLowerCase().replace(/[\s_-]+/g, "");
@@ -361,13 +361,12 @@
 
     // Check preloaded cache first for instant render if NOT forceRefresh
     if (!forceRefresh) {
-      var cached = typeof cacheGet === "function" ? (cacheGet("customersViewData") || cacheGet("projectsViewData") || cacheGet("leadsViewData")) : null;
-      if (cached && cached.users && cached.users.length > 0) {
-        allUsersList = cached.users || [];
+      var cachedUsers = (window._dataCache && window._dataCache.users) || (typeof cacheGet === "function" ? (cacheGet("usersViewData") || {}).users : null);
+      if (cachedUsers && Array.isArray(cachedUsers) && cachedUsers.length > 0) {
+        allUsersList = cachedUsers;
         renderUsersList(allUsersList);
-        if (cached.dropdowns) dropdownsCache = cached.dropdowns;
+        if (window._dataCache && window._dataCache.dropdowns) dropdownsCache = window._dataCache.dropdowns;
         populateRolesFromCache();
-        showLoader(false);
         return;
       }
     }
@@ -519,19 +518,15 @@
       showToast("You cannot set your own account to Inactive.", "error");
       return;
     }
-    showLoader(true);
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         closeUserModal();
-        loadUsersView(true);
+        loadUsersView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveUser(formData, currentUserId);
   }
@@ -543,20 +538,16 @@
       return;
     }
     if (confirm("Are you sure you want to delete User " + userId + "? This action is permanent.")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           allUsersList = allUsersList.filter(function(u) { return u.UserID !== userId; });
           renderUsersList(allUsersList);
-          loadUsersView(true);
+          loadUsersView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteUser(userId, currentUserId);
     }
@@ -620,13 +611,18 @@
       populateRolesFromCache();
     }
     var roleId = (selectEl && selectEl.value) ? selectEl.value : "Project Manager";
-    showLoader(true, "Loading role permissions...");
+    if (window._dataCache && window._dataCache.rolePermissions) {
+      var matching = window._dataCache.rolePermissions.filter(function(r) { return r.RoleID === roleId; });
+      if (matching.length > 0) {
+        activeRolePermissionsList = matching;
+        renderRolePermissionsTable(activeRolePermissionsList);
+        return;
+      }
+    }
     google.script.run.withSuccessHandler(function(data) {
-      showLoader(false);
       activeRolePermissionsList = data || [];
       renderRolePermissionsTable(activeRolePermissionsList);
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast("Error loading role permissions: " + err.message, "error");
     }).getRolePermissions(roleId);
   }
@@ -750,9 +746,7 @@
     var permissionsList = Object.values(groupedByModule);
     var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
-    showLoader(true);
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
         loadRolePermissionsGrid();
@@ -760,7 +754,6 @@
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).saveRolePermissions(roleId, permissionsList, currentUserId);
   }

@@ -202,18 +202,19 @@
   window.companyBankAccountsList = [];
 
   function loadCompanySetupView() {
-    showLoader(true);
+    if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.CompanyName) {
+      window.currentCompanySetupData = window._dataCache.companySetup;
+      populateCompanySetupFields(window.currentCompanySetupData);
+      return;
+    }
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(data) {
-        showLoader(false);
         window.currentCompanySetupData = data || {};
         populateCompanySetupFields(data || {});
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast("Failed to load company setup: " + err.message, "error");
       }).getCompanySetup();
     } else {
-      showLoader(false);
       showToast("Unable to connect to Google Apps Script backend.", "error");
     }
   }
@@ -419,7 +420,6 @@
     var fileInput = document.getElementById("company-logo-file");
     var file = fileInput ? fileInput.files[0] : null;
 
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var userId = currentUser.userId || currentUser.UserID || "Admin";
 
@@ -435,7 +435,6 @@
         executeSaveCompany(formData, logoFileData, userId);
       };
       reader.onerror = function() {
-        showLoader(false);
         showToast("Failed to read logo image file.", "error");
       };
       reader.readAsDataURL(file);
@@ -453,7 +452,6 @@
     if (google.script && google.script.run) {
       google.script.run
         .withSuccessHandler(function(res) {
-          showLoader(false);
           showToast("Company setup saved successfully!", "success");
           if (res && res.company) {
             populateCompanySetupFields(res.company);
@@ -462,12 +460,10 @@
           }
         })
         .withFailureHandler(function(err) {
-          showLoader(false);
           showToast("Error saving company setup: " + err.message, "error");
         })
         .saveCompanySetup(formData, logoFileData, userId);
     } else {
-      showLoader(false);
       showToast("Unable to connect to Google Apps Script backend.", "error");
     }
   }

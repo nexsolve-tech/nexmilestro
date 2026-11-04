@@ -217,7 +217,6 @@
     "Puducherry": ["Puducherry", "Karaikal", "Mahe", "Yanam", "Other"]
   };
   window.loadCustomersView = function(forceRefresh) {
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -241,7 +240,7 @@
           return '<option value="'.concat(opt, '">').concat(opt, "</option>");
         }).join("");
         renderCustomers(allCustomers);
-        showLoader(false);
+        if (forceRefresh) showLoader(false);
       }
     }
 
@@ -258,14 +257,18 @@
       checkCompleted();
     }
 
-    // Check global cache first if not forceRefresh
+    // Check global cache first if not forceRefresh (0ms immediate render)
     if (!forceRefresh) {
-      var cached = cacheGet("customersViewData");
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.customers)
+        ? { customers: window._dataCache.customers, users: window._dataCache.users, dropdowns: window._dataCache.dropdowns }
+        : cacheGet("customersViewData");
+      if (cached && cached.customers) {
         applyCustomersData(cached);
         return;
       }
     }
+
+    if (forceRefresh) showLoader(true, "Refreshing customers...");
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
@@ -561,24 +564,20 @@
       formData.GSTNumber = formData.GSTNumber.toUpperCase();
     var fileInput = document.getElementById("cust-attachment");
     var files = fileInput ? fileInput.files : [];
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     function executeSaveCustomer(fileDataArray2) {
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           closeCustomerModal();
           if (formData.ConvertedLeadID) {
             google.script.run.markLeadAsWon(formData.ConvertedLeadID, currentUser.userId);
           }
-          loadCustomersView(true);
+          loadCustomersView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).saveCustomer(formData, fileDataArray2, currentUser.userId);
     }
@@ -614,20 +613,16 @@
   }
   function deleteCustomer(customerId) {
     if (confirm("Are you sure you want to delete Customer " + customerId + "? This action cannot be undone.")) {
-      showLoader(true);
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
           allCustomers = allCustomers.filter(function(c) { return c.CustomerID !== customerId; });
           renderCustomers(allCustomers);
-          loadCustomersView(true);
+          loadCustomersView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteCustomer(customerId);
     }

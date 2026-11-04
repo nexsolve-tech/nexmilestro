@@ -282,8 +282,6 @@
   }
 
   window.loadLeadsView = function(forceRefresh) {
-    if (typeof showLoader === "function") showLoader(true);
-
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -294,16 +292,18 @@
       addBtn.style.display = canAdd ? "inline-block" : "none";
     }
 
-    if (forceRefresh && typeof cacheClear === "function") {
-      cacheClear("leadsViewData");
-    }
-
     if (!forceRefresh) {
-      var cached = typeof cacheGet === "function" ? cacheGet("leadsViewData") : null;
-      if (cached) {
+      var cached = (window._dataCache && window._dataCache.leads)
+        ? { leads: window._dataCache.leads, dropdowns: window._dataCache.dropdowns, staff: window._dataCache.users }
+        : (typeof cacheGet === "function" ? cacheGet("leadsViewData") : null);
+      if (cached && cached.leads) {
         applyLeadsData(cached);
         return;
       }
+    }
+
+    if (forceRefresh && typeof showLoader === "function") {
+      showLoader(true, "Refreshing leads...");
     }
 
     if (google.script && google.script.run) {
@@ -551,20 +551,17 @@
       confirmText: '<i class="fas fa-trash"></i> Delete Lead',
       confirmBtnClass: "btn-danger",
       onConfirm: function() {
-        showLoader(true);
         var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
         google.script.run
           .withSuccessHandler(function(response) {
-            showLoader(false);
             if (response && response.success) {
               showToast(response.message || "Lead deleted successfully", "success");
-              loadLeadsView(true);
+              loadLeadsView(false);
             } else {
               showToast((response ? response.message : "Failed to delete lead"), "error");
             }
           })
           .withFailureHandler(function(err) {
-            showLoader(false);
             showToast("Error deleting lead: " + err.message, "error");
           })
           .deleteLead(leadId, currentUser.userId);
@@ -596,22 +593,19 @@
       }
     });
 
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
     google.script.run
       .withSuccessHandler(function(response) {
-        showLoader(false);
         if (response && response.success) {
           showToast(response.message || "Lead saved successfully", "success");
           closeLeadModal();
-          loadLeadsView(true);
+          loadLeadsView(false);
         } else {
           showToast((response ? response.message : "Failed to save lead"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        showLoader(false);
         showToast("Error saving lead: " + err.message, "error");
       })
       .saveLead(formData, currentUser.userId);
@@ -711,21 +705,18 @@
       DiscussionNotes: notesVal
     };
 
-    showLoader(true);
     google.script.run
       .withSuccessHandler(function(res) {
-        showLoader(false);
         if (res && res.success) {
           showToast("Follow-up logged successfully!", "success");
           document.getElementById("flp-notes").value = "";
           loadFollowupsTimeline(activeFollowupLeadId);
-          loadLeadsView(true);
+          loadLeadsView(false);
         } else {
           showToast((res ? res.message : "Failed to log follow-up"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        showLoader(false);
         showToast("Error logging follow-up: " + err.message, "error");
       })
       .saveLeadFollowup(data, currentUser.userId);
@@ -759,23 +750,20 @@
       NextFollowupDate: document.getElementById("email-next-date").value
     };
 
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
     google.script.run
       .withSuccessHandler(function(res) {
-        showLoader(false);
         if (res && res.success) {
           showToast("Email sent and follow-up logged successfully!", "success");
           closeEmailComposerModal();
           loadFollowupsTimeline(activeLeadObj.LeadID);
-          loadLeadsView(true);
+          loadLeadsView(false);
         } else {
           showToast((res ? res.message : "Failed to send email"), "error");
         }
       })
       .withFailureHandler(function(err) {
-        showLoader(false);
         showToast("Error sending email: " + err.message, "error");
       })
       .sendLeadEmail(emailData, currentUser.userId);

@@ -574,7 +574,10 @@
     try {
       var localCached = localStorage.getItem("nexmilestro_app_data");
       if (localCached) {
-        window._dataCache = JSON.parse(localCached);
+        try {
+          window._dataCache = JSON.parse(localCached);
+          populateAllCaches(window._dataCache);
+        } catch(e) {}
       }
     } catch(e) {}
 
@@ -598,9 +601,9 @@
     }
     window.cacheClear = cacheClear;
     window.cacheClearAll = function() {
-      window._dataCache = {};
-      window._dataCacheTimestamps = {};
-      localStorage.removeItem("nexmilestro_app_data");
+      // Local-first persistence: Do NOT wipe cached data during active session
+      // Preserves 0ms navigation and optimistic state across tabs
+      console.log("[Cache] Retaining operational data cache for 0ms transitions.");
     };
 
     /**
@@ -654,6 +657,15 @@
       window._dataCache.userPermissions = data.userPermissions || [];
 
       // Composite view caches
+      cacheSet("dashboardData", {
+        customers: window._dataCache.customers || [],
+        projects: window._dataCache.projects || [],
+        tasks: window._dataCache.tasks || [],
+        siteVisits: window._dataCache.siteVisits || [],
+        milestones: window._dataCache.milestones || [],
+        leads: window._dataCache.leads || [],
+        transactions: window._dataCache.transactions || []
+      });
       cacheSet("customersViewData", {
         customers: window._dataCache.customers,
         users: window._dataCache.users,
@@ -795,7 +807,7 @@
      * Central RPC Dispatcher: Handles cached instant reads & server mutations
      */
     
-    function handleDemoLocalMutation(fnName, payload, args) {
+        function handleLocalOptimisticMutation(fnName, payload, args) {
       window._dataCache = window._dataCache || {};
       var nowIso = (new Date()).toISOString();
 
@@ -812,14 +824,14 @@
           else window._dataCache.customers.unshift(cust);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, customerId: cust.CustomerID, message: "Customer saved successfully (Demo)." };
+        return { success: true, customerId: cust.CustomerID, message: "Customer saved successfully." };
       }
 
       if (fnName === "deleteCustomer") {
         var cId = payload.customerId || payload.id;
         window._dataCache.customers = (window._dataCache.customers || []).filter(function(c) { return c.CustomerID !== cId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Customer deleted (Demo)." };
+        return { success: true, message: "Customer deleted successfully." };
       }
 
       if (fnName === "saveProject") {
@@ -835,14 +847,14 @@
           else window._dataCache.projects.unshift(proj);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, projectId: proj.ProjectID, message: "Project saved successfully (Demo)." };
+        return { success: true, projectId: proj.ProjectID, message: "Project saved successfully." };
       }
 
       if (fnName === "deleteProject") {
         var pId = payload.projectId || payload.id;
         window._dataCache.projects = (window._dataCache.projects || []).filter(function(p) { return p.ProjectID !== pId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Project deleted (Demo)." };
+        return { success: true, message: "Project deleted successfully." };
       }
 
       if (fnName === "saveMilestone") {
@@ -858,14 +870,14 @@
           else window._dataCache.milestones.push(ms);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, milestoneId: ms.MilestoneID, message: "Milestone saved successfully (Demo)." };
+        return { success: true, milestoneId: ms.MilestoneID, message: "Milestone saved successfully." };
       }
 
       if (fnName === "deleteMilestone") {
         var mId = payload.milestoneId || payload.id;
         window._dataCache.milestones = (window._dataCache.milestones || []).filter(function(m) { return m.MilestoneID !== mId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Milestone removed (Demo)." };
+        return { success: true, message: "Milestone removed successfully." };
       }
 
       if (fnName === "saveTask") {
@@ -881,7 +893,7 @@
           else window._dataCache.tasks.unshift(task);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, taskId: task.TaskID, message: "Task saved successfully (Demo)." };
+        return { success: true, taskId: task.TaskID, message: "Task saved successfully." };
       }
 
       if (fnName === "updateTaskStatus") {
@@ -902,7 +914,7 @@
         var delTaskId = payload.taskId || payload.id;
         window._dataCache.tasks = (window._dataCache.tasks || []).filter(function(t) { return t.TaskID !== delTaskId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Task removed (Demo)." };
+        return { success: true, message: "Task removed." };
       }
 
       if (fnName === "saveSiteVisit") {
@@ -918,14 +930,14 @@
           else window._dataCache.siteVisits.unshift(visit);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, visitId: visit.VisitID, message: "Site visit logged (Demo)." };
+        return { success: true, visitId: visit.VisitID, message: "Site visit logged successfully." };
       }
 
       if (fnName === "deleteSiteVisit") {
         var visId = payload.visitId || payload.id;
         window._dataCache.siteVisits = (window._dataCache.siteVisits || []).filter(function(v) { return v.VisitID !== visId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Site visit deleted (Demo)." };
+        return { success: true, message: "Site visit deleted." };
       }
 
       if (fnName === "saveLead") {
@@ -941,7 +953,14 @@
           else window._dataCache.leads.unshift(lead);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, leadId: lead.LeadID, message: "Lead saved (Demo)." };
+        return { success: true, leadId: lead.LeadID, message: "Lead saved successfully." };
+      }
+
+      if (fnName === "deleteLead") {
+        var dlId = payload.leadId || payload.id;
+        window._dataCache.leads = (window._dataCache.leads || []).filter(function(l) { return l.LeadID !== dlId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Lead removed." };
       }
 
       if (fnName === "markLeadAsWon") {
@@ -949,7 +968,16 @@
         var leadObj = (window._dataCache.leads || []).find(function(l) { return l.LeadID === wonLeadId; });
         if (leadObj) leadObj.Status = "Won";
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Lead marked as Won (Demo)." };
+        return { success: true, message: "Lead marked as Won." };
+      }
+
+      if (fnName === "saveLeadFollowup") {
+        window._dataCache.leadFollowups = window._dataCache.leadFollowups || [];
+        var fup = Object.assign({}, payload);
+        if (!fup.FollowupID) fup.FollowupID = "FUP-" + Math.floor(1000 + Math.random() * 9000);
+        window._dataCache.leadFollowups.unshift(fup);
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Follow-up logged successfully." };
       }
 
       if (fnName === "saveProposal") {
@@ -965,7 +993,60 @@
           else window._dataCache.proposals.unshift(prop);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, proposalId: prop.ProposalID, message: "Proposal saved (Demo)." };
+        return { success: true, proposalId: prop.ProposalID, message: "Proposal saved successfully." };
+      }
+
+      if (fnName === "deleteProposal") {
+        var dpId = payload.proposalId || payload.id;
+        window._dataCache.proposals = (window._dataCache.proposals || []).filter(function(p) { return p.ProposalID !== dpId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Proposal removed." };
+      }
+
+      if (fnName === "saveVendor") {
+        window._dataCache.vendors = window._dataCache.vendors || [];
+        var vend = Object.assign({}, payload);
+        if (!vend.VendorID) {
+          vend.VendorID = "VEND-" + Math.floor(1000 + Math.random() * 9000);
+          vend.CreatedDate = nowIso;
+          window._dataCache.vendors.unshift(vend);
+        } else {
+          var veIdx = window._dataCache.vendors.findIndex(function(v) { return v.VendorID === vend.VendorID; });
+          if (veIdx !== -1) window._dataCache.vendors[veIdx] = Object.assign(window._dataCache.vendors[veIdx], vend);
+          else window._dataCache.vendors.unshift(vend);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, vendorId: vend.VendorID, message: "Vendor saved successfully." };
+      }
+
+      if (fnName === "deleteVendor") {
+        var vId = payload.vendorId || payload.id;
+        window._dataCache.vendors = (window._dataCache.vendors || []).filter(function(v) { return v.VendorID !== vId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Vendor deleted successfully." };
+      }
+
+      if (fnName === "saveAssociate") {
+        window._dataCache.associates = window._dataCache.associates || [];
+        var assoc = Object.assign({}, payload);
+        if (!assoc.AssociateID) {
+          assoc.AssociateID = "ASSOC-" + Math.floor(1000 + Math.random() * 9000);
+          assoc.CreatedDate = nowIso;
+          window._dataCache.associates.unshift(assoc);
+        } else {
+          var asIdx = window._dataCache.associates.findIndex(function(a) { return a.AssociateID === assoc.AssociateID; });
+          if (asIdx !== -1) window._dataCache.associates[asIdx] = Object.assign(window._dataCache.associates[asIdx], assoc);
+          else window._dataCache.associates.unshift(assoc);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, associateId: assoc.AssociateID, message: "Associate saved successfully." };
+      }
+
+      if (fnName === "deleteAssociate") {
+        var aId = payload.associateId || payload.id;
+        window._dataCache.associates = (window._dataCache.associates || []).filter(function(a) { return a.AssociateID !== aId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Associate deleted successfully." };
       }
 
       if (fnName === "saveTransaction") {
@@ -981,25 +1062,77 @@
           else window._dataCache.transactions.unshift(txn);
         }
         populateAllCaches(window._dataCache);
-        return { success: true, transactionId: txn.TransactionID, message: "Transaction booked (Demo)." };
+        return { success: true, transactionId: txn.TransactionID, message: "Transaction booked successfully." };
       }
 
       if (fnName === "deleteTransaction") {
         var txnId = payload.transactionId || payload.id;
         window._dataCache.transactions = (window._dataCache.transactions || []).filter(function(t) { return t.TransactionID !== txnId; });
         populateAllCaches(window._dataCache);
-        return { success: true, message: "Transaction deleted (Demo)." };
+        return { success: true, message: "Transaction deleted successfully." };
+      }
+
+      if (fnName === "saveUser") {
+        window._dataCache.users = window._dataCache.users || [];
+        var usr = Object.assign({}, payload);
+        if (!usr.UserID) {
+          usr.UserID = "USR-" + Math.floor(1000 + Math.random() * 9000);
+          usr.CreatedDate = nowIso;
+          window._dataCache.users.unshift(usr);
+        } else {
+          var uIdx = window._dataCache.users.findIndex(function(u) { return u.UserID === usr.UserID; });
+          if (uIdx !== -1) window._dataCache.users[uIdx] = Object.assign(window._dataCache.users[uIdx], usr);
+          else window._dataCache.users.unshift(usr);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, userId: usr.UserID, message: "User saved successfully." };
+      }
+
+      if (fnName === "deleteUser") {
+        var duId = payload.targetUserId || payload.userId || payload.id;
+        window._dataCache.users = (window._dataCache.users || []).filter(function(u) { return u.UserID !== duId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "User deleted successfully." };
+      }
+
+      if (fnName === "saveDropdownValue") {
+        var cat = payload.category;
+        var val = payload.value;
+        window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+        window._dataCache.dropdowns[cat] = window._dataCache.dropdowns[cat] || [];
+        if (!window._dataCache.dropdowns[cat].includes(val)) {
+          window._dataCache.dropdowns[cat].push(val);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Option saved." };
+      }
+
+      if (fnName === "deleteDropdownValue") {
+        var dCat = payload.category;
+        var dVal = payload.value;
+        if (window._dataCache.dropdowns && window._dataCache.dropdowns[dCat]) {
+          window._dataCache.dropdowns[dCat] = window._dataCache.dropdowns[dCat].filter(function(v) { return v !== dVal; });
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Option deleted." };
+      }
+
+      if (fnName === "saveCompanySetup") {
+        window._dataCache.companySetup = Object.assign(window._dataCache.companySetup || {}, payload);
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Company profile updated." };
       }
 
       if (fnName === "uploadFileToDrive") {
-        var mockUrl = "https://drive.google.com/uc?id=demo_upload_" + Date.now();
+        var mockUrl = "https://drive.google.com/uc?id=upload_" + Date.now();
         return { success: true, url: mockUrl, fileUrl: mockUrl };
       }
 
       populateAllCaches(window._dataCache);
-      return { success: true, message: "Action executed locally (Demo mode)." };
+      return { success: true, message: "Record updated locally." };
     }
-    window.handleDemoLocalMutation = handleDemoLocalMutation;
+    window.handleLocalOptimisticMutation = handleLocalOptimisticMutation;
+    window.handleDemoLocalMutation = handleLocalOptimisticMutation;
 
     async function dispatchRpcCall(fnName, args, successCb, failCb) {
       args = args || [];
@@ -1043,6 +1176,20 @@
         var dataRes = await apiCall("get_initial_data");
         populateAllCaches(dataRes);
         successCb(dataRes);
+        return;
+      }
+
+      if (fnName === "getDashboardData") {
+        var dData = cacheGet("dashboardData") || {
+          customers: window._dataCache.customers || [],
+          projects: window._dataCache.projects || [],
+          tasks: window._dataCache.tasks || [],
+          siteVisits: window._dataCache.siteVisits || [],
+          milestones: window._dataCache.milestones || [],
+          leads: window._dataCache.leads || [],
+          transactions: window._dataCache.transactions || []
+        };
+        successCb(dData);
         return;
       }
 
@@ -1404,22 +1551,33 @@
         }
         payload.userId = userId;
 
-        // In Demo Mode: execute optimistic local state updates with 0ms response
-        if (isDemoMode()) {
-          var demoMutRes = handleDemoLocalMutation(fnName, payload, args);
-          successCb(demoMutRes);
-          return;
-        }
+        // 1. OPTIMISTIC LOCAL MUTATION: Update state in memory & localStorage in 0ms (Nexallot pattern)
+        var localMutRes = handleLocalOptimisticMutation(fnName, payload, args);
 
-        var saveRes = await apiCall(targetAction, payload);
-        if (saveRes && saveRes.success !== false) {
-          successCb(saveRes);
-          // Auto-preload in background to refresh all tables silently
-          setTimeout(function() {
-            preloadAllAppData();
-          }, 200);
-        } else {
-          failCb(new Error(saveRes ? (saveRes.error || saveRes.message) : "Operation failed"));
+        // 2. IMMEDIATE 0ms RESPONSE: Unblocks caller, closes modal & renders table instantly
+        successCb(localMutRes);
+
+        // 3. BACKGROUND COMMIT: Pushes mutation to Google Sheets asynchronously without UI spinners
+        if (!isDemoMode()) {
+          apiCall(targetAction, payload).then(function(backendRes) {
+            if (backendRes && backendRes.success !== false) {
+              console.log("[Background Sync Succeeded]: " + targetAction, backendRes);
+              if (backendRes.customerId && payload.CustomerID && backendRes.customerId !== payload.CustomerID) {
+                var c = (window._dataCache.customers || []).find(function(x) { return x.CustomerID === payload.CustomerID; });
+                if (c) c.CustomerID = backendRes.customerId;
+                populateAllCaches(window._dataCache);
+              }
+              if (backendRes.projectId && payload.ProjectID && backendRes.projectId !== payload.ProjectID) {
+                var p = (window._dataCache.projects || []).find(function(x) { return x.ProjectID === payload.ProjectID; });
+                if (p) p.ProjectID = backendRes.projectId;
+                populateAllCaches(window._dataCache);
+              }
+            } else {
+              console.warn("[Background Sync Notice]:", backendRes);
+            }
+          }).catch(function(err) {
+            console.warn("[Background Sync Network Warning]:", err);
+          });
         }
         return;
       }

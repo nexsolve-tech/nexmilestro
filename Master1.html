@@ -72,10 +72,15 @@
 <script>
 (function() {
   var mastersCacheData = {};
-  window.loadMastersView = function() {
-    showLoader(true);
+  window.loadMastersView = function(forceRefresh) {
+    if (forceRefresh) showLoader(true);
+    if (!forceRefresh && window._dataCache && window._dataCache.dropdowns) {
+      mastersCacheData = window._dataCache.dropdowns;
+      renderCategoryOptions();
+      return;
+    }
     google.script.run.withSuccessHandler(function(data) {
-      mastersCacheData = data;
+      mastersCacheData = data || {};
       renderCategoryOptions();
       showLoader(false);
     }).withFailureHandler(function(err) {
@@ -122,40 +127,39 @@
       showToast("Option value cannot be empty.", "error");
       return;
     }
-    showLoader(true);
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
     google.script.run.withSuccessHandler(function(response) {
-      showLoader(false);
       if (response.success) {
         showToast(response.message, "success");
-        if (typeof cacheClearAll === "function") cacheClearAll();
         input.value = "";
-        loadMastersView();
+        mastersCacheData[key] = mastersCacheData[key] || [];
+        if (!mastersCacheData[key].includes(val)) mastersCacheData[key].push(val);
+        renderCategoryOptions();
+        loadMastersView(false);
       } else {
         showToast(response.message, "error");
       }
     }).withFailureHandler(function(err) {
-      showLoader(false);
       showToast(err.message, "error");
     }).addDropdownValue(key, val, userId);
   }
   function deleteMasterOption(key, value) {
     if (confirm('Are you sure you want to delete option "'.concat(value, '"? This will not alter existing sheet records, but it will remove it from future form select lists.'))) {
-      showLoader(true);
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
       var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response.success) {
           showToast(response.message, "success");
-          if (typeof cacheClearAll === "function") cacheClearAll();
-          loadMastersView();
+          if (mastersCacheData[key]) {
+            mastersCacheData[key] = mastersCacheData[key].filter(function(v) { return v !== value; });
+          }
+          renderCategoryOptions();
+          loadMastersView(false);
         } else {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteDropdownValue(key, value, userId);
     }

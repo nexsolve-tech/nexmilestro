@@ -332,7 +332,6 @@ window.editTxn = function(txnId) {
 
 window.deleteTxnRow = function(txnId) {
   if (confirm("Are you sure you want to delete this transaction ledger row?")) {
-    if (typeof showLoader === "function") showLoader(true);
     var currentUser = {};
     try { currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}"); } catch(e){}
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
@@ -340,17 +339,15 @@ window.deleteTxnRow = function(txnId) {
     if (google.script && google.script.run) {
       google.script.run
         .withSuccessHandler(function(response) {
-          if (typeof showLoader === "function") showLoader(false);
           if (response.success) {
             if (typeof showToast === "function") showToast(response.message, "success");
-            if (typeof cacheClear === "function") cacheClear(["dashboardData", "financeData"]);
-            window.loadFinanceView(true);
+            window.txnsDataList = (window.txnsDataList || []).filter(function(t) { return (t.TransactionID || t.id) !== txnId; });
+            window.loadFinanceView(false);
           } else {
             if (typeof showToast === "function") showToast(response.message, "error");
           }
         })
         .withFailureHandler(function(err) {
-          if (typeof showLoader === "function") showLoader(false);
           if (typeof showToast === "function") showToast("Error deleting transaction: " + err.message, "error");
         })
         .deleteTransaction(txnId, currentUserId);
@@ -388,8 +385,6 @@ window.handleTxnSubmit = function(e) {
   try { currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}"); } catch(e){}
   var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
 
-  if (typeof showLoader === "function") showLoader(true);
-
   if (fileInput && fileInput.files.length > 0) {
     var files = fileInput.files;
     var fileDataArr = [];
@@ -423,18 +418,15 @@ window.submitFormWithAttachment = function(txnData, fileDataArr, userId) {
   if (google.script && google.script.run) {
     google.script.run
       .withSuccessHandler(function(response) {
-        if (typeof showLoader === "function") showLoader(false);
         if (response.success) {
           if (typeof showToast === "function") showToast(response.message, "success");
           window.closeTxnModal();
-          if (typeof cacheClear === "function") cacheClear(["dashboardData", "financeData"]);
-          window.loadFinanceView(true);
+          window.loadFinanceView(false);
         } else {
           if (typeof showToast === "function") showToast(response.message, "error");
         }
       })
       .withFailureHandler(function(err) {
-        if (typeof showLoader === "function") showLoader(false);
         if (typeof showToast === "function") showToast("Error booking transaction: " + err.message, "error");
       })
       .saveTransaction(txnData, fileDataArr, userId);
@@ -1118,11 +1110,7 @@ window.exportTransactionsCSV = function() {
 };
 
 window.loadFinanceView = function(forceRefresh) {
-  if (typeof showLoader === "function") showLoader(true);
-
-  if (forceRefresh && typeof cacheClear === "function") {
-    cacheClear(["dashboardData", "financeData"]);
-  }
+  if (forceRefresh && typeof showLoader === "function") showLoader(true);
   
   var currentUser = {};
   try {
@@ -1167,14 +1155,25 @@ window.loadFinanceView = function(forceRefresh) {
   // Check preloaded cache for instant 0s tab switch (skip if forceRefresh)
   if (!forceRefresh) {
     var cachedDash = typeof cacheGet === "function" ? cacheGet("dashboardData") : null;
-    if (cachedDash && cachedDash.transactions && cachedDash.transactions.length > 0) {
+    var cachedFin = typeof cacheGet === "function" ? cacheGet("financeData") : null;
+    var dataSrc = cachedFin || cachedDash || (window._dataCache ? {
+      transactions: window._dataCache.transactions || [],
+      projects: window._dataCache.projects || [],
+      vendors: window._dataCache.vendors || [],
+      associates: window._dataCache.associates || [],
+      customers: window._dataCache.customers || [],
+      siteVisits: window._dataCache.siteVisits || [],
+      dropdowns: window._dataCache.dropdowns || {}
+    } : null);
+    if (dataSrc && (dataSrc.transactions || window._dataCache)) {
       applyData({
-        transactions: cachedDash.transactions || [],
-        projects: cachedDash.projects || [],
-        vendors: window.vndrsCacheList || [],
-        associates: window.associatesCacheList || [],
-        customers: cachedDash.customers || [],
-        siteVisits: cachedDash.siteVisits || []
+        transactions: dataSrc.transactions || (window._dataCache && window._dataCache.transactions) || [],
+        projects: dataSrc.projects || (window._dataCache && window._dataCache.projects) || [],
+        vendors: dataSrc.vendors || (window._dataCache && window._dataCache.vendors) || [],
+        associates: dataSrc.associates || (window._dataCache && window._dataCache.associates) || [],
+        customers: dataSrc.customers || (window._dataCache && window._dataCache.customers) || [],
+        siteVisits: dataSrc.siteVisits || (window._dataCache && window._dataCache.siteVisits) || [],
+        dropdowns: dataSrc.dropdowns || (window._dataCache && window._dataCache.dropdowns) || {}
       });
       return;
     }

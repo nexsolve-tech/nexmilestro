@@ -187,31 +187,35 @@
   var rawLeads = [];
   var rawTransactions = [];
   window.loadDashboardView = function(forceRefresh) {
-    showLoader(true);
-    // Check client-side cache first if not forceRefresh
-    if (!forceRefresh) {
-      var cached = cacheGet("dashboardData");
-      if (cached) {
-        rawCustomers = cached.customers || [];
-        rawProjects = cached.projects || [];
-        rawTasks = cached.tasks || [];
-        rawSiteVisits = cached.siteVisits || [];
-        rawMilestones = cached.milestones || [];
-        rawLeads = cached.leads || [];
-        rawTransactions = cached.transactions || [];
-        try {
-          populateDashboardFilters();
-          applyDashboardFilter();
-        } catch (e) {
-          showToast("Dashboard Render Error: " + e.message, "error");
-        }
-        showLoader(false);
-        return;
+    // 0ms instant render from memory cache
+    var data = (window._dataCache && window._dataCache.customers && window._dataCache.customers.length > 0)
+      ? window._dataCache
+      : (cacheGet("dashboardData") || window._dataCache || {});
+
+    if (data && data.customers && !forceRefresh) {
+      rawCustomers = data.customers || [];
+      rawProjects = data.projects || [];
+      rawTasks = data.tasks || [];
+      rawSiteVisits = data.siteVisits || [];
+      rawMilestones = data.milestones || [];
+      rawLeads = data.leads || [];
+      rawTransactions = data.transactions || [];
+      try {
+        populateDashboardFilters();
+        applyDashboardFilter();
+      } catch (e) {
+        console.error("Dashboard Render Error:", e);
       }
+      return;
+    }
+
+    if (forceRefresh) {
+      showLoader(true, "Refreshing workspace metrics...");
     }
 
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(result) {
+        if (forceRefresh) showLoader(false);
         if (result && result.success !== false) {
           rawCustomers = result.customers || [];
           rawProjects = result.projects || [];
@@ -225,17 +229,12 @@
             populateDashboardFilters();
             applyDashboardFilter();
           } catch (e) {
-            showToast("Dashboard Render Error: " + e.message, "error");
+            console.error("Dashboard Render Error:", e);
           }
-          showLoader(false);
-        } else {
-          fetchLegacyDashboardData();
         }
       }).withFailureHandler(function(err) {
-        fetchLegacyDashboardData();
+        if (forceRefresh) showLoader(false);
       }).getDashboardData();
-    } else {
-      fetchLegacyDashboardData();
     }
   };
 
