@@ -12077,8 +12077,12 @@ document.addEventListener("click", function() {
     async function apiCall(action, payload) {
       payload = payload || {};
       payload.action = action;
-      payload.licenseKey = getActiveLicenseKey();
-      payload.spreadsheetId = localStorage.getItem("nexmilestro_spreadsheet_id") || "";
+      if (!payload.licenseKey) {
+        payload.licenseKey = getActiveLicenseKey();
+      }
+      if (!payload.spreadsheetId) {
+        payload.spreadsheetId = localStorage.getItem("nexmilestro_spreadsheet_id") || "";
+      }
 
       try {
         var res = await fetch(window.NEXMILESTRO_API_URL, {
@@ -13436,12 +13440,15 @@ function showLoginOverlay(show) {
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-shield-check"></i> Connect Database'; }
 
       if (res && res.valid) {
+        var sheetId = res.spreadsheetId || res.clientSheetId || "";
+        var clientName = res.clientName || res.companyName || key;
+
         localStorage.setItem("nexmilestro_license_key", key);
-        if (res.spreadsheetId) localStorage.setItem("nexmilestro_spreadsheet_id", res.spreadsheetId);
-        if (res.clientName) localStorage.setItem("nexmilestro_client_name", res.clientName);
+        if (sheetId) localStorage.setItem("nexmilestro_spreadsheet_id", sheetId);
+        if (clientName) localStorage.setItem("nexmilestro_client_name", clientName);
         localStorage.removeItem("nexmilestro_is_demo");
 
-        showToast("Connected to Organization: " + (res.clientName || key), "success");
+        showToast("Connected to Organization: " + clientName, "success");
         showLicenseGateModal(false);
         showLockoutModal(false);
         updateLoginOrgDisplay();

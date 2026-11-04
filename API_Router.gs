@@ -148,8 +148,10 @@ function validateClientLicense(licenseOrEmail) {
       valid: true,
       licenseKey: String(matchedRow[colIdx.licenseKey] || ""),
       companyName: String(matchedRow[colIdx.clientName] || ""),
+      clientName: String(matchedRow[colIdx.clientName] || ""),
       adminEmail: String(matchedRow[colIdx.clientEmail] || ""),
       clientSheetId: clientSheetId,
+      spreadsheetId: clientSheetId,
       plan: String(matchedRow[colIdx.plan] || "Pro"),
       expiryDate: expFormatted,
       maxUsers: Number(matchedRow[colIdx.maxUsers]) || 10,
@@ -1383,13 +1385,13 @@ function doPost(e) {
 function handleUniversalApiRequest(action, params) {
   let response = { success: false, error: 'Unknown action: ' + action };
   try {
-    const licenseKey = params.licenseKey || params.orgCode || params.key || '';
-    const userId = params.userId || '';
     let dataObj = params.data;
     if (typeof dataObj === 'string') {
       try { dataObj = JSON.parse(dataObj); } catch (e) {}
     }
     if (!dataObj) dataObj = params;
+    const licenseKey = params.licenseKey || params.orgCode || params.key || (dataObj ? (dataObj.licenseKey || dataObj.orgCode || dataObj.key) : '') || '';
+    const userId = params.userId || (dataObj ? dataObj.userId : '') || '';
 
     switch (action) {
       // ── SYSTEM & AUTHENTICATION ──────────────────────────────────────────
