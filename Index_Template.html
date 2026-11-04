@@ -206,6 +206,12 @@
         </div>
         
         <div class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+          <!-- Demo Evaluation Mode Pill -->
+          <div id="header-demo-badge" style="display: none; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+            <i class="fas fa-sparkles"></i>
+            <span>Interactive Demo</span>
+          </div>
+
           <!-- License Expiry Warning Badge -->
           <div id="license-expiry-warning-badge" style="display: none; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent;">
             <i class="fas fa-exclamation-triangle"></i>
@@ -270,9 +276,57 @@
         <button type="submit" id="btn-validate-license" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-weight: 700; font-size: 0.95rem; justify-content: center;">
           <i class="fas fa-shield-check"></i> Connect Database
         </button>
+
+        <!-- Evaluator Demo Preview Option -->
+        <div style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1.25rem;">
+          <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.6rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Prospective Client & Commercial Evaluator Preview</div>
+          <button type="button" class="btn" onclick="startDemoMode()" style="width: 100%; padding: 0.85rem; font-weight: 700; font-size: 0.925rem; background: linear-gradient(135deg, #0f766e, #0284c7); color: #fff; border: none; border-radius: 10px; justify-content: center; box-shadow: 0 4px 14px rgba(15,118,110,0.25);">
+            <i class="fas fa-bolt"></i> ✨ Explore Live Interactive Demo (Instant Access)
+          </button>
+        </div>
       </form>
 
       <div id="license-gate-feedback" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;"></div>
+    </div>
+  </div>
+
+  <!-- ==================== FULL-SCREEN LICENSE LOCKOUT MODAL (EXPIRED / SUSPENDED) ==================== -->
+  <div class="license-gate-overlay" id="license-lockout-modal" style="display: none;">
+    <div class="license-gate-card" style="max-width: 500px; border-top: 5px solid #ef4444;">
+      <div class="license-gate-logo" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <div id="lockout-badge" style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: #fee2e2; color: #b91c1c; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem;">
+        Subscription Expired / Suspended
+      </div>
+      <h2 id="lockout-client-title" style="font-size: 1.35rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Access Restricted</h2>
+      <p id="lockout-reason-text" style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; line-height: 1.6;">
+        Your organization's license access is currently inactive, expired, or pending renewal. All database operations have been secured and locked.
+      </p>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: left; font-size: 0.8rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="color: #64748b; font-weight: 600;">Organization:</span>
+          <strong id="lockout-client-name" style="color: #0f172a;">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="color: #64748b; font-weight: 600;">License Key:</span>
+          <code id="lockout-license-key" style="color: #0f766e; font-weight: 700;">-</code>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: #64748b; font-weight: 600;">Contact Administrator:</span>
+          <a href="mailto:mehul.gandhi@nexsolve.in" style="color: #0284c7; text-decoration: none; font-weight: 700;">mehul.gandhi@nexsolve.in</a>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a id="lockout-contact-btn" href="mailto:mehul.gandhi@nexsolve.in?subject=NexMilestro%20License%20Reactivation" class="btn btn-primary" style="padding: 0.85rem; font-weight: 700; text-decoration: none; justify-content: center; background: #ef4444; border-color: #ef4444;">
+          <i class="fas fa-envelope"></i> Contact NexSolve Support
+        </a>
+        <button type="button" class="btn btn-secondary" onclick="openLicenseGateModalManual()" style="padding: 0.75rem; font-weight: 600; justify-content: center;">
+          <i class="fas fa-key"></i> Switch / Re-enter License Key
+        </button>
+      </div>
     </div>
   </div>
 
@@ -309,7 +363,18 @@
         
         <button type="submit" class="btn-login-submit" style="width: 100%;">Access Account</button>
 
-        <div style="text-align: center; margin-top: 1.25rem;">
+        <!-- Fast Role Testing for Prospective Evaluators -->
+        <div style="margin-top: 1.25rem; border-top: 1px dashed var(--border-color); padding-top: 1rem; text-align: center;">
+          <span style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">1-Click Role Testing (Live Evaluator)</span>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loginDemoRole('Super Admin')" style="font-size: 0.75rem; padding: 0.4rem; justify-content: center; font-weight: 600;"><i class="fas fa-shield-alt" style="color: var(--primary);"></i> Super Admin</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loginDemoRole('Project Manager')" style="font-size: 0.75rem; padding: 0.4rem; justify-content: center; font-weight: 600;"><i class="fas fa-hard-hat" style="color: #f59e0b;"></i> Project Mgr</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loginDemoRole('Site Engineer')" style="font-size: 0.75rem; padding: 0.4rem; justify-content: center; font-weight: 600;"><i class="fas fa-eye" style="color: #0284c7;"></i> Site Engineer</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loginDemoRole('Sales Executive')" style="font-size: 0.75rem; padding: 0.4rem; justify-content: center; font-weight: 600;"><i class="fas fa-bullseye" style="color: #10b981;"></i> Sales Lead</button>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 1rem;">
           <a href="#" onclick="openLicenseGateModalManual(); event.preventDefault();" style="font-size: 0.775rem; color: var(--text-muted); text-decoration: none; font-weight: 600;">
             <i class="fas fa-exchange-alt"></i> Switch Organization / License Key
           </a>
@@ -743,6 +808,213 @@
     /**
      * Central RPC Dispatcher: Handles cached instant reads & server mutations
      */
+    
+    function handleDemoLocalMutation(fnName, payload, args) {
+      window._dataCache = window._dataCache || {};
+      var nowIso = (new Date()).toISOString();
+
+      if (fnName === "saveCustomer") {
+        window._dataCache.customers = window._dataCache.customers || [];
+        var cust = Object.assign({}, payload);
+        if (!cust.CustomerID) {
+          cust.CustomerID = "CUST-" + Math.floor(1000 + Math.random() * 9000);
+          cust.CreatedDate = nowIso;
+          window._dataCache.customers.unshift(cust);
+        } else {
+          var idx = window._dataCache.customers.findIndex(function(c) { return c.CustomerID === cust.CustomerID; });
+          if (idx !== -1) window._dataCache.customers[idx] = Object.assign(window._dataCache.customers[idx], cust);
+          else window._dataCache.customers.unshift(cust);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, customerId: cust.CustomerID, message: "Customer saved successfully (Demo)." };
+      }
+
+      if (fnName === "deleteCustomer") {
+        var cId = payload.customerId || payload.id;
+        window._dataCache.customers = (window._dataCache.customers || []).filter(function(c) { return c.CustomerID !== cId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Customer deleted (Demo)." };
+      }
+
+      if (fnName === "saveProject") {
+        window._dataCache.projects = window._dataCache.projects || [];
+        var proj = Object.assign({}, payload);
+        if (!proj.ProjectID) {
+          proj.ProjectID = "PROJ-" + Math.floor(1000 + Math.random() * 9000);
+          proj.CreatedDate = nowIso;
+          window._dataCache.projects.unshift(proj);
+        } else {
+          var pIdx = window._dataCache.projects.findIndex(function(p) { return p.ProjectID === proj.ProjectID; });
+          if (pIdx !== -1) window._dataCache.projects[pIdx] = Object.assign(window._dataCache.projects[pIdx], proj);
+          else window._dataCache.projects.unshift(proj);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, projectId: proj.ProjectID, message: "Project saved successfully (Demo)." };
+      }
+
+      if (fnName === "deleteProject") {
+        var pId = payload.projectId || payload.id;
+        window._dataCache.projects = (window._dataCache.projects || []).filter(function(p) { return p.ProjectID !== pId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Project deleted (Demo)." };
+      }
+
+      if (fnName === "saveMilestone") {
+        window._dataCache.milestones = window._dataCache.milestones || [];
+        var ms = Object.assign({}, payload);
+        if (!ms.MilestoneID) {
+          ms.MilestoneID = "MS-" + Math.floor(100 + Math.random() * 900);
+          ms.CreatedDate = nowIso;
+          window._dataCache.milestones.push(ms);
+        } else {
+          var mIdx = window._dataCache.milestones.findIndex(function(m) { return m.MilestoneID === ms.MilestoneID; });
+          if (mIdx !== -1) window._dataCache.milestones[mIdx] = Object.assign(window._dataCache.milestones[mIdx], ms);
+          else window._dataCache.milestones.push(ms);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, milestoneId: ms.MilestoneID, message: "Milestone saved successfully (Demo)." };
+      }
+
+      if (fnName === "deleteMilestone") {
+        var mId = payload.milestoneId || payload.id;
+        window._dataCache.milestones = (window._dataCache.milestones || []).filter(function(m) { return m.MilestoneID !== mId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Milestone removed (Demo)." };
+      }
+
+      if (fnName === "saveTask") {
+        window._dataCache.tasks = window._dataCache.tasks || [];
+        var task = Object.assign({}, payload);
+        if (!task.TaskID) {
+          task.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
+          task.CreatedDate = nowIso;
+          window._dataCache.tasks.unshift(task);
+        } else {
+          var tIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === task.TaskID; });
+          if (tIdx !== -1) window._dataCache.tasks[tIdx] = Object.assign(window._dataCache.tasks[tIdx], task);
+          else window._dataCache.tasks.unshift(task);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, taskId: task.TaskID, message: "Task saved successfully (Demo)." };
+      }
+
+      if (fnName === "updateTaskStatus") {
+        var tId = payload.taskId;
+        var newStatus = payload.status;
+        var tObj = (window._dataCache.tasks || []).find(function(t) { return t.TaskID === tId; });
+        if (tObj) {
+          tObj.Status = newStatus;
+          if (newStatus === "Completed" && !tObj.CompletionDate) {
+            tObj.CompletionDate = nowIso.substring(0, 10);
+          }
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Task status changed to " + newStatus };
+      }
+
+      if (fnName === "deleteTask") {
+        var delTaskId = payload.taskId || payload.id;
+        window._dataCache.tasks = (window._dataCache.tasks || []).filter(function(t) { return t.TaskID !== delTaskId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Task removed (Demo)." };
+      }
+
+      if (fnName === "saveSiteVisit") {
+        window._dataCache.siteVisits = window._dataCache.siteVisits || [];
+        var visit = Object.assign({}, payload);
+        if (!visit.VisitID) {
+          visit.VisitID = "VISIT-" + Math.floor(1000 + Math.random() * 9000);
+          visit.CreatedDate = nowIso;
+          window._dataCache.siteVisits.unshift(visit);
+        } else {
+          var vIdx = window._dataCache.siteVisits.findIndex(function(v) { return v.VisitID === visit.VisitID; });
+          if (vIdx !== -1) window._dataCache.siteVisits[vIdx] = Object.assign(window._dataCache.siteVisits[vIdx], visit);
+          else window._dataCache.siteVisits.unshift(visit);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, visitId: visit.VisitID, message: "Site visit logged (Demo)." };
+      }
+
+      if (fnName === "deleteSiteVisit") {
+        var visId = payload.visitId || payload.id;
+        window._dataCache.siteVisits = (window._dataCache.siteVisits || []).filter(function(v) { return v.VisitID !== visId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Site visit deleted (Demo)." };
+      }
+
+      if (fnName === "saveLead") {
+        window._dataCache.leads = window._dataCache.leads || [];
+        var lead = Object.assign({}, payload);
+        if (!lead.LeadID) {
+          lead.LeadID = "LEAD-" + Math.floor(1000 + Math.random() * 9000);
+          lead.CreatedDate = nowIso;
+          window._dataCache.leads.unshift(lead);
+        } else {
+          var lIdx = window._dataCache.leads.findIndex(function(l) { return l.LeadID === lead.LeadID; });
+          if (lIdx !== -1) window._dataCache.leads[lIdx] = Object.assign(window._dataCache.leads[lIdx], lead);
+          else window._dataCache.leads.unshift(lead);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, leadId: lead.LeadID, message: "Lead saved (Demo)." };
+      }
+
+      if (fnName === "markLeadAsWon") {
+        var wonLeadId = payload.leadId || payload.id;
+        var leadObj = (window._dataCache.leads || []).find(function(l) { return l.LeadID === wonLeadId; });
+        if (leadObj) leadObj.Status = "Won";
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Lead marked as Won (Demo)." };
+      }
+
+      if (fnName === "saveProposal") {
+        window._dataCache.proposals = window._dataCache.proposals || [];
+        var prop = Object.assign({}, payload);
+        if (!prop.ProposalID) {
+          prop.ProposalID = "PROP-" + Math.floor(1000 + Math.random() * 9000);
+          prop.CreatedDate = nowIso;
+          window._dataCache.proposals.unshift(prop);
+        } else {
+          var prIdx = window._dataCache.proposals.findIndex(function(p) { return p.ProposalID === prop.ProposalID; });
+          if (prIdx !== -1) window._dataCache.proposals[prIdx] = Object.assign(window._dataCache.proposals[prIdx], prop);
+          else window._dataCache.proposals.unshift(prop);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, proposalId: prop.ProposalID, message: "Proposal saved (Demo)." };
+      }
+
+      if (fnName === "saveTransaction") {
+        window._dataCache.transactions = window._dataCache.transactions || [];
+        var txn = Object.assign({}, payload);
+        if (!txn.TransactionID) {
+          txn.TransactionID = "TXN-" + Math.floor(1000 + Math.random() * 9000);
+          txn.CreatedDate = nowIso;
+          window._dataCache.transactions.unshift(txn);
+        } else {
+          var txIdx = window._dataCache.transactions.findIndex(function(t) { return t.TransactionID === txn.TransactionID; });
+          if (txIdx !== -1) window._dataCache.transactions[txIdx] = Object.assign(window._dataCache.transactions[txIdx], txn);
+          else window._dataCache.transactions.unshift(txn);
+        }
+        populateAllCaches(window._dataCache);
+        return { success: true, transactionId: txn.TransactionID, message: "Transaction booked (Demo)." };
+      }
+
+      if (fnName === "deleteTransaction") {
+        var txnId = payload.transactionId || payload.id;
+        window._dataCache.transactions = (window._dataCache.transactions || []).filter(function(t) { return t.TransactionID !== txnId; });
+        populateAllCaches(window._dataCache);
+        return { success: true, message: "Transaction deleted (Demo)." };
+      }
+
+      if (fnName === "uploadFileToDrive") {
+        var mockUrl = "https://drive.google.com/uc?id=demo_upload_" + Date.now();
+        return { success: true, url: mockUrl, fileUrl: mockUrl };
+      }
+
+      populateAllCaches(window._dataCache);
+      return { success: true, message: "Action executed locally (Demo mode)." };
+    }
+    window.handleDemoLocalMutation = handleDemoLocalMutation;
+
     async function dispatchRpcCall(fnName, args, successCb, failCb) {
       args = args || [];
       var currentUser = getSessionUser();
@@ -1013,6 +1285,13 @@
         }
         payload.userId = userId;
 
+        // In Demo Mode: execute optimistic local state updates with 0ms response
+        if (isDemoMode()) {
+          var demoMutRes = handleDemoLocalMutation(fnName, payload, args);
+          successCb(demoMutRes);
+          return;
+        }
+
         var saveRes = await apiCall(targetAction, payload);
         if (saveRes && saveRes.success !== false) {
           successCb(saveRes);
@@ -1197,7 +1476,467 @@
     }
     window.getSessionUser = getSessionUser;
 
-    function showLoginOverlay(show) {
+    
+    /**
+     * =========================================================================
+     * ENTERPRISE DEMO ENGINE & PREVIEW DATASET
+     * Realistic Turnkey Interior, Contracting & Architecture Workspace
+     * =========================================================================
+     */
+    function generateEnterpriseDemoData() {
+      return {
+        customers: [
+          {
+            CustomerID: "CUST-1001",
+            CustomerName: "DLF CyberCity Developers Ltd",
+            CompanyName: "DLF CyberCity Developers Ltd",
+            ContactPerson: "Rajeev Singhal",
+            Designation: "VP Infrastructure",
+            Mobile: "9811223344",
+            Email: "rajeev.singhal@dlf.in",
+            Address: "DLF Gateway Tower, CyberCity",
+            City: "Gurugram",
+            State: "Haryana",
+            Pincode: "122002",
+            PANCardNumber: "AAACD1234F",
+            GSTNumber: "06AAACD1234F1Z5",
+            CustomerType: "Enterprise / Corporate",
+            Industry: "Commercial Real Estate",
+            Status: "Active",
+            Notes: "Turnkey interior partner for luxury residential and commercial high-rises."
+          },
+          {
+            CustomerID: "CUST-1002",
+            CustomerName: "Oberoi Realty Projects",
+            CompanyName: "Oberoi Realty Projects",
+            ContactPerson: "Priya Nair",
+            Designation: "Director - Projects",
+            Mobile: "9820334455",
+            Email: "priya.nair@oberoirealty.com",
+            Address: "Oberoi Commerz II, International Business Park",
+            City: "Mumbai",
+            State: "Maharashtra",
+            Pincode: "400063",
+            PANCardNumber: "AABCO5678G",
+            GSTNumber: "27AABCO5678G1Z2",
+            CustomerType: "Luxury Builder",
+            Industry: "Luxury Residential",
+            Status: "Active",
+            Notes: "High-spec corporate fitouts & sample duplex penthouses."
+          },
+          {
+            CustomerID: "CUST-1003",
+            CustomerName: "Prestige Estates Ltd",
+            CompanyName: "Prestige Estates Ltd",
+            ContactPerson: "Arun Swaminathan",
+            Designation: "Chief Engineer",
+            Mobile: "9845112233",
+            Email: "arun@prestigeconstructions.com",
+            Address: "The Falcon Tower, Brunton Road",
+            City: "Bengaluru",
+            State: "Karnataka",
+            Pincode: "560001",
+            PANCardNumber: "AACCP9012H",
+            GSTNumber: "29AACCP9012H1Z9",
+            CustomerType: "Commercial Developer",
+            Industry: "Turnkey Contracting",
+            Status: "Active",
+            Notes: "Golfshire villas and tech park customer experience centers."
+          },
+          {
+            CustomerID: "CUST-1004",
+            CustomerName: "Godrej Properties Retail",
+            CompanyName: "Godrej Properties Retail",
+            ContactPerson: "Vikram Khurana",
+            Designation: "Head - Store Experience",
+            Mobile: "9876543210",
+            Email: "vikram.k@godrejproperties.com",
+            Address: "Godrej One, Pirojshanagar",
+            City: "Pune",
+            State: "Maharashtra",
+            Pincode: "411001",
+            PANCardNumber: "AABCG3456J",
+            GSTNumber: "27AABCG3456J1Z8",
+            CustomerType: "Retail Chain",
+            Industry: "Retail Infrastructure",
+            Status: "Active",
+            Notes: "Flagship retail experience zones across Tier-1 cities."
+          },
+          {
+            CustomerID: "CUST-1005",
+            CustomerName: "Brigade Commercials",
+            CompanyName: "Brigade Commercials",
+            ContactPerson: "Sunita Reddy",
+            Designation: "Operations VP",
+            Mobile: "9880123456",
+            Email: "sunita.r@brigadegroup.com",
+            Address: "World Trade Center, Malleswaram",
+            City: "Hyderabad",
+            State: "Telangana",
+            Pincode: "500081",
+            PANCardNumber: "AABCB7890K",
+            GSTNumber: "36AABCB7890K1Z4",
+            CustomerType: "Commercial Real Estate",
+            Industry: "Corporate IT Parks",
+            Status: "Active",
+            Notes: "Fintech towers and co-working incubation suites."
+          }
+        ],
+        projects: [
+          {
+            ProjectID: "PROJ-1001",
+            ProjectName: "DLF Horizon Luxury Penthouse - Phase 2",
+            CustomerID: "CUST-1001",
+            ProjectType: "Luxury Residential",
+            Location: "Golf Course Road, Gurugram",
+            StartDate: "2026-08-01",
+            ExpectedCompletionDate: "2026-12-15",
+            ProjectValue: 4500000,
+            EstimatedBudget: 4500000,
+            Status: "In Progress",
+            Notes: "10,500 sq ft duplex penthouse. Turnkey MEP, Italian marble, smart automation, acoustic home theater."
+          },
+          {
+            ProjectID: "PROJ-1002",
+            ProjectName: "Phoenix One Commercial HQ - 4th Floor",
+            CustomerID: "CUST-1002",
+            ProjectType: "Corporate Office Fitout",
+            Location: "Lower Parel, Mumbai",
+            StartDate: "2026-09-01",
+            ExpectedCompletionDate: "2027-02-28",
+            ProjectValue: 8500000,
+            EstimatedBudget: 8500000,
+            Status: "In Progress",
+            Notes: "180 workstation corporate fitout with precision server room and acoustic boardrooms."
+          },
+          {
+            ProjectID: "PROJ-1003",
+            ProjectName: "Prestige Golfshire Villa 12",
+            CustomerID: "CUST-1003",
+            ProjectType: "Turnkey Villa Execution",
+            Location: "Nandi Hills Road, Bengaluru",
+            StartDate: "2026-07-15",
+            ExpectedCompletionDate: "2026-11-30",
+            ProjectValue: 6200000,
+            EstimatedBudget: 6200000,
+            Status: "In Progress",
+            Notes: "High-end bespoke villa. Complete structural redesign, deck woodwork, infinity pool lounge."
+          },
+          {
+            ProjectID: "PROJ-1004",
+            ProjectName: "Godrej Infinity Retail Experience Center",
+            CustomerID: "CUST-1004",
+            ProjectType: "Retail Flagship Showroom",
+            Location: "Koregaon Park, Pune",
+            StartDate: "2026-10-15",
+            ExpectedCompletionDate: "2027-01-31",
+            ProjectValue: 2800000,
+            EstimatedBudget: 2800000,
+            Status: "In Progress",
+            Notes: "Interactive digital retail walkthrough showroom with high-lumen architectural lighting."
+          }
+        ],
+        milestones: [
+          { MilestoneID: "MS-101", ProjectID: "PROJ-1001", MilestoneName: "Site Survey, 3D Elevation & Layout Finalization", Title: "Site Survey & 3D Elevation", DueDate: "2026-08-20", CompletionDate: "2026-08-18", Status: "Completed", Weightage: 15, EstimatedCost: 350000, ActualCost: 320000, AssociateName: "Studio Dimension 3D", AssociateCost: 150000 },
+          { MilestoneID: "MS-102", ProjectID: "PROJ-1001", MilestoneName: "Civil Modifications & Concealed Plumbing", Title: "Civil & Plumbing", DueDate: "2026-09-15", CompletionDate: "2026-09-12", Status: "Completed", Weightage: 25, EstimatedCost: 850000, ActualCost: 825000, AssociateName: "Apex MEP Consultants", AssociateCost: 350000 },
+          { MilestoneID: "MS-103", ProjectID: "PROJ-1001", MilestoneName: "False Ceiling, HVAC Ducting & Wiring", Title: "Ceiling & HVAC", DueDate: "2026-10-20", CompletionDate: "2026-10-19", Status: "Completed", Weightage: 35, EstimatedCost: 1450000, ActualCost: 1420000, AssociateName: "Apex MEP Consultants", AssociateCost: 450000 },
+          { MilestoneID: "MS-104", ProjectID: "PROJ-1001", MilestoneName: "Italian Marble Flooring & Premium Polishing", Title: "Marble Flooring", DueDate: "2026-11-15", Status: "In Progress", Weightage: 15, EstimatedCost: 950000, ActualCost: 500000, AssociateName: "Italian Stoneworks Ltd", AssociateCost: 400000 },
+          { MilestoneID: "MS-105", ProjectID: "PROJ-1001", MilestoneName: "Custom Modular Woodwork, Veneers & Fixtures", Title: "Modular Millwork", DueDate: "2026-12-10", Status: "Pending", Weightage: 10, EstimatedCost: 900000, ActualCost: 0, AssociateName: "CraftWood Millwork", AssociateCost: 650000 },
+
+          { MilestoneID: "MS-201", ProjectID: "PROJ-1002", MilestoneName: "Demolition & Structural Grid Layout", Title: "Demolition & Grid", DueDate: "2026-09-20", CompletionDate: "2026-09-18", Status: "Completed", Weightage: 20, EstimatedCost: 1200000, ActualCost: 1150000, AssociateName: "Apex MEP Consultants", AssociateCost: 250000 },
+          { MilestoneID: "MS-202", ProjectID: "PROJ-1002", MilestoneName: "Server Room Precision AC & MEP Conduit Setup", Title: "Server Room PAC & MEP", DueDate: "2026-10-30", CompletionDate: "2026-10-28", Status: "Completed", Weightage: 20, EstimatedCost: 2200000, ActualCost: 2100000, AssociateName: "Apex MEP Consultants", AssociateCost: 650000 },
+          { MilestoneID: "MS-203", ProjectID: "PROJ-1002", MilestoneName: "Acoustic Partitions & Toughened Glass Glazing", Title: "Acoustic Glazing", DueDate: "2026-11-30", Status: "In Progress", Weightage: 30, EstimatedCost: 2800000, ActualCost: 1000000, AssociateName: "GlazeTech Systems", AssociateCost: 850000 },
+          { MilestoneID: "MS-204", ProjectID: "PROJ-1002", MilestoneName: "Workstation Electrical Grids & Carpet Tiles", Title: "Workstations & Carpets", DueDate: "2027-01-15", Status: "Pending", Weightage: 20, EstimatedCost: 1500000, ActualCost: 0, AssociateName: "CraftWood Millwork", AssociateCost: 550000 },
+          { MilestoneID: "MS-205", ProjectID: "PROJ-1002", MilestoneName: "Final Paint, Fire Safety Testing & Handover", Title: "Final Handover", DueDate: "2027-02-25", Status: "Pending", Weightage: 10, EstimatedCost: 800000, ActualCost: 0, AssociateName: "Studio Dimension 3D", AssociateCost: 200000 },
+
+          { MilestoneID: "MS-301", ProjectID: "PROJ-1003", MilestoneName: "Landscape Architecture & Civil Plinth Handover", Title: "Landscape & Civil", DueDate: "2026-08-30", CompletionDate: "2026-08-28", Status: "Completed", Weightage: 40, EstimatedCost: 2400000, ActualCost: 2350000, AssociateName: "Studio Dimension 3D", AssociateCost: 200000 },
+          { MilestoneID: "MS-302", ProjectID: "PROJ-1003", MilestoneName: "Interior Turnkey Fitouts & Smart Lighting", Title: "Fitouts & Smart Lighting", DueDate: "2026-11-20", Status: "In Progress", Weightage: 60, EstimatedCost: 3800000, ActualCost: 3200000, AssociateName: "CraftWood Millwork", AssociateCost: 900000 }
+        ],
+        tasks: [
+          { TaskID: "TASK-1001", TaskName: "Inspect marble slab dry-lay with client", ProjectID: "PROJ-1001", Priority: "High", Status: "Pending", AssignedTo: "Karan Mehta", DueDate: "2026-11-06", Description: "Verify vein continuity on master lounge floor before final adhesive setting." },
+          { TaskID: "TASK-1002", TaskName: "Submit HVAC balancing CFM test report", ProjectID: "PROJ-1002", Priority: "High", Status: "Under Review", AssignedTo: "Sanjay Sharma", DueDate: "2026-11-07", Description: "Confirm airflow balance report for server room precision AC unit." },
+          { TaskID: "TASK-1003", TaskName: "Acoustic ceiling baffles installation", ProjectID: "PROJ-1002", Priority: "Medium", Status: "In Progress", AssignedTo: "Amit Verma", DueDate: "2026-11-12", Description: "Hang perforated timber baffles in conference room 4A." },
+          { TaskID: "TASK-1004", TaskName: "Approve veneer polish swatches", ProjectID: "PROJ-1001", Priority: "High", Status: "In Progress", AssignedTo: "Mehul Gandhi", DueDate: "2026-11-08", Description: "Smoked oak sample 3 vs matte walnut for foyer paneling." },
+          { TaskID: "TASK-1005", TaskName: "Poolside deck wood composite treatment", ProjectID: "PROJ-1003", Priority: "Medium", Status: "Completed", AssignedTo: "Karan Mehta", DueDate: "2026-11-02", CompletionDate: "2026-11-02", Description: "Weather-resistant teak composite seal coat applied." },
+          { TaskID: "TASK-1006", TaskName: "Fire suppression sensor wiring test", ProjectID: "PROJ-1002", Priority: "Critical", Status: "Pending", AssignedTo: "Sanjay Sharma", DueDate: "2026-11-09", Description: "Test loop sensors with building management central panel." },
+          { TaskID: "TASK-1007", TaskName: "Retail lighting lux level verification", ProjectID: "PROJ-1004", Priority: "Medium", Status: "In Progress", AssignedTo: "Amit Verma", DueDate: "2026-11-14", Description: "Check focal display spots reach 1200 lux standard." },
+          { TaskID: "TASK-1008", TaskName: "Smart home automation scene programming", ProjectID: "PROJ-1003", Priority: "Low", Status: "Pending", AssignedTo: "Mehul Gandhi", DueDate: "2026-11-18", Description: "Configure lighting presets: Morning, Evening, Party." }
+        ],
+        siteVisits: [
+          {
+            VisitID: "VISIT-1001",
+            ProjectID: "PROJ-1001",
+            VisitDate: "2026-11-02",
+            VisitedBy: "Mehul Gandhi",
+            Purpose: "False ceiling clearance inspection",
+            Remarks: "HVAC plenum height verified; 150mm clearance maintained. Client approved lighting cutouts.",
+            AssignedTo: "Mehul Gandhi",
+            Status: "Completed",
+            BillableAmount: 5000,
+            NextFollowupDate: "2026-11-08"
+          },
+          {
+            VisitID: "VISIT-1002",
+            ProjectID: "PROJ-1002",
+            VisitDate: "2026-11-01",
+            VisitedBy: "Sanjay Sharma",
+            Purpose: "Precision server room baseline inspection",
+            Remarks: "Dual PAC conduits placed. Fire damper clearances verified with MEP consultant.",
+            AssignedTo: "Sanjay Sharma",
+            Status: "Completed",
+            BillableAmount: 7500,
+            NextFollowupDate: "2026-11-07"
+          },
+          {
+            VisitID: "VISIT-1003",
+            LeadID: "LEAD-1002",
+            VisitDate: "2026-11-03",
+            VisitedBy: "Amit Verma",
+            Purpose: "Commercial site measurement & preliminary BOQ",
+            Remarks: "Detailed laser measurements taken. 4,500 sq ft carpet area confirmed.",
+            AssignedTo: "Amit Verma",
+            Status: "Completed",
+            BillableAmount: 0,
+            NextFollowupDate: "2026-11-06"
+          }
+        ],
+        leads: [
+          { LeadID: "LEAD-1001", CustomerName: "Lodha World One Penthouse", CompanyName: "Lodha World One Penthouse", Mobile: "9820011223", Email: "contact@lodhagroup.com", ProjectType: "Luxury Residential", DealValue: 5500000, Status: "Won", Source: "Client Referral", AssignedTo: "Mehul Gandhi", Notes: "Converted to signed design agreement." },
+          { LeadID: "LEAD-1002", CustomerName: "K Raheja Mindspace Office", CompanyName: "K Raheja Mindspace Office", Mobile: "9833445566", Email: "infra@kraheja.com", ProjectType: "Corporate Office Fitout", DealValue: 9200000, Status: "Site Visit Scheduled", Source: "Exhibition", AssignedTo: "Amit Verma", Notes: "4,500 sqft corporate interior" },
+          { LeadID: "LEAD-1003", CustomerName: "Hiranandani Estate Villa", CompanyName: "Hiranandani Estate Villa", Mobile: "9819876543", Email: "villas@hiranandani.net", ProjectType: "Turnkey Villa Execution", DealValue: 4800000, Status: "Discussion", Source: "Website Lead", AssignedTo: "Karan Mehta", Notes: "Floor plan received, preparing 3D proposal" },
+          { LeadID: "LEAD-1004", CustomerName: "TATA Digital Innovation Hub", CompanyName: "TATA Digital Innovation Hub", Mobile: "9820987654", Email: "projects@tatadigital.com", ProjectType: "Corporate Office Fitout", DealValue: 12000000, Status: "Qualified", Source: "Direct Contact", AssignedTo: "Mehul Gandhi", Notes: "RFP response submitted" },
+          { LeadID: "LEAD-1005", CustomerName: "Zomato Dark Kitchen Hub", CompanyName: "Zomato Dark Kitchen Hub", Mobile: "9811122233", Email: "facilities@zomato.com", ProjectType: "Commercial Kitchen / Food", DealValue: 3200000, Status: "Proposal Sent", Source: "Client Referral", AssignedTo: "Sanjay Sharma", Notes: "Equipment layouts and MEP design under review" }
+        ],
+        leadFollowups: [
+          { FollowupID: "FLP-101", LeadID: "LEAD-1002", FollowupDate: "2026-11-03", DiscussionNotes: "Conducted site measurements. Sent proposal draft for review.", NextFollowupDate: "2026-11-06", Mode: "Site Visit" },
+          { FollowupID: "FLP-102", LeadID: "LEAD-1003", FollowupDate: "2026-11-02", DiscussionNotes: "Discussed interior mood boards and Italian marble specs.", NextFollowupDate: "2026-11-07", Mode: "Call" }
+        ],
+        proposals: [
+          {
+            ProposalID: "PROP-1001",
+            Title: "Turnkey Fitout Proposal - Phoenix HQ 4th Floor",
+            CustomerID: "CUST-1002",
+            ProjectName: "Phoenix One Commercial HQ",
+            ProposalDate: "2026-08-25",
+            ValidityDate: "2026-09-25",
+            Amount: 8500000,
+            Subtotal: 7203389.83,
+            TaxRate: 18,
+            TaxAmount: 1296610.17,
+            GrandTotal: 8500000,
+            Status: "Approved",
+            ScopeOfWork: "Turnkey Civil, MEP, HVAC, Acoustic Partitions, Workstations and Lighting"
+          },
+          {
+            ProposalID: "PROP-1002",
+            Title: "Penthouse Interior Architecture - DLF Horizon",
+            CustomerID: "CUST-1001",
+            ProjectName: "DLF Horizon Luxury Penthouse",
+            ProposalDate: "2026-07-20",
+            ValidityDate: "2026-08-20",
+            Amount: 4500000,
+            Subtotal: 3813559.32,
+            TaxRate: 18,
+            TaxAmount: 686440.68,
+            GrandTotal: 4500000,
+            Status: "Approved",
+            ScopeOfWork: "Luxury marble, bespoke millwork, automation, false ceiling, sanitary fittings"
+          },
+          {
+            ProposalID: "PROP-1003",
+            Title: "Corporate Fitout Proposal - K Raheja Mindspace",
+            LeadID: "LEAD-1002",
+            ProjectName: "K Raheja Mindspace Office",
+            ProposalDate: "2026-11-01",
+            ValidityDate: "2026-12-01",
+            Amount: 9200000,
+            Subtotal: 7796610.17,
+            TaxRate: 18,
+            TaxAmount: 1403389.83,
+            GrandTotal: 9200000,
+            Status: "Sent",
+            ScopeOfWork: "Complete 4500 sqft acoustic office execution"
+          }
+        ],
+        vendors: [
+          { VendorID: "VNDR-1001", VendorName: "CraftWood Millwork Pvt Ltd", ContactPerson: "Ramesh Sharma", Mobile: "9810112233", Email: "orders@craftwood.in", Address: "Kirti Nagar Industrial Area, New Delhi", GSTNumber: "07AAACC1234F1Z8", VendorType: "Modular Woodwork & Veneers", Status: "Active" },
+          { VendorID: "VNDR-1002", VendorName: "Apex Electricals & MEP", ContactPerson: "Kishore Kumar", Mobile: "9820223344", Email: "contact@apexelectricals.com", Address: "Andheri East, Mumbai", GSTNumber: "27AABCA5678G1Z1", VendorType: "MEP & Low Voltage", Status: "Active" },
+          { VendorID: "VNDR-1003", VendorName: "Italian Stoneworks Direct", ContactPerson: "Fabio D'Souza", Mobile: "9830334455", Email: "sales@italianstoneworks.in", Address: "Makrana Road, Kishangarh, Rajasthan", GSTNumber: "08AABCI9012H1Z6", VendorType: "Imported Marble & Tiles", Status: "Active" },
+          { VendorID: "VNDR-1004", VendorName: "GlazeTech Architectural Glass", ContactPerson: "Naveen Gupta", Mobile: "9840445566", Email: "info@glazetech.co.in", Address: "Peenya Industrial Area, Bengaluru", GSTNumber: "29AABCG3456J1Z3", VendorType: "Acoustic Glass Partitions", Status: "Active" },
+          { VendorID: "VNDR-1005", VendorName: "Somany Tiles & Sanitary", ContactPerson: "Deepak Verma", Mobile: "9850556677", Email: "corporate@somanytiles.com", Address: "Connaught Place, New Delhi", GSTNumber: "07AABCS7890K1Z9", VendorType: "Sanitaryware & Bath Fittings", Status: "Active" }
+        ],
+        associates: [
+          { AssociateID: "ASSOC-101", AssociateName: "Studio Dimension 3D", FullName: "Studio Dimension 3D", Specialization: "Photorealistic 3D Rendering & Animations", Mobile: "9899112233", Email: "studio@dimension3d.in", RateType: "Per Render / Project", DefaultRate: 150000, Status: "Active" },
+          { AssociateID: "ASSOC-102", AssociateName: "Apex MEP Consultants", FullName: "Apex MEP Consultants", Specialization: "HVAC & Electrical Design Calculations", Mobile: "9899223344", Email: "consulting@apex-mep.com", RateType: "Lumpsum per Project", DefaultRate: 350000, Status: "Active" },
+          { AssociateID: "ASSOC-103", AssociateName: "Italian Stoneworks Ltd", FullName: "Italian Stoneworks Ltd", Specialization: "Master Italian Marble Laying & Diamond Polishing", Mobile: "9899334455", Email: "specialists@stoneworks.in", RateType: "Per SqFt", DefaultRate: 140, Status: "Active" },
+          { AssociateID: "ASSOC-104", AssociateName: "GlazeTech Systems", FullName: "GlazeTech Systems", Specialization: "Double-Glazed Acoustic Acoustic Partition Installation", Mobile: "9899445566", Email: "projects@glazetech.in", RateType: "Lumpsum per Project", DefaultRate: 850000, Status: "Active" }
+        ],
+        transactions: [
+          { TransactionID: "TXN-1001", ProjectID: "PROJ-1001", TransactionDate: "2026-08-05", Type: "Income", Category: "Milestone Advance", Amount: 1500000, BaseAmount: 1271186.44, GSTRate: 18, GSTType: "CGST+SGST", CGST: 114406.78, SGST: 114406.78, TotalGST: 228813.56, PaymentMode: "Bank Transfer (NEFT/RTGS)", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Milestone 1 Advance receipt" },
+          { TransactionID: "TXN-1002", ProjectID: "PROJ-1001", TransactionDate: "2026-09-20", Type: "Income", Category: "Civil & MEP Stage", Amount: 1200000, BaseAmount: 1016949.15, GSTRate: 18, GSTType: "CGST+SGST", CGST: 91525.42, SGST: 91525.42, TotalGST: 183050.85, PaymentMode: "Bank Transfer (NEFT/RTGS)", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Milestone 2 completion payment" },
+          { TransactionID: "TXN-1003", ProjectID: "PROJ-1001", VendorID: "VNDR-1003", TransactionDate: "2026-10-15", Type: "Expense", Category: "Material - Marble & Stone", Amount: 420000, BaseAmount: 355932.20, GSTRate: 18, GSTType: "CGST+SGST", CGST: 32033.90, SGST: 32033.90, TotalGST: 64067.80, PaymentMode: "Bank Transfer", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Botticino Classico slabs delivery" },
+          { TransactionID: "TXN-1004", ProjectID: "PROJ-1001", AssociateName: "Apex MEP Consultants", TransactionDate: "2026-10-22", Type: "Expense", Category: "Subcontractor / Associate", Amount: 180000, BaseAmount: 152542.37, GSTRate: 18, GSTType: "IGST", IGST: 27457.63, TotalGST: 27457.63, PaymentMode: "Bank Transfer", BankAccount: "ICICI Bank - Operational (Acct *4410)", Status: "Cleared", Remarks: "HVAC plenum and concealed wiring supervision fee" },
+          { TransactionID: "TXN-1005", IsProjectRelated: "No", TransactionDate: "2026-10-01", Type: "Expense", Category: "Office Rent", Amount: 125000, BaseAmount: 105932.20, GSTRate: 18, CGST: 9533.90, SGST: 9533.90, TotalGST: 19067.80, PaymentMode: "Bank Transfer", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Corporate office rent - Sector 44 Gurugram" },
+          { TransactionID: "TXN-1006", IsProjectRelated: "No", TransactionDate: "2026-10-31", Type: "Expense", Category: "Staff Salaries", Amount: 280000, BaseAmount: 280000, GSTRate: 0, TotalGST: 0, PaymentMode: "Bank Transfer", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Staff payroll for October 2026" },
+          { TransactionID: "TXN-1007", ProjectID: "PROJ-1002", TransactionDate: "2026-09-10", Type: "Income", Category: "Mobilization Advance", Amount: 2500000, BaseAmount: 2118644.07, GSTRate: 18, GSTType: "CGST+SGST", CGST: 190677.97, SGST: 190677.97, TotalGST: 381355.93, PaymentMode: "Bank Transfer (NEFT/RTGS)", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Mobilization advance for Phoenix One corporate HQ" },
+          { TransactionID: "TXN-1008", ProjectID: "PROJ-1002", VendorID: "VNDR-1002", TransactionDate: "2026-10-25", Type: "Expense", Category: "MEP & Electrical Materials", Amount: 650000, BaseAmount: 550847.46, GSTRate: 18, TotalGST: 99152.54, PaymentMode: "Bank Transfer", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Armored cables and distribution panels" }
+        ],
+        users: [
+          { UserID: "USR-101", FullName: "Mehul Gandhi", Email: "mehul.gandhi@nexsolve.in", Mobile: "9811223344", RoleID: "Super Admin", Status: "Active", MustChangePassword: "No" },
+          { UserID: "USR-102", FullName: "Karan Mehta", Email: "karan.pm@nexsolve.in", Mobile: "9820112233", RoleID: "Project Manager", Status: "Active", MustChangePassword: "No" },
+          { UserID: "USR-103", FullName: "Sanjay Sharma", Email: "sanjay.site@nexsolve.in", Mobile: "9830112233", RoleID: "Site Engineer", Status: "Active", MustChangePassword: "No" },
+          { UserID: "USR-104", FullName: "Amit Verma", Email: "amit.sales@nexsolve.in", Mobile: "9840112233", RoleID: "Sales Executive", Status: "Active", MustChangePassword: "No" },
+          { UserID: "USR-105", FullName: "Ritu Kapoor", Email: "ritu.accounts@nexsolve.in", Mobile: "9850112233", RoleID: "Finance Officer", Status: "Active", MustChangePassword: "No" }
+        ],
+        rolePermissions: [
+          { RoleID: "Super Admin", Module: "Dashboard", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Customers", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Projects", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "SiteVisits", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Tasks", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Leads", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Proposals", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Vendors", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Associates", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Finance", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Reports", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Users", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Company", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Masters", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
+          { RoleID: "Super Admin", Module: "Help", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true }
+        ],
+        dropdowns: {
+          ProjectType: ["Luxury Residential", "Corporate Office Fitout", "Turnkey Villa Execution", "Retail Flagship Showroom", "Commercial Kitchen / Food", "Hospitality & Restaurant"],
+          ProjectStatus: ["In Progress", "Planning & Design", "On Hold", "Completed", "Cancelled"],
+          TaskPriority: ["Critical", "High", "Medium", "Low"],
+          TaskStatus: ["Pending", "In Progress", "Under Review", "Completed", "Cancelled"],
+          LeadSource: ["Client Referral", "Website Lead", "Exhibition", "Direct Contact", "Architect Partner", "Cold Outreach"],
+          LeadStatus: ["New Inquiry", "Discussion", "Qualified", "Site Visit Scheduled", "Proposal Sent", "Won", "Lost"],
+          ExpenseCategory: ["Material - Marble & Stone", "Material - Woodwork & Veneers", "MEP & Electrical Materials", "Subcontractor / Associate", "Office Rent", "Staff Salaries", "Travel & Fuel", "Software Subscriptions", "Tools & Machinery Rent", "General Overheads"],
+          IncomeCategory: ["Milestone Advance", "Mobilization Advance", "Civil & MEP Stage", "Final Handover Payment", "Consulting Fee"],
+          PaymentMode: ["Bank Transfer (NEFT/RTGS)", "UPI / QR", "Cheque", "Credit Card", "Cash Voucher"],
+          UserRole: ["Super Admin", "Project Manager", "Site Engineer", "Sales Executive", "Finance Officer"]
+        },
+        companySetup: {
+          CompanyName: "NexSolve Architecture & Turnkey Solutions Pvt. Ltd.",
+          OfficialEmail: "mehul.gandhi@nexsolve.in",
+          ContactNumber: "+91 98112 23344",
+          Address: "Plot 42, Institutional Area, Sector 44, Gurugram, Haryana - 122003",
+          PANNumber: "AAACN1234F",
+          GSTNumber: "06AAACN1234F1Z9",
+          Website: "https://nexsolve.in",
+          BankAccounts: [
+            { BankName: "HDFC Bank", AccountNumber: "50200012349821", IFSCCode: "HDFC0000123", Branch: "Sector 44 Gurugram", AccountType: "Current", IsPrimary: true },
+            { BankName: "ICICI Bank", AccountNumber: "002105004410", IFSCCode: "ICIC0000021", Branch: "Cyber City Gurugram", AccountType: "Current", IsPrimary: false },
+            { BankName: "State Bank of India", AccountNumber: "38921100234", IFSCCode: "SBIN0004321", Branch: "Institutional Area", AccountType: "Escrow", IsPrimary: false }
+          ]
+        }
+      };
+    }
+    window.generateEnterpriseDemoData = generateEnterpriseDemoData;
+
+    function isDemoMode() {
+      var k = getActiveLicenseKey();
+      return k.indexOf("DEMO") !== -1 || localStorage.getItem("nexmilestro_is_demo") === "true";
+    }
+    window.isDemoMode = isDemoMode;
+
+    function startDemoMode(roleId) {
+      roleId = roleId || "Super Admin";
+      localStorage.setItem("nexmilestro_license_key", "DEMO-ENTERPRISE-2026");
+      localStorage.setItem("nexmilestro_client_name", "NexSolve Architecture & Turnkey Solutions");
+      localStorage.setItem("nexmilestro_is_demo", "true");
+
+      var demoData = generateEnterpriseDemoData();
+      populateAllCaches(demoData);
+
+      loginDemoRole(roleId);
+      showLicenseGateModal(false);
+      showLockoutModal(false);
+      showLoginOverlay(false);
+      updateHeaderCompanyLogo(demoData.companySetup.LogoUrl);
+      showToast("✨ Interactive Demo Mode Activated! Logged in as " + roleId, "success");
+    }
+    window.startDemoMode = startDemoMode;
+
+    function loginDemoRole(roleId) {
+      roleId = roleId || "Super Admin";
+      var demoData = generateEnterpriseDemoData();
+      var user = demoData.users.find(function(u) { return u.RoleID === roleId; }) || demoData.users[0];
+
+      // Build permissions matrix according to role
+      var permissions = {};
+      var isSuper = (roleId === "Super Admin");
+      var allMods = ["Dashboard", "Customers", "Projects", "Milestones", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Finance", "Reports", "Users", "Company", "Masters", "Help"];
+
+      allMods.forEach(function(mod) {
+        if (isSuper) {
+          permissions[mod] = { view: true, add: true, edit: true, delete: true };
+        } else if (roleId === "Project Manager") {
+          var can = ["Dashboard", "Customers", "Projects", "Milestones", "Tasks", "SiteVisits", "Vendors", "Associates", "Proposals", "Help"].indexOf(mod) !== -1;
+          permissions[mod] = { view: can, add: can, edit: can, delete: false };
+        } else if (roleId === "Site Engineer") {
+          var can = ["Dashboard", "Tasks", "SiteVisits", "Help"].indexOf(mod) !== -1;
+          permissions[mod] = { view: can, add: can, edit: can, delete: false };
+        } else if (roleId === "Sales Executive") {
+          var can = ["Dashboard", "Leads", "Customers", "Proposals", "Help"].indexOf(mod) !== -1;
+          permissions[mod] = { view: can, add: can, edit: can, delete: false };
+        } else if (roleId === "Finance Officer") {
+          var can = ["Dashboard", "Finance", "Reports", "Projects", "Vendors", "Customers", "Help"].indexOf(mod) !== -1;
+          permissions[mod] = { view: can, add: can, edit: can, delete: false };
+        }
+      });
+
+      var authPayload = {
+        success: true,
+        userId: user.UserID,
+        fullName: user.FullName,
+        email: user.Email,
+        mobile: user.Mobile,
+        roleId: user.RoleID,
+        permissions: permissions,
+        mustChangePassword: "No",
+        user: user
+      };
+
+      localStorage.setItem("pm_user", JSON.stringify(authPayload));
+      sessionStorage.removeItem("pm_user");
+
+      // Update Header Demo pill
+      var demoPill = document.getElementById("header-demo-badge");
+      if (demoPill) demoPill.style.display = "inline-flex";
+
+      showLoginOverlay(false);
+      populateSidebarUserProfile();
+      applySidebarPermissions();
+      appRouter.navigate("dashboard");
+      showToast("Switched active role to: " + roleId, "info");
+    }
+    window.loginDemoRole = loginDemoRole;
+
+    function showLockoutModal(show, clientName, licenseKey, reason) {
+      var modal = document.getElementById("license-lockout-modal");
+      if (!modal) return;
+      if (show) {
+        var orgEl = document.getElementById("lockout-client-name");
+        var keyEl = document.getElementById("lockout-license-key");
+        var reasonEl = document.getElementById("lockout-reason-text");
+        var titleEl = document.getElementById("lockout-client-title");
+        var btn = document.getElementById("lockout-contact-btn");
+
+        if (orgEl) orgEl.innerText = clientName || "Organization Account";
+        if (keyEl) keyEl.innerText = licenseKey || "-";
+        if (reasonEl) reasonEl.innerText = reason || "Your organization's license access is currently inactive, expired, or pending renewal. All database operations have been secured and locked.";
+        if (titleEl) titleEl.innerText = (clientName ? (clientName + " - ") : "") + "Access Restricted (Locked)";
+        if (btn) btn.href = "mailto:mehul.gandhi@nexsolve.in?subject=" + encodeURIComponent("NexMilestro License Reactivation - " + (licenseKey || ""));
+        modal.style.display = "flex";
+      } else {
+        modal.style.display = "none";
+      }
+    }
+    window.showLockoutModal = showLockoutModal;
+
+function showLoginOverlay(show) {
       var el = document.getElementById("login-overlay");
       if (el) el.style.display = show ? "flex" : "none";
     }
@@ -1233,6 +1972,11 @@
       var key = (input ? input.value : "").trim().toUpperCase();
       if (!key) return;
 
+      if (key.indexOf("DEMO") !== -1 || key === "TEST" || key === "PREVIEW") {
+        startDemoMode();
+        return;
+      }
+
       var btn = document.getElementById("btn-validate-license");
       var feedback = document.getElementById("license-gate-feedback");
       if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating License...'; }
@@ -1245,17 +1989,25 @@
         localStorage.setItem("nexmilestro_license_key", key);
         if (res.spreadsheetId) localStorage.setItem("nexmilestro_spreadsheet_id", res.spreadsheetId);
         if (res.clientName) localStorage.setItem("nexmilestro_client_name", res.clientName);
+        localStorage.removeItem("nexmilestro_is_demo");
 
         showToast("Connected to Organization: " + (res.clientName || key), "success");
         showLicenseGateModal(false);
+        showLockoutModal(false);
         updateLoginOrgDisplay();
         showLoginOverlay(true);
       } else {
-        if (feedback) {
-          feedback.style.display = "block";
-          feedback.style.background = "#fee2e2";
-          feedback.style.color = "#dc2626";
-          feedback.innerText = res ? (res.error || "License Key invalid or inactive.") : "Validation failed.";
+        var status = (res && res.status) ? String(res.status).toLowerCase() : "";
+        if (status === "expired" || status === "suspended" || status === "inactive" || status === "locked") {
+          showLicenseGateModal(false);
+          showLockoutModal(true, (res ? res.clientName : "") || key, key, res ? res.error : "License expired or suspended.");
+        } else {
+          if (feedback) {
+            feedback.style.display = "block";
+            feedback.style.background = "#fee2e2";
+            feedback.style.color = "#dc2626";
+            feedback.innerText = res ? (res.error || "License Key invalid or not registered.") : "Validation failed.";
+          }
         }
       }
     }
@@ -1600,10 +2352,19 @@
         return;
       }
 
+      if (isDemoMode()) {
+        var demoPill = document.getElementById("header-demo-badge");
+        if (demoPill) demoPill.style.display = "inline-flex";
+        if (!window._dataCache || !window._dataCache.customers || window._dataCache.customers.length === 0) {
+          populateAllCaches(generateEnterpriseDemoData());
+        }
+      }
+
       updateLoginOrgDisplay();
 
       if (isAuthenticated()) {
         showLicenseGateModal(false);
+        showLockoutModal(false);
         showLoginOverlay(false);
         populateSidebarUserProfile();
         applySidebarPermissions();
@@ -1611,9 +2372,12 @@
           updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
         }
         appRouter.navigate("dashboard");
-        preloadAllAppData();
+        if (!isDemoMode()) {
+          preloadAllAppData();
+        }
       } else {
         showLicenseGateModal(false);
+        showLockoutModal(false);
         showLoginOverlay(true);
       }
     });

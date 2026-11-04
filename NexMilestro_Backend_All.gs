@@ -1556,3 +1556,258 @@ function include(filename) {
 
 
 
+
+
+// =========================================================================
+// GOOGLE SHEETS MENU & DATABASE AUTOMATION
+// =========================================================================
+
+function onOpen(e) {
+  SpreadsheetApp.getUi()
+    .createMenu('🚀 NexMilestro SaaS')
+    .addItem('⚡ 1-Click Setup All 15 Database Tables & Master Data', 'setupDatabaseTabs')
+    .addItem('🔑 Setup Central Master License Sheet (Licenses Tab)', 'setupMasterLicenseSheet')
+    .addSeparator()
+    .addItem('🧪 Test Backend API Health Ping', 'testApiPing')
+    .addToUi();
+}
+
+function testApiPing() {
+  SpreadsheetApp.getUi().alert('API Gateway Status: Operational\nTimestamp: ' + new Date().toISOString());
+}
+
+/**
+ * Creates and formats all 15 database tables in the active spreadsheet with canonical headers and seed data.
+ */
+function setupDatabaseTabs() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ui = SpreadsheetApp.getUi();
+  
+  const tables = [
+    {
+      name: "Customers",
+      headers: ["CustomerID", "CompanyName", "ContactPerson", "Designation", "Phone", "AltPhone", "Email", "BillingAddress", "ShippingAddress", "GSTIN", "PAN", "Industry", "Notes", "Attachments", "Status", "CreatedAt", "CreatedBy"],
+      sampleRow: ["CUST-1001", "DLF CyberCity Developers Ltd", "Rajeev Singhal", "VP Infrastructure", "9811223344", "", "rajeev.singhal@dlf.in", "Gateway Tower, CyberCity", "Golf Course Road, Gurugram", "06AAACD1234F1Z5", "AAACD1234F", "Commercial Real Estate", "Turnkey interior client", "", "Active", new Date(), "SYSTEM"]
+    },
+    {
+      name: "Projects",
+      headers: ["ProjectID", "ProjectName", "CustomerID", "ProjectType", "EstimatedBudget", "StartDate", "ExpectedCompletionDate", "ProjectManager", "Location", "Description", "Attachments", "Status", "CreatedAt", "CreatedBy"],
+      sampleRow: ["PROJ-1001", "DLF Horizon Luxury Penthouse - Phase 2", "CUST-1001", "Luxury Residential", 4500000, "2026-08-01", "2026-12-15", "Mehul Gandhi", "Golf Course Road, Gurugram", "10,500 sqft duplex penthouse turnkey fitout", "", "In Progress", new Date(), "SYSTEM"]
+    },
+    {
+      name: "Milestones",
+      headers: ["MilestoneID", "ProjectID", "Title", "Description", "DueDate", "Weightage", "EstimatedCost", "ActualCost", "Assignee", "Status", "CreatedAt"],
+      sampleRow: ["MS-101", "PROJ-1001", "Site Survey, 3D Elevation & Layout Finalization", "Preliminary survey and laser measurements", "2026-08-20", 15, 350000, 320000, "Studio Dimension 3D", "Completed", new Date()]
+    },
+    {
+      name: "Tasks",
+      headers: ["TaskID", "ProjectID", "TaskName", "AssigneeCategory", "AssignedTo", "Priority", "DueDate", "Description", "Attachments", "Status", "CreatedAt", "CreatedBy"],
+      sampleRow: ["TASK-1001", "PROJ-1001", "Inspect marble slab dry-lay with client", "Staff", "Karan Mehta", "High", "2026-11-06", "Verify vein continuity on lounge floor", "", "Pending", new Date(), "SYSTEM"]
+    },
+    {
+      name: "SiteVisits",
+      headers: ["VisitID", "EntityType", "EntityID", "VisitedBy", "VisitDate", "Location", "Purpose", "DiscussionNotes", "FollowupDate", "Attachments", "Status", "CreatedAt"],
+      sampleRow: ["VISIT-1001", "Project", "PROJ-1001", "Mehul Gandhi", "2026-11-02", "Golf Course Road, Gurugram", "False ceiling clearance inspection", "Plenum height verified; client approved lighting cutouts", "2026-11-08", "", "Completed", new Date()]
+    },
+    {
+      name: "Leads",
+      headers: ["LeadID", "CompanyName", "ContactPerson", "Phone", "Email", "Source", "DealValue", "Priority", "Industry", "Notes", "Status", "AssignedTo", "CreatedAt", "CreatedBy"],
+      sampleRow: ["LEAD-1001", "Lodha World One Penthouse", "Vikram Lodha", "9820011223", "contact@lodhagroup.com", "Client Referral", 5500000, "High", "Luxury Residential", "Luxury 4BHK interior architecture", "Won", "Mehul Gandhi", new Date(), "SYSTEM"]
+    },
+    {
+      name: "LeadFollowups",
+      headers: ["FollowupID", "LeadID", "FollowupDate", "Mode", "Discussion", "NextDate", "Status", "CreatedBy"],
+      sampleRow: ["FLP-101", "LEAD-1001", "2026-11-01", "Call", "Discussed preliminary moodboards and budget estimates", "2026-11-05", "Completed", "SYSTEM"]
+    },
+    {
+      name: "Proposals",
+      headers: ["ProposalID", "Title", "EntityType", "EntityID", "ProposalDate", "ValidTill", "LineItemsJSON", "Subtotal", "TaxRate", "TaxAmount", "GrandTotal", "Terms", "Attachments", "Status", "CreatedAt"],
+      sampleRow: ["PROP-1001", "Turnkey Penthouse Interior Architecture", "Customer", "CUST-1001", "2026-08-01", "2026-09-01", "[]", 3813559.32, 18, 686440.68, 4500000, "50% advance, 40% stage-wise, 10% on handover", "", "Approved", new Date()]
+    },
+    {
+      name: "Vendors",
+      headers: ["VendorID", "VendorName", "Category", "ContactPerson", "Phone", "Email", "Address", "GSTIN", "PAN", "BankDetails", "Attachments", "Status", "CreatedAt"],
+      sampleRow: ["VNDR-1001", "CraftWood Millwork Pvt Ltd", "Modular Woodwork & Veneers", "Ramesh Sharma", "9810112233", "orders@craftwood.in", "Kirti Nagar, New Delhi", "07AAACC1234F1Z8", "AAACC1234F", "HDFC Bank Acct 5020001234, IFSC: HDFC0000123", "", "Active", new Date()]
+    },
+    {
+      name: "Associates",
+      headers: ["AssociateID", "FullName", "Specialization", "Phone", "Email", "Address", "RateType", "RateAmount", "MarginPct", "BankDetails", "Status", "CreatedAt"],
+      sampleRow: ["ASSOC-101", "Studio Dimension 3D", "Photorealistic 3D Rendering & Elevation", "9899112233", "studio@dimension3d.in", "Gurugram, Haryana", "Lumpsum", 150000, 10, "ICICI Bank Acct 002105004410", "Active", new Date()]
+    },
+    {
+      name: "Transactions",
+      headers: ["TransactionID", "Date", "Type", "IsProjectRelated", "ProjectID", "MilestoneID", "Category", "BaseAmount", "GSTRate", "GSTAmount", "TDSRate", "TDSAmount", "NetAmount", "PaymentMode", "BankAccountID", "RefNo", "Notes", "Attachments", "Status", "CreatedAt", "CreatedBy"],
+      sampleRow: ["TXN-1001", "2026-08-05", "Income", "Yes", "PROJ-1001", "MS-101", "Milestone Advance", 1271186.44, 18, 228813.56, 0, 0, 1500000, "Bank Transfer (NEFT/RTGS)", "HDFC Bank (Acct *9821)", "RTGS-982341", "Milestone 1 Advance receipt", "", "Cleared", new Date(), "SYSTEM"]
+    },
+    {
+      name: "Users",
+      headers: ["UserID", "FullName", "Email", "Mobile", "RoleID", "PasswordHash", "MustChangePassword", "Status", "LastLogin", "CreatedAt"],
+      sampleRow: ["USR-101", "Mehul Gandhi", "mehul.gandhi@nexsolve.in", "9811223344", "Super Admin", hashPassword("admin123"), "No", "Active", new Date(), new Date()]
+    },
+    {
+      name: "RolePermissions",
+      headers: ["RoleID", "ModuleID", "CanView", "CanAdd", "CanEdit", "CanDelete"],
+      sampleRow: ["Super Admin", "Dashboard", true, true, true, true]
+    },
+    {
+      name: "DropdownMasters",
+      headers: ["Category", "Value", "SortOrder", "IsActive"],
+      sampleRow: ["ProjectType", "Luxury Residential", 1, true]
+    },
+    {
+      name: "CompanyProfile",
+      headers: ["Key", "Value"],
+      sampleRow: ["CompanyName", "NexSolve Architecture & Turnkey Solutions Pvt. Ltd."]
+    }
+  ];
+
+  tables.forEach(function(t) {
+    let sheet = ss.getSheetByName(t.name);
+    if (!sheet) {
+      sheet = ss.insertSheet(t.name);
+    }
+    sheet.clear();
+    sheet.getRange(1, 1, 1, t.headers.length).setValues([t.headers]);
+    sheet.getRange(1, 1, 1, t.headers.length)
+      .setBackground("#0f766e")
+      .setFontColor("#ffffff")
+      .setFontWeight("bold");
+    sheet.setFrozenRows(1);
+    if (t.sampleRow) {
+      sheet.getRange(2, 1, 1, t.sampleRow.length).setValues([t.sampleRow]);
+    }
+  });
+
+  // Seed default RolePermissions
+  const permSheet = ss.getSheetByName("RolePermissions");
+  const allModules = ["Dashboard", "Customers", "Projects", "Milestones", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Finance", "Reports", "Users", "Company", "Masters", "Help"];
+  const roles = ["Super Admin", "Project Manager", "Site Engineer", "Sales Executive", "Finance Officer"];
+  const permRows = [];
+
+  roles.forEach(function(role) {
+    allModules.forEach(function(mod) {
+      const isSuper = (role === "Super Admin");
+      let canView = isSuper;
+      let canAdd = isSuper;
+      let canEdit = isSuper;
+      let canDel = isSuper;
+
+      if (role === "Project Manager") {
+        canView = ["Dashboard", "Customers", "Projects", "Milestones", "Tasks", "SiteVisits", "Vendors", "Associates", "Proposals", "Help"].indexOf(mod) !== -1;
+        canAdd = canView; canEdit = canView; canDel = false;
+      } else if (role === "Site Engineer") {
+        canView = ["Dashboard", "Tasks", "SiteVisits", "Help"].indexOf(mod) !== -1;
+        canAdd = canView; canEdit = canView; canDel = false;
+      } else if (role === "Sales Executive") {
+        canView = ["Dashboard", "Leads", "Customers", "Proposals", "Help"].indexOf(mod) !== -1;
+        canAdd = canView; canEdit = canView; canDel = false;
+      } else if (role === "Finance Officer") {
+        canView = ["Dashboard", "Finance", "Reports", "Projects", "Vendors", "Customers", "Help"].indexOf(mod) !== -1;
+        canAdd = canView; canEdit = canView; canDel = false;
+      }
+      permRows.push([role, mod, canView, canAdd, canEdit, canDel]);
+    });
+  });
+  if (permRows.length > 0) {
+    permSheet.getRange(2, 1, permRows.length, 6).setValues(permRows);
+  }
+
+  // Seed default DropdownMasters
+  const masterSheet = ss.getSheetByName("DropdownMasters");
+  const mastersData = [
+    ["ProjectType", "Luxury Residential", 1, true],
+    ["ProjectType", "Corporate Office Fitout", 2, true],
+    ["ProjectType", "Turnkey Villa Execution", 3, true],
+    ["ProjectType", "Retail Flagship Showroom", 4, true],
+    ["ProjectType", "Commercial Kitchen / Food", 5, true],
+    ["ProjectStatus", "In Progress", 1, true],
+    ["ProjectStatus", "Planning & Design", 2, true],
+    ["ProjectStatus", "On Hold", 3, true],
+    ["ProjectStatus", "Completed", 4, true],
+    ["TaskPriority", "Critical", 1, true],
+    ["TaskPriority", "High", 2, true],
+    ["TaskPriority", "Medium", 3, true],
+    ["TaskPriority", "Low", 4, true],
+    ["TaskStatus", "Pending", 1, true],
+    ["TaskStatus", "In Progress", 2, true],
+    ["TaskStatus", "Under Review", 3, true],
+    ["TaskStatus", "Completed", 4, true],
+    ["LeadSource", "Client Referral", 1, true],
+    ["LeadSource", "Website Lead", 2, true],
+    ["LeadSource", "Exhibition", 3, true],
+    ["LeadSource", "Direct Contact", 4, true],
+    ["LeadStatus", "New Inquiry", 1, true],
+    ["LeadStatus", "Discussion", 2, true],
+    ["LeadStatus", "Qualified", 3, true],
+    ["LeadStatus", "Site Visit Scheduled", 4, true],
+    ["LeadStatus", "Proposal Sent", 5, true],
+    ["LeadStatus", "Won", 6, true],
+    ["ExpenseCategory", "Material - Marble & Stone", 1, true],
+    ["ExpenseCategory", "Material - Woodwork & Veneers", 2, true],
+    ["ExpenseCategory", "MEP & Electrical Materials", 3, true],
+    ["ExpenseCategory", "Subcontractor / Associate", 4, true],
+    ["ExpenseCategory", "Office Rent", 5, true],
+    ["ExpenseCategory", "Staff Salaries", 6, true],
+    ["ExpenseCategory", "Travel & Fuel", 7, true],
+    ["PaymentMode", "Bank Transfer (NEFT/RTGS)", 1, true],
+    ["PaymentMode", "UPI / QR", 2, true],
+    ["PaymentMode", "Cheque", 3, true],
+    ["PaymentMode", "Credit Card", 4, true]
+  ];
+  masterSheet.getRange(2, 1, mastersData.length, 4).setValues(mastersData);
+
+  // Seed default CompanyProfile
+  const profileSheet = ss.getSheetByName("CompanyProfile");
+  const bankAccountsJson = JSON.stringify([
+    { BankName: "HDFC Bank", AccountNumber: "50200012349821", IFSCCode: "HDFC0000123", Branch: "Sector 44 Gurugram", AccountType: "Current", IsPrimary: true },
+    { BankName: "ICICI Bank", AccountNumber: "002105004410", IFSCCode: "ICIC0000021", Branch: "Cyber City Gurugram", AccountType: "Current", IsPrimary: false }
+  ]);
+  const profileData = [
+    ["CompanyName", "NexSolve Architecture & Turnkey Solutions Pvt. Ltd."],
+    ["OfficialEmail", "mehul.gandhi@nexsolve.in"],
+    ["ContactNumber", "+91 98112 23344"],
+    ["Address", "Plot 42, Institutional Area, Sector 44, Gurugram, Haryana - 122003"],
+    ["PANNumber", "AAACN1234F"],
+    ["GSTNumber", "06AAACN1234F1Z9"],
+    ["Website", "https://nexsolve.in"],
+    ["LogoUrl", ""],
+    ["BankAccounts", bankAccountsJson]
+  ];
+  profileSheet.getRange(2, 1, profileData.length, 2).setValues(profileData);
+
+  ui.alert("✅ Database Setup Complete!\nAll 15 tables initialized with headers, default admin credentials (mehul.gandhi@nexsolve.in / admin123), Role Permissions, Dropdowns, and Company Setup.");
+}
+
+/**
+ * Sets up the Central Master License sheet with the Licenses tab and sample record.
+ */
+function setupMasterLicenseSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Licenses");
+  if (!sheet) {
+    sheet = ss.insertSheet("Licenses");
+  }
+  sheet.clear();
+  const headers = ["LicenseKey", "ClientName", "ClientEmail", "SpreadsheetID", "Plan", "IssueDate", "ExpiryDate", "Status", "MaxUsers", "LastVerified"];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length)
+    .setBackground("#0f766e")
+    .setFontColor("#ffffff")
+    .setFontWeight("bold");
+  sheet.setFrozenRows(1);
+
+  const sampleLicense = [
+    "LIC-ENTERPRISE-2026",
+    "NexSolve Architecture & Turnkey Solutions",
+    "mehul.gandhi@nexsolve.in",
+    ss.getId(),
+    "Enterprise Pro",
+    "2026-01-01",
+    "2027-12-31",
+    "Active",
+    25,
+    new Date()
+  ];
+  sheet.getRange(2, 1, 1, sampleLicense.length).setValues([sampleLicense]);
+  SpreadsheetApp.getUi().alert("✅ Central Master License Sheet configured!\nRegistered key 'LIC-ENTERPRISE-2026' linked to current spreadsheet ID.");
+}

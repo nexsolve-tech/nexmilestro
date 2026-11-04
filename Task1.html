@@ -26,10 +26,10 @@
 
   <!-- Kanban Board View -->
   <div class="kanban-board">
-    <!-- Pending Column -->
+    <!-- To Do / Pending Column -->
     <div class="kanban-col">
       <div class="kanban-col-header">
-        <h4 class="kanban-col-title">Pending</h4>
+        <h4 class="kanban-col-title"><i class="fas fa-list" style="color: var(--text-muted); margin-right: 0.35rem;"></i>To Do</h4>
         <span class="kanban-card-count" id="count-pending">0</span>
       </div>
       <div class="kanban-card-list" id="list-pending">
@@ -40,7 +40,7 @@
     <!-- In Progress Column -->
     <div class="kanban-col">
       <div class="kanban-col-header">
-        <h4 class="kanban-col-title">In Progress</h4>
+        <h4 class="kanban-col-title"><i class="fas fa-spinner fa-spin-pulse" style="color: var(--secondary); margin-right: 0.35rem;"></i>In Progress</h4>
         <span class="kanban-card-count" id="count-inprogress">0</span>
       </div>
       <div class="kanban-card-list" id="list-inprogress">
@@ -48,10 +48,21 @@
       </div>
     </div>
 
+    <!-- Under Review Column -->
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <h4 class="kanban-col-title"><i class="fas fa-clipboard-check" style="color: #f59e0b; margin-right: 0.35rem;"></i>Under Review</h4>
+        <span class="kanban-card-count" id="count-underreview">0</span>
+      </div>
+      <div class="kanban-card-list" id="list-underreview">
+        <!-- Rendered tasks go here -->
+      </div>
+    </div>
+
     <!-- Completed Column -->
     <div class="kanban-col">
       <div class="kanban-col-header">
-        <h4 class="kanban-col-title">Completed</h4>
+        <h4 class="kanban-col-title"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 0.35rem;"></i>Completed</h4>
         <span class="kanban-card-count" id="count-completed">0</span>
       </div>
       <div class="kanban-card-list" id="list-completed">
@@ -122,8 +133,9 @@
           <div class="form-group">
             <label class="form-label">Status *</label>
             <select id="task-status" name="Status" class="form-control" onchange="onTaskStatusChange()" required>
-              <option value="Pending">Pending</option>
+              <option value="Pending">To Do / Pending</option>
               <option value="In Progress">In Progress</option>
+              <option value="Under Review">Under Review</option>
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
@@ -319,18 +331,23 @@
     var columns = {
       "Pending": { listEl: document.getElementById("list-pending"), countEl: document.getElementById("count-pending"), items: [] },
       "In Progress": { listEl: document.getElementById("list-inprogress"), countEl: document.getElementById("count-inprogress"), items: [] },
+      "Under Review": { listEl: document.getElementById("list-underreview"), countEl: document.getElementById("count-underreview"), items: [] },
       "Completed": { listEl: document.getElementById("list-completed"), countEl: document.getElementById("count-completed"), items: [] }
     };
     for (var key in columns) {
-      columns[key].listEl.innerHTML = "";
-      columns[key].countEl.innerText = "0";
+      if (columns[key].listEl) columns[key].listEl.innerHTML = "";
+      if (columns[key].countEl) columns[key].countEl.innerText = "0";
     }
     tasks.forEach(function(task) {
       if (task.Status === "Cancelled")
         return;
       var colName = task.Status;
-      if (colName === "Todo" || colName === "Pending")
+      if (colName === "Todo" || colName === "Pending" || colName === "To Do")
         colName = "Pending";
+      else if (colName === "Review" || colName === "Under Review" || colName === "UnderReview")
+        colName = "Under Review";
+      else if (colName === "Done" || colName === "Completed")
+        colName = "Completed";
       if (columns[colName]) {
         columns[colName].items.push(task);
       }
