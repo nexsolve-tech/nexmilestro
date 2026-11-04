@@ -1925,56 +1925,121 @@ textarea.form-control {
   <script type="text/html" id="dashboard-view-template">
     <!-- Dashboard.html -->
 <div class="view-container">
-  <!-- Dashboard Filter Bar -->
-  <div class="filter-bar" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
-      <i class="fas fa-filter" style="color: var(--primary);"></i>
-      <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">Filter Workspace View:</span>
+  <!-- Top Command & Filter Bar -->
+  <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+    <!-- Upper Row: Title & Quick Action Launchpad -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(30, 58, 138, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">Executive Operations Dashboard</h3>
+          <span style="font-size: 0.775rem; color: var(--text-muted);">Real-time performance metrics, milestones, tasks, and financials</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <div class="dropdown" style="position: relative; display: inline-block;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="toggleQuickActionMenu(event)" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.55rem 0.95rem; border-radius: var(--radius-md);">
+            <i class="fas fa-plus-circle"></i> Quick Action <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>
+          </button>
+          <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 5px); background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 220px; z-index: 100; overflow: hidden;">
+            <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
+            <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-building" style="color: var(--success); width: 16px;"></i> + New Customer</a>
+            <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-tasks" style="color: var(--warning); width: 16px;"></i> + New Task</a>
+            <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-map-marker-alt" style="color: var(--secondary); width: 16px;"></i> + Log Site Visit</a>
+            <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-receipt" style="color: var(--danger); width: 16px;"></i> + Book Expense / Income</a>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="refreshCurrentView()" title="Force Refresh Workspace Data" style="padding: 0.55rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;">
+          <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+      </div>
     </div>
-    <div style="display: flex; gap: 0.5rem; align-items: center;">
-      <select id="dash-project-filter" class="select-filter" style="max-width: 280px; min-width: 200px;" onchange="applyDashboardFilter()">
-        <option value="">All Projects</option>
-      </select>
-      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+
+    <!-- Lower Row: Omni-Search & Multi-Filter Controls -->
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+      <!-- Search Input -->
+      <div class="search-input-wrapper" style="flex: 1; min-width: 230px; position: relative;">
+        <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
+        <input type="text" id="dash-search-input" class="search-input" placeholder="Search by Project, Customer, or City..." oninput="applyDashboardFilter()" style="padding-left: 2.5rem; width: 100%;">
+      </div>
+
+      <!-- Customer Filter Dropdown -->
+      <div style="min-width: 180px;">
+        <select id="dash-customer-filter" class="form-control select-filter" onchange="onDashboardCustomerChange()" style="font-weight: 600; font-size: 0.85rem;">
+          <option value="">All Customers</option>
+        </select>
+      </div>
+
+      <!-- Project Filter Dropdown -->
+      <div style="min-width: 180px;">
+        <select id="dash-project-filter" class="form-control select-filter" onchange="applyDashboardFilter()" style="font-weight: 600; font-size: 0.85rem;">
+          <option value="">All Projects</option>
+        </select>
+      </div>
+
+      <!-- Status Filter Dropdown -->
+      <div style="min-width: 140px;">
+        <select id="dash-status-filter" class="form-control select-filter" onchange="applyDashboardFilter()" style="font-weight: 600; font-size: 0.85rem;">
+          <option value="">All Statuses</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Planning">Planning</option>
+          <option value="Under Review">Under Review</option>
+          <option value="On Hold">On Hold</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+
+      <!-- Reset Filters Button -->
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-clear-filter" onclick="clearDashboardFilters()" title="Reset Filters" style="display: none; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--danger);">
+        <i class="fas fa-times-circle"></i> Reset
+      </button>
     </div>
   </div>
 
-  <!-- Dynamic Stats Grid -->
+  <!-- Interactive Stats Grid -->
   <div class="dashboard-grid">
-    <div class="stats-card card-sky">
+    <div class="stats-card card-sky" onclick="appRouter.navigate('projects')" style="cursor: pointer;" title="Click to view all projects">
       <div class="stats-info">
         <span class="stats-label">Active Projects</span>
         <span class="stats-value" id="dash-active-projects">0</span>
+        <span style="font-size: 0.725rem; color: var(--primary); font-weight: 600; margin-top: 0.25rem;">View Projects <i class="fas fa-arrow-right" style="font-size: 0.65rem;"></i></span>
       </div>
       <div class="stats-icon-wrapper">
         <i class="fas fa-folder-open"></i>
       </div>
     </div>
     
-    <div class="stats-card card-emerald">
+    <div class="stats-card card-emerald" onclick="appRouter.navigate('customers')" style="cursor: pointer;" title="Click to view customer directory">
       <div class="stats-info">
         <span class="stats-label">Total Customers</span>
         <span class="stats-value" id="dash-total-customers">0</span>
+        <span style="font-size: 0.725rem; color: #059669; font-weight: 600; margin-top: 0.25rem;">View Directory <i class="fas fa-arrow-right" style="font-size: 0.65rem;"></i></span>
       </div>
       <div class="stats-icon-wrapper">
         <i class="fas fa-users"></i>
       </div>
     </div>
     
-    <div class="stats-card card-amber">
+    <div class="stats-card card-amber" onclick="appRouter.navigate('tasks')" style="cursor: pointer;" title="Click to view tasks kanban board">
       <div class="stats-info">
         <span class="stats-label">Pending Tasks</span>
         <span class="stats-value" id="dash-pending-tasks">0</span>
+        <span style="font-size: 0.725rem; color: #d97706; font-weight: 600; margin-top: 0.25rem;">View Kanban <i class="fas fa-arrow-right" style="font-size: 0.65rem;"></i></span>
       </div>
       <div class="stats-icon-wrapper">
         <i class="fas fa-tasks"></i>
       </div>
     </div>
     
-    <div class="stats-card card-indigo">
+    <div class="stats-card card-indigo" onclick="appRouter.navigate('siteVisits')" style="cursor: pointer;" title="Click to view field site visit logs">
       <div class="stats-info">
         <span class="stats-label">Recent Site Visits</span>
         <span class="stats-value" id="dash-site-visits">0</span>
+        <span style="font-size: 0.725rem; color: #4f46e5; font-weight: 600; margin-top: 0.25rem;">View Field Logs <i class="fas fa-arrow-right" style="font-size: 0.65rem;"></i></span>
       </div>
       <div class="stats-icon-wrapper">
         <i class="fas fa-eye"></i>
@@ -1986,9 +2051,9 @@ textarea.form-control {
   <div class="form-grid" style="margin-top: 1rem;">
     <!-- Recent Projects list -->
     <div class="card">
-      <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 0.5rem;"></i>Active Projects Overview</h3>
-        <button class="btn btn-secondary btn-sm" onclick="appRouter.navigate('projects')">View All</button>
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title" id="dash-projects-card-title"><i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 0.5rem;"></i>Active Projects Overview</h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('projects')">View All Projects</button>
       </div>
       <div class="card-body" style="padding: 0;">
         <div class="table-wrapper" style="border: none; box-shadow: none;">
@@ -1996,15 +2061,17 @@ textarea.form-control {
             <thead>
               <tr>
                 <th>Project Name</th>
+                <th>Customer</th>
                 <th>Type</th>
-                <th>Expected Completion</th>
+                <th>Expected Date</th>
                 <th>Progress (Milestones)</th>
                 <th>Status</th>
+                <th style="text-align: right;">Action</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading projects...</td>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading projects...</td>
               </tr>
             </tbody>
           </table>
@@ -2014,9 +2081,9 @@ textarea.form-control {
 
     <!-- Urgent Tasks checklist -->
     <div class="card">
-      <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
-        <button class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title" id="dash-tasks-card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
       </div>
       <div class="card-body" style="padding: 0;">
         <div class="table-wrapper" style="border: none; box-shadow: none;">
@@ -2027,11 +2094,12 @@ textarea.form-control {
                 <th>Project</th>
                 <th>Due Date</th>
                 <th>Priority</th>
+                <th style="text-align: right;">Action</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
               </tr>
             </tbody>
           </table>
@@ -2111,6 +2179,7 @@ textarea.form-control {
   var rawMilestones = [];
   var rawLeads = [];
   var rawTransactions = [];
+
   window.loadDashboardView = function(forceRefresh) {
     // 0ms instant render from memory cache
     var data = (window._dataCache && window._dataCache.customers && window._dataCache.customers.length > 0)
@@ -2159,100 +2228,282 @@ textarea.form-control {
         }
       }).withFailureHandler(function(err) {
         if (forceRefresh) showLoader(false);
+        console.error("getDashboardData error:", err);
       }).getDashboardData();
     }
   };
 
-  function fetchLegacyDashboardData() {
-    var loadedCount = 0;
-    var totalRequests = 7;
-    function checkCompletion() {
-      loadedCount++;
-      if (loadedCount === totalRequests) {
-        try {
-          populateDashboardFilters();
-          applyDashboardFilter();
-        } catch (e) {
-          showToast("Dashboard Render Error: " + e.message, "error");
-        }
-        showLoader(false);
-      }
+  // Quick Action menu toggle
+  window.toggleQuickActionMenu = function(e) {
+    if (e) e.stopPropagation();
+    var menu = document.getElementById("quick-action-dropdown-menu");
+    if (menu) {
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
     }
-    google.script.run.withSuccessHandler(function(data) { rawCustomers = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getCustomers();
-    google.script.run.withSuccessHandler(function(data) { rawProjects = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getProjects();
-    google.script.run.withSuccessHandler(function(data) { rawTasks = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getTasks();
-    google.script.run.withSuccessHandler(function(data) { rawSiteVisits = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getSiteVisits();
-    google.script.run.withSuccessHandler(function(data) { rawMilestones = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getMilestones();
-    google.script.run.withSuccessHandler(function(data) { rawLeads = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getLeads();
-    google.script.run.withSuccessHandler(function(data) { rawTransactions = data || []; checkCompletion(); }).withFailureHandler(function(err) { checkCompletion(); }).getTransactions();
-  }
+  };
+
+  document.addEventListener("click", function(e) {
+    var menu = document.getElementById("quick-action-dropdown-menu");
+    if (menu && menu.style.display === "block") {
+      menu.style.display = "none";
+    }
+  });
+
+  // Quick Action navigation and modal triggers
+  window.quickActionCreate = function(actionType) {
+    var menu = document.getElementById("quick-action-dropdown-menu");
+    if (menu) menu.style.display = "none";
+
+    if (actionType === "project") {
+      appRouter.navigate("projects");
+      setTimeout(function() {
+        if (typeof openProjectModal === "function") openProjectModal();
+      }, 150);
+    } else if (actionType === "customer") {
+      appRouter.navigate("customers");
+      setTimeout(function() {
+        if (typeof openCustomerModal === "function") openCustomerModal();
+      }, 150);
+    } else if (actionType === "task") {
+      appRouter.navigate("tasks");
+      setTimeout(function() {
+        if (typeof openTaskModal === "function") openTaskModal();
+      }, 150);
+    } else if (actionType === "visit") {
+      appRouter.navigate("siteVisits");
+      setTimeout(function() {
+        if (typeof openSiteVisitModal === "function") openSiteVisitModal();
+      }, 150);
+    } else if (actionType === "expense") {
+      appRouter.navigate("finance");
+      setTimeout(function() {
+        if (typeof openTxnModal === "function") openTxnModal("Expense");
+      }, 150);
+    }
+  };
+
+  // Open Project & Milestones from dashboard table
+  window.openProjectFromDash = function(projectId) {
+    appRouter.navigate("projects");
+    setTimeout(function() {
+      if (typeof openMilestonesModal === "function") {
+        var proj = (rawProjects || []).find(function(p) { return p.ProjectID === projectId; });
+        if (proj) {
+          openMilestonesModal(proj.ProjectID, proj.ProjectName);
+        }
+      }
+    }, 200);
+  };
+
+  // Quick complete a task from dashboard
+  window.quickCompleteTaskFromDash = function(taskId, event) {
+    if (event) event.stopPropagation();
+    if (!confirm("Mark task " + taskId + " as Completed?")) return;
+
+    var tIdx = rawTasks.findIndex(function(t) { return t.TaskID === taskId; });
+    if (tIdx !== -1) {
+      rawTasks[tIdx].Status = "Completed";
+      if (window._dataCache && window._dataCache.tasks) {
+        var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === taskId; });
+        if (cIdx !== -1) window._dataCache.tasks[cIdx].Status = "Completed";
+      }
+      applyDashboardFilter();
+      showToast("Task " + taskId + " marked as Completed!", "success");
+
+      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      var currentUserId = currentUser.userId || currentUser.UserID || "Admin";
+      google.script.run.saveTask({ TaskID: taskId, Status: "Completed" }, null, currentUserId);
+    }
+  };
+
+  // Populate filter dropdowns
   function populateDashboardFilters() {
-    var filter = document.getElementById("dash-project-filter");
-    if (!filter)
-      return;
-    var sortedProjects = rawProjects.slice().sort(function(a, b) {
+    var custFilter = document.getElementById("dash-customer-filter");
+    var projFilter = document.getElementById("dash-project-filter");
+
+    // Populate Customers
+    if (custFilter) {
+      var curCust = custFilter.value;
+      var sortedCust = (rawCustomers || []).slice().sort(function(a, b) {
+        var nameA = a.CompanyFirmName || a.CustomerName || "";
+        var nameB = b.CompanyFirmName || b.CustomerName || "";
+        return nameA.localeCompare(nameB);
+      });
+
+      custFilter.innerHTML = '<option value="">All Customers</option>' + sortedCust.map(function(c) {
+        var name = c.CompanyFirmName || c.CustomerName || c.CustomerID;
+        return '<option value="' + escapeHtml(c.CustomerID) + '">' + escapeHtml(name) + ' (' + escapeHtml(c.CustomerID) + ')</option>';
+      }).join("");
+
+      if (curCust) custFilter.value = curCust;
+    }
+
+    // Populate Projects
+    updateProjectFilterOptions();
+  }
+
+  function updateProjectFilterOptions() {
+    var custFilter = document.getElementById("dash-customer-filter");
+    var projFilter = document.getElementById("dash-project-filter");
+    if (!projFilter) return;
+
+    var selectedCust = custFilter ? custFilter.value : "";
+    var projectsToShow = rawProjects || [];
+    if (selectedCust) {
+      projectsToShow = projectsToShow.filter(function(p) { return p.CustomerID === selectedCust; });
+    }
+
+    var curProj = projFilter.value;
+    var sortedProjects = projectsToShow.slice().sort(function(a, b) {
       return b.ProjectID.localeCompare(a.ProjectID);
     });
-    filter.innerHTML = '<option value="">All Projects</option>' + sortedProjects.map(function(p) {
-      return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), " (").concat(p.ProjectID, ")</option>");
+
+    projFilter.innerHTML = '<option value="">All Projects</option>' + sortedProjects.map(function(p) {
+      return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + ' (' + escapeHtml(p.ProjectID) + ')</option>';
     }).join("");
-  }
-  window.applyDashboardFilter = function() {
-    var selectedProjId = document.getElementById("dash-project-filter").value;
-    var filteredProjects = rawProjects;
-    var filteredTasks = rawTasks;
-    var filteredSiteVisits = rawSiteVisits;
-    var filteredCustomers = rawCustomers;
-    var filteredTransactions = rawTransactions;
-    if (selectedProjId) {
-      filteredProjects = rawProjects.filter(function(p) {
-        return p.ProjectID === selectedProjId;
-      });
-      filteredTasks = rawTasks.filter(function(t) {
-        return t.ProjectID === selectedProjId;
-      });
-      filteredSiteVisits = rawSiteVisits.filter(function(sv) {
-        return sv.ProjectID === selectedProjId;
-      });
-      filteredTransactions = rawTransactions.filter(function(t) {
-        return t.ProjectID === selectedProjId;
-      });
-      var custIds = filteredProjects.map(function(p) {
-        return p.CustomerID;
-      });
-      filteredCustomers = rawCustomers.filter(function(c) {
-        return custIds.indexOf(c.CustomerID) !== -1;
-      });
+
+    if (curProj && projectsToShow.some(function(p) { return p.ProjectID === curProj; })) {
+      projFilter.value = curProj;
     }
+  }
+
+  window.onDashboardCustomerChange = function() {
+    updateProjectFilterOptions();
+    applyDashboardFilter();
+  };
+
+  window.clearDashboardFilters = function() {
+    var sInput = document.getElementById("dash-search-input");
+    var cSelect = document.getElementById("dash-customer-filter");
+    var pSelect = document.getElementById("dash-project-filter");
+    var stSelect = document.getElementById("dash-status-filter");
+
+    if (sInput) sInput.value = "";
+    if (cSelect) cSelect.value = "";
+    if (pSelect) pSelect.value = "";
+    if (stSelect) stSelect.value = "";
+
+    updateProjectFilterOptions();
+    applyDashboardFilter();
+  };
+
+  window.applyDashboardFilter = function() {
+    var searchInput = document.getElementById("dash-search-input");
+    var custFilter = document.getElementById("dash-customer-filter");
+    var projFilter = document.getElementById("dash-project-filter");
+    var statFilter = document.getElementById("dash-status-filter");
+
+    var searchVal = (searchInput ? searchInput.value : "").trim().toLowerCase();
+    var selectedCustId = custFilter ? custFilter.value : "";
+    var selectedProjId = projFilter ? projFilter.value : "";
+    var selectedStatus = statFilter ? statFilter.value : "";
+
+    // Toggle reset button
+    var resetBtn = document.getElementById("btn-dash-clear-filter");
+    if (resetBtn) {
+      resetBtn.style.display = (searchVal || selectedCustId || selectedProjId || selectedStatus) ? "inline-flex" : "none";
+    }
+
+    // Filter projects
+    var filteredProjects = (rawProjects || []).filter(function(p) {
+      var matchCust = !selectedCustId || p.CustomerID === selectedCustId;
+      var matchProj = !selectedProjId || p.ProjectID === selectedProjId;
+      var matchStat = !selectedStatus || (p.Status || "Proposed") === selectedStatus;
+
+      var cust = (rawCustomers || []).find(function(c) { return c.CustomerID === p.CustomerID; });
+      var custName = (cust ? (cust.CompanyFirmName || cust.CustomerName || "") : (p.CustomerName || "")).toLowerCase();
+      var pName = (p.ProjectName || "").toLowerCase();
+      var pCity = (p.SiteLocation || p.City || (cust ? cust.City : "") || "").toLowerCase();
+      var pType = (p.ProjectType || "").toLowerCase();
+      var pId = (p.ProjectID || "").toLowerCase();
+
+      var matchSearch = !searchVal || 
+        pName.indexOf(searchVal) !== -1 || 
+        custName.indexOf(searchVal) !== -1 || 
+        pCity.indexOf(searchVal) !== -1 || 
+        pType.indexOf(searchVal) !== -1 ||
+        pId.indexOf(searchVal) !== -1;
+
+      return matchCust && matchProj && matchStat && matchSearch;
+    });
+
+    var activeProjIds = filteredProjects.map(function(p) { return p.ProjectID; });
+
+    // Filter tasks
+    var filteredTasks = (rawTasks || []).filter(function(t) {
+      var matchProj = (!selectedCustId && !selectedProjId) || activeProjIds.indexOf(t.ProjectID) !== -1;
+      var tName = (t.TaskName || "").toLowerCase();
+      var matchSearch = !searchVal || tName.indexOf(searchVal) !== -1 || activeProjIds.indexOf(t.ProjectID) !== -1;
+      return matchProj && matchSearch;
+    });
+
+    // Filter site visits
+    var filteredSiteVisits = (rawSiteVisits || []).filter(function(sv) {
+      var matchProj = (!selectedCustId && !selectedProjId) || activeProjIds.indexOf(sv.ProjectID) !== -1;
+      var svText = ((sv.EntityName || "") + " " + (sv.SiteAddress || "") + " " + (sv.Purpose || "")).toLowerCase();
+      var matchSearch = !searchVal || svText.indexOf(searchVal) !== -1 || activeProjIds.indexOf(sv.ProjectID) !== -1;
+      return matchProj && matchSearch;
+    });
+
+    // Filter transactions
+    var filteredTransactions = (rawTransactions || []).filter(function(t) {
+      return (!selectedCustId && !selectedProjId) || activeProjIds.indexOf(t.ProjectID) !== -1;
+    });
+
+    // Filter customers
+    var filteredCustomers = (rawCustomers || []).filter(function(c) {
+      if (selectedCustId) return c.CustomerID === selectedCustId;
+      var custProjects = filteredProjects.filter(function(p) { return p.CustomerID === c.CustomerID; });
+      if (selectedProjId || selectedStatus) return custProjects.length > 0;
+      if (!searchVal) return true;
+      var cText = ((c.CompanyFirmName || c.CustomerName || "") + " " + (c.City || "") + " " + (c.CustomerID || "")).toLowerCase();
+      return cText.indexOf(searchVal) !== -1 || custProjects.length > 0;
+    });
+
     renderDashboardWidgets(filteredCustomers, filteredProjects, filteredTasks, filteredSiteVisits, rawMilestones, filteredTransactions);
   };
+
   function renderDashboardWidgets(customers, projects, tasks, siteVisits, milestones, transactions) {
     var activeProjects = projects.filter(function(p) {
       return p.Status !== "Completed" && p.Status !== "Cancelled";
     });
+
     document.getElementById("dash-active-projects").innerText = activeProjects.length;
     document.getElementById("dash-total-customers").innerText = customers.length;
+
     var pendingTasks = tasks.filter(function(t) {
       return t.Status !== "Completed" && t.Status !== "Cancelled";
     });
     document.getElementById("dash-pending-tasks").innerText = pendingTasks.length;
     document.getElementById("dash-site-visits").innerText = siteVisits.length;
+
+    // Active Projects Table
     var projectsTableBody = document.querySelector("#dash-projects-table tbody");
     var activeProjectsSorted = activeProjects.slice().sort(function(a, b) {
       return b.ProjectID.localeCompare(a.ProjectID);
     });
+
+    var pCardTitle = document.getElementById("dash-projects-card-title");
+    if (pCardTitle) {
+      pCardTitle.innerHTML = '<i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 0.5rem;"></i>Active Projects Overview (' + activeProjects.length + ')';
+    }
+
     if (activeProjectsSorted.length === 0) {
-      projectsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active projects.</td></tr>';
+      projectsTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">No matching active projects found.</td></tr>';
     } else {
-      var recentActiveProjects = activeProjectsSorted.slice(0, 5);
+      var recentActiveProjects = activeProjectsSorted.slice(0, 7);
       projectsTableBody.innerHTML = recentActiveProjects.map(function(p) {
         var dateStr = "Not set";
         if (p.ExpectedCompletionDate) {
-          dateStr = formatDate(p.ExpectedCompletionDate);
+          dateStr = typeof formatDate === "function" ? formatDate(p.ExpectedCompletionDate) : p.ExpectedCompletionDate;
         }
         var statusStr = p.Status || "Proposed";
         var statusClass = statusStr.toLowerCase().replace(/\s+/g, "-");
-        var projMs = milestones.filter(function(m) {
+
+        var cust = (rawCustomers || []).find(function(c) { return c.CustomerID === p.CustomerID; });
+        var custName = cust ? (cust.CompanyFirmName || cust.CustomerName || p.CustomerID) : (p.CustomerName || "-");
+
+        var projMs = (milestones || []).filter(function(m) {
           return m.ProjectID === p.ProjectID;
         });
         var total = projMs.length;
@@ -2260,62 +2511,118 @@ textarea.form-control {
           return m.Status === "Completed";
         }).length;
         var pct = total > 0 ? Math.round(completed / total * 100) : 0;
-        var progressBarHtml = '\n          <div style="display:flex; align-items:center; gap:0.5rem; width:120px;">\n            <div style="flex:1; height:8px; background:#e2e8f0; border-radius:10px; overflow:hidden; border: 1px solid var(--border-color);">\n              <div style="height:100%; width:'.concat(pct, "%; background:").concat(pct === 100 ? "var(--success)" : "var(--primary)", '; border-radius:10px;"></div>\n            </div>\n            <span style="font-size:0.7rem; font-weight:600; color:var(--text-main); min-width:24px; text-align:right;">').concat(pct, "%</span>\n          </div>\n        ");
-        return '\n          <tr>\n            <td style="font-weight: 600;">'.concat(escapeHtml(p.ProjectName), "</td>\n            <td>").concat(escapeHtml(p.ProjectType || "General"), "</td>\n            <td>").concat(dateStr, "</td>\n            <td>").concat(progressBarHtml, '</td>\n            <td><span class="badge badge-').concat(statusClass, '">').concat(escapeHtml(statusStr), "</span></td>\n          </tr>\n        ");
+        var progressBarHtml = '\n          <div style="display:flex; align-items:center; gap:0.5rem; width:110px;">\n            <div style="flex:1; height:7px; background:#e2e8f0; border-radius:10px; overflow:hidden; border: 1px solid var(--border-color);">\n              <div style="height:100%; width:' + pct + '%; background:' + (pct === 100 ? "var(--success)" : "var(--primary)") + '; border-radius:10px;"></div>\n            </div>\n            <span style="font-size:0.7rem; font-weight:700; color:var(--text-main); min-width:26px; text-align:right;">' + pct + '%</span>\n          </div>\n        ';
+
+        var pIdEsc = typeof escapeHtml === "function" ? escapeHtml(p.ProjectID) : p.ProjectID;
+        var pNameEsc = typeof escapeHtml === "function" ? escapeHtml(p.ProjectName) : p.ProjectName;
+        var cNameEsc = typeof escapeHtml === "function" ? escapeHtml(custName) : custName;
+        var pTypeEsc = typeof escapeHtml === "function" ? escapeHtml(p.ProjectType || "General") : (p.ProjectType || "General");
+
+        return '<tr>' +
+          '<td>' +
+            '<div style="font-weight: 700; color: var(--text-main);">' + pNameEsc + '</div>' +
+            '<div style="font-size: 0.725rem; font-family: monospace; color: var(--primary);">' + pIdEsc + '</div>' +
+          '</td>' +
+          '<td style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">' + cNameEsc + '</td>' +
+          '<td>' + pTypeEsc + '</td>' +
+          '<td>' + dateStr + '</td>' +
+          '<td>' + progressBarHtml + '</td>' +
+          '<td><span class="badge badge-' + statusClass + '">' + escapeHtml(statusStr) + '</span></td>' +
+          '<td style="text-align: right;">' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="openProjectFromDash(\'' + pIdEsc + '\')" title="Manage Project Milestones & Budget" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;"><i class="fas fa-tasks" style="color: var(--primary);"></i> Milestones</button>' +
+          '</td>' +
+        '</tr>';
       }).join("");
     }
+
+    // Urgent Tasks Table
     var tasksTableBody = document.querySelector("#dash-tasks-table tbody");
     var urgentTasks = tasks.filter(function(t) {
       return t.Priority === "High" && t.Status !== "Completed" && t.Status !== "Cancelled";
     }).sort(function(a, b) {
       return b.TaskID.localeCompare(a.TaskID);
-    }).slice(0, 5);
+    }).slice(0, 7);
+
+    var tCardTitle = document.getElementById("dash-tasks-card-title");
+    if (tCardTitle) {
+      tCardTitle.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks (' + urgentTasks.length + ')';
+    }
+
     if (urgentTasks.length === 0) {
-      tasksTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No urgent high priority tasks.</td></tr>';
+      tasksTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No pending urgent high-priority tasks.</td></tr>';
     } else {
       tasksTableBody.innerHTML = urgentTasks.map(function(t) {
-        var proj = rawProjects.find(function(p) {
+        var proj = (rawProjects || []).find(function(p) {
           return p.ProjectID === t.ProjectID;
         });
-        var projName = proj ? proj.ProjectName : "Unknown Project";
+        var projName = proj ? proj.ProjectName : "General";
         var dueStr = "No date";
         if (t.DueDate) {
-          dueStr = formatDate(t.DueDate);
+          dueStr = typeof formatDate === "function" ? formatDate(t.DueDate) : t.DueDate;
         }
-        return '\n          <tr>\n            <td style="font-weight: 600;">'.concat(escapeHtml(t.TaskName), "</td>\n            <td>").concat(escapeHtml(projName), "</td>\n            <td>").concat(dueStr, '</td>\n            <td><span class="badge priority-').concat(t.Priority.toLowerCase(), '">').concat(escapeHtml(t.Priority), "</span></td>\n          </tr>\n        ");
+
+        var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskID) : t.TaskID;
+        var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskName) : t.TaskName;
+        var projNameEsc = typeof escapeHtml === "function" ? escapeHtml(projName) : projName;
+        var prioEsc = typeof escapeHtml === "function" ? escapeHtml(t.Priority) : t.Priority;
+
+        return '<tr>' +
+          '<td>' +
+            '<div style="font-weight: 600; color: var(--text-main);">' + tNameEsc + '</div>' +
+            '<div style="font-size: 0.725rem; font-family: monospace; color: var(--text-muted);">' + tIdEsc + '</div>' +
+          '</td>' +
+          '<td style="font-size: 0.85rem;">' + projNameEsc + '</td>' +
+          '<td>' + dueStr + '</td>' +
+          '<td><span class="badge priority-' + t.Priority.toLowerCase() + '">' + prioEsc + '</span></td>' +
+          '<td style="text-align: right;">' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="quickCompleteTaskFromDash(\'' + tIdEsc + '\', event)" title="Mark as Completed" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; color: var(--success); display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-check"></i> Done</button>' +
+          '</td>' +
+        '</tr>';
       }).join("");
     }
+
     renderConversionFunnel();
     renderExpenseBreakdown(transactions);
   }
+
   function renderConversionFunnel() {
-    var total = rawLeads.length;
-    var won = rawLeads.filter(function(l) {
+    var total = (rawLeads || []).length;
+    var won = (rawLeads || []).filter(function(l) {
       return l.Status === "Won";
     }).length;
-    var lost = rawLeads.filter(function(l) {
+    var lost = (rawLeads || []).filter(function(l) {
       return l.Status === "Lost";
     }).length;
-    var isNew = rawLeads.filter(function(l) {
+    var isNew = (rawLeads || []).filter(function(l) {
       return l.Status === "New";
     }).length;
     var active = total - (won + lost + isNew);
     var rate = total > 0 ? Math.round(won / total * 100) : 0;
-    document.getElementById("rep-leads-total").innerText = total;
-    document.getElementById("rep-leads-won").innerText = won;
-    document.getElementById("rep-conversion-rate").innerText = rate + "%";
-    document.getElementById("rep-conversion-bar").style.width = rate + "%";
-    document.getElementById("rep-leads-new").innerText = isNew;
-    document.getElementById("rep-leads-active").innerText = active;
-    document.getElementById("rep-leads-lost").innerText = lost;
+
+    var elTotal = document.getElementById("rep-leads-total");
+    var elWon = document.getElementById("rep-leads-won");
+    var elRate = document.getElementById("rep-conversion-rate");
+    var elBar = document.getElementById("rep-conversion-bar");
+    var elNew = document.getElementById("rep-leads-new");
+    var elActive = document.getElementById("rep-leads-active");
+    var elLost = document.getElementById("rep-leads-lost");
+
+    if (elTotal) elTotal.innerText = total;
+    if (elWon) elWon.innerText = won;
+    if (elRate) elRate.innerText = rate + "%";
+    if (elBar) elBar.style.width = rate + "%";
+    if (elNew) elNew.innerText = isNew;
+    if (elActive) elActive.innerText = active;
+    if (elLost) elLost.innerText = lost;
   }
+
   function renderExpenseBreakdown(transactions) {
     var listContainer = document.getElementById("rep-expense-distribution-list");
-    if (!listContainer)
-      return;
+    if (!listContainer) return;
+
     var categories = {};
     var grandTotalExpense = 0;
-    transactions.forEach(function(t) {
+    (transactions || []).forEach(function(t) {
       if (t.Type === "Expense") {
         var amt = parseFloat(t.Amount) || 0;
         var cat = t.Category || "Other";
@@ -2323,16 +2630,20 @@ textarea.form-control {
         grandTotalExpense += amt;
       }
     });
+
     if (grandTotalExpense === 0) {
       listContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No expense records logged in the database yet.</p>';
       return;
     }
+
     var fmt = function(val) {
-      return formatCurrency(val);
+      return typeof formatCurrency === "function" ? formatCurrency(val) : ("₹" + val.toFixed(2));
     };
+
     var sortedCats = Object.keys(categories).sort(function(a, b) {
       return categories[b] - categories[a];
     });
+
     var catColors = {
       "Material Purchase": "linear-gradient(135deg, #e11d48, #be123c)",
       "Labor Wages": "linear-gradient(135deg, #d97706, #b45309)",
@@ -2341,15 +2652,25 @@ textarea.form-control {
       "Travel": "linear-gradient(135deg, #0d9488, #0f766e)",
       "Other": "linear-gradient(135deg, #64748b, #475569)"
     };
+
     listContainer.innerHTML = sortedCats.map(function(cat) {
       var amt = categories[cat];
       var pct = Math.round(amt / grandTotalExpense * 100);
       var bgStyle = catColors[cat] || "linear-gradient(135deg, var(--primary-light), var(--primary))";
-      return '\n        <div>\n          <div style="display:flex; justify-content:space-between; font-size:0.825rem; font-weight:600; margin-bottom:0.35rem;">\n            <span><i class="fas fa-tag" style="margin-right:0.35rem; color:var(--text-muted);"></i>'.concat(escapeHtml(cat), '</span>\n            <span style="color:var(--text-main); font-family:monospace;">').concat(fmt(amt), " (").concat(pct, '%)</span>\n          </div>\n          <div style="height:10px; background:#f1f5f9; border-radius:10px; overflow:hidden;">\n            <div style="height:100%; width:').concat(pct, "%; background:").concat(bgStyle, '; border-radius:10px; transition: width 0.6s ease-in-out;"></div>\n          </div>\n        </div>\n      ');
+      var catEsc = typeof escapeHtml === "function" ? escapeHtml(cat) : cat;
+
+      return '<div>' +
+        '<div style="display:flex; justify-content:space-between; font-size:0.825rem; font-weight:600; margin-bottom:0.35rem;">' +
+          '<span><i class="fas fa-tag" style="margin-right:0.35rem; color:var(--text-muted);"></i>' + catEsc + '</span>' +
+          '<span style="color:var(--text-main); font-family:monospace;">' + fmt(amt) + ' (' + pct + '%)</span>' +
+        '</div>' +
+        '<div style="height:10px; background:#f1f5f9; border-radius:10px; overflow:hidden;">' +
+          '<div style="height:100%; width:' + pct + '%; background:' + bgStyle + '; border-radius:10px; transition: width 0.6s ease-in-out;"></div>' +
+        '</div>' +
+      '</div>';
     }).join("");
   }
 })();
-
 </script>
 
   </script>
