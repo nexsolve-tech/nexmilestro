@@ -319,15 +319,19 @@
     showLoader(true);
     var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var roleStr = String(currentUser.roleId || currentUser.RoleID || currentUser.role || currentUser.Role || "");
-    var isSuperAdmin = (roleStr === "Super Admin" || roleStr === "Admin" || roleStr === "Administrator");
+    var roleNorm = roleStr.toLowerCase().replace(/[\s_-]+/g, "");
+    var isSuperAdmin = (
+      roleNorm === "superadmin" ||
+      roleNorm === "admin" ||
+      roleNorm === "administrator" ||
+      roleNorm === "owner" ||
+      roleNorm === "director" ||
+      roleNorm.indexOf("admin") !== -1 ||
+      (currentUser.permissions && currentUser.permissions.Users && currentUser.permissions.Users.view)
+    );
     var permsTabBtn = document.getElementById("tab-btn-perms");
-    if (isSuperAdmin) {
-      if (permsTabBtn)
-        permsTabBtn.style.display = "inline-block";
-    } else {
-      if (permsTabBtn)
-        permsTabBtn.style.display = "none";
-      switchUserSubTab("users");
+    if (permsTabBtn) {
+      permsTabBtn.style.display = "inline-block";
     }
 
     var adminPanel = document.getElementById("license-admin-panel");
@@ -605,13 +609,18 @@
       usersBtn.style.fontWeight = "600";
       usersView.style.display = "none";
       permsView.style.display = "block";
+      populateRolesFromCache();
       loadRolePermissionsGrid();
     }
   };
   var activeRolePermissionsList = [];
   function loadRolePermissionsGrid() {
-    var roleId = document.getElementById("perm-role-select").value;
-    showLoader(true);
+    var selectEl = document.getElementById("perm-role-select");
+    if (!selectEl || !selectEl.value) {
+      populateRolesFromCache();
+    }
+    var roleId = (selectEl && selectEl.value) ? selectEl.value : "Project Manager";
+    showLoader(true, "Loading role permissions...");
     google.script.run.withSuccessHandler(function(data) {
       showLoader(false);
       activeRolePermissionsList = data || [];
@@ -876,24 +885,32 @@
     }).saveUserPermissions(activeUserPermsTargetId, permissionsList, isOverridden, currentUserId);
   }
   function populateRolesFromCache() {
-    var roles = dropdownsCache["UserRole"] || [];
+    var rawRoles = dropdownsCache["UserRole"] || (window._dataCache && window._dataCache.dropdowns && window._dataCache.dropdowns.UserRole) || [];
+    var defaultRoles = ["Super Admin", "Project Manager", "Site Engineer", "Sales Executive", "Finance Officer", "Auditor"];
+    var roles = (Array.isArray(rawRoles) && rawRoles.length > 0) ? rawRoles.slice() : defaultRoles;
+    if (!roles.includes("Super Admin")) roles.unshift("Super Admin");
+
     var roleSelect = document.getElementById("user-role");
     var permRoleSelect = document.getElementById("perm-role-select");
-    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
-    var userRoleIdStr = currentUser.roleId || currentUser.RoleID || currentUser.role || currentUser.Role || "";
+    
     var html = roles.map(function(r) {
-      return '<option value="'.concat(r, '">').concat(escapeHtml(r), "</option>");
+      return '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>';
     }).join("");
+
     if (roleSelect) {
+      var curVal = roleSelect.value;
       roleSelect.innerHTML = html;
-      if (userRoleIdStr === "Super Admin" || userRoleIdStr === "Admin" || userRoleIdStr === "Administrator") {
-        roleSelect.innerHTML += '<option value="Super Admin">Super Admin</option>';
-      }
+      if (curVal && roles.includes(curVal)) roleSelect.value = curVal;
     }
+
     if (permRoleSelect) {
+      var prevPermRole = permRoleSelect.value;
       permRoleSelect.innerHTML = html;
-      if (currentUser.roleId === "Super Admin") {
-        permRoleSelect.innerHTML += '<option value="Super Admin">Super Admin</option>';
+      if (prevPermRole && roles.includes(prevPermRole)) {
+        permRoleSelect.value = prevPermRole;
+      } else {
+        var nonSuper = roles.find(function(r) { return r !== "Super Admin"; });
+        permRoleSelect.value = nonSuper || roles[0];
       }
     }
   }

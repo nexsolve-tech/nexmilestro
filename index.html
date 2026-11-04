@@ -1705,14 +1705,6 @@ textarea.form-control {
         <button type="submit" id="btn-validate-license" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-weight: 700; font-size: 0.95rem; justify-content: center;">
           <i class="fas fa-shield-check"></i> Connect Database
         </button>
-
-        <!-- Evaluator Demo Preview Option -->
-        <div style="margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1.25rem;">
-          <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.6rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Prospective Client & Commercial Evaluator Preview</div>
-          <button type="button" class="btn" onclick="startDemoMode()" style="width: 100%; padding: 0.85rem; font-weight: 700; font-size: 0.925rem; background: linear-gradient(135deg, #0f766e, #0284c7); color: #fff; border: none; border-radius: 10px; justify-content: center; box-shadow: 0 4px 14px rgba(15,118,110,0.25);">
-            <i class="fas fa-bolt"></i> ✨ Explore Live Interactive Demo (Instant Access)
-          </button>
-        </div>
       </form>
 
       <div id="license-gate-feedback" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;"></div>
@@ -1792,18 +1784,7 @@ textarea.form-control {
         
         <button type="submit" class="btn-login-submit" style="width: 100%;">Access Account</button>
 
-        <!-- Fast Role Testing for Prospective Evaluators -->
-        <div style="margin-top: 1.25rem; border-top: 1px dashed var(--border-color); padding-top: 1rem; text-align: center;">
-          <span style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">1-Click Role Testing (Live Evaluator)</span>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="loginDemoRole('Super Admin')" style="font-size: 0.75rem; padding: 0.4rem; justify-content: center; font-weight: 600;"><i class="fas fa-shield-alt" style="color: var(--primary);"></i> Super Admin</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="loginDemoRole('Project Manager')" style="font-size: 0.75rem; padding: 0.4rem; justify-content: center; font-weight: 600;"><i class="fas fa-hard-hat" style="color: #f59e0b;"></i> Project Mgr</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="loginDemoRole('Site Engineer')" style="font-size: 0.75rem; padding: 0.4rem; justify-content: center; font-weight: 600;"><i class="fas fa-eye" style="color: #0284c7;"></i> Site Engineer</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="loginDemoRole('Sales Executive')" style="font-size: 0.75rem; padding: 0.4rem; justify-content: center; font-weight: 600;"><i class="fas fa-bullseye" style="color: #10b981;"></i> Sales Lead</button>
-          </div>
-        </div>
-
-        <div style="text-align: center; margin-top: 1rem;">
+        <div style="text-align: center; margin-top: 1.25rem;">
           <a href="#" onclick="openLicenseGateModalManual(); event.preventDefault();" style="font-size: 0.775rem; color: var(--text-muted); text-decoration: none; font-weight: 600;">
             <i class="fas fa-exchange-alt"></i> Switch Organization / License Key
           </a>
@@ -1922,6 +1903,7 @@ textarea.form-control {
   
   <div class="global-loader" id="global-loader">
     <div class="spinner"></div>
+    <div id="global-loader-text" style="color: #ffffff; font-weight: 600; font-size: 0.95rem; margin-top: 1rem; text-align: center; letter-spacing: 0.3px;">Loading...</div>
   </div>
 
   <!-- ==================== UNIVERSAL CUSTOM CONFIRMATION MODAL ==================== -->
@@ -9043,15 +9025,19 @@ textarea.form-control {
     showLoader(true);
     var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var roleStr = String(currentUser.roleId || currentUser.RoleID || currentUser.role || currentUser.Role || "");
-    var isSuperAdmin = (roleStr === "Super Admin" || roleStr === "Admin" || roleStr === "Administrator");
+    var roleNorm = roleStr.toLowerCase().replace(/[\s_-]+/g, "");
+    var isSuperAdmin = (
+      roleNorm === "superadmin" ||
+      roleNorm === "admin" ||
+      roleNorm === "administrator" ||
+      roleNorm === "owner" ||
+      roleNorm === "director" ||
+      roleNorm.indexOf("admin") !== -1 ||
+      (currentUser.permissions && currentUser.permissions.Users && currentUser.permissions.Users.view)
+    );
     var permsTabBtn = document.getElementById("tab-btn-perms");
-    if (isSuperAdmin) {
-      if (permsTabBtn)
-        permsTabBtn.style.display = "inline-block";
-    } else {
-      if (permsTabBtn)
-        permsTabBtn.style.display = "none";
-      switchUserSubTab("users");
+    if (permsTabBtn) {
+      permsTabBtn.style.display = "inline-block";
     }
 
     var adminPanel = document.getElementById("license-admin-panel");
@@ -9329,13 +9315,18 @@ textarea.form-control {
       usersBtn.style.fontWeight = "600";
       usersView.style.display = "none";
       permsView.style.display = "block";
+      populateRolesFromCache();
       loadRolePermissionsGrid();
     }
   };
   var activeRolePermissionsList = [];
   function loadRolePermissionsGrid() {
-    var roleId = document.getElementById("perm-role-select").value;
-    showLoader(true);
+    var selectEl = document.getElementById("perm-role-select");
+    if (!selectEl || !selectEl.value) {
+      populateRolesFromCache();
+    }
+    var roleId = (selectEl && selectEl.value) ? selectEl.value : "Project Manager";
+    showLoader(true, "Loading role permissions...");
     google.script.run.withSuccessHandler(function(data) {
       showLoader(false);
       activeRolePermissionsList = data || [];
@@ -9600,24 +9591,32 @@ textarea.form-control {
     }).saveUserPermissions(activeUserPermsTargetId, permissionsList, isOverridden, currentUserId);
   }
   function populateRolesFromCache() {
-    var roles = dropdownsCache["UserRole"] || [];
+    var rawRoles = dropdownsCache["UserRole"] || (window._dataCache && window._dataCache.dropdowns && window._dataCache.dropdowns.UserRole) || [];
+    var defaultRoles = ["Super Admin", "Project Manager", "Site Engineer", "Sales Executive", "Finance Officer", "Auditor"];
+    var roles = (Array.isArray(rawRoles) && rawRoles.length > 0) ? rawRoles.slice() : defaultRoles;
+    if (!roles.includes("Super Admin")) roles.unshift("Super Admin");
+
     var roleSelect = document.getElementById("user-role");
     var permRoleSelect = document.getElementById("perm-role-select");
-    var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
-    var userRoleIdStr = currentUser.roleId || currentUser.RoleID || currentUser.role || currentUser.Role || "";
+    
     var html = roles.map(function(r) {
-      return '<option value="'.concat(r, '">').concat(escapeHtml(r), "</option>");
+      return '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>';
     }).join("");
+
     if (roleSelect) {
+      var curVal = roleSelect.value;
       roleSelect.innerHTML = html;
-      if (userRoleIdStr === "Super Admin" || userRoleIdStr === "Admin" || userRoleIdStr === "Administrator") {
-        roleSelect.innerHTML += '<option value="Super Admin">Super Admin</option>';
-      }
+      if (curVal && roles.includes(curVal)) roleSelect.value = curVal;
     }
+
     if (permRoleSelect) {
+      var prevPermRole = permRoleSelect.value;
       permRoleSelect.innerHTML = html;
-      if (currentUser.roleId === "Super Admin") {
-        permRoleSelect.innerHTML += '<option value="Super Admin">Super Admin</option>';
+      if (prevPermRole && roles.includes(prevPermRole)) {
+        permRoleSelect.value = prevPermRole;
+      } else {
+        var nonSuper = roles.find(function(r) { return r !== "Super Admin"; });
+        permRoleSelect.value = nonSuper || roles[0];
       }
     }
   }
@@ -12663,6 +12662,139 @@ document.addEventListener("click", function() {
         return;
       }
 
+      if (fnName === "getRolePermissions") {
+        var reqRoleId = args[0] || (document.getElementById("perm-role-select") ? document.getElementById("perm-role-select").value : "");
+        var cachedPerms = (window._dataCache && window._dataCache.rolePermissions) || [];
+        var rolePerms = cachedPerms.filter(function(r) { return r.RoleID === reqRoleId; });
+        if (rolePerms.length === 0) {
+          var stdModules = [
+            { key: "Dashboard", name: "Dashboard & Home" },
+            { key: "Customers", name: "Customers Profile Directory" },
+            { key: "Projects", name: "Projects & Blueprint Tracker" },
+            { key: "SiteVisits", name: "Site visits Logs & Uploads" },
+            { key: "Tasks", name: "Task Kanban Board" },
+            { key: "Leads", name: "Leads pipeline & Follow-ups" },
+            { key: "Proposals", name: "Proposals & Estimates" },
+            { key: "Vendors", name: "Vendor & Contractor Directory" },
+            { key: "Finance", name: "Income & Expense Booking" },
+            { key: "Reports", name: "Financial & Margins Reports" },
+            { key: "Users", name: "Users Accounts & Staff Security" },
+            { key: "Masters", name: "Dropdown Values (Masters)" }
+          ];
+          var isSuper = (reqRoleId === "Super Admin" || reqRoleId === "Admin" || reqRoleId === "Administrator");
+          var isFinance = (reqRoleId.indexOf("Finance") !== -1 || reqRoleId.indexOf("Account") !== -1);
+          var isSales = (reqRoleId.indexOf("Sales") !== -1 || reqRoleId.indexOf("Lead") !== -1);
+          var isSite = (reqRoleId.indexOf("Site") !== -1 || reqRoleId.indexOf("Field") !== -1);
+
+          rolePerms = stdModules.map(function(m) {
+            var canView = isSuper;
+            var canAdd = isSuper;
+            var canEdit = isSuper;
+            var canDelete = isSuper;
+
+            if (!isSuper) {
+              if (m.key === "Dashboard") { canView = true; }
+              else if (m.key === "Projects" || m.key === "Tasks") { canView = true; canAdd = true; canEdit = true; }
+              else if (m.key === "Customers") { canView = true; canAdd = true; canEdit = true; }
+              else if (m.key === "SiteVisits") { canView = true; canAdd = true; canEdit = true; }
+              else if (m.key === "Leads" || m.key === "Proposals") { canView = isSales || !isSite; canAdd = isSales || !isSite; canEdit = isSales || !isSite; }
+              else if (m.key === "Finance" || m.key === "Reports") { canView = isFinance; canAdd = isFinance; canEdit = isFinance; }
+              else if (m.key === "Vendors") { canView = true; canAdd = !isSales; canEdit = !isSales; }
+              else if (m.key === "Users" || m.key === "Masters") { canView = false; canAdd = false; canEdit = false; }
+            }
+
+            return {
+              RoleID: reqRoleId,
+              Module: m.key,
+              CanView: canView,
+              CanAdd: canAdd,
+              CanEdit: canEdit,
+              CanDelete: canDelete
+            };
+          });
+        }
+        successCb(rolePerms);
+        return;
+      }
+
+      if (fnName === "getUserPermissions") {
+        var reqUserId = args[0];
+        var cachedUserPerms = (window._dataCache && window._dataCache.userPermissions) || [];
+        var userPerms = cachedUserPerms.filter(function(u) { return u.UserID === reqUserId; });
+        successCb(userPerms);
+        return;
+      }
+
+      if (fnName === "saveRolePermissions") {
+        var sRoleId = args[0];
+        var sPerms = args[1];
+        var cUserId = args[2] || userId;
+
+        window._dataCache.rolePermissions = window._dataCache.rolePermissions || [];
+        window._dataCache.rolePermissions = window._dataCache.rolePermissions.filter(function(r) { return r.RoleID !== sRoleId; });
+        var pList = Array.isArray(sPerms) ? sPerms : Object.keys(sPerms || {}).map(function(k) { return Object.assign({ Module: k }, sPerms[k]); });
+        pList.forEach(function(p) {
+          window._dataCache.rolePermissions.push({
+            RoleID: sRoleId,
+            Module: p.Module,
+            CanView: p.CanView === true || p.view === true || String(p.CanView).toUpperCase() === "TRUE",
+            CanAdd: p.CanAdd === true || p.add === true || String(p.CanAdd).toUpperCase() === "TRUE",
+            CanEdit: p.CanEdit === true || p.edit === true || String(p.CanEdit).toUpperCase() === "TRUE",
+            CanDelete: p.CanDelete === true || p.del === true || String(p.CanDelete).toUpperCase() === "TRUE"
+          });
+        });
+
+        if (isDemoMode()) {
+          successCb({ success: true, message: "Role permissions saved successfully (Demo)." });
+          return;
+        }
+
+        var saveRoleRes = await apiCall("save_role_permissions", {
+          roleId: sRoleId,
+          permissions: pList,
+          userId: cUserId
+        });
+        successCb(saveRoleRes && saveRoleRes.success !== false ? saveRoleRes : { success: true, message: "Role permissions saved successfully." });
+        return;
+      }
+
+      if (fnName === "saveUserPermissions") {
+        var suUserId = args[0];
+        var suPerms = args[1];
+        var suIsOver = args[2];
+        var suCUserId = args[3] || userId;
+
+        window._dataCache.userPermissions = window._dataCache.userPermissions || [];
+        window._dataCache.userPermissions = window._dataCache.userPermissions.filter(function(u) { return u.UserID !== suUserId; });
+        if (suIsOver) {
+          var upList = Array.isArray(suPerms) ? suPerms : Object.keys(suPerms || {}).map(function(k) { return Object.assign({ Module: k }, suPerms[k]); });
+          upList.forEach(function(p) {
+            window._dataCache.userPermissions.push({
+              UserID: suUserId,
+              Module: p.Module,
+              CanView: p.CanView === true || p.view === true || String(p.CanView).toUpperCase() === "TRUE",
+              CanAdd: p.CanAdd === true || p.add === true || String(p.CanAdd).toUpperCase() === "TRUE",
+              CanEdit: p.CanEdit === true || p.edit === true || String(p.CanEdit).toUpperCase() === "TRUE",
+              CanDelete: p.CanDelete === true || p.del === true || String(p.CanDelete).toUpperCase() === "TRUE"
+            });
+          });
+        }
+
+        if (isDemoMode()) {
+          successCb({ success: true, message: suIsOver ? "User custom permissions saved (Demo)." : "User overrides cleared (Demo)." });
+          return;
+        }
+
+        var saveUserRes = await apiCall("save_user_permissions", {
+          targetUserId: suUserId,
+          permissions: suPerms,
+          isOverridden: suIsOver,
+          userId: suCUserId
+        });
+        successCb(saveUserRes && saveUserRes.success !== false ? saveUserRes : { success: true, message: suIsOver ? "User custom permissions saved." : "User overrides cleared." });
+        return;
+      }
+
       // 3. MUTATION OPERATIONS (Dispatched to Google Apps Script Backend)
       var actionMap = {
         saveCustomer: "save_customer",
@@ -13485,9 +13617,8 @@ function showLoginOverlay(show) {
       var pass = document.getElementById("login-password").value;
       var remember = document.getElementById("login-remember-me").checked;
 
-      showLoader(true);
+      showLoader(true, "Authenticating user credentials...");
       google.script.run.withSuccessHandler(function(response) {
-        showLoader(false);
         if (response && response.success) {
           if (remember) {
             localStorage.setItem("pm_user", JSON.stringify(response));
@@ -13496,18 +13627,27 @@ function showLoginOverlay(show) {
             sessionStorage.setItem("pm_user", JSON.stringify(response));
             localStorage.removeItem("pm_user");
           }
-          showLoginOverlay(false);
-          populateSidebarUserProfile();
-          applySidebarPermissions();
 
-          if (response.mustChangePassword === "Yes" || response.mustChangePassword === true) {
-            showPasswordResetModal(true);
-          } else {
-            appRouter.navigate("dashboard");
-            showToast("Welcome back, " + (response.fullName || "User") + "!", "success");
-            preloadAllAppData();
-          }
+          showLoader(true, "Synchronizing workspace data & database tables...");
+          preloadAllAppData(function() {
+            showLoader(false);
+            showLoginOverlay(false);
+            populateSidebarUserProfile();
+            applySidebarPermissions();
+
+            if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
+              updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
+            }
+
+            if (response.mustChangePassword === "Yes" || response.mustChangePassword === true) {
+              showPasswordResetModal(true);
+            } else {
+              appRouter.navigate("dashboard");
+              showToast("Welcome back, " + (response.fullName || "User") + "!", "success");
+            }
+          });
         } else {
+          showLoader(false);
           showToast(response ? response.message : "Invalid credentials", "error");
         }
       }).withFailureHandler(function(err) {
@@ -13671,11 +13811,16 @@ function showLoginOverlay(show) {
     }
     window.showToast = showToast;
 
-    function showLoader(show) {
+    function showLoader(show, message) {
       var loader = document.getElementById("global-loader");
+      var textEl = document.getElementById("global-loader-text");
       if (loader) {
-        if (show) loader.classList.add("show");
-        else loader.classList.remove("show");
+        if (show) {
+          if (textEl) textEl.innerText = message || "Loading workspace data...";
+          loader.classList.add("show");
+        } else {
+          loader.classList.remove("show");
+        }
       }
     }
     window.showLoader = showLoader;
@@ -13822,15 +13967,29 @@ function showLoginOverlay(show) {
       if (isAuthenticated()) {
         showLicenseGateModal(false);
         showLockoutModal(false);
-        showLoginOverlay(false);
         populateSidebarUserProfile();
         applySidebarPermissions();
         if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
           updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
         }
-        appRouter.navigate("dashboard");
-        if (!isDemoMode()) {
-          preloadAllAppData();
+
+        var hasCachedData = window._dataCache && window._dataCache.customers && window._dataCache.customers.length > 0;
+        if (hasCachedData) {
+          showLoginOverlay(false);
+          appRouter.navigate("dashboard");
+          if (!isDemoMode()) {
+            preloadAllAppData();
+          }
+        } else {
+          showLoader(true, "Restoring workspace data...");
+          preloadAllAppData(function() {
+            showLoader(false);
+            showLoginOverlay(false);
+            if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
+              updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
+            }
+            appRouter.navigate("dashboard");
+          });
         }
       } else {
         showLicenseGateModal(false);

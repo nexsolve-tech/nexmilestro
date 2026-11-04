@@ -615,6 +615,7 @@ function getInitialAppData(licenseKey, userId, role) {
     const transactions = sheetToObjects(ensureSheetWithHeaders(ss, "Transactions"));
     const mastersRaw = sheetToObjects(ensureSheetWithHeaders(ss, "Masters"));
     const rolePermissions = sheetToObjects(ensureSheetWithHeaders(ss, "RolePermissions"));
+    const userPermissions = sheetToObjects(ensureSheetWithHeaders(ss, "UserPermissions"));
     const companyRows = sheetToObjects(ensureSheetWithHeaders(ss, "CompanySetup"));
 
     // Map Masters sheet to clean Dropdowns object: { ProjectType: [...], Status: [...] }
@@ -674,7 +675,8 @@ function getInitialAppData(licenseKey, userId, role) {
       milestones: milestones,
       transactions: transactions,
       dropdowns: dropdowns,
-      rolePermissions: rolePermissions
+      rolePermissions: rolePermissions,
+      userPermissions: userPermissions
     };
 
   } catch (err) {
@@ -1228,20 +1230,72 @@ function saveRolePermissions(licenseKey, roleId, permissions, userId) {
     const permSheet = ensureSheetWithHeaders(ss, "RolePermissions");
     const existing = sheetToObjects(permSheet);
 
-    for (const mod in permissions) {
-      const p = permissions[mod];
+    const permArray = Array.isArray(permissions) ? permissions : Object.keys(permissions || {}).map(k => Object.assign({ Module: k }, permissions[k]));
+
+    for (const p of permArray) {
+      const mod = p.Module;
+      if (!mod) continue;
       const match = existing.find(r => r.RoleID === roleId && r.Module === mod);
       const permObj = {
         RoleID: roleId,
         Module: mod,
-        CanView: p.view === true || p.CanView === true,
-        CanAdd: p.add === true || p.CanAdd === true,
-        CanEdit: p.edit === true || p.CanEdit === true,
-        CanDelete: p.del === true || p.CanDelete === true
+        CanView: p.view === true || p.CanView === true || String(p.CanView).toUpperCase() === "TRUE",
+        CanAdd: p.add === true || p.CanAdd === true || String(p.CanAdd).toUpperCase() === "TRUE",
+        CanEdit: p.edit === true || p.edit === "TRUE" || p.CanEdit === true || String(p.CanEdit).toUpperCase() === "TRUE",
+        CanDelete: p.del === true || p.del === "TRUE" || p.CanDelete === true || String(p.CanDelete).toUpperCase() === "TRUE"
       };
       writeTableRow(ss, "RolePermissions", "PermissionID", match ? match.PermissionID : "", permObj, userId);
     }
     return { success: true, message: "Role permissions updated successfully." };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+function getUserPermissions(licenseKey, targetUserId) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const permSheet = ensureSheetWithHeaders(ss, "UserPermissions");
+    const existing = sheetToObjects(permSheet);
+    return existing.filter(r => r.UserID === targetUserId);
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveUserPermissions(licenseKey, targetUserId, permissions, isOverridden, userId) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const permSheet = ensureSheetWithHeaders(ss, "UserPermissions");
+    const existing = sheetToObjects(permSheet);
+    const userRows = existing.filter(r => r.UserID === targetUserId);
+
+    if (!isOverridden) {
+      const data = permSheet.getDataRange().getValues();
+      for (let i = data.length - 1; i >= 1; i--) {
+        if (data[i][1] === targetUserId) {
+          permSheet.deleteRow(i + 1);
+        }
+      }
+      return { success: true, message: "User overrides removed. Standard role defaults restored." };
+    }
+
+    const permArray = Array.isArray(permissions) ? permissions : Object.keys(permissions || {}).map(k => Object.assign({ Module: k }, permissions[k]));
+    for (const p of permArray) {
+      const mod = p.Module;
+      if (!mod) continue;
+      const match = userRows.find(r => r.UserID === targetUserId && r.Module === mod);
+      const permObj = {
+        UserID: targetUserId,
+        Module: mod,
+        CanView: p.view === true || p.CanView === true || String(p.CanView).toUpperCase() === "TRUE",
+        CanAdd: p.add === true || p.CanAdd === true || String(p.CanAdd).toUpperCase() === "TRUE",
+        CanEdit: p.edit === true || p.edit === "TRUE" || p.CanEdit === true || String(p.CanEdit).toUpperCase() === "TRUE",
+        CanDelete: p.del === true || p.del === "TRUE" || p.CanDelete === true || String(p.CanDelete).toUpperCase() === "TRUE"
+      };
+      writeTableRow(ss, "UserPermissions", "PermissionID", match ? match.PermissionID : "", permObj, userId);
+    }
+    return { success: true, message: "User custom permissions saved successfully." };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -1504,6 +1558,21 @@ function handleUniversalApiRequest(action, params) {
       case 'mark_lead_won':
       case 'markLeadAsWon':
         response = markLeadAsWon(licenseKey, dataObj.leadId || dataObj.ConvertedLeadID || params.leadId, userId);
+        break;
+
+      case 'get_role_permissions':
+      case 'getRolePermissions':
+        response = { success: true, data: (sheetToObjects(ensureSheetWithHeaders(getClientSpreadsheet(licenseKey).ss, "RolePermissions"))).filter(r => r.RoleID === (dataObj.roleId || params.roleId)) };
+        break;
+
+      case 'get_user_permissions':
+      case 'getUserPermissions':
+        response = { success: true, data: getUserPermissions(licenseKey, dataObj.targetUserId || params.targetUserId) };
+        break;
+
+      case 'save_user_permissions':
+      case 'saveUserPermissions':
+        response = saveUserPermissions(licenseKey, dataObj.targetUserId || params.targetUserId, dataObj.permissions || dataObj, dataObj.isOverridden, userId);
         break;
 
       case 'save_role_permissions':
