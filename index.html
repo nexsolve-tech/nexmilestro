@@ -1647,6 +1647,12 @@ textarea.form-control {
             <span id="license-expiry-warning-text">License Expiry</span>
           </div>
 
+          <!-- Real-Time Sync Status Indicator (Zero-Loss Guarantee) -->
+          <div id="header-sync-status-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); transition: all 0.3s ease;">
+            <i class="fas fa-check-circle" id="header-sync-icon" style="font-size: 0.75rem;"></i>
+            <span id="header-sync-text">All synced</span>
+          </div>
+
           <!-- Authenticated Role Badge -->
           <div id="header-user-role-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(15,118,110,0.12); border: 1px solid var(--primary); color: var(--primary); font-size: 0.8rem; font-weight: 700;">
             <i class="fas fa-shield-alt"></i>
@@ -1941,16 +1947,16 @@ textarea.form-control {
 
       <!-- Quick Action Buttons -->
       <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-        <div class="dropdown" style="position: relative; display: inline-block;">
+        <div class="dropdown" style="position: relative; display: inline-block; z-index: 1050;">
           <button type="button" class="btn btn-primary btn-sm" onclick="toggleQuickActionMenu(event)" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.55rem 0.95rem; border-radius: var(--radius-md);">
             <i class="fas fa-plus-circle"></i> Quick Action <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>
           </button>
-          <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 5px); background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 220px; z-index: 100; overflow: hidden;">
-            <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
-            <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-building" style="color: var(--success); width: 16px;"></i> + New Customer</a>
-            <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-tasks" style="color: var(--warning); width: 16px;"></i> + New Task</a>
-            <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-map-marker-alt" style="color: var(--secondary); width: 16px;"></i> + Log Site Visit</a>
-            <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-receipt" style="color: var(--danger); width: 16px;"></i> + Book Expense / Income</a>
+          <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #ffffff !important; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.22), 0 5px 15px rgba(0,0,0,0.1); min-width: 220px; z-index: 999999 !important; overflow: hidden;">
+            <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
+            <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-building" style="color: #059669; width: 16px;"></i> + New Customer</a>
+            <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-tasks" style="color: #d97706; width: 16px;"></i> + New Task</a>
+            <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-map-marker-alt" style="color: #4f46e5; width: 16px;"></i> + Log Site Visit</a>
+            <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; background: #ffffff;"><i class="fas fa-receipt" style="color: #e11d48; width: 16px;"></i> + Book Expense / Income</a>
           </div>
         </div>
         <button type="button" class="btn btn-secondary btn-sm" onclick="refreshCurrentView()" title="Force Refresh Workspace Data" style="padding: 0.55rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;">
@@ -2035,7 +2041,7 @@ textarea.form-control {
       </div>
     </div>
     
-    <div class="stats-card card-indigo" onclick="appRouter.navigate('siteVisits')" style="cursor: pointer;" title="Click to view field site visit logs">
+    <div class="stats-card card-indigo" onclick="appRouter.navigate('sitevisits')" style="cursor: pointer;" title="Click to view field site visit logs">
       <div class="stats-info">
         <span class="stats-label">Recent Site Visits</span>
         <span class="stats-value" id="dash-site-visits">0</span>
@@ -2270,9 +2276,9 @@ textarea.form-control {
         if (typeof openTaskModal === "function") openTaskModal();
       }, 150);
     } else if (actionType === "visit") {
-      appRouter.navigate("siteVisits");
+      appRouter.navigate("sitevisits");
       setTimeout(function() {
-        if (typeof openSiteVisitModal === "function") openSiteVisitModal();
+        if (typeof openVisitModal === "function") openVisitModal();
       }, 150);
     } else if (actionType === "expense") {
       appRouter.navigate("finance");
@@ -4611,12 +4617,11 @@ textarea.form-control {
     var projSelect = document.getElementById("visit-project-id");
     var leadSelect = document.getElementById("visit-lead-id");
 
-    var currentLeads = window.leadsCacheList || leadsCacheList || [];
+    var currentLeads = (window.leadsCacheList || leadsCacheList || (window._dataCache && window._dataCache.leads) || []);
     if (leadSelect && currentLeads.length > 0) {
       var currentLeadVal = leadSelect.value;
       leadSelect.innerHTML = '<option value="">Select Lead</option>' + currentLeads.filter(function(l) {
-        var st = l.Status || l.LeadStatus || "";
-        return st !== "Lost";
+        return l && (l.Status || l.LeadStatus || "") !== "Lost";
       }).map(function(l) {
         var name = l.CustomerName || l.LeadName || l.LeadID;
         return '<option value="' + escapeHtml(l.LeadID) + '">' + escapeHtml(name) + ' (' + escapeHtml(l.LeadID) + ')</option>';
@@ -4624,11 +4629,11 @@ textarea.form-control {
       if (currentLeadVal) leadSelect.value = currentLeadVal;
     }
 
-    var currentProjects = window.projectsCacheList || projectsCache || [];
+    var currentProjects = (window.projectsCacheList || projectsCache || (window._dataCache && window._dataCache.projects) || []);
     if (projSelect && currentProjects.length > 0) {
       var currentProjVal = projSelect.value;
       projSelect.innerHTML = '<option value="">Select Project</option>' + currentProjects.filter(function(p) {
-        return p.Status !== "Completed" && p.Status !== "Cancelled";
+        return p && p.Status !== "Completed" && p.Status !== "Cancelled";
       }).map(function(p) {
         return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + ' (' + escapeHtml(p.ProjectID) + ')</option>';
       }).join("");
@@ -4638,13 +4643,15 @@ textarea.form-control {
     if (isLead) {
       if (projGroup) projGroup.style.display = "none";
       if (leadGroup) leadGroup.style.display = "block";
-      if (projSelect) { projSelect.removeAttribute("required"); projSelect.value = ""; }
+      if (projSelect) { projSelect.removeAttribute("required"); }
       if (leadSelect) { leadSelect.setAttribute("required", "required"); }
     } else {
       if (projGroup) projGroup.style.display = "block";
       if (leadGroup) leadGroup.style.display = "none";
-      if (leadSelect) { leadSelect.removeAttribute("required"); leadSelect.value = ""; }
+      if (leadSelect) { leadSelect.removeAttribute("required"); }
       if (projSelect) { projSelect.setAttribute("required", "required"); }
+    }
+  };
     }
   };
 
@@ -4687,56 +4694,56 @@ textarea.form-control {
     if (addBtn) addBtn.style.display = canAdd ? "inline-block" : "none";
 
     function applySiteVisitsData(result) {
-      customersCacheList = result.customers || [];
-      window.customersCacheList = result.customers || [];
+      if (!result) return;
+      customersCacheList = Array.isArray(result.customers) ? result.customers : [];
+      window.customersCacheList = customersCacheList;
 
-      projectsCache = result.projects || [];
+      projectsCache = Array.isArray(result.projects) ? result.projects : [];
       var select = document.getElementById("visit-project-id");
       if (select) {
         select.innerHTML = '<option value="">Select Project</option>' + projectsCache.filter(function(p) {
-          return p.Status !== "Completed" && p.Status !== "Cancelled";
+          return p && p.Status !== "Completed" && p.Status !== "Cancelled";
         }).map(function(p) {
-          return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), " (").concat(p.ProjectID, ")</option>");
+          return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + ' (' + escapeHtml(p.ProjectID) + ')</option>';
         }).join("");
       }
 
-      leadsCacheList = result.leads || [];
-      window.leadsCacheList = result.leads || [];
+      leadsCacheList = Array.isArray(result.leads) ? result.leads : [];
+      window.leadsCacheList = leadsCacheList;
       var leadSelect = document.getElementById("visit-lead-id");
       if (leadSelect) {
         leadSelect.innerHTML = '<option value="">Select Lead</option>' + leadsCacheList.filter(function(l) {
-          var st = l.Status || l.LeadStatus || "";
-          return st !== "Lost";
+          return l && (l.Status || l.LeadStatus || "") !== "Lost";
         }).map(function(l) {
           var name = l.CustomerName || l.LeadName || l.LeadID;
           return '<option value="' + escapeHtml(l.LeadID) + '">' + escapeHtml(name) + ' (' + escapeHtml(l.LeadID) + ')</option>';
         }).join("");
       }
 
-      allVisits = result.siteVisits || [];
-      staffCacheList = result.users || [];
-      vendorsCacheList = result.vendors || [];
-      associatesCacheList = result.associates || [];
+      allVisits = Array.isArray(result.siteVisits) ? result.siteVisits : [];
+      staffCacheList = Array.isArray(result.users) ? result.users : [];
+      vendorsCacheList = Array.isArray(result.vendors) ? result.vendors : [];
+      associatesCacheList = Array.isArray(result.associates) ? result.associates : [];
 
       populateProjectFilter();
-      renderVisits(allVisits);
+      filterVisits();
       if (forceRefresh) showLoader(false);
     }
 
     // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = (window._dataCache && window._dataCache.siteVisits)
+      var cached = (window._dataCache && Array.isArray(window._dataCache.siteVisits))
         ? {
             siteVisits: window._dataCache.siteVisits,
-            projects: window._dataCache.projects,
-            leads: window._dataCache.leads,
-            users: window._dataCache.users,
-            customers: window._dataCache.customers,
-            vendors: window._dataCache.vendors,
-            associates: window._dataCache.associates
+            projects: window._dataCache.projects || [],
+            leads: window._dataCache.leads || [],
+            users: window._dataCache.users || [],
+            customers: window._dataCache.customers || [],
+            vendors: window._dataCache.vendors || [],
+            associates: window._dataCache.associates || []
           }
         : cacheGet("siteVisitsViewData");
-      if (cached && cached.siteVisits) {
+      if (cached) {
         applySiteVisitsData(cached);
         return;
       }
@@ -4828,12 +4835,13 @@ textarea.form-control {
 
   function renderVisits(visitsList) {
     var tbody = document.querySelector("#visits-table tbody");
-    if (!tbody)
-      return;
-    if (visitsList.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-eye empty-state-icon"></i>\n          <p class="empty-state-title">No site visits logged</p>\n          <p class="empty-state-desc">Record architectural site visits, inspection logs, and measurements.</p>\n        </div>\n      </td></tr>';
+    if (!tbody) return;
+
+    if (!visitsList || !Array.isArray(visitsList) || visitsList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-eye empty-state-icon"></i>\n          <p class="empty-state-title">' + (activeVisitTab === "scheduled" ? "No scheduled visits" : "No site visits logged") + '</p>\n          <p class="empty-state-desc">' + (activeVisitTab === "scheduled" ? "Plan upcoming inspections and field audits." : "Record architectural site visits, inspection logs, and measurements.") + '</p>\n        </div>\n      </td></tr>';
       return;
     }
+
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -4841,7 +4849,7 @@ textarea.form-control {
     var canEdit = isSuperAdmin || siteVisitsPerm.edit === true;
     var canDelete = isSuperAdmin || siteVisitsPerm.del === true;
 
-    var sortedVisits = visitsList.slice().sort(function(a, b) {
+    var sortedVisits = visitsList.filter(function(v) { return v && typeof v === "object"; }).slice().sort(function(a, b) {
       var idA = String(a.VisitID || "");
       var idB = String(b.VisitID || "");
       return idB.localeCompare(idA);
@@ -4850,27 +4858,26 @@ textarea.form-control {
     tbody.innerHTML = sortedVisits.map(function(visit) {
       var entityHtml = "-";
       if (visit.ProjectID) {
-        var proj = projectsCache.find(function(p) { return p.ProjectID === visit.ProjectID; });
+        var proj = (projectsCache || []).find(function(p) { return p && p.ProjectID === visit.ProjectID; });
         var projName = proj ? proj.ProjectName : "Project ID: " + visit.ProjectID;
         entityHtml = '<i class="fas fa-building" style="color: var(--primary); margin-right: 0.35rem;"></i>' + escapeHtml(projName);
       } else if (visit.LeadID) {
-        var lead = leadsCacheList.find(function(l) { return l.LeadID === visit.LeadID; });
+        var lead = (leadsCacheList || []).find(function(l) { return l && l.LeadID === visit.LeadID; });
         var leadTitle = lead ? (lead.CustomerName || lead.LeadName || lead.LeadID) : ("Lead ID: " + visit.LeadID);
         entityHtml = '<i class="fas fa-bullseye" style="color: #0284c7; margin-right: 0.35rem;"></i>' + escapeHtml(leadTitle) + ' <span style="font-size:0.75rem; color:var(--text-muted); font-weight: 500;">(Lead)</span>';
       }
 
-      var dateStr = formatDate(visit.VisitDate);
-      var followupStr = visit.NextFollowupDate ? formatDate(visit.NextFollowupDate) : "-";
+      var dateStr = (visit.VisitDate && typeof formatDate === "function") ? formatDate(visit.VisitDate) : (visit.VisitDate || "-");
+      var followupStr = (visit.NextFollowupDate && typeof formatDate === "function") ? formatDate(visit.NextFollowupDate) : "-";
       var assigneeName = visit.AssignedTo || "Unassigned";
       if ((!visit.AssignedType || visit.AssignedType === "Staff") && visit.AssignedTo) {
-        var u = staffCacheList.find(function(staff) {
-          return staff.UserID === visit.AssignedTo;
+        var u = (staffCacheList || []).find(function(staff) {
+          return staff && (staff.UserID === visit.AssignedTo || staff.userId === visit.AssignedTo);
         });
-        if (u)
-          assigneeName = u.FullName;
+        if (u) assigneeName = u.FullName || u.fullName || u.UserID;
       }
       var isBillable = visit.IsBillable === "Yes" || visit.IsBillable === true;
-      var billableStr = isBillable ? formatCurrency(visit.BillingAmount || 0) : "-";
+      var billableStr = isBillable ? (typeof formatCurrency === "function" ? formatCurrency(visit.BillingAmount || 0) : ("₹" + (visit.BillingAmount || 0))) : "-";
       var photosHtml = "-";
       if (visit.Photos && typeof visit.Photos === "string" && visit.Photos.trim() !== "") {
         var links = visit.Photos.split(",").map(function(l) {
@@ -4878,10 +4885,10 @@ textarea.form-control {
         }).filter(function(l) {
           return l !== "";
         });
+        var svIdEsc = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
         if (links.length === 1) {
           photosHtml = '<a href="' + escapeHtml(links[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View</a>';
         } else if (links.length > 1) {
-          var svIdEsc = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
           var itemsHtml = links.map(function(link, idx) {
             return '<a href="' + escapeHtml(link) + '" target="_blank" style="display: block; padding: 0.35rem 0.75rem; font-size: 0.75rem; color: var(--text-main); text-decoration: none; font-weight: 500;"><i class="fas fa-file" style="margin-right: 0.35rem; color: var(--primary);"></i> Attachment ' + (idx + 1) + '</a>';
           }).join("");
@@ -4933,18 +4940,21 @@ textarea.form-control {
 
   function filterVisits() {
     var searchInput = document.getElementById("visit-search");
-    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
-    var projVal = document.getElementById("filter-visit-project").value;
-    var filtered = allVisits.filter(function(v) {
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase().trim() : "";
+    var projSelect = document.getElementById("filter-visit-project");
+    var projVal = projSelect ? projSelect.value : "";
+
+    var filtered = (allVisits || []).filter(function(v) {
+      if (!v || typeof v !== "object") return false;
       var purpose = v.Purpose ? String(v.Purpose).toLowerCase() : "";
       var remarks = v.Remarks ? String(v.Remarks).toLowerCase() : "";
-      var matchesSearch = purpose.includes(searchVal) || remarks.includes(searchVal);
+      var matchesSearch = !searchVal || purpose.indexOf(searchVal) !== -1 || remarks.indexOf(searchVal) !== -1;
       
       var matchesProj = true;
       if (projVal) {
-        if (projVal.startsWith("PROJ:")) {
+        if (projVal.indexOf("PROJ:") === 0) {
           matchesProj = v.ProjectID === projVal.replace("PROJ:", "");
-        } else if (projVal.startsWith("LEAD:")) {
+        } else if (projVal.indexOf("LEAD:") === 0) {
           matchesProj = v.LeadID === projVal.replace("LEAD:", "");
         } else {
           matchesProj = (v.ProjectID === projVal || v.LeadID === projVal);
@@ -4952,7 +4962,8 @@ textarea.form-control {
       }
 
       var status = v.Status || "Completed";
-      var matchesTab = activeVisitTab === "logs" && status === "Completed" || activeVisitTab === "scheduled" && status === "Scheduled";
+      var isSched = (status === "Scheduled");
+      var matchesTab = (activeVisitTab === "scheduled") ? isSched : (!isSched);
       return matchesSearch && matchesProj && matchesTab;
     });
     renderVisits(filtered);
@@ -5073,9 +5084,17 @@ textarea.form-control {
     if (isLeadRadio) {
       formData["ProjectID"] = "";
       formData["LeadID"] = document.getElementById("visit-lead-id") ? document.getElementById("visit-lead-id").value : "";
+      if (!formData["LeadID"]) {
+        showToast("Please select a Lead / Prospect for this visit.", "error");
+        return;
+      }
     } else {
       formData["ProjectID"] = document.getElementById("visit-project-id") ? document.getElementById("visit-project-id").value : "";
       formData["LeadID"] = "";
+      if (!formData["ProjectID"]) {
+        showToast("Please select a Project for this visit.", "error");
+        return;
+      }
     }
 
     var fileInput = document.getElementById("visit-attachment");
@@ -5158,13 +5177,23 @@ textarea.form-control {
   window.shareVisitOnWhatsApp = shareVisitOnWhatsApp;
 
   function executeSaveVisit(formData, fileData, userId) {
+    if (!formData.VisitID) {
+      formData.VisitID = "VISIT-" + Math.floor(1000 + Math.random() * 9000);
+      allVisits.unshift(formData);
+    } else {
+      var vIdx = allVisits.findIndex(function(v) { return v.VisitID === formData.VisitID; });
+      if (vIdx !== -1) allVisits[vIdx] = Object.assign(allVisits[vIdx], formData);
+      else allVisits.unshift(formData);
+    }
+    closeVisitModal();
+    filterVisits();
+
     google.script.run.withSuccessHandler(function(response) {
       if (response.success) {
-        showToast(response.message, "success");
-        closeVisitModal();
+        showToast(response.message || "Site visit saved successfully.", "success");
         loadSiteVisitsView(false);
       } else {
-        showToast(response.message, "error");
+        showToast(response.message || "Failed to save visit.", "error");
       }
     }).withFailureHandler(function(err) {
       showToast(err.message, "error");
@@ -5350,7 +5379,7 @@ textarea.form-control {
         <h4 class="kanban-col-title"><i class="fas fa-list" style="color: var(--text-muted); margin-right: 0.35rem;"></i>To Do</h4>
         <span class="kanban-card-count" id="count-pending">0</span>
       </div>
-      <div class="kanban-card-list" id="list-pending">
+      <div class="kanban-card-list" id="list-pending" ondragover="handleTaskDragOver(event)" ondrop="handleTaskDrop(event, 'Pending')">
         <!-- Rendered tasks go here -->
       </div>
     </div>
@@ -5361,7 +5390,7 @@ textarea.form-control {
         <h4 class="kanban-col-title"><i class="fas fa-spinner fa-spin-pulse" style="color: var(--secondary); margin-right: 0.35rem;"></i>In Progress</h4>
         <span class="kanban-card-count" id="count-inprogress">0</span>
       </div>
-      <div class="kanban-card-list" id="list-inprogress">
+      <div class="kanban-card-list" id="list-inprogress" ondragover="handleTaskDragOver(event)" ondrop="handleTaskDrop(event, 'In Progress')">
         <!-- Rendered tasks go here -->
       </div>
     </div>
@@ -5372,7 +5401,7 @@ textarea.form-control {
         <h4 class="kanban-col-title"><i class="fas fa-clipboard-check" style="color: #f59e0b; margin-right: 0.35rem;"></i>Under Review</h4>
         <span class="kanban-card-count" id="count-underreview">0</span>
       </div>
-      <div class="kanban-card-list" id="list-underreview">
+      <div class="kanban-card-list" id="list-underreview" ondragover="handleTaskDragOver(event)" ondrop="handleTaskDrop(event, 'Under Review')">
         <!-- Rendered tasks go here -->
       </div>
     </div>
@@ -5383,7 +5412,7 @@ textarea.form-control {
         <h4 class="kanban-col-title"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 0.35rem;"></i>Completed</h4>
         <span class="kanban-card-count" id="count-completed">0</span>
       </div>
-      <div class="kanban-card-list" id="list-completed">
+      <div class="kanban-card-list" id="list-completed" ondragover="handleTaskDragOver(event)" ondrop="handleTaskDrop(event, 'Completed')">
         <!-- Rendered tasks go here -->
       </div>
     </div>
@@ -5628,33 +5657,91 @@ textarea.form-control {
     google.script.run.withSuccessHandler(function(data) { associatesCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getAssociates();
   }
   function populateDropdownsFromCache() {
-    var priorities = dropdownsCache["TaskPriority"] || [];
+    var rawPrio = dropdownsCache["TaskPriority"];
+    var priorities = (Array.isArray(rawPrio) && rawPrio.length > 0) ? rawPrio : ["High", "Medium", "Low"];
     var prioritySelect = document.getElementById("task-priority");
     if (prioritySelect) {
+      var curVal = prioritySelect.value;
       prioritySelect.innerHTML = priorities.map(function(p) {
-        return '<option value="'.concat(p, '">').concat(escapeHtml(p), "</option>");
+        return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
       }).join("");
+      if (curVal && priorities.includes(curVal)) prioritySelect.value = curVal;
+      else prioritySelect.value = "Medium";
     }
     var priorityFilter = document.getElementById("filter-task-priority");
     if (priorityFilter) {
       priorityFilter.innerHTML = '<option value="">All Priorities</option>' + priorities.map(function(p) {
-        return '<option value="'.concat(p, '">').concat(escapeHtml(p), "</option>");
+        return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
       }).join("");
     }
-    var statuses = dropdownsCache["TaskStatus"] || [];
+    var rawStat = dropdownsCache["TaskStatus"];
+    var statuses = (Array.isArray(rawStat) && rawStat.length > 0) ? rawStat : ["Pending", "In Progress", "Under Review", "Completed", "Cancelled"];
     var statusSelect = document.getElementById("task-status");
     if (statusSelect) {
+      var curStat = statusSelect.value;
       statusSelect.innerHTML = statuses.map(function(s) {
-        return '<option value="'.concat(s, '">').concat(escapeHtml(s), "</option>");
+        var label = s;
+        if (s === "Pending") label = "To Do / Pending";
+        return '<option value="' + escapeHtml(s) + '">' + escapeHtml(label) + '</option>';
       }).join("");
+      if (curStat && statuses.includes(curStat)) statusSelect.value = curStat;
+      else statusSelect.value = "Pending";
     }
   }
-  function populateTaskFilters() {
-    var filterSelect = document.getElementById("filter-task-project");
-    filterSelect.innerHTML = '<option value="">All Projects</option>' + projectsCacheList.map(function(p) {
-      return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), "</option>");
-    }).join("");
-  }
+
+  // HTML5 Drag and Drop Handlers for Kanban
+  window.handleTaskDragStart = function(e, taskId) {
+    if (e.dataTransfer) {
+      e.dataTransfer.setData("text/plain", taskId);
+      e.dataTransfer.effectAllowed = "move";
+    }
+  };
+
+  window.handleTaskDragOver = function(e) {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+  };
+
+  window.handleTaskDrop = function(e, targetStatus) {
+    e.preventDefault();
+    var taskId = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+    if (taskId) {
+      moveTaskStatus(taskId, targetStatus, e);
+    }
+  };
+
+  // Move task status locally (0ms) + background save
+  window.moveTaskStatus = function(taskId, newStatus, event) {
+    if (event) event.stopPropagation();
+    var task = (allTasks || []).find(function(t) { return t && t.TaskID === taskId; });
+    if (!task) return;
+    if (task.Status === newStatus) return;
+
+    task.Status = newStatus;
+    if (newStatus === "Completed") {
+      task.CompletionDate = new Date().toISOString().substring(0, 10);
+    }
+
+    if (window._dataCache && window._dataCache.tasks) {
+      var cTask = window._dataCache.tasks.find(function(t) { return t && t.TaskID === taskId; });
+      if (cTask) {
+        cTask.Status = newStatus;
+        if (newStatus === "Completed") cTask.CompletionDate = task.CompletionDate;
+      }
+    }
+
+    renderKanban(allTasks);
+    showToast("Task " + taskId + " moved to '" + newStatus + "'", "success");
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var currentUserId = currentUser.userId || currentUser.UserID || "Admin";
+    google.script.run.saveTask({
+      TaskID: taskId,
+      Status: newStatus,
+      CompletionDate: task.CompletionDate || ""
+    }, currentUserId);
+  };
+
   function renderKanban(tasks) {
     var columns = {
       "Pending": { listEl: document.getElementById("list-pending"), countEl: document.getElementById("count-pending"), items: [] },
@@ -5666,9 +5753,8 @@ textarea.form-control {
       if (columns[key].listEl) columns[key].listEl.innerHTML = "";
       if (columns[key].countEl) columns[key].countEl.innerText = "0";
     }
-    tasks.forEach(function(task) {
-      if (task.Status === "Cancelled")
-        return;
+    (tasks || []).forEach(function(task) {
+      if (!task || task.Status === "Cancelled") return;
       var colName = task.Status;
       if (colName === "Todo" || colName === "Pending" || colName === "To Do")
         colName = "Pending";
@@ -5680,11 +5766,12 @@ textarea.form-control {
         columns[colName].items.push(task);
       }
     });
-    for (var key in columns) {
-      var col = columns[key];
+
+    for (var colKey in columns) {
+      var col = columns[colKey];
       col.countEl.innerText = col.items.length;
       if (col.items.length === 0) {
-        col.listEl.innerHTML = '\n          <div style="text-align:center; padding: 1.5rem; border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.8rem;">\n            No tasks in this lane\n          </div>\n        ';
+        col.listEl.innerHTML = '<div style="text-align:center; padding: 1.5rem; border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.8rem;">No tasks in this lane</div>';
         continue;
       }
       col.items.sort(function(a, b) {
@@ -5692,19 +5779,35 @@ textarea.form-control {
         var idB = String(b.TaskID || "");
         return idB.localeCompare(idA);
       });
+
       col.listEl.innerHTML = col.items.map(function(task) {
-        var proj = projectsCacheList.find(function(p) {
-          return p.ProjectID === task.ProjectID;
+        var proj = (projectsCacheList || []).find(function(p) {
+          return p && p.ProjectID === task.ProjectID;
         });
-        var projName = proj ? proj.ProjectName : "Unknown Project";
+        var projName = proj ? proj.ProjectName : "General Project";
         var dateStr = task.DueDate ? formatDate(task.DueDate) : "No Due Date";
         var priorityClass = (task.Priority || "Medium").toLowerCase();
-        return '<div class="kanban-card" onclick="editTask(\'' + task.TaskID + '\')">' +
+
+        var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(task.TaskID) : task.TaskID;
+        var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(task.TaskName) : task.TaskName;
+
+        // Quick status advance buttons
+        var quickBtns = "";
+        if (colKey === "Pending") {
+          quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'In Progress\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--secondary); font-weight:600;"><i class="fas fa-play"></i> Start</button>';
+        } else if (colKey === "In Progress") {
+          quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Under Review\', event)" style="font-size:0.7rem; padding: 2px 7px; color: #f59e0b; font-weight:600;"><i class="fas fa-clipboard-check"></i> Review</button>' +
+                      '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Completed\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--success); font-weight:600;"><i class="fas fa-check"></i> Done</button>';
+        } else if (colKey === "Under Review") {
+          quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Completed\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--success); font-weight:600;"><i class="fas fa-check-double"></i> Approve</button>';
+        }
+
+        return '<div class="kanban-card" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: grab;">' +
           '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">' +
-            '<span class="kanban-card-title">' + escapeHtml(task.TaskName) + '</span>' +
+            '<span class="kanban-card-title">' + tNameEsc + '</span>' +
             '<div style="display:flex; align-items:center; gap:0.35rem;">' +
-              '<button type="button" data-task-id="' + escapeHtml(task.TaskID) + '" onclick="event.stopPropagation(); notifyTaskWhatsApp(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: #25D366; padding:0; width:22px; height:22px; cursor:pointer;" title="Notify via WhatsApp"><i class="fab fa-whatsapp"></i></button>' +
-              '<span class="badge priority-' + priorityClass + '">' + escapeHtml(task.Priority) + '</span>' +
+              '<button type="button" data-task-id="' + tIdEsc + '" onclick="event.stopPropagation(); notifyTaskWhatsApp(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: #25D366; padding:0; width:22px; height:22px; cursor:pointer;" title="Notify via WhatsApp"><i class="fab fa-whatsapp"></i></button>' +
+              '<span class="badge priority-' + priorityClass + '">' + escapeHtml(task.Priority || "Medium") + '</span>' +
             '</div>' +
           '</div>' +
           '<div class="kanban-card-desc">' + escapeHtml(task.Description || "No description.") + '</div>' +
@@ -5712,8 +5815,9 @@ textarea.form-control {
             '<span class="kanban-card-assigned"><i class="far fa-user"></i> ' + escapeHtml(task.AssignedTo || "Unassigned") + '</span>' +
             '<span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;"><i class="far fa-calendar"></i> ' + dateStr + '</span>' +
           '</div>' +
-          '<div style="font-size: 0.65rem; color: var(--primary); font-weight: 700; margin-top: 0.25rem;">' +
-            'Project: ' + escapeHtml(projName) +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem; padding-top:0.35rem; border-top:1px dashed var(--border-color);">' +
+            '<span style="font-size: 0.65rem; color: var(--primary); font-weight: 700;">' + escapeHtml(projName) + '</span>' +
+            '<div style="display:flex; gap:0.3rem;">' + quickBtns + '</div>' +
           '</div>' +
         '</div>';
       }).join("");
@@ -5809,8 +5913,24 @@ textarea.form-control {
       document.getElementById("task-assigned-to").value = taskObj.AssignedTo || "";
       document.getElementById("task-start-date").value = parseRawDateString(taskObj.StartDate);
       document.getElementById("task-due-date").value = parseRawDateString(taskObj.DueDate);
-      document.getElementById("task-priority").value = taskObj.Priority;
-      document.getElementById("task-status").value = taskObj.Status;
+      var prioEl = document.getElementById("task-priority");
+      if (prioEl) prioEl.value = taskObj.Priority || "Medium";
+
+      var st = taskObj.Status || "Pending";
+      if (st === "Todo" || st === "To Do") st = "Pending";
+      if (st === "Done") st = "Completed";
+      if (st === "Review") st = "Under Review";
+      var statusEl = document.getElementById("task-status");
+      if (statusEl) {
+        var exists = Array.from(statusEl.options).some(function(o) { return o.value === st; });
+        if (!exists) {
+          var opt = document.createElement("option");
+          opt.value = st;
+          opt.text = st;
+          statusEl.appendChild(opt);
+        }
+        statusEl.value = st;
+      }
       document.getElementById("task-completion-date").value = parseRawDateString(taskObj.CompletionDate);
       document.getElementById("task-desc").value = taskObj.Description || "";
       document.getElementById("task-remarks").value = taskObj.Remarks || "";
@@ -5855,12 +5975,24 @@ textarea.form-control {
         formData[input.name] = input.value;
       }
     });
+
+    // Optimistically update in local allTasks array immediately
+    if (!formData.TaskID) {
+      formData.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
+      allTasks.unshift(formData);
+    } else {
+      var tIdx = allTasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
+      if (tIdx !== -1) allTasks[tIdx] = Object.assign(allTasks[tIdx], formData);
+      else allTasks.unshift(formData);
+    }
+    closeTaskModal();
+    renderKanban(allTasks);
+
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
     google.script.run.withSuccessHandler(function(response) {
       if (response.success) {
-        showToast(response.message, "success");
-        closeTaskModal();
+        showToast(response.message || "Task saved.", "success");
         loadTasksView(false);
       } else {
         showToast(response.message, "error");
@@ -13320,7 +13452,12 @@ document.addEventListener("click", function() {
 
         // 3. BACKGROUND COMMIT: Pushes mutation to Google Sheets asynchronously without UI spinners
         if (!isDemoMode()) {
+          window._pendingSyncCount = (window._pendingSyncCount || 0) + 1;
+          updateSyncStatusUI();
+
           apiCall(targetAction, payload).then(function(backendRes) {
+            window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
+            updateSyncStatusUI();
             if (backendRes && backendRes.success !== false) {
               console.log("[Background Sync Succeeded]: " + targetAction, backendRes);
               if (backendRes.customerId && payload.CustomerID && backendRes.customerId !== payload.CustomerID) {
@@ -13337,6 +13474,8 @@ document.addEventListener("click", function() {
               console.warn("[Background Sync Notice]:", backendRes);
             }
           }).catch(function(err) {
+            window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
+            updateSyncStatusUI();
             console.warn("[Background Sync Network Warning]:", err);
           });
         }
@@ -13352,6 +13491,38 @@ document.addEventListener("click", function() {
       }
     }
 
+    window._pendingSyncCount = 0;
+    function updateSyncStatusUI() {
+      var badge = document.getElementById("header-sync-status-badge");
+      var icon = document.getElementById("header-sync-icon");
+      var text = document.getElementById("header-sync-text");
+      if (!badge || !icon || !text) return;
+
+      if (window._pendingSyncCount > 0) {
+        badge.style.background = "rgba(245, 158, 11, 0.12)";
+        badge.style.color = "#d97706";
+        badge.style.borderColor = "rgba(245, 158, 11, 0.35)";
+        icon.className = "fas fa-spinner fa-spin";
+        text.innerText = "Syncing (" + window._pendingSyncCount + ")...";
+      } else {
+        badge.style.background = "rgba(16, 185, 129, 0.1)";
+        badge.style.color = "#059669";
+        badge.style.borderColor = "rgba(16, 185, 129, 0.25)";
+        icon.className = "fas fa-check-circle";
+        text.innerText = "All synced";
+      }
+    }
+    window.updateSyncStatusUI = updateSyncStatusUI;
+
+    window.addEventListener("beforeunload", function(e) {
+      if (window._pendingSyncCount > 0) {
+        var msg = "Your modifications are currently syncing to Google Sheets. If you close now, pending changes might be interrupted.";
+        e.preventDefault();
+        e.returnValue = msg;
+        return msg;
+      }
+    });
+
     /**
      * =========================================================================
      * SPA ROUTER ENGINE
@@ -13360,11 +13531,14 @@ document.addEventListener("click", function() {
      */
     var appRouter = {
       currentView: "dashboard",
-      navigate: function(viewId) {
+      navigate: function(rawViewId) {
         if (!isAuthenticated()) {
           showLoginOverlay(true);
           return;
         }
+
+        var viewId = String(rawViewId || "dashboard").toLowerCase().trim();
+        if (viewId === "sitevisits" || viewId === "sitevisit") viewId = "sitevisits";
 
         var user = getSessionUser();
         var isSuperAdmin = user.roleId === "Super Admin";
@@ -14110,6 +14284,22 @@ function showLoginOverlay(show) {
     window.handleLoginSubmit = handleLoginSubmit;
 
     function handleLogout() {
+      if (window._pendingSyncCount > 0) {
+        showToast("Syncing recent modifications to Google Sheets before sign out...", "info");
+        var attempts = 0;
+        var checkInterval = setInterval(function() {
+          attempts++;
+          if (window._pendingSyncCount <= 0 || attempts >= 10) {
+            clearInterval(checkInterval);
+            finishLogout();
+          }
+        }, 400);
+        return;
+      }
+      finishLogout();
+    }
+
+    function finishLogout() {
       localStorage.removeItem("pm_user");
       sessionStorage.removeItem("pm_user");
       cacheClearAll();

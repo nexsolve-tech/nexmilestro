@@ -16,16 +16,16 @@
 
       <!-- Quick Action Buttons -->
       <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-        <div class="dropdown" style="position: relative; display: inline-block;">
+        <div class="dropdown" style="position: relative; display: inline-block; z-index: 1050;">
           <button type="button" class="btn btn-primary btn-sm" onclick="toggleQuickActionMenu(event)" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.55rem 0.95rem; border-radius: var(--radius-md);">
             <i class="fas fa-plus-circle"></i> Quick Action <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>
           </button>
-          <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 5px); background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 220px; z-index: 100; overflow: hidden;">
-            <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
-            <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-building" style="color: var(--success); width: 16px;"></i> + New Customer</a>
-            <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-tasks" style="color: var(--warning); width: 16px;"></i> + New Task</a>
-            <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color);"><i class="fas fa-map-marker-alt" style="color: var(--secondary); width: 16px;"></i> + Log Site Visit</a>
-            <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-receipt" style="color: var(--danger); width: 16px;"></i> + Book Expense / Income</a>
+          <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #ffffff !important; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.22), 0 5px 15px rgba(0,0,0,0.1); min-width: 220px; z-index: 999999 !important; overflow: hidden;">
+            <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
+            <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-building" style="color: #059669; width: 16px;"></i> + New Customer</a>
+            <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-tasks" style="color: #d97706; width: 16px;"></i> + New Task</a>
+            <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-map-marker-alt" style="color: #4f46e5; width: 16px;"></i> + Log Site Visit</a>
+            <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; background: #ffffff;"><i class="fas fa-receipt" style="color: #e11d48; width: 16px;"></i> + Book Expense / Income</a>
           </div>
         </div>
         <button type="button" class="btn btn-secondary btn-sm" onclick="refreshCurrentView()" title="Force Refresh Workspace Data" style="padding: 0.55rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;">
@@ -110,7 +110,7 @@
       </div>
     </div>
     
-    <div class="stats-card card-indigo" onclick="appRouter.navigate('siteVisits')" style="cursor: pointer;" title="Click to view field site visit logs">
+    <div class="stats-card card-indigo" onclick="appRouter.navigate('sitevisits')" style="cursor: pointer;" title="Click to view field site visit logs">
       <div class="stats-info">
         <span class="stats-label">Recent Site Visits</span>
         <span class="stats-value" id="dash-site-visits">0</span>
@@ -345,9 +345,9 @@
         if (typeof openTaskModal === "function") openTaskModal();
       }, 150);
     } else if (actionType === "visit") {
-      appRouter.navigate("siteVisits");
+      appRouter.navigate("sitevisits");
       setTimeout(function() {
-        if (typeof openSiteVisitModal === "function") openSiteVisitModal();
+        if (typeof openVisitModal === "function") openVisitModal();
       }, 150);
     } else if (actionType === "expense") {
       appRouter.navigate("finance");

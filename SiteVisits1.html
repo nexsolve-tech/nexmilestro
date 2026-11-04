@@ -184,12 +184,11 @@
     var projSelect = document.getElementById("visit-project-id");
     var leadSelect = document.getElementById("visit-lead-id");
 
-    var currentLeads = window.leadsCacheList || leadsCacheList || [];
+    var currentLeads = (window.leadsCacheList || leadsCacheList || (window._dataCache && window._dataCache.leads) || []);
     if (leadSelect && currentLeads.length > 0) {
       var currentLeadVal = leadSelect.value;
       leadSelect.innerHTML = '<option value="">Select Lead</option>' + currentLeads.filter(function(l) {
-        var st = l.Status || l.LeadStatus || "";
-        return st !== "Lost";
+        return l && (l.Status || l.LeadStatus || "") !== "Lost";
       }).map(function(l) {
         var name = l.CustomerName || l.LeadName || l.LeadID;
         return '<option value="' + escapeHtml(l.LeadID) + '">' + escapeHtml(name) + ' (' + escapeHtml(l.LeadID) + ')</option>';
@@ -197,11 +196,11 @@
       if (currentLeadVal) leadSelect.value = currentLeadVal;
     }
 
-    var currentProjects = window.projectsCacheList || projectsCache || [];
+    var currentProjects = (window.projectsCacheList || projectsCache || (window._dataCache && window._dataCache.projects) || []);
     if (projSelect && currentProjects.length > 0) {
       var currentProjVal = projSelect.value;
       projSelect.innerHTML = '<option value="">Select Project</option>' + currentProjects.filter(function(p) {
-        return p.Status !== "Completed" && p.Status !== "Cancelled";
+        return p && p.Status !== "Completed" && p.Status !== "Cancelled";
       }).map(function(p) {
         return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + ' (' + escapeHtml(p.ProjectID) + ')</option>';
       }).join("");
@@ -211,13 +210,15 @@
     if (isLead) {
       if (projGroup) projGroup.style.display = "none";
       if (leadGroup) leadGroup.style.display = "block";
-      if (projSelect) { projSelect.removeAttribute("required"); projSelect.value = ""; }
+      if (projSelect) { projSelect.removeAttribute("required"); }
       if (leadSelect) { leadSelect.setAttribute("required", "required"); }
     } else {
       if (projGroup) projGroup.style.display = "block";
       if (leadGroup) leadGroup.style.display = "none";
-      if (leadSelect) { leadSelect.removeAttribute("required"); leadSelect.value = ""; }
+      if (leadSelect) { leadSelect.removeAttribute("required"); }
       if (projSelect) { projSelect.setAttribute("required", "required"); }
+    }
+  };
     }
   };
 
@@ -260,56 +261,56 @@
     if (addBtn) addBtn.style.display = canAdd ? "inline-block" : "none";
 
     function applySiteVisitsData(result) {
-      customersCacheList = result.customers || [];
-      window.customersCacheList = result.customers || [];
+      if (!result) return;
+      customersCacheList = Array.isArray(result.customers) ? result.customers : [];
+      window.customersCacheList = customersCacheList;
 
-      projectsCache = result.projects || [];
+      projectsCache = Array.isArray(result.projects) ? result.projects : [];
       var select = document.getElementById("visit-project-id");
       if (select) {
         select.innerHTML = '<option value="">Select Project</option>' + projectsCache.filter(function(p) {
-          return p.Status !== "Completed" && p.Status !== "Cancelled";
+          return p && p.Status !== "Completed" && p.Status !== "Cancelled";
         }).map(function(p) {
-          return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), " (").concat(p.ProjectID, ")</option>");
+          return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + ' (' + escapeHtml(p.ProjectID) + ')</option>';
         }).join("");
       }
 
-      leadsCacheList = result.leads || [];
-      window.leadsCacheList = result.leads || [];
+      leadsCacheList = Array.isArray(result.leads) ? result.leads : [];
+      window.leadsCacheList = leadsCacheList;
       var leadSelect = document.getElementById("visit-lead-id");
       if (leadSelect) {
         leadSelect.innerHTML = '<option value="">Select Lead</option>' + leadsCacheList.filter(function(l) {
-          var st = l.Status || l.LeadStatus || "";
-          return st !== "Lost";
+          return l && (l.Status || l.LeadStatus || "") !== "Lost";
         }).map(function(l) {
           var name = l.CustomerName || l.LeadName || l.LeadID;
           return '<option value="' + escapeHtml(l.LeadID) + '">' + escapeHtml(name) + ' (' + escapeHtml(l.LeadID) + ')</option>';
         }).join("");
       }
 
-      allVisits = result.siteVisits || [];
-      staffCacheList = result.users || [];
-      vendorsCacheList = result.vendors || [];
-      associatesCacheList = result.associates || [];
+      allVisits = Array.isArray(result.siteVisits) ? result.siteVisits : [];
+      staffCacheList = Array.isArray(result.users) ? result.users : [];
+      vendorsCacheList = Array.isArray(result.vendors) ? result.vendors : [];
+      associatesCacheList = Array.isArray(result.associates) ? result.associates : [];
 
       populateProjectFilter();
-      renderVisits(allVisits);
+      filterVisits();
       if (forceRefresh) showLoader(false);
     }
 
     // Check global cache first for instant render (0ms)
     if (!forceRefresh) {
-      var cached = (window._dataCache && window._dataCache.siteVisits)
+      var cached = (window._dataCache && Array.isArray(window._dataCache.siteVisits))
         ? {
             siteVisits: window._dataCache.siteVisits,
-            projects: window._dataCache.projects,
-            leads: window._dataCache.leads,
-            users: window._dataCache.users,
-            customers: window._dataCache.customers,
-            vendors: window._dataCache.vendors,
-            associates: window._dataCache.associates
+            projects: window._dataCache.projects || [],
+            leads: window._dataCache.leads || [],
+            users: window._dataCache.users || [],
+            customers: window._dataCache.customers || [],
+            vendors: window._dataCache.vendors || [],
+            associates: window._dataCache.associates || []
           }
         : cacheGet("siteVisitsViewData");
-      if (cached && cached.siteVisits) {
+      if (cached) {
         applySiteVisitsData(cached);
         return;
       }
@@ -401,12 +402,13 @@
 
   function renderVisits(visitsList) {
     var tbody = document.querySelector("#visits-table tbody");
-    if (!tbody)
-      return;
-    if (visitsList.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-eye empty-state-icon"></i>\n          <p class="empty-state-title">No site visits logged</p>\n          <p class="empty-state-desc">Record architectural site visits, inspection logs, and measurements.</p>\n        </div>\n      </td></tr>';
+    if (!tbody) return;
+
+    if (!visitsList || !Array.isArray(visitsList) || visitsList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-eye empty-state-icon"></i>\n          <p class="empty-state-title">' + (activeVisitTab === "scheduled" ? "No scheduled visits" : "No site visits logged") + '</p>\n          <p class="empty-state-desc">' + (activeVisitTab === "scheduled" ? "Plan upcoming inspections and field audits." : "Record architectural site visits, inspection logs, and measurements.") + '</p>\n        </div>\n      </td></tr>';
       return;
     }
+
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -414,7 +416,7 @@
     var canEdit = isSuperAdmin || siteVisitsPerm.edit === true;
     var canDelete = isSuperAdmin || siteVisitsPerm.del === true;
 
-    var sortedVisits = visitsList.slice().sort(function(a, b) {
+    var sortedVisits = visitsList.filter(function(v) { return v && typeof v === "object"; }).slice().sort(function(a, b) {
       var idA = String(a.VisitID || "");
       var idB = String(b.VisitID || "");
       return idB.localeCompare(idA);
@@ -423,27 +425,26 @@
     tbody.innerHTML = sortedVisits.map(function(visit) {
       var entityHtml = "-";
       if (visit.ProjectID) {
-        var proj = projectsCache.find(function(p) { return p.ProjectID === visit.ProjectID; });
+        var proj = (projectsCache || []).find(function(p) { return p && p.ProjectID === visit.ProjectID; });
         var projName = proj ? proj.ProjectName : "Project ID: " + visit.ProjectID;
         entityHtml = '<i class="fas fa-building" style="color: var(--primary); margin-right: 0.35rem;"></i>' + escapeHtml(projName);
       } else if (visit.LeadID) {
-        var lead = leadsCacheList.find(function(l) { return l.LeadID === visit.LeadID; });
+        var lead = (leadsCacheList || []).find(function(l) { return l && l.LeadID === visit.LeadID; });
         var leadTitle = lead ? (lead.CustomerName || lead.LeadName || lead.LeadID) : ("Lead ID: " + visit.LeadID);
         entityHtml = '<i class="fas fa-bullseye" style="color: #0284c7; margin-right: 0.35rem;"></i>' + escapeHtml(leadTitle) + ' <span style="font-size:0.75rem; color:var(--text-muted); font-weight: 500;">(Lead)</span>';
       }
 
-      var dateStr = formatDate(visit.VisitDate);
-      var followupStr = visit.NextFollowupDate ? formatDate(visit.NextFollowupDate) : "-";
+      var dateStr = (visit.VisitDate && typeof formatDate === "function") ? formatDate(visit.VisitDate) : (visit.VisitDate || "-");
+      var followupStr = (visit.NextFollowupDate && typeof formatDate === "function") ? formatDate(visit.NextFollowupDate) : "-";
       var assigneeName = visit.AssignedTo || "Unassigned";
       if ((!visit.AssignedType || visit.AssignedType === "Staff") && visit.AssignedTo) {
-        var u = staffCacheList.find(function(staff) {
-          return staff.UserID === visit.AssignedTo;
+        var u = (staffCacheList || []).find(function(staff) {
+          return staff && (staff.UserID === visit.AssignedTo || staff.userId === visit.AssignedTo);
         });
-        if (u)
-          assigneeName = u.FullName;
+        if (u) assigneeName = u.FullName || u.fullName || u.UserID;
       }
       var isBillable = visit.IsBillable === "Yes" || visit.IsBillable === true;
-      var billableStr = isBillable ? formatCurrency(visit.BillingAmount || 0) : "-";
+      var billableStr = isBillable ? (typeof formatCurrency === "function" ? formatCurrency(visit.BillingAmount || 0) : ("₹" + (visit.BillingAmount || 0))) : "-";
       var photosHtml = "-";
       if (visit.Photos && typeof visit.Photos === "string" && visit.Photos.trim() !== "") {
         var links = visit.Photos.split(",").map(function(l) {
@@ -451,10 +452,10 @@
         }).filter(function(l) {
           return l !== "";
         });
+        var svIdEsc = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
         if (links.length === 1) {
           photosHtml = '<a href="' + escapeHtml(links[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View</a>';
         } else if (links.length > 1) {
-          var svIdEsc = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
           var itemsHtml = links.map(function(link, idx) {
             return '<a href="' + escapeHtml(link) + '" target="_blank" style="display: block; padding: 0.35rem 0.75rem; font-size: 0.75rem; color: var(--text-main); text-decoration: none; font-weight: 500;"><i class="fas fa-file" style="margin-right: 0.35rem; color: var(--primary);"></i> Attachment ' + (idx + 1) + '</a>';
           }).join("");
@@ -506,18 +507,21 @@
 
   function filterVisits() {
     var searchInput = document.getElementById("visit-search");
-    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
-    var projVal = document.getElementById("filter-visit-project").value;
-    var filtered = allVisits.filter(function(v) {
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase().trim() : "";
+    var projSelect = document.getElementById("filter-visit-project");
+    var projVal = projSelect ? projSelect.value : "";
+
+    var filtered = (allVisits || []).filter(function(v) {
+      if (!v || typeof v !== "object") return false;
       var purpose = v.Purpose ? String(v.Purpose).toLowerCase() : "";
       var remarks = v.Remarks ? String(v.Remarks).toLowerCase() : "";
-      var matchesSearch = purpose.includes(searchVal) || remarks.includes(searchVal);
+      var matchesSearch = !searchVal || purpose.indexOf(searchVal) !== -1 || remarks.indexOf(searchVal) !== -1;
       
       var matchesProj = true;
       if (projVal) {
-        if (projVal.startsWith("PROJ:")) {
+        if (projVal.indexOf("PROJ:") === 0) {
           matchesProj = v.ProjectID === projVal.replace("PROJ:", "");
-        } else if (projVal.startsWith("LEAD:")) {
+        } else if (projVal.indexOf("LEAD:") === 0) {
           matchesProj = v.LeadID === projVal.replace("LEAD:", "");
         } else {
           matchesProj = (v.ProjectID === projVal || v.LeadID === projVal);
@@ -525,7 +529,8 @@
       }
 
       var status = v.Status || "Completed";
-      var matchesTab = activeVisitTab === "logs" && status === "Completed" || activeVisitTab === "scheduled" && status === "Scheduled";
+      var isSched = (status === "Scheduled");
+      var matchesTab = (activeVisitTab === "scheduled") ? isSched : (!isSched);
       return matchesSearch && matchesProj && matchesTab;
     });
     renderVisits(filtered);
@@ -646,9 +651,17 @@
     if (isLeadRadio) {
       formData["ProjectID"] = "";
       formData["LeadID"] = document.getElementById("visit-lead-id") ? document.getElementById("visit-lead-id").value : "";
+      if (!formData["LeadID"]) {
+        showToast("Please select a Lead / Prospect for this visit.", "error");
+        return;
+      }
     } else {
       formData["ProjectID"] = document.getElementById("visit-project-id") ? document.getElementById("visit-project-id").value : "";
       formData["LeadID"] = "";
+      if (!formData["ProjectID"]) {
+        showToast("Please select a Project for this visit.", "error");
+        return;
+      }
     }
 
     var fileInput = document.getElementById("visit-attachment");
@@ -731,13 +744,23 @@
   window.shareVisitOnWhatsApp = shareVisitOnWhatsApp;
 
   function executeSaveVisit(formData, fileData, userId) {
+    if (!formData.VisitID) {
+      formData.VisitID = "VISIT-" + Math.floor(1000 + Math.random() * 9000);
+      allVisits.unshift(formData);
+    } else {
+      var vIdx = allVisits.findIndex(function(v) { return v.VisitID === formData.VisitID; });
+      if (vIdx !== -1) allVisits[vIdx] = Object.assign(allVisits[vIdx], formData);
+      else allVisits.unshift(formData);
+    }
+    closeVisitModal();
+    filterVisits();
+
     google.script.run.withSuccessHandler(function(response) {
       if (response.success) {
-        showToast(response.message, "success");
-        closeVisitModal();
+        showToast(response.message || "Site visit saved successfully.", "success");
         loadSiteVisitsView(false);
       } else {
-        showToast(response.message, "error");
+        showToast(response.message || "Failed to save visit.", "error");
       }
     }).withFailureHandler(function(err) {
       showToast(err.message, "error");

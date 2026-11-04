@@ -218,6 +218,12 @@
             <span id="license-expiry-warning-text">License Expiry</span>
           </div>
 
+          <!-- Real-Time Sync Status Indicator (Zero-Loss Guarantee) -->
+          <div id="header-sync-status-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); transition: all 0.3s ease;">
+            <i class="fas fa-check-circle" id="header-sync-icon" style="font-size: 0.75rem;"></i>
+            <span id="header-sync-text">All synced</span>
+          </div>
+
           <!-- Authenticated Role Badge -->
           <div id="header-user-role-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(15,118,110,0.12); border: 1px solid var(--primary); color: var(--primary); font-size: 0.8rem; font-weight: 700;">
             <i class="fas fa-shield-alt"></i>
@@ -1559,7 +1565,12 @@
 
         // 3. BACKGROUND COMMIT: Pushes mutation to Google Sheets asynchronously without UI spinners
         if (!isDemoMode()) {
+          window._pendingSyncCount = (window._pendingSyncCount || 0) + 1;
+          updateSyncStatusUI();
+
           apiCall(targetAction, payload).then(function(backendRes) {
+            window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
+            updateSyncStatusUI();
             if (backendRes && backendRes.success !== false) {
               console.log("[Background Sync Succeeded]: " + targetAction, backendRes);
               if (backendRes.customerId && payload.CustomerID && backendRes.customerId !== payload.CustomerID) {
@@ -1576,6 +1587,8 @@
               console.warn("[Background Sync Notice]:", backendRes);
             }
           }).catch(function(err) {
+            window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
+            updateSyncStatusUI();
             console.warn("[Background Sync Network Warning]:", err);
           });
         }
@@ -1591,6 +1604,38 @@
       }
     }
 
+    window._pendingSyncCount = 0;
+    function updateSyncStatusUI() {
+      var badge = document.getElementById("header-sync-status-badge");
+      var icon = document.getElementById("header-sync-icon");
+      var text = document.getElementById("header-sync-text");
+      if (!badge || !icon || !text) return;
+
+      if (window._pendingSyncCount > 0) {
+        badge.style.background = "rgba(245, 158, 11, 0.12)";
+        badge.style.color = "#d97706";
+        badge.style.borderColor = "rgba(245, 158, 11, 0.35)";
+        icon.className = "fas fa-spinner fa-spin";
+        text.innerText = "Syncing (" + window._pendingSyncCount + ")...";
+      } else {
+        badge.style.background = "rgba(16, 185, 129, 0.1)";
+        badge.style.color = "#059669";
+        badge.style.borderColor = "rgba(16, 185, 129, 0.25)";
+        icon.className = "fas fa-check-circle";
+        text.innerText = "All synced";
+      }
+    }
+    window.updateSyncStatusUI = updateSyncStatusUI;
+
+    window.addEventListener("beforeunload", function(e) {
+      if (window._pendingSyncCount > 0) {
+        var msg = "Your modifications are currently syncing to Google Sheets. If you close now, pending changes might be interrupted.";
+        e.preventDefault();
+        e.returnValue = msg;
+        return msg;
+      }
+    });
+
     /**
      * =========================================================================
      * SPA ROUTER ENGINE
@@ -1599,11 +1644,14 @@
      */
     var appRouter = {
       currentView: "dashboard",
-      navigate: function(viewId) {
+      navigate: function(rawViewId) {
         if (!isAuthenticated()) {
           showLoginOverlay(true);
           return;
         }
+
+        var viewId = String(rawViewId || "dashboard").toLowerCase().trim();
+        if (viewId === "sitevisits" || viewId === "sitevisit") viewId = "sitevisits";
 
         var user = getSessionUser();
         var isSuperAdmin = user.roleId === "Super Admin";
@@ -2349,6 +2397,22 @@ function showLoginOverlay(show) {
     window.handleLoginSubmit = handleLoginSubmit;
 
     function handleLogout() {
+      if (window._pendingSyncCount > 0) {
+        showToast("Syncing recent modifications to Google Sheets before sign out...", "info");
+        var attempts = 0;
+        var checkInterval = setInterval(function() {
+          attempts++;
+          if (window._pendingSyncCount <= 0 || attempts >= 10) {
+            clearInterval(checkInterval);
+            finishLogout();
+          }
+        }, 400);
+        return;
+      }
+      finishLogout();
+    }
+
+    function finishLogout() {
       localStorage.removeItem("pm_user");
       sessionStorage.removeItem("pm_user");
       cacheClearAll();

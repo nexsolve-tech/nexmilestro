@@ -32,7 +32,7 @@
         <h4 class="kanban-col-title"><i class="fas fa-list" style="color: var(--text-muted); margin-right: 0.35rem;"></i>To Do</h4>
         <span class="kanban-card-count" id="count-pending">0</span>
       </div>
-      <div class="kanban-card-list" id="list-pending">
+      <div class="kanban-card-list" id="list-pending" ondragover="handleTaskDragOver(event)" ondrop="handleTaskDrop(event, 'Pending')">
         <!-- Rendered tasks go here -->
       </div>
     </div>
@@ -43,7 +43,7 @@
         <h4 class="kanban-col-title"><i class="fas fa-spinner fa-spin-pulse" style="color: var(--secondary); margin-right: 0.35rem;"></i>In Progress</h4>
         <span class="kanban-card-count" id="count-inprogress">0</span>
       </div>
-      <div class="kanban-card-list" id="list-inprogress">
+      <div class="kanban-card-list" id="list-inprogress" ondragover="handleTaskDragOver(event)" ondrop="handleTaskDrop(event, 'In Progress')">
         <!-- Rendered tasks go here -->
       </div>
     </div>
@@ -54,7 +54,7 @@
         <h4 class="kanban-col-title"><i class="fas fa-clipboard-check" style="color: #f59e0b; margin-right: 0.35rem;"></i>Under Review</h4>
         <span class="kanban-card-count" id="count-underreview">0</span>
       </div>
-      <div class="kanban-card-list" id="list-underreview">
+      <div class="kanban-card-list" id="list-underreview" ondragover="handleTaskDragOver(event)" ondrop="handleTaskDrop(event, 'Under Review')">
         <!-- Rendered tasks go here -->
       </div>
     </div>
@@ -65,7 +65,7 @@
         <h4 class="kanban-col-title"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 0.35rem;"></i>Completed</h4>
         <span class="kanban-card-count" id="count-completed">0</span>
       </div>
-      <div class="kanban-card-list" id="list-completed">
+      <div class="kanban-card-list" id="list-completed" ondragover="handleTaskDragOver(event)" ondrop="handleTaskDrop(event, 'Completed')">
         <!-- Rendered tasks go here -->
       </div>
     </div>
@@ -310,33 +310,91 @@
     google.script.run.withSuccessHandler(function(data) { associatesCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getAssociates();
   }
   function populateDropdownsFromCache() {
-    var priorities = dropdownsCache["TaskPriority"] || [];
+    var rawPrio = dropdownsCache["TaskPriority"];
+    var priorities = (Array.isArray(rawPrio) && rawPrio.length > 0) ? rawPrio : ["High", "Medium", "Low"];
     var prioritySelect = document.getElementById("task-priority");
     if (prioritySelect) {
+      var curVal = prioritySelect.value;
       prioritySelect.innerHTML = priorities.map(function(p) {
-        return '<option value="'.concat(p, '">').concat(escapeHtml(p), "</option>");
+        return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
       }).join("");
+      if (curVal && priorities.includes(curVal)) prioritySelect.value = curVal;
+      else prioritySelect.value = "Medium";
     }
     var priorityFilter = document.getElementById("filter-task-priority");
     if (priorityFilter) {
       priorityFilter.innerHTML = '<option value="">All Priorities</option>' + priorities.map(function(p) {
-        return '<option value="'.concat(p, '">').concat(escapeHtml(p), "</option>");
+        return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
       }).join("");
     }
-    var statuses = dropdownsCache["TaskStatus"] || [];
+    var rawStat = dropdownsCache["TaskStatus"];
+    var statuses = (Array.isArray(rawStat) && rawStat.length > 0) ? rawStat : ["Pending", "In Progress", "Under Review", "Completed", "Cancelled"];
     var statusSelect = document.getElementById("task-status");
     if (statusSelect) {
+      var curStat = statusSelect.value;
       statusSelect.innerHTML = statuses.map(function(s) {
-        return '<option value="'.concat(s, '">').concat(escapeHtml(s), "</option>");
+        var label = s;
+        if (s === "Pending") label = "To Do / Pending";
+        return '<option value="' + escapeHtml(s) + '">' + escapeHtml(label) + '</option>';
       }).join("");
+      if (curStat && statuses.includes(curStat)) statusSelect.value = curStat;
+      else statusSelect.value = "Pending";
     }
   }
-  function populateTaskFilters() {
-    var filterSelect = document.getElementById("filter-task-project");
-    filterSelect.innerHTML = '<option value="">All Projects</option>' + projectsCacheList.map(function(p) {
-      return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), "</option>");
-    }).join("");
-  }
+
+  // HTML5 Drag and Drop Handlers for Kanban
+  window.handleTaskDragStart = function(e, taskId) {
+    if (e.dataTransfer) {
+      e.dataTransfer.setData("text/plain", taskId);
+      e.dataTransfer.effectAllowed = "move";
+    }
+  };
+
+  window.handleTaskDragOver = function(e) {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+  };
+
+  window.handleTaskDrop = function(e, targetStatus) {
+    e.preventDefault();
+    var taskId = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+    if (taskId) {
+      moveTaskStatus(taskId, targetStatus, e);
+    }
+  };
+
+  // Move task status locally (0ms) + background save
+  window.moveTaskStatus = function(taskId, newStatus, event) {
+    if (event) event.stopPropagation();
+    var task = (allTasks || []).find(function(t) { return t && t.TaskID === taskId; });
+    if (!task) return;
+    if (task.Status === newStatus) return;
+
+    task.Status = newStatus;
+    if (newStatus === "Completed") {
+      task.CompletionDate = new Date().toISOString().substring(0, 10);
+    }
+
+    if (window._dataCache && window._dataCache.tasks) {
+      var cTask = window._dataCache.tasks.find(function(t) { return t && t.TaskID === taskId; });
+      if (cTask) {
+        cTask.Status = newStatus;
+        if (newStatus === "Completed") cTask.CompletionDate = task.CompletionDate;
+      }
+    }
+
+    renderKanban(allTasks);
+    showToast("Task " + taskId + " moved to '" + newStatus + "'", "success");
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var currentUserId = currentUser.userId || currentUser.UserID || "Admin";
+    google.script.run.saveTask({
+      TaskID: taskId,
+      Status: newStatus,
+      CompletionDate: task.CompletionDate || ""
+    }, currentUserId);
+  };
+
   function renderKanban(tasks) {
     var columns = {
       "Pending": { listEl: document.getElementById("list-pending"), countEl: document.getElementById("count-pending"), items: [] },
@@ -348,9 +406,8 @@
       if (columns[key].listEl) columns[key].listEl.innerHTML = "";
       if (columns[key].countEl) columns[key].countEl.innerText = "0";
     }
-    tasks.forEach(function(task) {
-      if (task.Status === "Cancelled")
-        return;
+    (tasks || []).forEach(function(task) {
+      if (!task || task.Status === "Cancelled") return;
       var colName = task.Status;
       if (colName === "Todo" || colName === "Pending" || colName === "To Do")
         colName = "Pending";
@@ -362,11 +419,12 @@
         columns[colName].items.push(task);
       }
     });
-    for (var key in columns) {
-      var col = columns[key];
+
+    for (var colKey in columns) {
+      var col = columns[colKey];
       col.countEl.innerText = col.items.length;
       if (col.items.length === 0) {
-        col.listEl.innerHTML = '\n          <div style="text-align:center; padding: 1.5rem; border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.8rem;">\n            No tasks in this lane\n          </div>\n        ';
+        col.listEl.innerHTML = '<div style="text-align:center; padding: 1.5rem; border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.8rem;">No tasks in this lane</div>';
         continue;
       }
       col.items.sort(function(a, b) {
@@ -374,19 +432,35 @@
         var idB = String(b.TaskID || "");
         return idB.localeCompare(idA);
       });
+
       col.listEl.innerHTML = col.items.map(function(task) {
-        var proj = projectsCacheList.find(function(p) {
-          return p.ProjectID === task.ProjectID;
+        var proj = (projectsCacheList || []).find(function(p) {
+          return p && p.ProjectID === task.ProjectID;
         });
-        var projName = proj ? proj.ProjectName : "Unknown Project";
+        var projName = proj ? proj.ProjectName : "General Project";
         var dateStr = task.DueDate ? formatDate(task.DueDate) : "No Due Date";
         var priorityClass = (task.Priority || "Medium").toLowerCase();
-        return '<div class="kanban-card" onclick="editTask(\'' + task.TaskID + '\')">' +
+
+        var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(task.TaskID) : task.TaskID;
+        var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(task.TaskName) : task.TaskName;
+
+        // Quick status advance buttons
+        var quickBtns = "";
+        if (colKey === "Pending") {
+          quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'In Progress\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--secondary); font-weight:600;"><i class="fas fa-play"></i> Start</button>';
+        } else if (colKey === "In Progress") {
+          quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Under Review\', event)" style="font-size:0.7rem; padding: 2px 7px; color: #f59e0b; font-weight:600;"><i class="fas fa-clipboard-check"></i> Review</button>' +
+                      '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Completed\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--success); font-weight:600;"><i class="fas fa-check"></i> Done</button>';
+        } else if (colKey === "Under Review") {
+          quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Completed\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--success); font-weight:600;"><i class="fas fa-check-double"></i> Approve</button>';
+        }
+
+        return '<div class="kanban-card" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: grab;">' +
           '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">' +
-            '<span class="kanban-card-title">' + escapeHtml(task.TaskName) + '</span>' +
+            '<span class="kanban-card-title">' + tNameEsc + '</span>' +
             '<div style="display:flex; align-items:center; gap:0.35rem;">' +
-              '<button type="button" data-task-id="' + escapeHtml(task.TaskID) + '" onclick="event.stopPropagation(); notifyTaskWhatsApp(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: #25D366; padding:0; width:22px; height:22px; cursor:pointer;" title="Notify via WhatsApp"><i class="fab fa-whatsapp"></i></button>' +
-              '<span class="badge priority-' + priorityClass + '">' + escapeHtml(task.Priority) + '</span>' +
+              '<button type="button" data-task-id="' + tIdEsc + '" onclick="event.stopPropagation(); notifyTaskWhatsApp(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: #25D366; padding:0; width:22px; height:22px; cursor:pointer;" title="Notify via WhatsApp"><i class="fab fa-whatsapp"></i></button>' +
+              '<span class="badge priority-' + priorityClass + '">' + escapeHtml(task.Priority || "Medium") + '</span>' +
             '</div>' +
           '</div>' +
           '<div class="kanban-card-desc">' + escapeHtml(task.Description || "No description.") + '</div>' +
@@ -394,8 +468,9 @@
             '<span class="kanban-card-assigned"><i class="far fa-user"></i> ' + escapeHtml(task.AssignedTo || "Unassigned") + '</span>' +
             '<span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;"><i class="far fa-calendar"></i> ' + dateStr + '</span>' +
           '</div>' +
-          '<div style="font-size: 0.65rem; color: var(--primary); font-weight: 700; margin-top: 0.25rem;">' +
-            'Project: ' + escapeHtml(projName) +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem; padding-top:0.35rem; border-top:1px dashed var(--border-color);">' +
+            '<span style="font-size: 0.65rem; color: var(--primary); font-weight: 700;">' + escapeHtml(projName) + '</span>' +
+            '<div style="display:flex; gap:0.3rem;">' + quickBtns + '</div>' +
           '</div>' +
         '</div>';
       }).join("");
@@ -491,8 +566,24 @@
       document.getElementById("task-assigned-to").value = taskObj.AssignedTo || "";
       document.getElementById("task-start-date").value = parseRawDateString(taskObj.StartDate);
       document.getElementById("task-due-date").value = parseRawDateString(taskObj.DueDate);
-      document.getElementById("task-priority").value = taskObj.Priority;
-      document.getElementById("task-status").value = taskObj.Status;
+      var prioEl = document.getElementById("task-priority");
+      if (prioEl) prioEl.value = taskObj.Priority || "Medium";
+
+      var st = taskObj.Status || "Pending";
+      if (st === "Todo" || st === "To Do") st = "Pending";
+      if (st === "Done") st = "Completed";
+      if (st === "Review") st = "Under Review";
+      var statusEl = document.getElementById("task-status");
+      if (statusEl) {
+        var exists = Array.from(statusEl.options).some(function(o) { return o.value === st; });
+        if (!exists) {
+          var opt = document.createElement("option");
+          opt.value = st;
+          opt.text = st;
+          statusEl.appendChild(opt);
+        }
+        statusEl.value = st;
+      }
       document.getElementById("task-completion-date").value = parseRawDateString(taskObj.CompletionDate);
       document.getElementById("task-desc").value = taskObj.Description || "";
       document.getElementById("task-remarks").value = taskObj.Remarks || "";
@@ -537,12 +628,24 @@
         formData[input.name] = input.value;
       }
     });
+
+    // Optimistically update in local allTasks array immediately
+    if (!formData.TaskID) {
+      formData.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
+      allTasks.unshift(formData);
+    } else {
+      var tIdx = allTasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
+      if (tIdx !== -1) allTasks[tIdx] = Object.assign(allTasks[tIdx], formData);
+      else allTasks.unshift(formData);
+    }
+    closeTaskModal();
+    renderKanban(allTasks);
+
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
     google.script.run.withSuccessHandler(function(response) {
       if (response.success) {
-        showToast(response.message, "success");
-        closeTaskModal();
+        showToast(response.message || "Task saved.", "success");
         loadTasksView(false);
       } else {
         showToast(response.message, "error");
