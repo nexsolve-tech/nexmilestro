@@ -219,8 +219,6 @@
       if (projSelect) { projSelect.setAttribute("required", "required"); }
     }
   };
-    }
-  };
 
   window.switchVisitSubTab = function(subTab) {
     activeVisitTab = subTab;
@@ -262,10 +260,11 @@
 
     function applySiteVisitsData(result) {
       if (!result) return;
-      customersCacheList = Array.isArray(result.customers) ? result.customers : [];
+      customersCacheList = (Array.isArray(result.customers) && result.customers.length > 0) ? result.customers : ((window._dataCache && window._dataCache.customers) || []);
       window.customersCacheList = customersCacheList;
 
-      projectsCache = Array.isArray(result.projects) ? result.projects : [];
+      projectsCache = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      window.projectsCache = projectsCache;
       var select = document.getElementById("visit-project-id");
       if (select) {
         select.innerHTML = '<option value="">Select Project</option>' + projectsCache.filter(function(p) {
@@ -275,7 +274,7 @@
         }).join("");
       }
 
-      leadsCacheList = Array.isArray(result.leads) ? result.leads : [];
+      leadsCacheList = (Array.isArray(result.leads) && result.leads.length > 0) ? result.leads : ((window._dataCache && window._dataCache.leads) || []);
       window.leadsCacheList = leadsCacheList;
       var leadSelect = document.getElementById("visit-lead-id");
       if (leadSelect) {
@@ -287,10 +286,10 @@
         }).join("");
       }
 
-      allVisits = Array.isArray(result.siteVisits) ? result.siteVisits : [];
-      staffCacheList = Array.isArray(result.users) ? result.users : [];
-      vendorsCacheList = Array.isArray(result.vendors) ? result.vendors : [];
-      associatesCacheList = Array.isArray(result.associates) ? result.associates : [];
+      allVisits = Array.isArray(result.siteVisits) ? result.siteVisits : ((window._dataCache && window._dataCache.siteVisits) || []);
+      staffCacheList = (Array.isArray(result.users) && result.users.length > 0) ? result.users : ((window._dataCache && window._dataCache.users) || []);
+      vendorsCacheList = (Array.isArray(result.vendors) && result.vendors.length > 0) ? result.vendors : ((window._dataCache && window._dataCache.vendors) || []);
+      associatesCacheList = (Array.isArray(result.associates) && result.associates.length > 0) ? result.associates : ((window._dataCache && window._dataCache.associates) || []);
 
       populateProjectFilter();
       filterVisits();
@@ -779,11 +778,6 @@
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showToast(err.message, "error");
-      }).deleteSiteVisit(visitId);
-    }
-  }
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteSiteVisit(visitId);
     }

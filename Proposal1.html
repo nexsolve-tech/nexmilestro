@@ -681,17 +681,6 @@
       }).deleteProposal(proposalId);
     }
   }
-          renderProposals(proposalsDataList);
-          loadProposalsView(true);
-        } else {
-          showToast(response.message, "error");
-        }
-      }).withFailureHandler(function(err) {
-        showLoader(false);
-        showToast(err.message, "error");
-      }).deleteProposal(proposalId);
-    }
-  }
 
   window.handleProposalLinkTypeChange = handleProposalLinkTypeChange;
   window.openProposalModal = openProposalModal;

@@ -4652,8 +4652,6 @@ textarea.form-control {
       if (projSelect) { projSelect.setAttribute("required", "required"); }
     }
   };
-    }
-  };
 
   window.switchVisitSubTab = function(subTab) {
     activeVisitTab = subTab;
@@ -4695,10 +4693,11 @@ textarea.form-control {
 
     function applySiteVisitsData(result) {
       if (!result) return;
-      customersCacheList = Array.isArray(result.customers) ? result.customers : [];
+      customersCacheList = (Array.isArray(result.customers) && result.customers.length > 0) ? result.customers : ((window._dataCache && window._dataCache.customers) || []);
       window.customersCacheList = customersCacheList;
 
-      projectsCache = Array.isArray(result.projects) ? result.projects : [];
+      projectsCache = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      window.projectsCache = projectsCache;
       var select = document.getElementById("visit-project-id");
       if (select) {
         select.innerHTML = '<option value="">Select Project</option>' + projectsCache.filter(function(p) {
@@ -4708,7 +4707,7 @@ textarea.form-control {
         }).join("");
       }
 
-      leadsCacheList = Array.isArray(result.leads) ? result.leads : [];
+      leadsCacheList = (Array.isArray(result.leads) && result.leads.length > 0) ? result.leads : ((window._dataCache && window._dataCache.leads) || []);
       window.leadsCacheList = leadsCacheList;
       var leadSelect = document.getElementById("visit-lead-id");
       if (leadSelect) {
@@ -4720,10 +4719,10 @@ textarea.form-control {
         }).join("");
       }
 
-      allVisits = Array.isArray(result.siteVisits) ? result.siteVisits : [];
-      staffCacheList = Array.isArray(result.users) ? result.users : [];
-      vendorsCacheList = Array.isArray(result.vendors) ? result.vendors : [];
-      associatesCacheList = Array.isArray(result.associates) ? result.associates : [];
+      allVisits = Array.isArray(result.siteVisits) ? result.siteVisits : ((window._dataCache && window._dataCache.siteVisits) || []);
+      staffCacheList = (Array.isArray(result.users) && result.users.length > 0) ? result.users : ((window._dataCache && window._dataCache.users) || []);
+      vendorsCacheList = (Array.isArray(result.vendors) && result.vendors.length > 0) ? result.vendors : ((window._dataCache && window._dataCache.vendors) || []);
+      associatesCacheList = (Array.isArray(result.associates) && result.associates.length > 0) ? result.associates : ((window._dataCache && window._dataCache.associates) || []);
 
       populateProjectFilter();
       filterVisits();
@@ -5216,11 +5215,6 @@ textarea.form-control {
       }).deleteSiteVisit(visitId);
     }
   }
-        showLoader(false);
-        showToast(err.message, "error");
-      }).deleteSiteVisit(visitId);
-    }
-  }
 
   function parseRawDateString(isoString) {
     if (!isoString)
@@ -5537,7 +5531,7 @@ textarea.form-control {
 
     function applyTasksData(result) {
       result = result || {};
-      projectsCacheList = result.projects || [];
+      projectsCacheList = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
       var projSelect = document.getElementById("task-project-id");
       if (projSelect) {
         projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
@@ -5545,7 +5539,7 @@ textarea.form-control {
         }).join("");
       }
 
-      usersCacheList = result.users || [];
+      usersCacheList = (Array.isArray(result.users) && result.users.length > 0) ? result.users : ((window._dataCache && window._dataCache.users) || []);
       var userSelect = document.getElementById("task-assigned-to");
       if (userSelect) {
         userSelect.innerHTML = '<option value="">Select Staff</option>' + (usersCacheList || []).filter(function(u) {
@@ -5559,10 +5553,10 @@ textarea.form-control {
         }).join("");
       }
 
-      allTasks = result.tasks || [];
-      dropdownsCache = result.dropdowns || {};
-      vendorsCacheList = result.vendors || [];
-      associatesCacheList = result.associates || [];
+      allTasks = Array.isArray(result.tasks) ? result.tasks : ((window._dataCache && window._dataCache.tasks) || []);
+      dropdownsCache = result.dropdowns || (window._dataCache && window._dataCache.dropdowns) || {};
+      vendorsCacheList = (Array.isArray(result.vendors) && result.vendors.length > 0) ? result.vendors : ((window._dataCache && window._dataCache.vendors) || []);
+      associatesCacheList = (Array.isArray(result.associates) && result.associates.length > 0) ? result.associates : ((window._dataCache && window._dataCache.associates) || []);
 
       populateDropdownsFromCache();
       populateTaskFilters();
@@ -5689,6 +5683,17 @@ textarea.form-control {
     }
   }
 
+  function populateTaskFilters() {
+    var projFilter = document.getElementById("filter-task-project");
+    if (projFilter) {
+      var currentVal = projFilter.value;
+      projFilter.innerHTML = '<option value="">All Projects</option>' + (projectsCacheList || []).map(function(p) {
+        return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + '</option>';
+      }).join("");
+      if (currentVal) projFilter.value = currentVal;
+    }
+  }
+
   // HTML5 Drag and Drop Handlers for Kanban
   window.handleTaskDragStart = function(e, taskId) {
     if (e.dataTransfer) {
@@ -5728,6 +5733,7 @@ textarea.form-control {
         cTask.Status = newStatus;
         if (newStatus === "Completed") cTask.CompletionDate = task.CompletionDate;
       }
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
     }
 
     renderKanban(allTasks);
@@ -5735,11 +5741,9 @@ textarea.form-control {
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || "Admin";
-    google.script.run.saveTask({
-      TaskID: taskId,
-      Status: newStatus,
-      CompletionDate: task.CompletionDate || ""
-    }, currentUserId);
+    if (google.script && google.script.run && google.script.run.updateTaskStatus) {
+      google.script.run.updateTaskStatus(taskId, newStatus, currentUserId);
+    }
   };
 
   function renderKanban(tasks) {
@@ -5754,14 +5758,20 @@ textarea.form-control {
       if (columns[key].countEl) columns[key].countEl.innerText = "0";
     }
     (tasks || []).forEach(function(task) {
-      if (!task || task.Status === "Cancelled") return;
-      var colName = task.Status;
-      if (colName === "Todo" || colName === "Pending" || colName === "To Do")
-        colName = "Pending";
-      else if (colName === "Review" || colName === "Under Review" || colName === "UnderReview")
-        colName = "Under Review";
-      else if (colName === "Done" || colName === "Completed")
+      if (!task) return;
+      var rawStatus = String(task.Status || "").trim().toLowerCase();
+      if (rawStatus === "cancelled" || rawStatus === "canceled") return;
+
+      var colName = "Pending";
+      if (rawStatus === "completed" || rawStatus === "done" || rawStatus === "closed" || rawStatus === "finished") {
         colName = "Completed";
+      } else if (rawStatus === "under review" || rawStatus === "underreview" || rawStatus === "review" || rawStatus === "qa" || rawStatus === "testing") {
+        colName = "Under Review";
+      } else if (rawStatus === "in progress" || rawStatus === "inprogress" || rawStatus === "in-progress" || rawStatus === "active" || rawStatus === "wip" || rawStatus === "ongoing") {
+        colName = "In Progress";
+      } else {
+        colName = "Pending";
+      }
       if (columns[colName]) {
         columns[colName].items.push(task);
       }
@@ -5858,13 +5868,23 @@ textarea.form-control {
   }
   window.notifyTaskWhatsApp = notifyTaskWhatsApp;
   function filterTasks() {
-    var searchVal = document.getElementById("task-search").value.toLowerCase();
-    var projVal = document.getElementById("filter-task-project").value;
-    var priorityVal = document.getElementById("filter-task-priority").value;
-    var filtered = allTasks.filter(function(t) {
-      var matchesSearch = t.TaskName.toLowerCase().includes(searchVal) || t.Description && t.Description.toLowerCase().includes(searchVal) || t.AssignedTo && t.AssignedTo.toLowerCase().includes(searchVal);
-      var matchesProj = !projVal || t.ProjectID === projVal;
-      var matchesPriority = !priorityVal || t.Priority === priorityVal;
+    var searchEl = document.getElementById("task-search");
+    var searchVal = (searchEl ? searchEl.value : "").toLowerCase().trim();
+    var projEl = document.getElementById("filter-task-project");
+    var projVal = projEl ? projEl.value : "";
+    var priorityEl = document.getElementById("filter-task-priority");
+    var priorityVal = priorityEl ? priorityEl.value : "";
+
+    var filtered = (allTasks || []).filter(function(t) {
+      if (!t) return false;
+      var tName = String(t.TaskName || "").toLowerCase();
+      var tDesc = String(t.Description || "").toLowerCase();
+      var tAssigned = String(t.AssignedTo || "").toLowerCase();
+      var tId = String(t.TaskID || "").toLowerCase();
+
+      var matchesSearch = !searchVal || tName.includes(searchVal) || tDesc.includes(searchVal) || tAssigned.includes(searchVal) || tId.includes(searchVal);
+      var matchesProj = !projVal || String(t.ProjectID || "") === projVal;
+      var matchesPriority = !priorityVal || String(t.Priority || "") === priorityVal;
       return matchesSearch && matchesProj && matchesPriority;
     });
     renderKanban(filtered);
@@ -7604,17 +7624,6 @@ textarea.form-control {
           showToast(response.message, "error");
         }
       }).withFailureHandler(function(err) {
-        showToast(err.message, "error");
-      }).deleteProposal(proposalId);
-    }
-  }
-          renderProposals(proposalsDataList);
-          loadProposalsView(true);
-        } else {
-          showToast(response.message, "error");
-        }
-      }).withFailureHandler(function(err) {
-        showLoader(false);
         showToast(err.message, "error");
       }).deleteProposal(proposalId);
     }
