@@ -1947,6 +1947,55 @@
       if (e.key === "Escape") {
         var pop = document.getElementById("user-profile-popover");
         if (pop && pop.style.display === "block") pop.style.display = "none";
+        closeAllTableActionMenus();
+      }
+    });
+
+    /**
+     * Universal Table Row Action Menu (Nexallot Style)
+     */
+    function toggleTableRowActionMenu(e, menuId) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      var targetMenu = document.getElementById(menuId);
+      if (!targetMenu) return;
+
+      var wrap = targetMenu.closest(".action-dropdown-wrap");
+      var isCurrentlyOpen = targetMenu.style.display === "block";
+
+      closeAllTableActionMenus();
+
+      if (!isCurrentlyOpen) {
+        targetMenu.style.display = "block";
+        if (wrap) wrap.classList.add("open");
+
+        // Viewport collision detection: open upwards if near screen bottom
+        var rect = targetMenu.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight - 20) {
+          targetMenu.style.top = "auto";
+          targetMenu.style.bottom = "calc(100% + 5px)";
+        } else {
+          targetMenu.style.top = "calc(100% + 5px)";
+          targetMenu.style.bottom = "auto";
+        }
+      }
+    }
+    window.toggleTableRowActionMenu = toggleTableRowActionMenu;
+
+    function closeAllTableActionMenus() {
+      document.querySelectorAll(".table-action-menu").forEach(function(m) {
+        m.style.display = "none";
+        var wrap = m.closest(".action-dropdown-wrap");
+        if (wrap) wrap.classList.remove("open");
+      });
+    }
+    window.closeAllTableActionMenus = closeAllTableActionMenus;
+
+    document.addEventListener("click", function(e) {
+      if (!e.target.closest(".action-dropdown-wrap")) {
+        closeAllTableActionMenus();
       }
     });
 

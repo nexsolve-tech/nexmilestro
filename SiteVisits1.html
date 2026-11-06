@@ -565,16 +565,31 @@
         }
       }
       var statusClass = (visit.Status || "Completed") === "Scheduled" ? "badge-inactive" : "badge-completed";
-      var actionsHtml = "";
-      actionsHtml += '<button type="button" data-visit-id="' + escapeHtml(visit.VisitID) + '" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Share Report on WhatsApp" onclick="shareVisitOnWhatsApp(this.getAttribute(\'data-visit-id\'))"><i class="fab fa-whatsapp"></i></button>';
+      var svId = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
+      var svIdEsc = svId;
+      var menuId = "act-visit-" + svIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); shareVisitOnWhatsApp(\'' + svIdEsc + '\');">' +
+            '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share Report (WhatsApp)</span>' +
+          '</button>';
+
       if (canEdit) {
-        var svId = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Visit" onclick="editVisit(\'' + svId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editVisit(\'' + svIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Visit Log</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var svId = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Visit" onclick="deleteVisit(\'' + svId + '\')"><i class="fas fa-trash"></i></button>';
+        actionsHtml += '<div class="table-action-divider"></div>' +
+          '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteVisit(\'' + svIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Site Visit</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
 
       var svIdEsc = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
       var purposeEsc = typeof escapeHtml === "function" ? escapeHtml(visit.Purpose || "") : (visit.Purpose || "");

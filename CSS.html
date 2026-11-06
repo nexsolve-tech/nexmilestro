@@ -1012,6 +1012,122 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #f1f5f9;
 }
 
+/* Universal Table Action Dropdown (Nexallot Style) */
+.action-dropdown-wrap {
+  position: relative;
+  display: inline-block;
+  text-align: right;
+}
+
+.btn-table-action {
+  background: var(--primary, #0f766e);
+  color: #ffffff !important;
+  border: 1.5px solid rgba(13, 148, 136, 0.5);
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.775rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.btn-table-action:hover {
+  background: #115e59;
+  border-color: #14b8a6;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-table-action .table-action-chevron {
+  font-size: 0.65rem;
+  transition: transform 0.2s ease;
+  margin-left: 2px;
+}
+
+.action-dropdown-wrap.open .btn-table-action {
+  background: #115e59;
+  border-color: #2dd4bf;
+}
+
+.action-dropdown-wrap.open .table-action-chevron {
+  transform: rotate(180deg);
+}
+
+.table-action-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 5px);
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18), 0 4px 10px rgba(0, 0, 0, 0.08);
+  min-width: 200px;
+  z-index: 1050 !important;
+  overflow: hidden;
+  padding: 0.4rem 0;
+  animation: actionFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+@keyframes actionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.table-action-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 1rem;
+  color: var(--text-main, #1e293b);
+  text-decoration: none;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.table-action-item:hover {
+  background-color: var(--bg-secondary, #f8fafc);
+  color: var(--primary, #0f766e);
+}
+
+.table-action-item i {
+  width: 18px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.table-action-item.item-danger {
+  color: #ef4444;
+}
+
+.table-action-item.item-danger:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.table-action-divider {
+  height: 1px;
+  background: var(--border-color, #e2e8f0);
+  margin: 0.35rem 0;
+}
+
 /* Badges for status, priorities, etc. */
 .badge {
   display: inline-flex;

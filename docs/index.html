@@ -1030,6 +1030,122 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #f1f5f9;
 }
 
+/* Universal Table Action Dropdown (Nexallot Style) */
+.action-dropdown-wrap {
+  position: relative;
+  display: inline-block;
+  text-align: right;
+}
+
+.btn-table-action {
+  background: var(--primary, #0f766e);
+  color: #ffffff !important;
+  border: 1.5px solid rgba(13, 148, 136, 0.5);
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.775rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.btn-table-action:hover {
+  background: #115e59;
+  border-color: #14b8a6;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-table-action .table-action-chevron {
+  font-size: 0.65rem;
+  transition: transform 0.2s ease;
+  margin-left: 2px;
+}
+
+.action-dropdown-wrap.open .btn-table-action {
+  background: #115e59;
+  border-color: #2dd4bf;
+}
+
+.action-dropdown-wrap.open .table-action-chevron {
+  transform: rotate(180deg);
+}
+
+.table-action-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 5px);
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18), 0 4px 10px rgba(0, 0, 0, 0.08);
+  min-width: 200px;
+  z-index: 1050 !important;
+  overflow: hidden;
+  padding: 0.4rem 0;
+  animation: actionFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+@keyframes actionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.table-action-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 1rem;
+  color: var(--text-main, #1e293b);
+  text-decoration: none;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.table-action-item:hover {
+  background-color: var(--bg-secondary, #f8fafc);
+  color: var(--primary, #0f766e);
+}
+
+.table-action-item i {
+  width: 18px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.table-action-item.item-danger {
+  color: #ef4444;
+}
+
+.table-action-item.item-danger:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.table-action-divider {
+  height: 1px;
+  background: var(--border-color, #e2e8f0);
+  margin: 0.35rem 0;
+}
+
 /* Badges for status, priorities, etc. */
 .badge {
   display: inline-flex;
@@ -3681,15 +3797,28 @@ textarea.form-control {
       return idB.localeCompare(idA);
     });
     tbody.innerHTML = sorted.map(function(cust) {
-      var actionsHtml = "";
+      var cId = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
+      var cIdEsc = cId;
+      var menuId = "act-cust-" + cIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">';
+
       if (canEdit) {
-        var cId = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Customer" onclick="editCustomer(\'' + cId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editCustomer(\'' + cIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Customer</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var cId = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Customer" onclick="deleteCustomer(\'' + cId + '\')"><i class="fas fa-trash"></i></button>';
+        if (canEdit) actionsHtml += '<div class="table-action-divider"></div>';
+        actionsHtml += '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteCustomer(\'' + cIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Customer</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
       var photosHtml = "-";
       if (cust.Attachments && typeof cust.Attachments === "string" && cust.Attachments.trim() !== "") {
         var links = cust.Attachments.split(",").map(function(l) {
@@ -4136,36 +4265,45 @@ textarea.form-control {
     <!-- Project.html -->
 <div class="view-container">
   <!-- Filter & Search Bar -->
-  <div class="filter-bar">
+  <div class="filter-bar" style="overflow: visible !important;">
     <div class="search-input-wrapper">
       <i class="fas fa-search"></i>
       <input type="text" id="proj-search" class="search-input" placeholder="Search projects by name, location..." oninput="filterProjects()">
     </div>
     
-    <div class="filter-group">
-      <select id="filter-proj-customer" class="select-filter" style="max-width: 180px;" onchange="filterProjects()">
-        <option value="">All Customers</option>
-      </select>
+    <div class="filter-group" style="overflow: visible !important; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+      <div style="min-width: 180px;">
+        <select id="filter-proj-customer" class="select-filter" onchange="filterProjects()">
+          <option value="">All Customers</option>
+        </select>
+      </div>
 
-      <select id="filter-proj-type" class="select-filter" onchange="filterProjects()">
-        <option value="">All Types</option>
-        <option value="Interior Design">Interior Design</option>
-        <option value="Architecture">Architecture</option>
-        <option value="Civil Engineering">Civil Engineering</option>
-        <option value="Renovation">Renovation</option>
-      </select>
+      <div style="min-width: 160px;">
+        <select id="filter-proj-type" class="select-filter" onchange="filterProjects()">
+          <option value="">All Types</option>
+          <option value="Interior Design">Interior Design</option>
+          <option value="Architecture">Architecture</option>
+          <option value="Civil Engineering">Civil Engineering</option>
+          <option value="Renovation">Renovation</option>
+        </select>
+      </div>
 
-      <select id="filter-proj-status" class="select-filter" onchange="filterProjects()">
-        <option value="">All Statuses</option>
-        <option value="Proposed">Proposed</option>
-        <option value="In Progress">In Progress</option>
-        <option value="On Hold">On Hold</option>
-        <option value="Completed">Completed</option>
-        <option value="Cancelled">Cancelled</option>
-      </select>
+      <div style="min-width: 140px;">
+        <select id="filter-proj-status" class="select-filter" onchange="filterProjects()">
+          <option value="">All Statuses</option>
+          <option value="Proposed">Proposed</option>
+          <option value="In Progress">In Progress</option>
+          <option value="On Hold">On Hold</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
       
-      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
-      <button class="btn btn-primary" id="btn-add-project" onclick="openProjectModal()"><i class="fas fa-plus"></i> Add Project</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-proj-clear-filter" onclick="clearProjectFilters()" title="Reset Filters" style="display: none; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--danger); height: 38px;">
+        <i class="fas fa-times-circle"></i> Reset
+      </button>
+
+      <button class="btn btn-primary btn-sm" id="btn-add-project" onclick="openProjectModal()" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;"><i class="fas fa-plus"></i> Add Project</button>
     </div>
   </div>
 
@@ -4614,22 +4752,43 @@ textarea.form-control {
       var canEdit = isSuperAdmin || projectPerm.edit === true;
       var canDelete = isSuperAdmin || projectPerm.del === true;
       var canAddTask = isSuperAdmin || taskPerm.add === true;
-      var actionsHtml = "";
-      actionsHtml += '<button type="button" data-proj-id="' + escapeHtml(proj.ProjectID) + '" onclick="event.stopPropagation(); sendProjectWhatsApp(this.getAttribute(\'data-proj-id\'))" class="icon-btn" style="color: #25D366;" title="Share Project Update on WhatsApp"><i class="fab fa-whatsapp"></i></button>';
+      var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
+      var pjIdEsc = pjId;
+      var pjNameEscaped = escapeHtml((proj.ProjectName || "").replace(/'/g, "\\'"));
+      var menuId = "act-proj-" + pjIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); sendProjectWhatsApp(\'' + pjIdEsc + '\');">' +
+            '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share on WhatsApp</span>' +
+          '</button>';
+
       if (canAddTask) {
-        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
-        actionsHtml += '<button class="icon-btn" style="color: var(--success);" title="Add Task" onclick="addTaskForProject(\'' + pjId + '\')"><i class="fas fa-tasks"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); addTaskForProject(\'' + pjIdEsc + '\');">' +
+            '<i class="fas fa-tasks" style="color: var(--primary);"></i> <span>Add Task for Project</span>' +
+          '</button>';
       }
+
       if (canEdit) {
-        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
-        var pjNameEscaped = escapeHtml((proj.ProjectName || "").replace(/'/g, "\\'"));
-        actionsHtml += '<button class="icon-btn" style="color: var(--warning);" title="Manage Milestones" onclick="openMilestonesModal(\'' + pjId + '\', \'' + pjNameEscaped + '\')"><i class="fas fa-flag"></i></button>';
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Project" onclick="editProject(\'' + pjId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); openMilestonesModal(\'' + pjIdEsc + '\', \'' + pjNameEscaped + '\');">' +
+            '<i class="fas fa-flag" style="color: #f59e0b;"></i> <span>Manage Milestones</span>' +
+          '</button>' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editProject(\'' + pjIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Project</span>' +
+          '</button>';
       }
+
       if (canDelete) {
-        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Project" onclick="deleteProject(\'' + pjId + '\')"><i class="fas fa-trash"></i></button>';
+        actionsHtml += '<div class="table-action-divider"></div>' +
+          '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteProject(\'' + pjIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Project</span>' +
+          '</button>';
       }
+
+      actionsHtml += '</div></div>';
       var photosHtml = "-";
       if (proj.Attachments && typeof proj.Attachments === "string" && proj.Attachments.trim() !== "") {
         var links = proj.Attachments.split(",").map(function(l) {
@@ -4673,15 +4832,22 @@ textarea.form-control {
   }
   function filterProjects() {
     var searchInput = document.getElementById("proj-search");
-    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase().trim() : "";
     var custVal = document.getElementById("filter-proj-customer").value;
     var typeVal = document.getElementById("filter-proj-type").value;
     var statusVal = document.getElementById("filter-proj-status").value;
+
+    var hasActiveFilters = Boolean(searchVal || custVal || typeVal || statusVal);
+    var btnReset = document.getElementById("btn-proj-clear-filter");
+    if (btnReset) {
+      btnReset.style.display = hasActiveFilters ? "inline-flex" : "none";
+    }
+
     var filtered = allProjects.filter(function(p) {
       var projName = p.ProjectName ? String(p.ProjectName).toLowerCase() : "";
       var location = p.Location ? String(p.Location).toLowerCase() : "";
       var projId = p.ProjectID ? String(p.ProjectID).toLowerCase() : "";
-      var matchesSearch = projName.includes(searchVal) || location.includes(searchVal) || projId.includes(searchVal);
+      var matchesSearch = !searchVal || projName.includes(searchVal) || location.includes(searchVal) || projId.includes(searchVal);
       var matchesCust = !custVal || p.CustomerID === custVal;
       var matchesType = !typeVal || p.ProjectType === typeVal;
       var matchesStatus = !statusVal || p.Status === statusVal;
@@ -4689,6 +4855,32 @@ textarea.form-control {
     });
     renderProjects(filtered);
   }
+  window.filterProjects = filterProjects;
+
+  function clearProjectFilters() {
+    var searchInput = document.getElementById("proj-search");
+    var custSelect = document.getElementById("filter-proj-customer");
+    var typeSelect = document.getElementById("filter-proj-type");
+    var statusSelect = document.getElementById("filter-proj-status");
+    var btnReset = document.getElementById("btn-proj-clear-filter");
+
+    if (searchInput) searchInput.value = "";
+    if (custSelect) {
+      custSelect.value = "";
+      if (custSelect._refreshSearchable) custSelect._refreshSearchable();
+    }
+    if (typeSelect) {
+      typeSelect.value = "";
+      if (typeSelect._refreshSearchable) typeSelect._refreshSearchable();
+    }
+    if (statusSelect) {
+      statusSelect.value = "";
+      if (statusSelect._refreshSearchable) statusSelect._refreshSearchable();
+    }
+    if (btnReset) btnReset.style.display = "none";
+    filterProjects();
+  }
+  window.clearProjectFilters = clearProjectFilters;
 
   function sendProjectWhatsApp(projId) {
     var proj = allProjects.find(function(p) { return p.ProjectID === projId; });
@@ -5737,16 +5929,31 @@ textarea.form-control {
         }
       }
       var statusClass = (visit.Status || "Completed") === "Scheduled" ? "badge-inactive" : "badge-completed";
-      var actionsHtml = "";
-      actionsHtml += '<button type="button" data-visit-id="' + escapeHtml(visit.VisitID) + '" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Share Report on WhatsApp" onclick="shareVisitOnWhatsApp(this.getAttribute(\'data-visit-id\'))"><i class="fab fa-whatsapp"></i></button>';
+      var svId = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
+      var svIdEsc = svId;
+      var menuId = "act-visit-" + svIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); shareVisitOnWhatsApp(\'' + svIdEsc + '\');">' +
+            '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share Report (WhatsApp)</span>' +
+          '</button>';
+
       if (canEdit) {
-        var svId = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Visit" onclick="editVisit(\'' + svId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editVisit(\'' + svIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Visit Log</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var svId = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Visit" onclick="deleteVisit(\'' + svId + '\')"><i class="fas fa-trash"></i></button>';
+        actionsHtml += '<div class="table-action-divider"></div>' +
+          '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteVisit(\'' + svIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Site Visit</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
 
       var svIdEsc = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
       var purposeEsc = typeof escapeHtml === "function" ? escapeHtml(visit.Purpose || "") : (visit.Purpose || "");
@@ -8314,16 +8521,31 @@ textarea.form-control {
       var proposalPerm = perms["Proposals"] || {};
       var canEdit = isSuperAdmin || proposalPerm.edit === true;
       var canDelete = isSuperAdmin || proposalPerm.del === true;
-      var actionsHtml = "";
-      actionsHtml += '<button type="button" data-prop-id="' + escapeHtml(prop.ProposalID) + '" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Share Proposal on WhatsApp" onclick="sendProposalWhatsApp(this.getAttribute(\'data-prop-id\'))"><i class="fab fa-whatsapp"></i></button>';
+      var prId = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
+      var prIdEsc = prId;
+      var menuId = "act-prop-" + prIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); sendProposalWhatsApp(\'' + prIdEsc + '\');">' +
+            '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share on WhatsApp</span>' +
+          '</button>';
+
       if (canEdit) {
-        var prId = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Proposal" onclick="editProposal(\'' + prId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editProposal(\'' + prIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Proposal</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var prId = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Proposal" onclick="deleteProposal(\'' + prId + '\')"><i class="fas fa-trash"></i></button>';
+        actionsHtml += '<div class="table-action-divider"></div>' +
+          '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteProposal(\'' + prIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Proposal</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
       var prIdEsc = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
       var prProjNameEsc = typeof escapeHtml === "function" ? escapeHtml(prop.ProjectName || "") : (prop.ProjectName || "");
       var prStatusEsc = typeof escapeHtml === "function" ? escapeHtml(prop.Status || "") : (prop.Status || "");
@@ -8872,15 +9094,28 @@ textarea.form-control {
       return idB.localeCompare(idA);
     });
     tbody.innerHTML = sorted.map(function(v) {
-      var actionsHtml = "";
+      var vId = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
+      var vIdEsc = vId;
+      var menuId = "act-vnd-" + vIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">';
+
       if (canEdit) {
-        var vId = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Vendor" onclick="editVendor(\'' + vId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editVendor(\'' + vIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Vendor Details</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var vId = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Vendor" onclick="deleteVendor(\'' + vId + '\')"><i class="fas fa-trash"></i></button>';
+        if (canEdit) actionsHtml += '<div class="table-action-divider"></div>';
+        actionsHtml += '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteVendor(\'' + vIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Vendor</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
       var photosHtml = "-";
       if (v.Attachments && typeof v.Attachments === "string" && v.Attachments.trim() !== "") {
         var links = v.Attachments.split(",").map(function(l) {
@@ -9317,15 +9552,28 @@ textarea.form-control {
     tbody.innerHTML = sorted.map(function(assoc) {
       var badgeClass = assoc.Status === "Active" ? "badge-completed" : "badge-inactive";
       var categoryStr = assoc.Category || assoc.ServiceCategory || "-";
-      var actionsHtml = "";
+      var aId = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateID) : assoc.AssociateID;
+      var aIdEsc = aId;
+      var menuId = "act-asc-" + aIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">';
+
       if (canEdit) {
-        var aId = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateID) : assoc.AssociateID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Associate" onclick="editAssociate(\'' + aId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editAssociate(\'' + aIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Associate Details</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var aId = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateID) : assoc.AssociateID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Associate" onclick="deleteAssociateRow(\'' + aId + '\')"><i class="fas fa-trash"></i></button>';
+        if (canEdit) actionsHtml += '<div class="table-action-divider"></div>';
+        actionsHtml += '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteAssociateRow(\'' + aIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Associate</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
       var aIdEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateID) : assoc.AssociateID;
       var aNameEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.AssociateName || "") : (assoc.AssociateName || "");
       var aContactEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.ContactPerson || "-") : (assoc.ContactPerson || "-");
@@ -12993,18 +13241,30 @@ window.renderLedger = function(txns) {
       }
     }
 
-    var actionsHtml = "";
     var tIdEscaped = typeof escapeHtml === "function" ? escapeHtml(t.TransactionID) : t.TransactionID;
-    actionsHtml += '<button type="button" class="icon-btn" style="color: #25D366; cursor: pointer; margin-right: 0.35rem;" title="Share Voucher on WhatsApp" onclick="window.sendTxnWhatsApp(\'' + tIdEscaped + '\')"><i class="fab fa-whatsapp"></i></button>';
+    var menuId = "act-txn-" + tIdEscaped.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+    var actionsHtml = '<div class="action-dropdown-wrap">' +
+      '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+        '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+      '</button>' +
+      '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+        '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); window.sendTxnWhatsApp(\'' + tIdEscaped + '\');">' +
+          '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share Voucher (WhatsApp)</span>' +
+        '</button>';
+
     if (canEdit) {
-      actionsHtml += '<button class="icon-btn btn-edit" title="Edit Transaction" onclick="window.editTxn(\'' + tIdEscaped + '\')" style="margin-right:0.35rem;"><i class="fas fa-pen"></i></button>';
+      actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); window.editTxn(\'' + tIdEscaped + '\');">' +
+          '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Transaction</span>' +
+        '</button>';
     }
     if (canDelete) {
-      actionsHtml += '<button class="icon-btn btn-delete" title="Delete Transaction" onclick="window.deleteTxnRow(\'' + tIdEscaped + '\')"><i class="fas fa-trash"></i></button>';
+      actionsHtml += '<div class="table-action-divider"></div>' +
+        '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); window.deleteTxnRow(\'' + tIdEscaped + '\');">' +
+          '<i class="fas fa-trash"></i> <span>Delete Transaction</span>' +
+        '</button>';
     }
-    if (!canEdit && !canDelete) {
-      actionsHtml = '<button type="button" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Share Voucher on WhatsApp" onclick="window.sendTxnWhatsApp(\'' + tIdEscaped + '\')"><i class="fab fa-whatsapp"></i></button>';
-    }
+    actionsHtml += '</div></div>';
 
     var catStr = typeof escapeHtml === "function" ? escapeHtml(t.Category || "") : (t.Category || "");
     var modeStr = typeof escapeHtml === "function" ? escapeHtml(t.PaymentMode || "") : (t.PaymentMode || "");
@@ -14755,6 +15015,55 @@ document.addEventListener("click", function() {
       if (e.key === "Escape") {
         var pop = document.getElementById("user-profile-popover");
         if (pop && pop.style.display === "block") pop.style.display = "none";
+        closeAllTableActionMenus();
+      }
+    });
+
+    /**
+     * Universal Table Row Action Menu (Nexallot Style)
+     */
+    function toggleTableRowActionMenu(e, menuId) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      var targetMenu = document.getElementById(menuId);
+      if (!targetMenu) return;
+
+      var wrap = targetMenu.closest(".action-dropdown-wrap");
+      var isCurrentlyOpen = targetMenu.style.display === "block";
+
+      closeAllTableActionMenus();
+
+      if (!isCurrentlyOpen) {
+        targetMenu.style.display = "block";
+        if (wrap) wrap.classList.add("open");
+
+        // Viewport collision detection: open upwards if near screen bottom
+        var rect = targetMenu.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight - 20) {
+          targetMenu.style.top = "auto";
+          targetMenu.style.bottom = "calc(100% + 5px)";
+        } else {
+          targetMenu.style.top = "calc(100% + 5px)";
+          targetMenu.style.bottom = "auto";
+        }
+      }
+    }
+    window.toggleTableRowActionMenu = toggleTableRowActionMenu;
+
+    function closeAllTableActionMenus() {
+      document.querySelectorAll(".table-action-menu").forEach(function(m) {
+        m.style.display = "none";
+        var wrap = m.closest(".action-dropdown-wrap");
+        if (wrap) wrap.classList.remove("open");
+      });
+    }
+    window.closeAllTableActionMenus = closeAllTableActionMenus;
+
+    document.addEventListener("click", function(e) {
+      if (!e.target.closest(".action-dropdown-wrap")) {
+        closeAllTableActionMenus();
       }
     });
 

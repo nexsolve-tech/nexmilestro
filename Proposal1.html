@@ -407,16 +407,31 @@
       var proposalPerm = perms["Proposals"] || {};
       var canEdit = isSuperAdmin || proposalPerm.edit === true;
       var canDelete = isSuperAdmin || proposalPerm.del === true;
-      var actionsHtml = "";
-      actionsHtml += '<button type="button" data-prop-id="' + escapeHtml(prop.ProposalID) + '" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Share Proposal on WhatsApp" onclick="sendProposalWhatsApp(this.getAttribute(\'data-prop-id\'))"><i class="fab fa-whatsapp"></i></button>';
+      var prId = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
+      var prIdEsc = prId;
+      var menuId = "act-prop-" + prIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); sendProposalWhatsApp(\'' + prIdEsc + '\');">' +
+            '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share on WhatsApp</span>' +
+          '</button>';
+
       if (canEdit) {
-        var prId = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Proposal" onclick="editProposal(\'' + prId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editProposal(\'' + prIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Proposal</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var prId = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Proposal" onclick="deleteProposal(\'' + prId + '\')"><i class="fas fa-trash"></i></button>';
+        actionsHtml += '<div class="table-action-divider"></div>' +
+          '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteProposal(\'' + prIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Proposal</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
       var prIdEsc = typeof escapeHtml === "function" ? escapeHtml(prop.ProposalID) : prop.ProposalID;
       var prProjNameEsc = typeof escapeHtml === "function" ? escapeHtml(prop.ProjectName || "") : (prop.ProjectName || "");
       var prStatusEsc = typeof escapeHtml === "function" ? escapeHtml(prop.Status || "") : (prop.Status || "");

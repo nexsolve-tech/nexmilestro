@@ -258,15 +258,28 @@
       return idB.localeCompare(idA);
     });
     tbody.innerHTML = sorted.map(function(v) {
-      var actionsHtml = "";
+      var vId = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
+      var vIdEsc = vId;
+      var menuId = "act-vnd-" + vIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">';
+
       if (canEdit) {
-        var vId = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Vendor" onclick="editVendor(\'' + vId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editVendor(\'' + vIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Vendor Details</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var vId = typeof escapeHtml === "function" ? escapeHtml(v.VendorID) : v.VendorID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Vendor" onclick="deleteVendor(\'' + vId + '\')"><i class="fas fa-trash"></i></button>';
+        if (canEdit) actionsHtml += '<div class="table-action-divider"></div>';
+        actionsHtml += '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteVendor(\'' + vIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Vendor</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
       var photosHtml = "-";
       if (v.Attachments && typeof v.Attachments === "string" && v.Attachments.trim() !== "") {
         var links = v.Attachments.split(",").map(function(l) {

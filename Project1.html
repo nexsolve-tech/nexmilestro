@@ -1,36 +1,45 @@
 <!-- Project.html -->
 <div class="view-container">
   <!-- Filter & Search Bar -->
-  <div class="filter-bar">
+  <div class="filter-bar" style="overflow: visible !important;">
     <div class="search-input-wrapper">
       <i class="fas fa-search"></i>
       <input type="text" id="proj-search" class="search-input" placeholder="Search projects by name, location..." oninput="filterProjects()">
     </div>
     
-    <div class="filter-group">
-      <select id="filter-proj-customer" class="select-filter" style="max-width: 180px;" onchange="filterProjects()">
-        <option value="">All Customers</option>
-      </select>
+    <div class="filter-group" style="overflow: visible !important; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+      <div style="min-width: 180px;">
+        <select id="filter-proj-customer" class="select-filter" onchange="filterProjects()">
+          <option value="">All Customers</option>
+        </select>
+      </div>
 
-      <select id="filter-proj-type" class="select-filter" onchange="filterProjects()">
-        <option value="">All Types</option>
-        <option value="Interior Design">Interior Design</option>
-        <option value="Architecture">Architecture</option>
-        <option value="Civil Engineering">Civil Engineering</option>
-        <option value="Renovation">Renovation</option>
-      </select>
+      <div style="min-width: 160px;">
+        <select id="filter-proj-type" class="select-filter" onchange="filterProjects()">
+          <option value="">All Types</option>
+          <option value="Interior Design">Interior Design</option>
+          <option value="Architecture">Architecture</option>
+          <option value="Civil Engineering">Civil Engineering</option>
+          <option value="Renovation">Renovation</option>
+        </select>
+      </div>
 
-      <select id="filter-proj-status" class="select-filter" onchange="filterProjects()">
-        <option value="">All Statuses</option>
-        <option value="Proposed">Proposed</option>
-        <option value="In Progress">In Progress</option>
-        <option value="On Hold">On Hold</option>
-        <option value="Completed">Completed</option>
-        <option value="Cancelled">Cancelled</option>
-      </select>
+      <div style="min-width: 140px;">
+        <select id="filter-proj-status" class="select-filter" onchange="filterProjects()">
+          <option value="">All Statuses</option>
+          <option value="Proposed">Proposed</option>
+          <option value="In Progress">In Progress</option>
+          <option value="On Hold">On Hold</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
       
-      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
-      <button class="btn btn-primary" id="btn-add-project" onclick="openProjectModal()"><i class="fas fa-plus"></i> Add Project</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-proj-clear-filter" onclick="clearProjectFilters()" title="Reset Filters" style="display: none; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--danger); height: 38px;">
+        <i class="fas fa-times-circle"></i> Reset
+      </button>
+
+      <button class="btn btn-primary btn-sm" id="btn-add-project" onclick="openProjectModal()" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;"><i class="fas fa-plus"></i> Add Project</button>
     </div>
   </div>
 
@@ -479,22 +488,43 @@
       var canEdit = isSuperAdmin || projectPerm.edit === true;
       var canDelete = isSuperAdmin || projectPerm.del === true;
       var canAddTask = isSuperAdmin || taskPerm.add === true;
-      var actionsHtml = "";
-      actionsHtml += '<button type="button" data-proj-id="' + escapeHtml(proj.ProjectID) + '" onclick="event.stopPropagation(); sendProjectWhatsApp(this.getAttribute(\'data-proj-id\'))" class="icon-btn" style="color: #25D366;" title="Share Project Update on WhatsApp"><i class="fab fa-whatsapp"></i></button>';
+      var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
+      var pjIdEsc = pjId;
+      var pjNameEscaped = escapeHtml((proj.ProjectName || "").replace(/'/g, "\\'"));
+      var menuId = "act-proj-" + pjIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); sendProjectWhatsApp(\'' + pjIdEsc + '\');">' +
+            '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share on WhatsApp</span>' +
+          '</button>';
+
       if (canAddTask) {
-        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
-        actionsHtml += '<button class="icon-btn" style="color: var(--success);" title="Add Task" onclick="addTaskForProject(\'' + pjId + '\')"><i class="fas fa-tasks"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); addTaskForProject(\'' + pjIdEsc + '\');">' +
+            '<i class="fas fa-tasks" style="color: var(--primary);"></i> <span>Add Task for Project</span>' +
+          '</button>';
       }
+
       if (canEdit) {
-        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
-        var pjNameEscaped = escapeHtml((proj.ProjectName || "").replace(/'/g, "\\'"));
-        actionsHtml += '<button class="icon-btn" style="color: var(--warning);" title="Manage Milestones" onclick="openMilestonesModal(\'' + pjId + '\', \'' + pjNameEscaped + '\')"><i class="fas fa-flag"></i></button>';
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Project" onclick="editProject(\'' + pjId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); openMilestonesModal(\'' + pjIdEsc + '\', \'' + pjNameEscaped + '\');">' +
+            '<i class="fas fa-flag" style="color: #f59e0b;"></i> <span>Manage Milestones</span>' +
+          '</button>' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editProject(\'' + pjIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Project</span>' +
+          '</button>';
       }
+
       if (canDelete) {
-        var pjId = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectID) : proj.ProjectID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Project" onclick="deleteProject(\'' + pjId + '\')"><i class="fas fa-trash"></i></button>';
+        actionsHtml += '<div class="table-action-divider"></div>' +
+          '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteProject(\'' + pjIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Project</span>' +
+          '</button>';
       }
+
+      actionsHtml += '</div></div>';
       var photosHtml = "-";
       if (proj.Attachments && typeof proj.Attachments === "string" && proj.Attachments.trim() !== "") {
         var links = proj.Attachments.split(",").map(function(l) {
@@ -538,15 +568,22 @@
   }
   function filterProjects() {
     var searchInput = document.getElementById("proj-search");
-    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase().trim() : "";
     var custVal = document.getElementById("filter-proj-customer").value;
     var typeVal = document.getElementById("filter-proj-type").value;
     var statusVal = document.getElementById("filter-proj-status").value;
+
+    var hasActiveFilters = Boolean(searchVal || custVal || typeVal || statusVal);
+    var btnReset = document.getElementById("btn-proj-clear-filter");
+    if (btnReset) {
+      btnReset.style.display = hasActiveFilters ? "inline-flex" : "none";
+    }
+
     var filtered = allProjects.filter(function(p) {
       var projName = p.ProjectName ? String(p.ProjectName).toLowerCase() : "";
       var location = p.Location ? String(p.Location).toLowerCase() : "";
       var projId = p.ProjectID ? String(p.ProjectID).toLowerCase() : "";
-      var matchesSearch = projName.includes(searchVal) || location.includes(searchVal) || projId.includes(searchVal);
+      var matchesSearch = !searchVal || projName.includes(searchVal) || location.includes(searchVal) || projId.includes(searchVal);
       var matchesCust = !custVal || p.CustomerID === custVal;
       var matchesType = !typeVal || p.ProjectType === typeVal;
       var matchesStatus = !statusVal || p.Status === statusVal;
@@ -554,6 +591,32 @@
     });
     renderProjects(filtered);
   }
+  window.filterProjects = filterProjects;
+
+  function clearProjectFilters() {
+    var searchInput = document.getElementById("proj-search");
+    var custSelect = document.getElementById("filter-proj-customer");
+    var typeSelect = document.getElementById("filter-proj-type");
+    var statusSelect = document.getElementById("filter-proj-status");
+    var btnReset = document.getElementById("btn-proj-clear-filter");
+
+    if (searchInput) searchInput.value = "";
+    if (custSelect) {
+      custSelect.value = "";
+      if (custSelect._refreshSearchable) custSelect._refreshSearchable();
+    }
+    if (typeSelect) {
+      typeSelect.value = "";
+      if (typeSelect._refreshSearchable) typeSelect._refreshSearchable();
+    }
+    if (statusSelect) {
+      statusSelect.value = "";
+      if (statusSelect._refreshSearchable) statusSelect._refreshSearchable();
+    }
+    if (btnReset) btnReset.style.display = "none";
+    filterProjects();
+  }
+  window.clearProjectFilters = clearProjectFilters;
 
   function sendProjectWhatsApp(projId) {
     var proj = allProjects.find(function(p) { return p.ProjectID === projId; });

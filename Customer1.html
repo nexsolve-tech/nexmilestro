@@ -362,15 +362,28 @@
       return idB.localeCompare(idA);
     });
     tbody.innerHTML = sorted.map(function(cust) {
-      var actionsHtml = "";
+      var cId = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
+      var cIdEsc = cId;
+      var menuId = "act-cust-" + cIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">';
+
       if (canEdit) {
-        var cId = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Customer" onclick="editCustomer(\'' + cId + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editCustomer(\'' + cIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Customer</span>' +
+          '</button>';
       }
       if (canDelete) {
-        var cId = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerID) : cust.CustomerID;
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Customer" onclick="deleteCustomer(\'' + cId + '\')"><i class="fas fa-trash"></i></button>';
+        if (canEdit) actionsHtml += '<div class="table-action-divider"></div>';
+        actionsHtml += '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteCustomer(\'' + cIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Customer</span>' +
+          '</button>';
       }
+      actionsHtml += '</div></div>';
       var photosHtml = "-";
       if (cust.Attachments && typeof cust.Attachments === "string" && cust.Attachments.trim() !== "") {
         var links = cust.Attachments.split(",").map(function(l) {

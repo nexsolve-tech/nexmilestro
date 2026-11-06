@@ -891,18 +891,30 @@ window.renderLedger = function(txns) {
       }
     }
 
-    var actionsHtml = "";
     var tIdEscaped = typeof escapeHtml === "function" ? escapeHtml(t.TransactionID) : t.TransactionID;
-    actionsHtml += '<button type="button" class="icon-btn" style="color: #25D366; cursor: pointer; margin-right: 0.35rem;" title="Share Voucher on WhatsApp" onclick="window.sendTxnWhatsApp(\'' + tIdEscaped + '\')"><i class="fab fa-whatsapp"></i></button>';
+    var menuId = "act-txn-" + tIdEscaped.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+    var actionsHtml = '<div class="action-dropdown-wrap">' +
+      '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+        '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+      '</button>' +
+      '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+        '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); window.sendTxnWhatsApp(\'' + tIdEscaped + '\');">' +
+          '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share Voucher (WhatsApp)</span>' +
+        '</button>';
+
     if (canEdit) {
-      actionsHtml += '<button class="icon-btn btn-edit" title="Edit Transaction" onclick="window.editTxn(\'' + tIdEscaped + '\')" style="margin-right:0.35rem;"><i class="fas fa-pen"></i></button>';
+      actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); window.editTxn(\'' + tIdEscaped + '\');">' +
+          '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Transaction</span>' +
+        '</button>';
     }
     if (canDelete) {
-      actionsHtml += '<button class="icon-btn btn-delete" title="Delete Transaction" onclick="window.deleteTxnRow(\'' + tIdEscaped + '\')"><i class="fas fa-trash"></i></button>';
+      actionsHtml += '<div class="table-action-divider"></div>' +
+        '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); window.deleteTxnRow(\'' + tIdEscaped + '\');">' +
+          '<i class="fas fa-trash"></i> <span>Delete Transaction</span>' +
+        '</button>';
     }
-    if (!canEdit && !canDelete) {
-      actionsHtml = '<button type="button" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Share Voucher on WhatsApp" onclick="window.sendTxnWhatsApp(\'' + tIdEscaped + '\')"><i class="fab fa-whatsapp"></i></button>';
-    }
+    actionsHtml += '</div></div>';
 
     var catStr = typeof escapeHtml === "function" ? escapeHtml(t.Category || "") : (t.Category || "");
     var modeStr = typeof escapeHtml === "function" ? escapeHtml(t.PaymentMode || "") : (t.PaymentMode || "");
