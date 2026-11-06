@@ -353,6 +353,7 @@
       }).map(function(c) {
         return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), " (").concat(c.CustomerID, ")</option>");
       }).join("");
+      if (window.makeSearchableSelect) window.makeSearchableSelect(select, { placeholder: "Select Customer" });
     }
 
     populateDropdownsFromCache();
@@ -441,9 +442,13 @@
   }
   function populateFilters() {
     var filterSelect = document.getElementById("filter-proj-customer");
+    if (!filterSelect) return;
+    var curVal = filterSelect.value;
     filterSelect.innerHTML = '<option value="">All Customers</option>' + customersCache.map(function(c) {
       return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), "</option>");
     }).join("");
+    if (curVal) filterSelect.value = curVal;
+    if (window.makeSearchableSelect) window.makeSearchableSelect(filterSelect, { placeholder: "All Customers" });
   }
   function renderProjects(projects) {
     var tbody = document.querySelector("#projects-table tbody");
@@ -614,6 +619,8 @@
       document.getElementById("proj-id").value = projObj.ProjectID;
       document.getElementById("proj-name").value = projObj.ProjectName;
       document.getElementById("proj-customer-id").value = projObj.CustomerID;
+      var cSel = document.getElementById("proj-customer-id");
+      if (cSel && cSel._refreshSearchable) cSel._refreshSearchable();
       document.getElementById("proj-type").value = projObj.ProjectType;
       document.getElementById("proj-value").value = projObj.ProjectValue;
       document.getElementById("proj-inquiry").value = projObj.InquiryID || "";
@@ -653,6 +660,8 @@
       document.getElementById("proj-modal-title").innerText = "Add New Project";
       document.getElementById("proj-status").value = "";
       document.getElementById("proj-type").value = "";
+      var cSel = document.getElementById("proj-customer-id");
+      if (cSel && cSel._refreshSearchable) cSel._refreshSearchable();
       document.getElementById("btn-project-milestones").style.display = "none";
     }
     document.getElementById("project-modal").classList.add("show");
@@ -911,6 +920,7 @@
     } else {
       select.innerHTML = '<option value="">Unassigned</option>';
     }
+    if (window.makeSearchableSelect) window.makeSearchableSelect(select, { placeholder: "Select Assignee" });
   }
   function removeAttachment(index) {
     var hiddenInput = document.getElementById("proj-attachments-hidden");

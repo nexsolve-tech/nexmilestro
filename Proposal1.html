@@ -219,6 +219,7 @@
         }).map(function(c) {
           return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), "</option>");
         }).join("");
+        if (window.makeSearchableSelect) window.makeSearchableSelect(select, { placeholder: "Select Client" });
       }
 
       leadsCacheList = result.leads || [];
@@ -231,6 +232,7 @@
           var name = l.CustomerName || l.LeadName || l.LeadID;
           return '<option value="'.concat(l.LeadID, '">').concat(escapeHtml(name), " (").concat(l.LeadID, ")</option>");
         }).join("");
+        if (window.makeSearchableSelect) window.makeSearchableSelect(leadSelect, { placeholder: "Select Lead" });
       }
 
       proposalsDataList = result.proposals || [];
@@ -350,6 +352,7 @@
       html += '</optgroup>';
     }
     filterSelect.innerHTML = html;
+    if (window.makeSearchableSelect) window.makeSearchableSelect(filterSelect, { placeholder: "All Clients & Leads" });
   }
 
   function renderProposals(proposals) {
@@ -533,12 +536,18 @@
         var leadRadio = document.getElementById("prop-link-lead");
         if (leadRadio) leadRadio.checked = true;
         handleProposalLinkTypeChange();
-        if (leadSel) leadSel.value = String(propObj.LeadID || "").trim();
+        if (leadSel) {
+          leadSel.value = String(propObj.LeadID || "").trim();
+          if (leadSel._refreshSearchable) leadSel._refreshSearchable();
+        }
       } else {
         var custRadio = document.getElementById("prop-link-customer");
         if (custRadio) custRadio.checked = true;
         handleProposalLinkTypeChange();
-        if (custSel) custSel.value = String(propObj.CustomerID || "").trim();
+        if (custSel) {
+          custSel.value = String(propObj.CustomerID || "").trim();
+          if (custSel._refreshSearchable) custSel._refreshSearchable();
+        }
       }
 
       document.getElementById("prop-amount-field").value = propObj.Amount || "";

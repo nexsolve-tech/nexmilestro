@@ -645,6 +645,12 @@ window.populateDropdownsFromCache = function() {
     assocSelect.innerHTML = html;
   }
 
+  if (window.makeSearchableSelect) {
+    if (projSelect) window.makeSearchableSelect(projSelect, { placeholder: "Select Project" });
+    if (vendorSelect) window.makeSearchableSelect(vendorSelect, { placeholder: "Select Vendor" });
+    if (assocSelect) window.makeSearchableSelect(assocSelect, { placeholder: "Select Associate" });
+  }
+
   window.populateBankOptions();
 };
 
@@ -761,6 +767,7 @@ window.populateFinanceFilters = function() {
       }
     }
     projFilter.innerHTML = html;
+    if (window.makeSearchableSelect) window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
   }
 };
 

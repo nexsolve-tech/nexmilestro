@@ -64,7 +64,7 @@
 <body>
 
   <!-- ==================== MAIN SITE CONTAINER ==================== -->
-  <div class="app-container" id="app-container">
+  <div class="app-container" id="app-container" style="visibility: hidden;">
     
     <!-- Sidebar Mobile Backdrop -->
     <div class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
@@ -2266,18 +2266,30 @@
       } else {
         modal.style.display = "none";
       }
+      var appCont = document.getElementById("app-container");
+      if (appCont && show) {
+        appCont.style.visibility = "hidden";
+      }
     }
     window.showLockoutModal = showLockoutModal;
 
-function showLoginOverlay(show) {
+    function showLoginOverlay(show) {
       var el = document.getElementById("login-overlay");
       if (el) el.style.display = show ? "flex" : "none";
+      var appCont = document.getElementById("app-container");
+      if (appCont) {
+        appCont.style.visibility = show ? "hidden" : "visible";
+      }
     }
     window.showLoginOverlay = showLoginOverlay;
 
     function showLicenseGateModal(show) {
       var el = document.getElementById("license-gate-modal");
       if (el) el.style.display = show ? "flex" : "none";
+      var appCont = document.getElementById("app-container");
+      if (appCont && show) {
+        appCont.style.visibility = "hidden";
+      }
     }
     window.showLicenseGateModal = showLicenseGateModal;
 
@@ -2554,6 +2566,215 @@ function showLoginOverlay(show) {
         .replace(/'/g, "&#039;");
     }
     window.escapeHtml = escapeHtml;
+
+    /**
+     * =========================================================================
+     * UNIVERSAL SEARCHABLE SELECT COMPONENT
+     * Turns any <select> into a fast, searchable combobox with live typeahead
+     * =========================================================================
+     */
+    function makeSearchableSelect(selectEl, customConfig) {
+      if (!selectEl) return;
+      if (selectEl._searchableWrapper) {
+        if (selectEl._refreshSearchable) selectEl._refreshSearchable();
+        return;
+      }
+
+      var config = Object.assign({
+        placeholder: selectEl.getAttribute("data-placeholder") || (selectEl.options[0] ? selectEl.options[0].text : "Search & Select..."),
+        emptyText: "No matching results found"
+      }, customConfig || {});
+
+      // Hide native select while keeping it in DOM for value binding and form submissions
+      selectEl.style.display = "none";
+
+      var wrapper = document.createElement("div");
+      wrapper.className = "searchable-select-wrapper";
+      if (selectEl.id) wrapper.setAttribute("data-for-id", selectEl.id);
+
+      var trigger = document.createElement("div");
+      trigger.className = "searchable-select-trigger";
+      trigger.tabIndex = 0;
+
+      var triggerText = document.createElement("span");
+      triggerText.className = "trigger-text";
+      trigger.appendChild(triggerText);
+
+      var clearBtn = document.createElement("span");
+      clearBtn.className = "trigger-clear";
+      clearBtn.innerHTML = '<i class="fas fa-times"></i>';
+      clearBtn.title = "Clear selection";
+      trigger.appendChild(clearBtn);
+
+      var caret = document.createElement("span");
+      caret.className = "trigger-caret";
+      caret.innerHTML = '<i class="fas fa-chevron-down"></i>';
+      trigger.appendChild(caret);
+
+      var dropdown = document.createElement("div");
+      dropdown.className = "searchable-select-dropdown";
+
+      var searchWrap = document.createElement("div");
+      searchWrap.className = "searchable-select-search-wrap";
+      searchWrap.innerHTML = '<i class="fas fa-search searchable-select-search-icon"></i>';
+
+      var searchInput = document.createElement("input");
+      searchInput.type = "text";
+      searchInput.className = "searchable-select-search-input";
+      searchInput.placeholder = "Type to search...";
+      searchWrap.appendChild(searchInput);
+      dropdown.appendChild(searchWrap);
+
+      var optionsList = document.createElement("div");
+      optionsList.className = "searchable-select-options";
+      dropdown.appendChild(optionsList);
+
+      wrapper.appendChild(trigger);
+      wrapper.appendChild(dropdown);
+      selectEl.parentNode.insertBefore(wrapper, selectEl.nextSibling);
+      selectEl._searchableWrapper = wrapper;
+
+      var parsedOptions = [];
+
+      function parseSelectOptions() {
+        parsedOptions = [];
+        var children = Array.from(selectEl.children);
+        children.forEach(function(child) {
+          if (child.tagName === "OPTGROUP") {
+            parsedOptions.push({ isGroup: true, label: child.label });
+            Array.from(child.children).forEach(function(opt) {
+              parsedOptions.push({ isGroup: false, value: opt.value, text: opt.text, html: opt.innerHTML });
+            });
+          } else if (child.tagName === "OPTION") {
+            parsedOptions.push({ isGroup: false, value: child.value, text: child.text, html: child.innerHTML });
+          }
+        });
+      }
+
+      function updateTriggerLabel() {
+        var curVal = selectEl.value;
+        var selectedOpt = Array.from(selectEl.options).find(function(o) { return o.value === curVal; });
+        if (selectedOpt && curVal) {
+          triggerText.innerHTML = selectedOpt.innerHTML || escapeHtml(selectedOpt.text);
+          triggerText.classList.remove("placeholder");
+          wrapper.classList.add("has-value");
+        } else {
+          var firstOpt = selectEl.options[0];
+          var defLabel = (firstOpt && !firstOpt.value) ? firstOpt.text : config.placeholder;
+          triggerText.innerText = defLabel;
+          triggerText.classList.add("placeholder");
+          wrapper.classList.remove("has-value");
+        }
+      }
+
+      function renderOptions(query) {
+        optionsList.innerHTML = "";
+        query = (query || "").toLowerCase().trim();
+
+        var renderedCount = 0;
+        var currentGroupEl = null;
+
+        parsedOptions.forEach(function(item) {
+          if (item.isGroup) {
+            currentGroupEl = document.createElement("div");
+            currentGroupEl.className = "searchable-select-group-header";
+            currentGroupEl.innerText = item.label;
+            optionsList.appendChild(currentGroupEl);
+          } else {
+            var matches = !query || item.text.toLowerCase().indexOf(query) !== -1;
+            if (!matches) return;
+
+            renderedCount++;
+            var optEl = document.createElement("div");
+            optEl.className = "searchable-select-option";
+            if (item.value === selectEl.value) {
+              optEl.classList.add("selected");
+            }
+            optEl.innerHTML = '<span class="option-label">' + (item.html || escapeHtml(item.text)) + '</span>' +
+              (item.value === selectEl.value ? '<i class="fas fa-check" style="font-size:0.75rem; color: var(--primary);"></i>' : '');
+
+            optEl.addEventListener("click", function(e) {
+              e.stopPropagation();
+              selectEl.value = item.value;
+              updateTriggerLabel();
+              closeDropdown();
+              selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+              selectEl.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+            optionsList.appendChild(optEl);
+          }
+        });
+
+        if (renderedCount === 0) {
+          optionsList.innerHTML = '<div class="searchable-select-empty">' + config.emptyText + '</div>';
+        }
+      }
+
+      function openDropdown() {
+        document.querySelectorAll(".searchable-select-wrapper.open").forEach(function(w) {
+          if (w !== wrapper) w.classList.remove("open");
+        });
+        wrapper.classList.add("open");
+        searchInput.value = "";
+        renderOptions("");
+        setTimeout(function() { searchInput.focus(); }, 40);
+      }
+
+      function closeDropdown() {
+        wrapper.classList.remove("open");
+      }
+
+      trigger.addEventListener("click", function(e) {
+        if (e.target.closest(".trigger-clear")) return;
+        if (wrapper.classList.contains("open")) closeDropdown();
+        else openDropdown();
+      });
+
+      trigger.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+          e.preventDefault();
+          openDropdown();
+        }
+      });
+
+      clearBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        selectEl.value = "";
+        updateTriggerLabel();
+        closeDropdown();
+        selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+        selectEl.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+
+      searchInput.addEventListener("input", function() {
+        renderOptions(searchInput.value);
+      });
+
+      searchInput.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") {
+          closeDropdown();
+          trigger.focus();
+        }
+      });
+
+      document.addEventListener("click", function(e) {
+        if (!wrapper.contains(e.target)) {
+          closeDropdown();
+        }
+      });
+
+      function refresh() {
+        parseSelectOptions();
+        updateTriggerLabel();
+        if (wrapper.classList.contains("open")) {
+          renderOptions(searchInput.value);
+        }
+      }
+
+      selectEl._refreshSearchable = refresh;
+      refresh();
+    }
+    window.makeSearchableSelect = makeSearchableSelect;
 
     function showToast(message, type) {
       type = type || "info";

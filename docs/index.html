@@ -908,7 +908,7 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 500;
+  z-index: 9999999 !important;
   padding: 1.5rem;
 }
 
@@ -1444,6 +1444,223 @@ textarea.form-control {
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   UNIVERSAL SEARCHABLE DROPDOWN COMPONENT
+   ========================================================================== */
+.searchable-select-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.searchable-select-trigger {
+  width: 100%;
+  min-height: 38px;
+  padding: 0.45rem 2.2rem 0.45rem 0.85rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  user-select: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+.searchable-select-trigger:hover {
+  border-color: var(--primary-border);
+}
+
+.searchable-select-trigger:focus,
+.searchable-select-wrapper.open .searchable-select-trigger {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+  background: var(--bg-primary);
+  outline: none;
+}
+
+.searchable-select-trigger .trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  font-weight: 500;
+}
+
+.searchable-select-trigger .trigger-text.placeholder {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.searchable-select-trigger .trigger-caret {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.searchable-select-trigger .trigger-clear {
+  position: absolute;
+  right: 1.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: none;
+}
+
+.searchable-select-trigger .trigger-clear:hover {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.searchable-select-wrapper.has-value .searchable-select-trigger .trigger-clear {
+  display: block;
+}
+
+.searchable-select-wrapper.open .searchable-select-trigger .trigger-caret {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.searchable-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  min-width: 250px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.searchable-select-wrapper.open .searchable-select-dropdown {
+  display: flex;
+}
+
+.searchable-select-search-wrap {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  position: relative;
+  z-index: 2;
+}
+
+.searchable-select-search-input {
+  width: 100%;
+  padding: 0.45rem 0.6rem 0.45rem 2rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.searchable-select-search-input:focus {
+  border-color: var(--border-focus);
+}
+
+.searchable-select-search-icon {
+  position: absolute;
+  left: 1.15rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.searchable-select-options {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.25rem 0;
+}
+
+.searchable-select-option {
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  transition: background 0.12s;
+  gap: 0.5rem;
+}
+
+.searchable-select-option:hover,
+.searchable-select-option.highlighted {
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--primary);
+}
+
+.searchable-select-option.selected {
+  background: rgba(15, 118, 110, 0.14);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.searchable-select-option .option-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchable-select-option .option-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: 0.35rem;
+  font-weight: normal;
+}
+
+.searchable-select-group-header {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.searchable-select-empty {
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
 </style>
 
 
@@ -1493,7 +1710,7 @@ textarea.form-control {
 <body>
 
   <!-- ==================== MAIN SITE CONTAINER ==================== -->
-  <div class="app-container" id="app-container">
+  <div class="app-container" id="app-container" style="visibility: hidden;">
     
     <!-- Sidebar Mobile Backdrop -->
     <div class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
@@ -3759,6 +3976,7 @@ textarea.form-control {
       }).map(function(c) {
         return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), " (").concat(c.CustomerID, ")</option>");
       }).join("");
+      if (window.makeSearchableSelect) window.makeSearchableSelect(select, { placeholder: "Select Customer" });
     }
 
     populateDropdownsFromCache();
@@ -3847,9 +4065,13 @@ textarea.form-control {
   }
   function populateFilters() {
     var filterSelect = document.getElementById("filter-proj-customer");
+    if (!filterSelect) return;
+    var curVal = filterSelect.value;
     filterSelect.innerHTML = '<option value="">All Customers</option>' + customersCache.map(function(c) {
       return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), "</option>");
     }).join("");
+    if (curVal) filterSelect.value = curVal;
+    if (window.makeSearchableSelect) window.makeSearchableSelect(filterSelect, { placeholder: "All Customers" });
   }
   function renderProjects(projects) {
     var tbody = document.querySelector("#projects-table tbody");
@@ -4020,6 +4242,8 @@ textarea.form-control {
       document.getElementById("proj-id").value = projObj.ProjectID;
       document.getElementById("proj-name").value = projObj.ProjectName;
       document.getElementById("proj-customer-id").value = projObj.CustomerID;
+      var cSel = document.getElementById("proj-customer-id");
+      if (cSel && cSel._refreshSearchable) cSel._refreshSearchable();
       document.getElementById("proj-type").value = projObj.ProjectType;
       document.getElementById("proj-value").value = projObj.ProjectValue;
       document.getElementById("proj-inquiry").value = projObj.InquiryID || "";
@@ -4059,6 +4283,8 @@ textarea.form-control {
       document.getElementById("proj-modal-title").innerText = "Add New Project";
       document.getElementById("proj-status").value = "";
       document.getElementById("proj-type").value = "";
+      var cSel = document.getElementById("proj-customer-id");
+      if (cSel && cSel._refreshSearchable) cSel._refreshSearchable();
       document.getElementById("btn-project-milestones").style.display = "none";
     }
     document.getElementById("project-modal").classList.add("show");
@@ -4317,6 +4543,7 @@ textarea.form-control {
     } else {
       select.innerHTML = '<option value="">Unassigned</option>';
     }
+    if (window.makeSearchableSelect) window.makeSearchableSelect(select, { placeholder: "Select Assignee" });
   }
   function removeAttachment(index) {
     var hiddenInput = document.getElementById("proj-attachments-hidden");
@@ -4433,26 +4660,69 @@ textarea.form-control {
   <script type="text/html" id="sitevisits-view-template">
     <!-- SiteVisit.html -->
 <div class="view-container">
-  <!-- Tab Headers -->
-  <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--border-color); margin-bottom: 1.5rem; padding-bottom: 0.5rem; align-items: center; flex-shrink: 0;">
-    <button class="btn btn-secondary active-tab" id="tab-btn-logs" onclick="switchVisitSubTab('logs')" style="border: none; background: transparent; padding: 0.5rem 1rem; font-weight: 700; color: var(--primary); cursor: pointer; border-bottom: 3px solid var(--primary); border-radius: 0;">Visit Log History</button>
-    <button class="btn btn-secondary" id="tab-btn-scheduled" onclick="switchVisitSubTab('scheduled')" style="border: none; background: transparent; padding: 0.5rem 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 0;">Schedule Visit</button>
+  <!-- Tab Headers with Live Metric Badges -->
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); margin-bottom: 1.25rem; padding-bottom: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <button class="btn btn-secondary active-tab" id="tab-btn-logs" onclick="switchVisitSubTab('logs')" style="border: none; background: transparent; padding: 0.5rem 0.85rem; font-weight: 700; color: var(--primary); cursor: pointer; border-bottom: 3px solid var(--primary); border-radius: 0; display: inline-flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-clipboard-list"></i> Visit Log History <span class="badge" id="badge-count-logs" style="background: rgba(15, 118, 110, 0.15); color: var(--primary); font-size: 0.75rem; border-radius: 20px; padding: 2px 8px;">0</span>
+      </button>
+      <button class="btn btn-secondary" id="tab-btn-scheduled" onclick="switchVisitSubTab('scheduled')" style="border: none; background: transparent; padding: 0.5rem 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 0; display: inline-flex; align-items: center; gap: 0.5rem;">
+        <i class="far fa-calendar-check"></i> Scheduled Visits <span class="badge" id="badge-count-scheduled" style="background: rgba(100, 116, 139, 0.15); color: var(--text-muted); font-size: 0.75rem; border-radius: 20px; padding: 2px 8px;">0</span>
+      </button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.65rem;">
+      <span id="visit-filtered-count" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Showing all visits</span>
+      <button class="btn btn-secondary btn-sm" id="btn-clear-visit-filters" onclick="clearVisitFilters()" style="display: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; color: var(--danger);"><i class="fas fa-times-circle"></i> Clear Filters</button>
+    </div>
   </div>
 
-  <!-- Filter & Search Bar -->
-  <div class="filter-bar">
-    <div class="search-input-wrapper">
-      <i class="fas fa-search"></i>
-      <input type="text" id="visit-search" class="search-input" placeholder="Search by purpose or remarks..." oninput="filterVisits()">
-    </div>
-    
-    <div class="filter-group">
-      <select id="filter-visit-project" class="select-filter" style="max-width: 220px;" onchange="filterVisits()">
-        <option value="">All Projects</option>
-      </select>
-      
-      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
-      <button class="btn btn-primary" id="btn-add-visit" onclick="openVisitModal()"><i class="fas fa-plus"></i> Log Site Visit</button>
+  <!-- Multi-Faceted Search & Filter Panel -->
+  <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <!-- Row 1: Omni-Search & Main Action Buttons -->
+      <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <div class="search-input-wrapper" style="flex: 1; min-width: 280px;">
+          <i class="fas fa-search"></i>
+          <input type="text" id="visit-search" class="search-input" placeholder="Omni-Search by Purpose, Remarks, Project, Lead, Assignee, Visit ID..." oninput="filterVisits()" style="width: 100%;">
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button class="btn btn-primary" id="btn-add-visit" onclick="openVisitModal()"><i class="fas fa-plus"></i> Log Site Visit</button>
+        </div>
+      </div>
+
+      <!-- Row 2: Searchable Filters & Date Range Pickers -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.75rem; align-items: center;">
+        <!-- Searchable Project / Lead Dropdown -->
+        <div>
+          <select id="filter-visit-project" class="searchable-select" data-placeholder="All Projects & Leads" onchange="filterVisits()">
+            <option value="">All Projects & Leads</option>
+          </select>
+        </div>
+
+        <!-- Searchable Assignee Filter -->
+        <div>
+          <select id="filter-visit-assignee" class="searchable-select" data-placeholder="All Assignees / Staff" onchange="filterVisits()">
+            <option value="">All Assignees / Staff</option>
+          </select>
+        </div>
+
+        <!-- Billable Filter -->
+        <div>
+          <select id="filter-visit-billing" class="form-control" onchange="filterVisits()" style="padding: 0.45rem 0.75rem; font-size: 0.85rem; height: 38px;">
+            <option value="">All Billing Status</option>
+            <option value="Billable">Billable Visits Only (₹)</option>
+            <option value="Non-Billable">Non-Billable Visits</option>
+          </select>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div style="display: flex; gap: 0.4rem; align-items: center;">
+          <input type="date" id="filter-visit-date-from" class="form-control" title="Visit Date From" onchange="filterVisits()" style="padding: 0.4rem 0.5rem; font-size: 0.8rem; height: 38px;" placeholder="From Date">
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">to</span>
+          <input type="date" id="filter-visit-date-to" class="form-control" title="Visit Date To" onchange="filterVisits()" style="padding: 0.4rem 0.5rem; font-size: 0.8rem; height: 38px;" placeholder="To Date">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4627,6 +4897,7 @@ textarea.form-control {
         return '<option value="' + escapeHtml(l.LeadID) + '">' + escapeHtml(name) + ' (' + escapeHtml(l.LeadID) + ')</option>';
       }).join("");
       if (currentLeadVal) leadSelect.value = currentLeadVal;
+      if (window.makeSearchableSelect) window.makeSearchableSelect(leadSelect, { placeholder: "Select Lead" });
     }
 
     var currentProjects = (window.projectsCacheList || projectsCache || (window._dataCache && window._dataCache.projects) || []);
@@ -4638,6 +4909,7 @@ textarea.form-control {
         return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + ' (' + escapeHtml(p.ProjectID) + ')</option>';
       }).join("");
       if (currentProjVal) projSelect.value = currentProjVal;
+      if (window.makeSearchableSelect) window.makeSearchableSelect(projSelect, { placeholder: "Select Project" });
     }
 
     if (isLead) {
@@ -4725,6 +4997,7 @@ textarea.form-control {
       associatesCacheList = (Array.isArray(result.associates) && result.associates.length > 0) ? result.associates : ((window._dataCache && window._dataCache.associates) || []);
 
       populateProjectFilter();
+      populateAssigneeFilter();
       filterVisits();
       if (forceRefresh) showLoader(false);
     }
@@ -4813,6 +5086,7 @@ textarea.form-control {
   function populateProjectFilter() {
     var filterSelect = document.getElementById("filter-visit-project");
     if (!filterSelect) return;
+    var curVal = filterSelect.value;
     var html = '<option value="">All Projects & Leads</option>';
     if (projectsCache.length > 0) {
       html += '<optgroup label="Projects">';
@@ -4830,7 +5104,54 @@ textarea.form-control {
       html += '</optgroup>';
     }
     filterSelect.innerHTML = html;
+    if (curVal) filterSelect.value = curVal;
+    if (window.makeSearchableSelect) {
+      window.makeSearchableSelect(filterSelect, { placeholder: "All Projects & Leads" });
+    }
   }
+
+  function populateAssigneeFilter() {
+    var filterAssignee = document.getElementById("filter-visit-assignee");
+    if (!filterAssignee) return;
+    var curVal = filterAssignee.value;
+    var html = '<option value="">All Assignees / Staff</option>';
+    var users = staffCacheList || [];
+    if (users.length > 0) {
+      html += users.map(function(u) {
+        var val = u.UserID || u.userId || u.FullName || "";
+        var name = u.FullName || u.fullName || u.UserID || "Staff";
+        var role = u.RoleID || u.roleId || "";
+        return '<option value="' + escapeHtml(val) + '">' + escapeHtml(name) + (role ? ' (' + escapeHtml(role) + ')' : '') + '</option>';
+      }).join("");
+    }
+    filterAssignee.innerHTML = html;
+    if (curVal) filterAssignee.value = curVal;
+    if (window.makeSearchableSelect) {
+      window.makeSearchableSelect(filterAssignee, { placeholder: "All Assignees / Staff" });
+    }
+  }
+
+  window.clearVisitFilters = function() {
+    var searchInput = document.getElementById("visit-search");
+    if (searchInput) searchInput.value = "";
+    var projSelect = document.getElementById("filter-visit-project");
+    if (projSelect) {
+      projSelect.value = "";
+      if (projSelect._refreshSearchable) projSelect._refreshSearchable();
+    }
+    var assigneeSelect = document.getElementById("filter-visit-assignee");
+    if (assigneeSelect) {
+      assigneeSelect.value = "";
+      if (assigneeSelect._refreshSearchable) assigneeSelect._refreshSearchable();
+    }
+    var billingSelect = document.getElementById("filter-visit-billing");
+    if (billingSelect) billingSelect.value = "";
+    var dateFromEl = document.getElementById("filter-visit-date-from");
+    if (dateFromEl) dateFromEl.value = "";
+    var dateToEl = document.getElementById("filter-visit-date-to");
+    if (dateToEl) dateToEl.value = "";
+    filterVisits();
+  };
 
   function renderVisits(visitsList) {
     var tbody = document.querySelector("#visits-table tbody");
@@ -4941,30 +5262,120 @@ textarea.form-control {
     var searchInput = document.getElementById("visit-search");
     var searchVal = searchInput ? (searchInput.value || "").toLowerCase().trim() : "";
     var projSelect = document.getElementById("filter-visit-project");
-    var projVal = projSelect ? projSelect.value : "";
+    var projVal = projSelect ? (projSelect.value || "").trim() : "";
+    var assigneeSelect = document.getElementById("filter-visit-assignee");
+    var assigneeVal = assigneeSelect ? (assigneeSelect.value || "").toLowerCase().trim() : "";
+    var billingSelect = document.getElementById("filter-visit-billing");
+    var billingVal = billingSelect ? (billingSelect.value || "").trim() : "";
+    var dateFromEl = document.getElementById("filter-visit-date-from");
+    var dateFrom = dateFromEl ? dateFromEl.value : "";
+    var dateToEl = document.getElementById("filter-visit-date-to");
+    var dateTo = dateToEl ? dateToEl.value : "";
+
+    var totalLogs = 0;
+    var totalScheduled = 0;
 
     var filtered = (allVisits || []).filter(function(v) {
       if (!v || typeof v !== "object") return false;
-      var purpose = v.Purpose ? String(v.Purpose).toLowerCase() : "";
-      var remarks = v.Remarks ? String(v.Remarks).toLowerCase() : "";
-      var matchesSearch = !searchVal || purpose.indexOf(searchVal) !== -1 || remarks.indexOf(searchVal) !== -1;
-      
-      var matchesProj = true;
+      var status = String(v.Status || "Completed").trim();
+      var isSched = (status === "Scheduled");
+      if (isSched) totalScheduled++;
+      else totalLogs++;
+
+      var matchesTab = (activeVisitTab === "scheduled") ? isSched : (!isSched);
+      if (!matchesTab) return false;
+
+      // Project / Lead filter
       if (projVal) {
         if (projVal.indexOf("PROJ:") === 0) {
-          matchesProj = v.ProjectID === projVal.replace("PROJ:", "");
+          if (String(v.ProjectID || "") !== projVal.replace("PROJ:", "")) return false;
         } else if (projVal.indexOf("LEAD:") === 0) {
-          matchesProj = v.LeadID === projVal.replace("LEAD:", "");
+          if (String(v.LeadID || "") !== projVal.replace("LEAD:", "")) return false;
         } else {
-          matchesProj = (v.ProjectID === projVal || v.LeadID === projVal);
+          if (String(v.ProjectID || "") !== projVal && String(v.LeadID || "") !== projVal) return false;
         }
       }
 
-      var status = v.Status || "Completed";
-      var isSched = (status === "Scheduled");
-      var matchesTab = (activeVisitTab === "scheduled") ? isSched : (!isSched);
-      return matchesSearch && matchesProj && matchesTab;
+      // Assignee filter
+      if (assigneeVal) {
+        var vAssignee = String(v.AssignedTo || "").toLowerCase();
+        if (vAssignee !== assigneeVal && vAssignee.indexOf(assigneeVal) === -1) {
+          var matchedStaff = (staffCacheList || []).find(function(s) {
+            return (s.UserID && s.UserID.toLowerCase() === assigneeVal) || (s.FullName && s.FullName.toLowerCase() === assigneeVal);
+          });
+          if (!matchedStaff || (vAssignee !== (matchedStaff.UserID || "").toLowerCase() && vAssignee !== (matchedStaff.FullName || "").toLowerCase())) {
+            return false;
+          }
+        }
+      }
+
+      // Billing filter
+      if (billingVal) {
+        var isBill = (v.IsBillable === "Yes" || v.IsBillable === true);
+        if (billingVal === "Billable" && !isBill) return false;
+        if (billingVal === "Non-Billable" && isBill) return false;
+      }
+
+      // Date range filter
+      var vDate = (v.VisitDate || "").substring(0, 10);
+      if (dateFrom && vDate && vDate < dateFrom) return false;
+      if (dateTo && vDate && vDate > dateTo) return false;
+
+      // Omni-search
+      if (searchVal) {
+        var vid = String(v.VisitID || "").toLowerCase();
+        var purpose = String(v.Purpose || "").toLowerCase();
+        var remarks = String(v.Remarks || "").toLowerCase();
+        var assigned = String(v.AssignedTo || "").toLowerCase();
+        var pid = String(v.ProjectID || "").toLowerCase();
+        var lid = String(v.LeadID || "").toLowerCase();
+        
+        var projName = "";
+        if (v.ProjectID) {
+          var p = (projectsCache || []).find(function(pr) { return pr.ProjectID === v.ProjectID; });
+          if (p) projName = (p.ProjectName || "").toLowerCase();
+        }
+        var leadName = "";
+        if (v.LeadID) {
+          var l = (leadsCacheList || []).find(function(ld) { return ld.LeadID === v.LeadID; });
+          if (l) leadName = (l.CustomerName || l.LeadName || "").toLowerCase();
+        }
+
+        var matchesSearch = vid.indexOf(searchVal) !== -1 ||
+                            purpose.indexOf(searchVal) !== -1 ||
+                            remarks.indexOf(searchVal) !== -1 ||
+                            assigned.indexOf(searchVal) !== -1 ||
+                            pid.indexOf(searchVal) !== -1 ||
+                            lid.indexOf(searchVal) !== -1 ||
+                            projName.indexOf(searchVal) !== -1 ||
+                            leadName.indexOf(searchVal) !== -1;
+        if (!matchesSearch) return false;
+      }
+
+      return true;
     });
+
+    // Update Live Badges
+    var badgeLogs = document.getElementById("badge-count-logs");
+    if (badgeLogs) badgeLogs.innerText = totalLogs;
+    var badgeSched = document.getElementById("badge-count-scheduled");
+    if (badgeSched) badgeSched.innerText = totalScheduled;
+
+    // Filter indicator and Clear button
+    var isFiltered = !!(searchVal || projVal || assigneeVal || billingVal || dateFrom || dateTo);
+    var clearBtn = document.getElementById("btn-clear-visit-filters");
+    if (clearBtn) clearBtn.style.display = isFiltered ? "inline-flex" : "none";
+
+    var countIndicator = document.getElementById("visit-filtered-count");
+    if (countIndicator) {
+      var poolSize = (activeVisitTab === "scheduled") ? totalScheduled : totalLogs;
+      if (isFiltered) {
+        countIndicator.innerText = "Filtered: " + filtered.length + " of " + poolSize + " visits";
+      } else {
+        countIndicator.innerText = "Showing all (" + poolSize + ") visits";
+      }
+    }
+
     renderVisits(filtered);
   }
 
@@ -4997,20 +5408,30 @@ textarea.form-control {
         if (leadRadio) leadRadio.checked = true;
         handleVisitLinkTypeChange();
         var leadSelect = document.getElementById("visit-lead-id");
-        if (leadSelect) leadSelect.value = String(visitObj.LeadID || "").trim();
+        if (leadSelect) {
+          leadSelect.value = String(visitObj.LeadID || "").trim();
+          if (leadSelect._refreshSearchable) leadSelect._refreshSearchable();
+        }
       } else {
         var projRadio = document.getElementById("visit-link-project");
         if (projRadio) projRadio.checked = true;
         handleVisitLinkTypeChange();
         var projSelect = document.getElementById("visit-project-id");
-        if (projSelect) projSelect.value = String(visitObj.ProjectID || "").trim();
+        if (projSelect) {
+          projSelect.value = String(visitObj.ProjectID || "").trim();
+          if (projSelect._refreshSearchable) projSelect._refreshSearchable();
+        }
       }
 
       document.getElementById("visit-date").value = parseRawDateString(visitObj.VisitDate);
       document.getElementById("visit-followup-date").value = parseRawDateString(visitObj.NextFollowupDate);
       document.getElementById("visit-assigned-type").value = visitObj.AssignedType || "Staff";
       handleVisitAssignedTypeChange();
-      document.getElementById("visit-assigned-to").value = visitObj.AssignedTo || "";
+      var visitAssignedSelect = document.getElementById("visit-assigned-to");
+      if (visitAssignedSelect) {
+        visitAssignedSelect.value = visitObj.AssignedTo || "";
+        if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
+      }
       var isBillable = visitObj.IsBillable === "Yes" || visitObj.IsBillable === true;
       document.getElementById("visit-is-billable").checked = isBillable;
       toggleVisitBillingField();
@@ -5041,7 +5462,13 @@ textarea.form-control {
       document.getElementById("visit-date").value = (new Date()).toISOString().substring(0, 10);
       document.getElementById("visit-assigned-type").value = "Staff";
       handleVisitAssignedTypeChange();
-      document.getElementById("visit-assigned-to").value = currentUser.userId || "";
+      var visitAssignedSelect = document.getElementById("visit-assigned-to");
+      if (visitAssignedSelect) {
+        visitAssignedSelect.value = currentUser.userId || "";
+        if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
+      }
+      var projSelect = document.getElementById("visit-project-id");
+      if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
       document.getElementById("visit-is-billable").checked = false;
       toggleVisitBillingField();
       document.getElementById("visit-status").value = isScheduled ? "Scheduled" : "Completed";
@@ -5255,6 +5682,9 @@ textarea.form-control {
       }).join("");
     } else {
       select.innerHTML = '<option value="">Select Assignee</option>';
+    }
+    if (window.makeSearchableSelect) {
+      window.makeSearchableSelect(select, { placeholder: "Select " + type });
     }
   }
 
@@ -5537,6 +5967,7 @@ textarea.form-control {
         projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
           return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), "</option>");
         }).join("");
+        if (window.makeSearchableSelect) window.makeSearchableSelect(projSelect, { placeholder: "Select Project" });
       }
 
       usersCacheList = (Array.isArray(result.users) && result.users.length > 0) ? result.users : ((window._dataCache && window._dataCache.users) || []);
@@ -5551,6 +5982,7 @@ textarea.form-control {
           var name = u.FullName || u.UserID || "User";
           return '<option value="'.concat(escapeHtml(val), '">').concat(escapeHtml(name)).concat(roleStr, "</option>");
         }).join("");
+        if (window.makeSearchableSelect) window.makeSearchableSelect(userSelect, { placeholder: "Select Staff" });
       }
 
       allTasks = Array.isArray(result.tasks) ? result.tasks : ((window._dataCache && window._dataCache.tasks) || []);
@@ -5691,6 +6123,7 @@ textarea.form-control {
         return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + '</option>';
       }).join("");
       if (currentVal) projFilter.value = currentVal;
+      if (window.makeSearchableSelect) window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
     }
   }
 
@@ -5928,9 +6361,13 @@ textarea.form-control {
       document.getElementById("task-id").value = taskObj.TaskID;
       document.getElementById("task-name").value = taskObj.TaskName;
       document.getElementById("task-project-id").value = taskObj.ProjectID;
+      var pSel = document.getElementById("task-project-id");
+      if (pSel && pSel._refreshSearchable) pSel._refreshSearchable();
       document.getElementById("task-assigned-type").value = taskObj.AssignedType || "Staff";
       handleAssignedTypeChange();
       document.getElementById("task-assigned-to").value = taskObj.AssignedTo || "";
+      var aSel = document.getElementById("task-assigned-to");
+      if (aSel && aSel._refreshSearchable) aSel._refreshSearchable();
       document.getElementById("task-start-date").value = parseRawDateString(taskObj.StartDate);
       document.getElementById("task-due-date").value = parseRawDateString(taskObj.DueDate);
       var prioEl = document.getElementById("task-priority");
@@ -5969,6 +6406,10 @@ textarea.form-control {
       if (taskObj && taskObj.ProjectID) {
         document.getElementById("task-project-id").value = taskObj.ProjectID;
       }
+      var pSel = document.getElementById("task-project-id");
+      if (pSel && pSel._refreshSearchable) pSel._refreshSearchable();
+      var aSel = document.getElementById("task-assigned-to");
+      if (aSel && aSel._refreshSearchable) aSel._refreshSearchable();
       if (delBtn)
         delBtn.style.display = "none";
     }
@@ -6077,6 +6518,9 @@ textarea.form-control {
       }).join("");
     } else {
       select.innerHTML = '<option value="">Select Assignee</option>';
+    }
+    if (window.makeSearchableSelect) {
+      window.makeSearchableSelect(select, { placeholder: "Select " + type });
     }
   }
   window.openTaskModal = openTaskModal;
@@ -7166,6 +7610,7 @@ textarea.form-control {
         }).map(function(c) {
           return '<option value="'.concat(c.CustomerID, '">').concat(escapeHtml(c.CustomerName), "</option>");
         }).join("");
+        if (window.makeSearchableSelect) window.makeSearchableSelect(select, { placeholder: "Select Client" });
       }
 
       leadsCacheList = result.leads || [];
@@ -7178,6 +7623,7 @@ textarea.form-control {
           var name = l.CustomerName || l.LeadName || l.LeadID;
           return '<option value="'.concat(l.LeadID, '">').concat(escapeHtml(name), " (").concat(l.LeadID, ")</option>");
         }).join("");
+        if (window.makeSearchableSelect) window.makeSearchableSelect(leadSelect, { placeholder: "Select Lead" });
       }
 
       proposalsDataList = result.proposals || [];
@@ -7297,6 +7743,7 @@ textarea.form-control {
       html += '</optgroup>';
     }
     filterSelect.innerHTML = html;
+    if (window.makeSearchableSelect) window.makeSearchableSelect(filterSelect, { placeholder: "All Clients & Leads" });
   }
 
   function renderProposals(proposals) {
@@ -7480,12 +7927,18 @@ textarea.form-control {
         var leadRadio = document.getElementById("prop-link-lead");
         if (leadRadio) leadRadio.checked = true;
         handleProposalLinkTypeChange();
-        if (leadSel) leadSel.value = String(propObj.LeadID || "").trim();
+        if (leadSel) {
+          leadSel.value = String(propObj.LeadID || "").trim();
+          if (leadSel._refreshSearchable) leadSel._refreshSearchable();
+        }
       } else {
         var custRadio = document.getElementById("prop-link-customer");
         if (custRadio) custRadio.checked = true;
         handleProposalLinkTypeChange();
-        if (custSel) custSel.value = String(propObj.CustomerID || "").trim();
+        if (custSel) {
+          custSel.value = String(propObj.CustomerID || "").trim();
+          if (custSel._refreshSearchable) custSel._refreshSearchable();
+        }
       }
 
       document.getElementById("prop-amount-field").value = propObj.Amount || "";
@@ -11778,6 +12231,12 @@ window.populateDropdownsFromCache = function() {
     assocSelect.innerHTML = html;
   }
 
+  if (window.makeSearchableSelect) {
+    if (projSelect) window.makeSearchableSelect(projSelect, { placeholder: "Select Project" });
+    if (vendorSelect) window.makeSearchableSelect(vendorSelect, { placeholder: "Select Vendor" });
+    if (assocSelect) window.makeSearchableSelect(assocSelect, { placeholder: "Select Associate" });
+  }
+
   window.populateBankOptions();
 };
 
@@ -11894,6 +12353,7 @@ window.populateFinanceFilters = function() {
       }
     }
     projFilter.innerHTML = html;
+    if (window.makeSearchableSelect) window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
   }
 };
 
@@ -14162,18 +14622,30 @@ document.addEventListener("click", function() {
       } else {
         modal.style.display = "none";
       }
+      var appCont = document.getElementById("app-container");
+      if (appCont && show) {
+        appCont.style.visibility = "hidden";
+      }
     }
     window.showLockoutModal = showLockoutModal;
 
-function showLoginOverlay(show) {
+    function showLoginOverlay(show) {
       var el = document.getElementById("login-overlay");
       if (el) el.style.display = show ? "flex" : "none";
+      var appCont = document.getElementById("app-container");
+      if (appCont) {
+        appCont.style.visibility = show ? "hidden" : "visible";
+      }
     }
     window.showLoginOverlay = showLoginOverlay;
 
     function showLicenseGateModal(show) {
       var el = document.getElementById("license-gate-modal");
       if (el) el.style.display = show ? "flex" : "none";
+      var appCont = document.getElementById("app-container");
+      if (appCont && show) {
+        appCont.style.visibility = "hidden";
+      }
     }
     window.showLicenseGateModal = showLicenseGateModal;
 
@@ -14450,6 +14922,215 @@ function showLoginOverlay(show) {
         .replace(/'/g, "&#039;");
     }
     window.escapeHtml = escapeHtml;
+
+    /**
+     * =========================================================================
+     * UNIVERSAL SEARCHABLE SELECT COMPONENT
+     * Turns any <select> into a fast, searchable combobox with live typeahead
+     * =========================================================================
+     */
+    function makeSearchableSelect(selectEl, customConfig) {
+      if (!selectEl) return;
+      if (selectEl._searchableWrapper) {
+        if (selectEl._refreshSearchable) selectEl._refreshSearchable();
+        return;
+      }
+
+      var config = Object.assign({
+        placeholder: selectEl.getAttribute("data-placeholder") || (selectEl.options[0] ? selectEl.options[0].text : "Search & Select..."),
+        emptyText: "No matching results found"
+      }, customConfig || {});
+
+      // Hide native select while keeping it in DOM for value binding and form submissions
+      selectEl.style.display = "none";
+
+      var wrapper = document.createElement("div");
+      wrapper.className = "searchable-select-wrapper";
+      if (selectEl.id) wrapper.setAttribute("data-for-id", selectEl.id);
+
+      var trigger = document.createElement("div");
+      trigger.className = "searchable-select-trigger";
+      trigger.tabIndex = 0;
+
+      var triggerText = document.createElement("span");
+      triggerText.className = "trigger-text";
+      trigger.appendChild(triggerText);
+
+      var clearBtn = document.createElement("span");
+      clearBtn.className = "trigger-clear";
+      clearBtn.innerHTML = '<i class="fas fa-times"></i>';
+      clearBtn.title = "Clear selection";
+      trigger.appendChild(clearBtn);
+
+      var caret = document.createElement("span");
+      caret.className = "trigger-caret";
+      caret.innerHTML = '<i class="fas fa-chevron-down"></i>';
+      trigger.appendChild(caret);
+
+      var dropdown = document.createElement("div");
+      dropdown.className = "searchable-select-dropdown";
+
+      var searchWrap = document.createElement("div");
+      searchWrap.className = "searchable-select-search-wrap";
+      searchWrap.innerHTML = '<i class="fas fa-search searchable-select-search-icon"></i>';
+
+      var searchInput = document.createElement("input");
+      searchInput.type = "text";
+      searchInput.className = "searchable-select-search-input";
+      searchInput.placeholder = "Type to search...";
+      searchWrap.appendChild(searchInput);
+      dropdown.appendChild(searchWrap);
+
+      var optionsList = document.createElement("div");
+      optionsList.className = "searchable-select-options";
+      dropdown.appendChild(optionsList);
+
+      wrapper.appendChild(trigger);
+      wrapper.appendChild(dropdown);
+      selectEl.parentNode.insertBefore(wrapper, selectEl.nextSibling);
+      selectEl._searchableWrapper = wrapper;
+
+      var parsedOptions = [];
+
+      function parseSelectOptions() {
+        parsedOptions = [];
+        var children = Array.from(selectEl.children);
+        children.forEach(function(child) {
+          if (child.tagName === "OPTGROUP") {
+            parsedOptions.push({ isGroup: true, label: child.label });
+            Array.from(child.children).forEach(function(opt) {
+              parsedOptions.push({ isGroup: false, value: opt.value, text: opt.text, html: opt.innerHTML });
+            });
+          } else if (child.tagName === "OPTION") {
+            parsedOptions.push({ isGroup: false, value: child.value, text: child.text, html: child.innerHTML });
+          }
+        });
+      }
+
+      function updateTriggerLabel() {
+        var curVal = selectEl.value;
+        var selectedOpt = Array.from(selectEl.options).find(function(o) { return o.value === curVal; });
+        if (selectedOpt && curVal) {
+          triggerText.innerHTML = selectedOpt.innerHTML || escapeHtml(selectedOpt.text);
+          triggerText.classList.remove("placeholder");
+          wrapper.classList.add("has-value");
+        } else {
+          var firstOpt = selectEl.options[0];
+          var defLabel = (firstOpt && !firstOpt.value) ? firstOpt.text : config.placeholder;
+          triggerText.innerText = defLabel;
+          triggerText.classList.add("placeholder");
+          wrapper.classList.remove("has-value");
+        }
+      }
+
+      function renderOptions(query) {
+        optionsList.innerHTML = "";
+        query = (query || "").toLowerCase().trim();
+
+        var renderedCount = 0;
+        var currentGroupEl = null;
+
+        parsedOptions.forEach(function(item) {
+          if (item.isGroup) {
+            currentGroupEl = document.createElement("div");
+            currentGroupEl.className = "searchable-select-group-header";
+            currentGroupEl.innerText = item.label;
+            optionsList.appendChild(currentGroupEl);
+          } else {
+            var matches = !query || item.text.toLowerCase().indexOf(query) !== -1;
+            if (!matches) return;
+
+            renderedCount++;
+            var optEl = document.createElement("div");
+            optEl.className = "searchable-select-option";
+            if (item.value === selectEl.value) {
+              optEl.classList.add("selected");
+            }
+            optEl.innerHTML = '<span class="option-label">' + (item.html || escapeHtml(item.text)) + '</span>' +
+              (item.value === selectEl.value ? '<i class="fas fa-check" style="font-size:0.75rem; color: var(--primary);"></i>' : '');
+
+            optEl.addEventListener("click", function(e) {
+              e.stopPropagation();
+              selectEl.value = item.value;
+              updateTriggerLabel();
+              closeDropdown();
+              selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+              selectEl.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+            optionsList.appendChild(optEl);
+          }
+        });
+
+        if (renderedCount === 0) {
+          optionsList.innerHTML = '<div class="searchable-select-empty">' + config.emptyText + '</div>';
+        }
+      }
+
+      function openDropdown() {
+        document.querySelectorAll(".searchable-select-wrapper.open").forEach(function(w) {
+          if (w !== wrapper) w.classList.remove("open");
+        });
+        wrapper.classList.add("open");
+        searchInput.value = "";
+        renderOptions("");
+        setTimeout(function() { searchInput.focus(); }, 40);
+      }
+
+      function closeDropdown() {
+        wrapper.classList.remove("open");
+      }
+
+      trigger.addEventListener("click", function(e) {
+        if (e.target.closest(".trigger-clear")) return;
+        if (wrapper.classList.contains("open")) closeDropdown();
+        else openDropdown();
+      });
+
+      trigger.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+          e.preventDefault();
+          openDropdown();
+        }
+      });
+
+      clearBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        selectEl.value = "";
+        updateTriggerLabel();
+        closeDropdown();
+        selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+        selectEl.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+
+      searchInput.addEventListener("input", function() {
+        renderOptions(searchInput.value);
+      });
+
+      searchInput.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") {
+          closeDropdown();
+          trigger.focus();
+        }
+      });
+
+      document.addEventListener("click", function(e) {
+        if (!wrapper.contains(e.target)) {
+          closeDropdown();
+        }
+      });
+
+      function refresh() {
+        parseSelectOptions();
+        updateTriggerLabel();
+        if (wrapper.classList.contains("open")) {
+          renderOptions(searchInput.value);
+        }
+      }
+
+      selectEl._refreshSearchable = refresh;
+      refresh();
+    }
+    window.makeSearchableSelect = makeSearchableSelect;
 
     function showToast(message, type) {
       type = type || "info";

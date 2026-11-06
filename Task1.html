@@ -196,6 +196,7 @@
         projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
           return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), "</option>");
         }).join("");
+        if (window.makeSearchableSelect) window.makeSearchableSelect(projSelect, { placeholder: "Select Project" });
       }
 
       usersCacheList = (Array.isArray(result.users) && result.users.length > 0) ? result.users : ((window._dataCache && window._dataCache.users) || []);
@@ -210,6 +211,7 @@
           var name = u.FullName || u.UserID || "User";
           return '<option value="'.concat(escapeHtml(val), '">').concat(escapeHtml(name)).concat(roleStr, "</option>");
         }).join("");
+        if (window.makeSearchableSelect) window.makeSearchableSelect(userSelect, { placeholder: "Select Staff" });
       }
 
       allTasks = Array.isArray(result.tasks) ? result.tasks : ((window._dataCache && window._dataCache.tasks) || []);
@@ -350,6 +352,7 @@
         return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + '</option>';
       }).join("");
       if (currentVal) projFilter.value = currentVal;
+      if (window.makeSearchableSelect) window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
     }
   }
 
@@ -587,9 +590,13 @@
       document.getElementById("task-id").value = taskObj.TaskID;
       document.getElementById("task-name").value = taskObj.TaskName;
       document.getElementById("task-project-id").value = taskObj.ProjectID;
+      var pSel = document.getElementById("task-project-id");
+      if (pSel && pSel._refreshSearchable) pSel._refreshSearchable();
       document.getElementById("task-assigned-type").value = taskObj.AssignedType || "Staff";
       handleAssignedTypeChange();
       document.getElementById("task-assigned-to").value = taskObj.AssignedTo || "";
+      var aSel = document.getElementById("task-assigned-to");
+      if (aSel && aSel._refreshSearchable) aSel._refreshSearchable();
       document.getElementById("task-start-date").value = parseRawDateString(taskObj.StartDate);
       document.getElementById("task-due-date").value = parseRawDateString(taskObj.DueDate);
       var prioEl = document.getElementById("task-priority");
@@ -628,6 +635,10 @@
       if (taskObj && taskObj.ProjectID) {
         document.getElementById("task-project-id").value = taskObj.ProjectID;
       }
+      var pSel = document.getElementById("task-project-id");
+      if (pSel && pSel._refreshSearchable) pSel._refreshSearchable();
+      var aSel = document.getElementById("task-assigned-to");
+      if (aSel && aSel._refreshSearchable) aSel._refreshSearchable();
       if (delBtn)
         delBtn.style.display = "none";
     }
@@ -736,6 +747,9 @@
       }).join("");
     } else {
       select.innerHTML = '<option value="">Select Assignee</option>';
+    }
+    if (window.makeSearchableSelect) {
+      window.makeSearchableSelect(select, { placeholder: "Select " + type });
     }
   }
   window.openTaskModal = openTaskModal;

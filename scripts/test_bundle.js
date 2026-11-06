@@ -6,7 +6,7 @@ let count = 0;
 while ((match = scriptRegex.exec(content)) !== null) {
   const attrs = match[1];
   const code = match[2];
-  if (attrs.includes('text/template')) continue;
+  if (attrs.includes('text/template') || attrs.includes('text/html') || attrs.includes('src=')) continue;
   count++;
   try {
     new Function(code);
@@ -16,3 +16,4 @@ while ((match = scriptRegex.exec(content)) !== null) {
   }
 }
 console.log(`Verified ${count} executable scripts successfully!`);
+

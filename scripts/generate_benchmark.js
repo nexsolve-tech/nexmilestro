@@ -619,3 +619,4 @@ Object.keys(fullBenchmarkData).forEach(key => {
 });
 
 console.log("=== BENCHMARK GENERATION COMPLETE ===");
+

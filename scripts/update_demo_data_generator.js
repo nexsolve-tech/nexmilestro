@@ -377,3 +377,4 @@ const newGeneratorCode = `    function generateEnterpriseDemoData() {
 content = content.substring(0, sIdx) + newGeneratorCode + '\n' + content.substring(eIdx);
 fs.writeFileSync(tplPath, content, 'utf8');
 console.log("✓ Successfully replaced generateEnterpriseDemoData in Index_Template.html");
+
