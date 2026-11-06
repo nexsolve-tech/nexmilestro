@@ -3320,25 +3320,38 @@ textarea.form-control {
     <!-- Customer1.html -->
 <div class="view-container">
   <!-- Action Header -->
-  <div class="filter-bar">
+  <div class="filter-bar" style="overflow: visible !important;">
     <div class="search-input-wrapper">
       <i class="fas fa-search"></i>
       <input type="text" id="cust-search" class="search-input" placeholder="Search by name, email, phone..." oninput="filterCustomers()">
     </div>
     
-    <div class="filter-group">
-      <select id="filter-cust-type" class="select-filter" onchange="filterCustomers()">
-        <option value="">All Customer Types</option>
-      </select>
+    <div class="filter-group" style="overflow: visible !important; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+      <div style="min-width: 190px;">
+        <select id="filter-cust-name" class="select-filter" onchange="filterCustomers()">
+          <option value="">All Customers</option>
+        </select>
+      </div>
 
-      <select id="filter-cust-status" class="select-filter" onchange="filterCustomers()">
-        <option value="">All Statuses</option>
-        <option value="Active">Active</option>
-        <option value="Inactive">Inactive</option>
-      </select>
+      <div style="min-width: 180px;">
+        <select id="filter-cust-type" class="select-filter" onchange="filterCustomers()">
+          <option value="">All Customer Types</option>
+        </select>
+      </div>
+
+      <div style="min-width: 140px;">
+        <select id="filter-cust-status" class="select-filter" onchange="filterCustomers()">
+          <option value="">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
       
-      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
-      <button class="btn btn-primary" id="btn-add-customer" onclick="openCustomerModal()"><i class="fas fa-plus"></i> Add Customer</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-cust-clear-filter" onclick="clearCustomerFilters()" title="Reset Filters" style="display: none; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--danger); height: 38px;">
+        <i class="fas fa-times-circle"></i> Reset
+      </button>
+
+      <button class="btn btn-primary btn-sm" id="btn-add-customer" onclick="openCustomerModal()" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;"><i class="fas fa-plus"></i> Add Customer</button>
     </div>
   </div>
 
@@ -3549,15 +3562,7 @@ textarea.form-control {
     function checkCompleted() {
       loadedCount++;
       if (loadedCount === totalCalls) {
-        var filterTypeSelect = document.getElementById("filter-cust-type");
-        var typeOptions = dropdownsCache.CustomerType || [];
-        filterTypeSelect.innerHTML = '<option value="">All Customer Types</option>' + typeOptions.map(function(opt) {
-          return '<option value="'.concat(opt, '">').concat(opt, "</option>");
-        }).join("");
-        var typeSelect = document.getElementById("cust-type");
-        typeSelect.innerHTML = typeOptions.map(function(opt) {
-          return '<option value="'.concat(opt, '">').concat(opt, "</option>");
-        }).join("");
+        populateCustomerFilters();
         renderCustomers(allCustomers);
         if (forceRefresh) showLoader(false);
       }
@@ -3611,19 +3616,7 @@ textarea.form-control {
     function checkLegacyCompleted() {
       loadedCount++;
       if (loadedCount === totalCalls) {
-        var filterTypeSelect = document.getElementById("filter-cust-type");
-        var typeOptions = dropdownsCache.CustomerType || [];
-        if (filterTypeSelect) {
-          filterTypeSelect.innerHTML = '<option value="">All Customer Types</option>' + typeOptions.map(function(opt) {
-            return '<option value="'.concat(opt, '">').concat(opt, "</option>");
-          }).join("");
-        }
-        var typeSelect = document.getElementById("cust-type");
-        if (typeSelect) {
-          typeSelect.innerHTML = typeOptions.map(function(opt) {
-            return '<option value="'.concat(opt, '">').concat(opt, "</option>");
-          }).join("");
-        }
+        populateCustomerFilters();
         renderCustomers(allCustomers);
         showLoader(false);
       }
@@ -3737,23 +3730,124 @@ textarea.form-control {
       '</tr>';
     }).join("");
   }
+  function populateCustomerFilters() {
+    var custSelect = document.getElementById("filter-cust-name");
+    var filterTypeSelect = document.getElementById("filter-cust-type");
+    var filterStatusSelect = document.getElementById("filter-cust-status");
+
+    // 1. Populate All Customers dropdown
+    if (custSelect) {
+      var curVal = custSelect.value;
+      var sortedCust = (allCustomers || []).slice().sort(function(a, b) {
+        var nA = (a.CustomerName || a.CompanyFirmName || a.CustomerID || "").toLowerCase();
+        var nB = (b.CustomerName || b.CompanyFirmName || b.CustomerID || "").toLowerCase();
+        return nA.localeCompare(nB);
+      });
+      custSelect.innerHTML = '<option value="">All Customers</option>' + sortedCust.map(function(c) {
+        var name = c.CustomerName || c.CompanyFirmName || c.CustomerID;
+        var id = c.CustomerID || "";
+        return '<option value="' + escapeHtml(id) + '">' + escapeHtml(name) + (id ? ' (' + escapeHtml(id) + ')' : '') + '</option>';
+      }).join("");
+      if (curVal && sortedCust.some(function(c) { return c.CustomerID === curVal; })) {
+        custSelect.value = curVal;
+      }
+      if (window.makeSearchableSelect) window.makeSearchableSelect(custSelect, { placeholder: "All Customers" });
+    }
+
+    // 2. Populate Customer Types dropdown
+    if (filterTypeSelect) {
+      var curType = filterTypeSelect.value;
+      var cachedTypes = (dropdownsCache && dropdownsCache.CustomerType) ? dropdownsCache.CustomerType : [];
+      var defaultTypes = ["Enterprise / Commercial", "HNI Residential", "Boutique Retail", "Government / Institutional"];
+      var dataTypes = (allCustomers || []).map(function(c) { return c.CustomerType; }).filter(Boolean);
+      var allTypesSet = {};
+      cachedTypes.concat(dataTypes, defaultTypes).forEach(function(t) {
+        if (t && typeof t === "string" && t.trim()) allTypesSet[t.trim()] = true;
+      });
+      var allTypes = Object.keys(allTypesSet).sort();
+
+      filterTypeSelect.innerHTML = '<option value="">All Customer Types</option>' + allTypes.map(function(t) {
+        return '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>';
+      }).join("");
+      if (curType && allTypesSet[curType]) {
+        filterTypeSelect.value = curType;
+      }
+      if (window.makeSearchableSelect) window.makeSearchableSelect(filterTypeSelect, { placeholder: "All Customer Types" });
+
+      // Modal Customer Type Select
+      var modalTypeSelect = document.getElementById("cust-type");
+      if (modalTypeSelect) {
+        modalTypeSelect.innerHTML = allTypes.map(function(t) {
+          return '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>';
+        }).join("");
+      }
+    }
+
+    // 3. Make Status Select searchable
+    if (filterStatusSelect && window.makeSearchableSelect) {
+      window.makeSearchableSelect(filterStatusSelect, { placeholder: "All Statuses" });
+    }
+  }
+
   function filterCustomers() {
     var searchInput = document.getElementById("cust-search");
-    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
-    var typeVal = document.getElementById("filter-cust-type").value;
-    var statusVal = document.getElementById("filter-cust-status").value;
-    var filtered = allCustomers.filter(function(cust) {
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase().trim() : "";
+    var custSelect = document.getElementById("filter-cust-name");
+    var selectedCustId = custSelect ? custSelect.value : "";
+    var typeSelect = document.getElementById("filter-cust-type");
+    var typeVal = typeSelect ? typeSelect.value : "";
+    var statusSelect = document.getElementById("filter-cust-status");
+    var statusVal = statusSelect ? statusSelect.value : "";
+
+    var hasActiveFilters = Boolean(searchVal || selectedCustId || typeVal || statusVal);
+    var btnReset = document.getElementById("btn-cust-clear-filter");
+    if (btnReset) {
+      btnReset.style.display = hasActiveFilters ? "inline-flex" : "none";
+    }
+
+    var filtered = (allCustomers || []).filter(function(cust) {
       var name = cust.CustomerName ? String(cust.CustomerName).toLowerCase() : "";
       var email = cust.Email ? String(cust.Email).toLowerCase() : "";
       var phone = cust.Mobile ? String(cust.Mobile) : "";
       var id = cust.CustomerID ? String(cust.CustomerID).toLowerCase() : "";
-      var matchesSearch = name.includes(searchVal) || email.includes(searchVal) || phone.includes(searchVal) || id.includes(searchVal);
+      var city = cust.City ? String(cust.City).toLowerCase() : "";
+
+      var matchesSearch = !searchVal || name.includes(searchVal) || email.includes(searchVal) || phone.includes(searchVal) || id.includes(searchVal) || city.includes(searchVal);
+      var matchesCust = !selectedCustId || cust.CustomerID === selectedCustId;
       var matchesType = !typeVal || cust.CustomerType === typeVal;
       var matchesStatus = !statusVal || cust.Status === statusVal;
-      return matchesSearch && matchesType && matchesStatus;
+
+      return matchesSearch && matchesCust && matchesType && matchesStatus;
     });
+
     renderCustomers(filtered);
   }
+  window.filterCustomers = filterCustomers;
+
+  function clearCustomerFilters() {
+    var searchInput = document.getElementById("cust-search");
+    var custSelect = document.getElementById("filter-cust-name");
+    var typeSelect = document.getElementById("filter-cust-type");
+    var statusSelect = document.getElementById("filter-cust-status");
+    var btnReset = document.getElementById("btn-cust-clear-filter");
+
+    if (searchInput) searchInput.value = "";
+    if (custSelect) {
+      custSelect.value = "";
+      if (custSelect._refreshSearchable) custSelect._refreshSearchable();
+    }
+    if (typeSelect) {
+      typeSelect.value = "";
+      if (typeSelect._refreshSearchable) typeSelect._refreshSearchable();
+    }
+    if (statusSelect) {
+      statusSelect.value = "";
+      if (statusSelect._refreshSearchable) statusSelect._refreshSearchable();
+    }
+    if (btnReset) btnReset.style.display = "none";
+    filterCustomers();
+  }
+  window.clearCustomerFilters = clearCustomerFilters;
   function openCustomerModal(custObj) {
     if (custObj === void 0) {
       custObj = null;
