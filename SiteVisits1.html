@@ -17,7 +17,7 @@
   </div>
 
   <!-- Multi-Faceted Search & Filter Panel -->
-  <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+  <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: visible !important; position: relative; z-index: 50;">
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
       <!-- Row 1: Omni-Search & Main Action Buttons -->
       <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
@@ -428,16 +428,20 @@
     if (!filterSelect) return;
     var curVal = filterSelect.value;
     var html = '<option value="">All Projects & Leads</option>';
-    if (projectsCache.length > 0) {
+
+    var projs = (projectsCache && projectsCache.length > 0) ? projectsCache : ((window._dataCache && window._dataCache.projects) || window.projsCacheList || window.projectsCache || []);
+    var leads = (leadsCacheList && leadsCacheList.length > 0) ? leadsCacheList : ((window._dataCache && window._dataCache.leads) || window.leadsCacheList || []);
+
+    if (projs.length > 0) {
       html += '<optgroup label="Projects">';
-      html += projectsCache.map(function(p) {
-        return '<option value="PROJ:'.concat(p.ProjectID, '">&#127970; ').concat(escapeHtml(p.ProjectName), '</option>');
+      html += projs.map(function(p) {
+        return '<option value="PROJ:'.concat(p.ProjectID, '">&#127970; ').concat(escapeHtml(p.ProjectName), ' (', p.ProjectID, ')</option>');
       }).join("");
       html += '</optgroup>';
     }
-    if (leadsCacheList.length > 0) {
+    if (leads.length > 0) {
       html += '<optgroup label="Leads / Prospects">';
-      html += leadsCacheList.map(function(l) {
+      html += leads.map(function(l) {
         var name = l.CustomerName || l.LeadName || l.LeadID;
         return '<option value="LEAD:'.concat(l.LeadID, '">&#127919; ').concat(escapeHtml(name), " (").concat(l.LeadID, ')</option>');
       }).join("");
@@ -455,7 +459,7 @@
     if (!filterAssignee) return;
     var curVal = filterAssignee.value;
     var html = '<option value="">All Assignees / Staff</option>';
-    var users = staffCacheList || [];
+    var users = (staffCacheList && staffCacheList.length > 0) ? staffCacheList : ((window._dataCache && window._dataCache.users) || window.usersCacheList || []);
     if (users.length > 0) {
       html += users.map(function(u) {
         var val = u.UserID || u.userId || u.FullName || "";

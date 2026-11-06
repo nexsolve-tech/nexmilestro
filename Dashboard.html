@@ -1,7 +1,7 @@
 <!-- Dashboard.html -->
 <div class="view-container">
   <!-- Top Command & Filter Bar -->
-  <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+  <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: visible !important; position: relative; z-index: 50;">
     <!-- Upper Row: Title & Quick Action Launchpad -->
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
       <div style="display: flex; align-items: center; gap: 0.6rem;">
@@ -399,7 +399,8 @@
     // Populate Customers
     if (custFilter) {
       var curCust = custFilter.value;
-      var sortedCust = (rawCustomers || []).slice().sort(function(a, b) {
+      var custs = (rawCustomers && rawCustomers.length > 0) ? rawCustomers : ((window._dataCache && window._dataCache.customers) || window.customersCacheList || []);
+      var sortedCust = custs.slice().sort(function(a, b) {
         var nameA = a.CompanyFirmName || a.CustomerName || "";
         var nameB = b.CompanyFirmName || b.CustomerName || "";
         return nameA.localeCompare(nameB);
@@ -411,10 +412,16 @@
       }).join("");
 
       if (curCust) custFilter.value = curCust;
+      if (window.makeSearchableSelect) window.makeSearchableSelect(custFilter, { placeholder: "All Customers" });
     }
 
     // Populate Projects
     updateProjectFilterOptions();
+
+    var statFilter = document.getElementById("dash-status-filter");
+    if (statFilter && window.makeSearchableSelect) {
+      window.makeSearchableSelect(statFilter, { placeholder: "All Statuses" });
+    }
   }
 
   function updateProjectFilterOptions() {
@@ -423,14 +430,15 @@
     if (!projFilter) return;
 
     var selectedCust = custFilter ? custFilter.value : "";
-    var projectsToShow = rawProjects || [];
+    var allProjs = (rawProjects && rawProjects.length > 0) ? rawProjects : ((window._dataCache && window._dataCache.projects) || window.projsCacheList || []);
+    var projectsToShow = allProjs;
     if (selectedCust) {
       projectsToShow = projectsToShow.filter(function(p) { return p.CustomerID === selectedCust; });
     }
 
     var curProj = projFilter.value;
     var sortedProjects = projectsToShow.slice().sort(function(a, b) {
-      return b.ProjectID.localeCompare(a.ProjectID);
+      return (b.ProjectID || "").localeCompare(a.ProjectID || "");
     });
 
     projFilter.innerHTML = '<option value="">All Projects</option>' + sortedProjects.map(function(p) {
@@ -440,6 +448,7 @@
     if (curProj && projectsToShow.some(function(p) { return p.ProjectID === curProj; })) {
       projFilter.value = curProj;
     }
+    if (window.makeSearchableSelect) window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
   }
 
   window.onDashboardCustomerChange = function() {
@@ -454,9 +463,18 @@
     var stSelect = document.getElementById("dash-status-filter");
 
     if (sInput) sInput.value = "";
-    if (cSelect) cSelect.value = "";
-    if (pSelect) pSelect.value = "";
-    if (stSelect) stSelect.value = "";
+    if (cSelect) {
+      cSelect.value = "";
+      if (cSelect._refreshSearchable) cSelect._refreshSearchable();
+    }
+    if (pSelect) {
+      pSelect.value = "";
+      if (pSelect._refreshSearchable) pSelect._refreshSearchable();
+    }
+    if (stSelect) {
+      stSelect.value = "";
+      if (stSelect._refreshSearchable) stSelect._refreshSearchable();
+    }
 
     updateProjectFilterOptions();
     applyDashboardFilter();

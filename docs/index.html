@@ -477,7 +477,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
@@ -1535,6 +1535,10 @@ textarea.form-control {
   display: block;
 }
 
+.searchable-select-wrapper.open {
+  z-index: 999999 !important;
+}
+
 .searchable-select-wrapper.open .searchable-select-trigger .trigger-caret {
   transform: translateY(-50%) rotate(180deg);
 }
@@ -1544,16 +1548,23 @@ textarea.form-control {
   top: calc(100% + 4px);
   left: 0;
   width: 100%;
-  min-width: 250px;
-  background: var(--bg-primary);
+  min-width: 240px;
+  max-width: 450px;
+  background: var(--bg-primary) !important;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  z-index: 10000;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25), 0 5px 15px rgba(0, 0, 0, 0.12);
+  z-index: 999999 !important;
   display: none;
   flex-direction: column;
   overflow: hidden;
   animation: dropdownFadeIn 0.15s ease-out;
+}
+
+.searchable-select-dropdown.drop-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+  box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.25), 0 -5px 15px rgba(0, 0, 0, 0.12);
 }
 
 @keyframes dropdownFadeIn {
@@ -1562,7 +1573,7 @@ textarea.form-control {
 }
 
 .searchable-select-wrapper.open .searchable-select-dropdown {
-  display: flex;
+  display: flex !important;
 }
 
 .searchable-select-search-wrap {
@@ -1571,6 +1582,7 @@ textarea.form-control {
   background: var(--bg-secondary);
   position: relative;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .searchable-select-search-input {
@@ -1586,7 +1598,7 @@ textarea.form-control {
 }
 
 .searchable-select-search-input:focus {
-  border-color: var(--border-focus);
+  border-color: var(--primary);
 }
 
 .searchable-select-search-icon {
@@ -1600,31 +1612,34 @@ textarea.form-control {
 }
 
 .searchable-select-options {
-  max-height: 240px;
-  overflow-y: auto;
+  max-height: 260px;
+  min-height: 48px;
+  overflow-y: auto !important;
   padding: 0.25rem 0;
+  background: var(--bg-primary);
+  display: block !important;
 }
 
 .searchable-select-option {
-  padding: 0.5rem 0.85rem;
+  padding: 0.55rem 0.85rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.825rem;
   color: var(--text-main);
-  transition: background 0.12s;
+  transition: background 0.1s;
   gap: 0.5rem;
 }
 
 .searchable-select-option:hover,
 .searchable-select-option.highlighted {
-  background: rgba(15, 118, 110, 0.08);
+  background: rgba(15, 118, 110, 0.1);
   color: var(--primary);
 }
 
 .searchable-select-option.selected {
-  background: rgba(15, 118, 110, 0.14);
+  background: rgba(15, 118, 110, 0.15);
   color: var(--primary);
   font-weight: 700;
 }
@@ -1644,7 +1659,7 @@ textarea.form-control {
 }
 
 .searchable-select-group-header {
-  padding: 0.35rem 0.85rem;
+  padding: 0.4rem 0.85rem;
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
@@ -1660,6 +1675,11 @@ textarea.form-control {
   text-align: center;
   color: var(--text-muted);
   font-size: 0.8rem;
+}
+
+/* Ensure filter bars, cards, form grids never clip dropdowns */
+.filter-bar, .form-grid, .filter-group {
+  overflow: visible !important;
 }
 </style>
 
@@ -2149,7 +2169,7 @@ textarea.form-control {
     <!-- Dashboard.html -->
 <div class="view-container">
   <!-- Top Command & Filter Bar -->
-  <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+  <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: visible !important; position: relative; z-index: 50;">
     <!-- Upper Row: Title & Quick Action Launchpad -->
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
       <div style="display: flex; align-items: center; gap: 0.6rem;">
@@ -2547,7 +2567,8 @@ textarea.form-control {
     // Populate Customers
     if (custFilter) {
       var curCust = custFilter.value;
-      var sortedCust = (rawCustomers || []).slice().sort(function(a, b) {
+      var custs = (rawCustomers && rawCustomers.length > 0) ? rawCustomers : ((window._dataCache && window._dataCache.customers) || window.customersCacheList || []);
+      var sortedCust = custs.slice().sort(function(a, b) {
         var nameA = a.CompanyFirmName || a.CustomerName || "";
         var nameB = b.CompanyFirmName || b.CustomerName || "";
         return nameA.localeCompare(nameB);
@@ -2559,10 +2580,16 @@ textarea.form-control {
       }).join("");
 
       if (curCust) custFilter.value = curCust;
+      if (window.makeSearchableSelect) window.makeSearchableSelect(custFilter, { placeholder: "All Customers" });
     }
 
     // Populate Projects
     updateProjectFilterOptions();
+
+    var statFilter = document.getElementById("dash-status-filter");
+    if (statFilter && window.makeSearchableSelect) {
+      window.makeSearchableSelect(statFilter, { placeholder: "All Statuses" });
+    }
   }
 
   function updateProjectFilterOptions() {
@@ -2571,14 +2598,15 @@ textarea.form-control {
     if (!projFilter) return;
 
     var selectedCust = custFilter ? custFilter.value : "";
-    var projectsToShow = rawProjects || [];
+    var allProjs = (rawProjects && rawProjects.length > 0) ? rawProjects : ((window._dataCache && window._dataCache.projects) || window.projsCacheList || []);
+    var projectsToShow = allProjs;
     if (selectedCust) {
       projectsToShow = projectsToShow.filter(function(p) { return p.CustomerID === selectedCust; });
     }
 
     var curProj = projFilter.value;
     var sortedProjects = projectsToShow.slice().sort(function(a, b) {
-      return b.ProjectID.localeCompare(a.ProjectID);
+      return (b.ProjectID || "").localeCompare(a.ProjectID || "");
     });
 
     projFilter.innerHTML = '<option value="">All Projects</option>' + sortedProjects.map(function(p) {
@@ -2588,6 +2616,7 @@ textarea.form-control {
     if (curProj && projectsToShow.some(function(p) { return p.ProjectID === curProj; })) {
       projFilter.value = curProj;
     }
+    if (window.makeSearchableSelect) window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
   }
 
   window.onDashboardCustomerChange = function() {
@@ -2602,9 +2631,18 @@ textarea.form-control {
     var stSelect = document.getElementById("dash-status-filter");
 
     if (sInput) sInput.value = "";
-    if (cSelect) cSelect.value = "";
-    if (pSelect) pSelect.value = "";
-    if (stSelect) stSelect.value = "";
+    if (cSelect) {
+      cSelect.value = "";
+      if (cSelect._refreshSearchable) cSelect._refreshSearchable();
+    }
+    if (pSelect) {
+      pSelect.value = "";
+      if (pSelect._refreshSearchable) pSelect._refreshSearchable();
+    }
+    if (stSelect) {
+      stSelect.value = "";
+      if (stSelect._refreshSearchable) stSelect._refreshSearchable();
+    }
 
     updateProjectFilterOptions();
     applyDashboardFilter();
@@ -4677,7 +4715,7 @@ textarea.form-control {
   </div>
 
   <!-- Multi-Faceted Search & Filter Panel -->
-  <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+  <div class="card" style="margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: visible !important; position: relative; z-index: 50;">
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
       <!-- Row 1: Omni-Search & Main Action Buttons -->
       <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
@@ -5088,16 +5126,20 @@ textarea.form-control {
     if (!filterSelect) return;
     var curVal = filterSelect.value;
     var html = '<option value="">All Projects & Leads</option>';
-    if (projectsCache.length > 0) {
+
+    var projs = (projectsCache && projectsCache.length > 0) ? projectsCache : ((window._dataCache && window._dataCache.projects) || window.projsCacheList || window.projectsCache || []);
+    var leads = (leadsCacheList && leadsCacheList.length > 0) ? leadsCacheList : ((window._dataCache && window._dataCache.leads) || window.leadsCacheList || []);
+
+    if (projs.length > 0) {
       html += '<optgroup label="Projects">';
-      html += projectsCache.map(function(p) {
-        return '<option value="PROJ:'.concat(p.ProjectID, '">&#127970; ').concat(escapeHtml(p.ProjectName), '</option>');
+      html += projs.map(function(p) {
+        return '<option value="PROJ:'.concat(p.ProjectID, '">&#127970; ').concat(escapeHtml(p.ProjectName), ' (', p.ProjectID, ')</option>');
       }).join("");
       html += '</optgroup>';
     }
-    if (leadsCacheList.length > 0) {
+    if (leads.length > 0) {
       html += '<optgroup label="Leads / Prospects">';
-      html += leadsCacheList.map(function(l) {
+      html += leads.map(function(l) {
         var name = l.CustomerName || l.LeadName || l.LeadID;
         return '<option value="LEAD:'.concat(l.LeadID, '">&#127919; ').concat(escapeHtml(name), " (").concat(l.LeadID, ')</option>');
       }).join("");
@@ -5115,7 +5157,7 @@ textarea.form-control {
     if (!filterAssignee) return;
     var curVal = filterAssignee.value;
     var html = '<option value="">All Assignees / Staff</option>';
-    var users = staffCacheList || [];
+    var users = (staffCacheList && staffCacheList.length > 0) ? staffCacheList : ((window._dataCache && window._dataCache.users) || window.usersCacheList || []);
     if (users.length > 0) {
       html += users.map(function(u) {
         var val = u.UserID || u.userId || u.FullName || "";
@@ -14055,6 +14097,10 @@ document.addEventListener("click", function() {
           if (typeof window[loaderHook] === "function") {
             window[loaderHook]();
           }
+          if (typeof window.upgradeAllSelects === "function") {
+            window.upgradeAllSelects(appContent);
+            setTimeout(function() { window.upgradeAllSelects(appContent); }, 150);
+          }
           this.currentView = viewId;
         }
 
@@ -14930,10 +14976,17 @@ document.addEventListener("click", function() {
      * =========================================================================
      */
     function makeSearchableSelect(selectEl, customConfig) {
-      if (!selectEl) return;
+      if (!selectEl || !selectEl.parentNode) return;
+
+      // If already wrapped and wrapper is still attached to same parent
       if (selectEl._searchableWrapper) {
-        if (selectEl._refreshSearchable) selectEl._refreshSearchable();
-        return;
+        if (selectEl._searchableWrapper.parentNode === selectEl.parentNode) {
+          if (selectEl._refreshSearchable) selectEl._refreshSearchable();
+          return;
+        } else {
+          try { selectEl._searchableWrapper.remove(); } catch(e) {}
+          selectEl._searchableWrapper = null;
+        }
       }
 
       var config = Object.assign({
@@ -15027,17 +15080,22 @@ document.addEventListener("click", function() {
         optionsList.innerHTML = "";
         query = (query || "").toLowerCase().trim();
 
+        if (parsedOptions.length === 0) {
+          optionsList.innerHTML = '<div class="searchable-select-empty">No options available</div>';
+          return;
+        }
+
         var renderedCount = 0;
-        var currentGroupEl = null;
 
         parsedOptions.forEach(function(item) {
           if (item.isGroup) {
-            currentGroupEl = document.createElement("div");
-            currentGroupEl.className = "searchable-select-group-header";
-            currentGroupEl.innerText = item.label;
-            optionsList.appendChild(currentGroupEl);
+            var groupEl = document.createElement("div");
+            groupEl.className = "searchable-select-group-header";
+            groupEl.innerText = item.label;
+            optionsList.appendChild(groupEl);
           } else {
-            var matches = !query || item.text.toLowerCase().indexOf(query) !== -1;
+            var labelText = item.text || "";
+            var matches = !query || labelText.toLowerCase().indexOf(query) !== -1 || (item.value && item.value.toLowerCase().indexOf(query) !== -1);
             if (!matches) return;
 
             renderedCount++;
@@ -15068,16 +15126,33 @@ document.addEventListener("click", function() {
 
       function openDropdown() {
         document.querySelectorAll(".searchable-select-wrapper.open").forEach(function(w) {
-          if (w !== wrapper) w.classList.remove("open");
+          if (w !== wrapper) {
+            w.classList.remove("open");
+            w.style.zIndex = "";
+          }
         });
+
+        parseSelectOptions();
         wrapper.classList.add("open");
+        wrapper.style.zIndex = "999999";
+
+        // Flip up if near bottom of viewport
+        var rect = trigger.getBoundingClientRect();
+        var spaceBelow = window.innerHeight - rect.bottom;
+        if (spaceBelow < 280 && rect.top > 280) {
+          dropdown.classList.add("drop-up");
+        } else {
+          dropdown.classList.remove("drop-up");
+        }
+
         searchInput.value = "";
         renderOptions("");
-        setTimeout(function() { searchInput.focus(); }, 40);
+        setTimeout(function() { searchInput.focus(); }, 50);
       }
 
       function closeDropdown() {
         wrapper.classList.remove("open");
+        wrapper.style.zIndex = "";
       }
 
       trigger.addEventListener("click", function(e) {
@@ -15127,10 +15202,60 @@ document.addEventListener("click", function() {
         }
       }
 
+      selectEl.addEventListener("change", updateTriggerLabel);
+
+      // Auto-observe DOM mutations on select options
+      if (window.MutationObserver && !selectEl._searchObserver) {
+        var mo = new MutationObserver(function() {
+          refresh();
+        });
+        mo.observe(selectEl, { childList: true, subtree: true });
+        selectEl._searchObserver = mo;
+      }
+
       selectEl._refreshSearchable = refresh;
       refresh();
     }
     window.makeSearchableSelect = makeSearchableSelect;
+
+    /**
+     * Upgrades all selects within scope to searchable dropdowns
+     */
+    function upgradeAllSelects(scope) {
+      var root = scope || document.body;
+      if (!root) return;
+      var selects = root.querySelectorAll("select:not(.no-searchable)");
+      selects.forEach(function(sel) {
+        makeSearchableSelect(sel);
+      });
+    }
+    window.upgradeAllSelects = upgradeAllSelects;
+
+    // Global observer: automatically upgrades any new select elements inserted anywhere in the app
+    if (typeof window !== "undefined" && window.MutationObserver) {
+      var globalSelectAutoObserver = new MutationObserver(function(mutations) {
+        var hasNew = false;
+        for (var i = 0; i < mutations.length; i++) {
+          var added = mutations[i].addedNodes;
+          for (var j = 0; j < added.length; j++) {
+            var n = added[j];
+            if (n.nodeType === 1) {
+              if (n.tagName === "SELECT" && !n._searchableWrapper && !n.classList.contains("no-searchable")) {
+                hasNew = true; break;
+              }
+              if (n.querySelector && n.querySelector("select:not(.no-searchable)")) {
+                hasNew = true; break;
+              }
+            }
+          }
+          if (hasNew) break;
+        }
+        if (hasNew) {
+          upgradeAllSelects(document.body);
+        }
+      });
+      globalSelectAutoObserver.observe(document.body, { childList: true, subtree: true });
+    }
 
     function showToast(message, type) {
       type = type || "info";

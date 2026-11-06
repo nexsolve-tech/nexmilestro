@@ -1699,6 +1699,10 @@
           if (typeof window[loaderHook] === "function") {
             window[loaderHook]();
           }
+          if (typeof window.upgradeAllSelects === "function") {
+            window.upgradeAllSelects(appContent);
+            setTimeout(function() { window.upgradeAllSelects(appContent); }, 150);
+          }
           this.currentView = viewId;
         }
 
@@ -2574,10 +2578,17 @@
      * =========================================================================
      */
     function makeSearchableSelect(selectEl, customConfig) {
-      if (!selectEl) return;
+      if (!selectEl || !selectEl.parentNode) return;
+
+      // If already wrapped and wrapper is still attached to same parent
       if (selectEl._searchableWrapper) {
-        if (selectEl._refreshSearchable) selectEl._refreshSearchable();
-        return;
+        if (selectEl._searchableWrapper.parentNode === selectEl.parentNode) {
+          if (selectEl._refreshSearchable) selectEl._refreshSearchable();
+          return;
+        } else {
+          try { selectEl._searchableWrapper.remove(); } catch(e) {}
+          selectEl._searchableWrapper = null;
+        }
       }
 
       var config = Object.assign({
@@ -2671,17 +2682,22 @@
         optionsList.innerHTML = "";
         query = (query || "").toLowerCase().trim();
 
+        if (parsedOptions.length === 0) {
+          optionsList.innerHTML = '<div class="searchable-select-empty">No options available</div>';
+          return;
+        }
+
         var renderedCount = 0;
-        var currentGroupEl = null;
 
         parsedOptions.forEach(function(item) {
           if (item.isGroup) {
-            currentGroupEl = document.createElement("div");
-            currentGroupEl.className = "searchable-select-group-header";
-            currentGroupEl.innerText = item.label;
-            optionsList.appendChild(currentGroupEl);
+            var groupEl = document.createElement("div");
+            groupEl.className = "searchable-select-group-header";
+            groupEl.innerText = item.label;
+            optionsList.appendChild(groupEl);
           } else {
-            var matches = !query || item.text.toLowerCase().indexOf(query) !== -1;
+            var labelText = item.text || "";
+            var matches = !query || labelText.toLowerCase().indexOf(query) !== -1 || (item.value && item.value.toLowerCase().indexOf(query) !== -1);
             if (!matches) return;
 
             renderedCount++;
@@ -2712,16 +2728,33 @@
 
       function openDropdown() {
         document.querySelectorAll(".searchable-select-wrapper.open").forEach(function(w) {
-          if (w !== wrapper) w.classList.remove("open");
+          if (w !== wrapper) {
+            w.classList.remove("open");
+            w.style.zIndex = "";
+          }
         });
+
+        parseSelectOptions();
         wrapper.classList.add("open");
+        wrapper.style.zIndex = "999999";
+
+        // Flip up if near bottom of viewport
+        var rect = trigger.getBoundingClientRect();
+        var spaceBelow = window.innerHeight - rect.bottom;
+        if (spaceBelow < 280 && rect.top > 280) {
+          dropdown.classList.add("drop-up");
+        } else {
+          dropdown.classList.remove("drop-up");
+        }
+
         searchInput.value = "";
         renderOptions("");
-        setTimeout(function() { searchInput.focus(); }, 40);
+        setTimeout(function() { searchInput.focus(); }, 50);
       }
 
       function closeDropdown() {
         wrapper.classList.remove("open");
+        wrapper.style.zIndex = "";
       }
 
       trigger.addEventListener("click", function(e) {
@@ -2771,10 +2804,60 @@
         }
       }
 
+      selectEl.addEventListener("change", updateTriggerLabel);
+
+      // Auto-observe DOM mutations on select options
+      if (window.MutationObserver && !selectEl._searchObserver) {
+        var mo = new MutationObserver(function() {
+          refresh();
+        });
+        mo.observe(selectEl, { childList: true, subtree: true });
+        selectEl._searchObserver = mo;
+      }
+
       selectEl._refreshSearchable = refresh;
       refresh();
     }
     window.makeSearchableSelect = makeSearchableSelect;
+
+    /**
+     * Upgrades all selects within scope to searchable dropdowns
+     */
+    function upgradeAllSelects(scope) {
+      var root = scope || document.body;
+      if (!root) return;
+      var selects = root.querySelectorAll("select:not(.no-searchable)");
+      selects.forEach(function(sel) {
+        makeSearchableSelect(sel);
+      });
+    }
+    window.upgradeAllSelects = upgradeAllSelects;
+
+    // Global observer: automatically upgrades any new select elements inserted anywhere in the app
+    if (typeof window !== "undefined" && window.MutationObserver) {
+      var globalSelectAutoObserver = new MutationObserver(function(mutations) {
+        var hasNew = false;
+        for (var i = 0; i < mutations.length; i++) {
+          var added = mutations[i].addedNodes;
+          for (var j = 0; j < added.length; j++) {
+            var n = added[j];
+            if (n.nodeType === 1) {
+              if (n.tagName === "SELECT" && !n._searchableWrapper && !n.classList.contains("no-searchable")) {
+                hasNew = true; break;
+              }
+              if (n.querySelector && n.querySelector("select:not(.no-searchable)")) {
+                hasNew = true; break;
+              }
+            }
+          }
+          if (hasNew) break;
+        }
+        if (hasNew) {
+          upgradeAllSelects(document.body);
+        }
+      });
+      globalSelectAutoObserver.observe(document.body, { childList: true, subtree: true });
+    }
 
     function showToast(message, type) {
       type = type || "info";
