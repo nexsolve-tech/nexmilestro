@@ -1,0 +1,9 @@
+UserID,FullName,Email,Mobile,RoleID,Status,MustChangePassword,CreatedDate,CreatedBy,ReportsTo
+USR-101,Mehul Gandhi,mehul.gandhi@nexsolve.in,9811223344,Super Admin,Active,No,2025-01-01,SYSTEM,
+USR-102,Dhwani Gandhi,dhwani.gandhi@nexsolve.in,9822334455,Project Manager,Active,No,2025-01-01,SYSTEM,USR-101
+USR-103,Karan Mehta,karan.mehta@nexsolve.in,9833445566,Site Engineer,Active,No,2025-01-01,SYSTEM,USR-101
+USR-104,Ananya Sen,ananya.sen@nexsolve.in,9844556677,Sales Executive,Active,No,2025-01-01,SYSTEM,USR-101
+USR-105,Rajesh Kulkarni,rajesh.kulkarni@nexsolve.in,9855667788,Finance Officer,Active,No,2025-01-01,SYSTEM,USR-101
+USR-106,Siddharth Verma,siddharth.verma@nexsolve.in,9866778899,Project Manager,Active,No,2025-01-01,SYSTEM,USR-101
+USR-107,Pooja Sharma,pooja.sharma@nexsolve.in,9877889900,Site Engineer,Active,No,2025-01-01,SYSTEM,USR-101
+USR-108,Vikram Saxena,vikram.saxena@nexsolve.in,9888990011,Site Engineer,Active,No,2025-01-01,SYSTEM,USR-101

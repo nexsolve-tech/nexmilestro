@@ -1550,6 +1550,11 @@ function handleUniversalApiRequest(action, params) {
         response = saveCompanySetupRecord(licenseKey, dataObj, userId);
         break;
 
+      case 'seed_benchmark_data':
+      case 'seedBenchmarkData':
+        response = seedBenchmarkDataForClient(licenseKey, userId);
+        break;
+
       case 'uploadFile':
       case 'upload_attachment':
         response = uploadFileToDrive(licenseKey, dataObj.base64Data || params.base64Data, dataObj.filename || dataObj.fileName || params.fileName, dataObj.mimeType || params.mimeType, dataObj.subfolderName || dataObj.folderName || params.folderName);
@@ -1847,6 +1852,19 @@ function setupDatabaseTabs() {
   profileSheet.getRange(2, 1, profileData.length, 2).setValues(profileData);
 
   ui.alert("✅ Database Setup Complete!\nAll 15 tables initialized with headers, default admin credentials (mehul.gandhi@nexsolve.in / admin123), Role Permissions, Dropdowns, and Company Setup.");
+}
+
+function seedBenchmarkDataForClient(licenseKey, userId) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    if (typeof executeHighVolumeSeeding === "function") {
+      const res = executeHighVolumeSeeding(ss);
+      return { success: true, message: res.message };
+    }
+    return { success: false, error: "executeHighVolumeSeeding function not found in project scripts." };
+  } catch (err) {
+    return { success: false, error: "Failed to seed benchmark database: " + err.message };
+  }
 }
 
 /**

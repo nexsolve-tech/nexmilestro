@@ -1809,355 +1809,363 @@
      * =========================================================================
      */
     function generateEnterpriseDemoData() {
-      return {
-        customers: [
-          {
-            CustomerID: "CUST-1001",
-            CustomerName: "DLF CyberCity Developers Ltd",
-            CompanyName: "DLF CyberCity Developers Ltd",
-            ContactPerson: "Rajeev Singhal",
-            Designation: "VP Infrastructure",
-            Mobile: "9811223344",
-            Email: "rajeev.singhal@dlf.in",
-            Address: "DLF Gateway Tower, CyberCity",
-            City: "Gurugram",
-            State: "Haryana",
-            Pincode: "122002",
-            PANCardNumber: "AAACD1234F",
-            GSTNumber: "06AAACD1234F1Z5",
-            CustomerType: "Enterprise / Corporate",
-            Industry: "Commercial Real Estate",
-            Status: "Active",
-            Notes: "Turnkey interior partner for luxury residential and commercial high-rises."
-          },
-          {
-            CustomerID: "CUST-1002",
-            CustomerName: "Oberoi Realty Projects",
-            CompanyName: "Oberoi Realty Projects",
-            ContactPerson: "Priya Nair",
-            Designation: "Director - Projects",
-            Mobile: "9820334455",
-            Email: "priya.nair@oberoirealty.com",
-            Address: "Oberoi Commerz II, International Business Park",
-            City: "Mumbai",
-            State: "Maharashtra",
-            Pincode: "400063",
-            PANCardNumber: "AABCO5678G",
-            GSTNumber: "27AABCO5678G1Z2",
-            CustomerType: "Luxury Builder",
-            Industry: "Luxury Residential",
-            Status: "Active",
-            Notes: "High-spec corporate fitouts & sample duplex penthouses."
-          },
-          {
-            CustomerID: "CUST-1003",
-            CustomerName: "Prestige Estates Ltd",
-            CompanyName: "Prestige Estates Ltd",
-            ContactPerson: "Arun Swaminathan",
-            Designation: "Chief Engineer",
-            Mobile: "9845112233",
-            Email: "arun@prestigeconstructions.com",
-            Address: "The Falcon Tower, Brunton Road",
-            City: "Bengaluru",
-            State: "Karnataka",
-            Pincode: "560001",
-            PANCardNumber: "AACCP9012H",
-            GSTNumber: "29AACCP9012H1Z9",
-            CustomerType: "Commercial Developer",
-            Industry: "Turnkey Contracting",
-            Status: "Active",
-            Notes: "Golfshire villas and tech park customer experience centers."
-          },
-          {
-            CustomerID: "CUST-1004",
-            CustomerName: "Godrej Properties Retail",
-            CompanyName: "Godrej Properties Retail",
-            ContactPerson: "Vikram Khurana",
-            Designation: "Head - Store Experience",
-            Mobile: "9876543210",
-            Email: "vikram.k@godrejproperties.com",
-            Address: "Godrej One, Pirojshanagar",
-            City: "Pune",
-            State: "Maharashtra",
-            Pincode: "411001",
-            PANCardNumber: "AABCG3456J",
-            GSTNumber: "27AABCG3456J1Z8",
-            CustomerType: "Retail Chain",
-            Industry: "Retail Infrastructure",
-            Status: "Active",
-            Notes: "Flagship retail experience zones across Tier-1 cities."
-          },
-          {
-            CustomerID: "CUST-1005",
-            CustomerName: "Brigade Commercials",
-            CompanyName: "Brigade Commercials",
-            ContactPerson: "Sunita Reddy",
-            Designation: "Operations VP",
-            Mobile: "9880123456",
-            Email: "sunita.r@brigadegroup.com",
-            Address: "World Trade Center, Malleswaram",
-            City: "Hyderabad",
-            State: "Telangana",
-            Pincode: "500081",
-            PANCardNumber: "AABCB7890K",
-            GSTNumber: "36AABCB7890K1Z4",
-            CustomerType: "Commercial Real Estate",
-            Industry: "Corporate IT Parks",
-            Status: "Active",
-            Notes: "Fintech towers and co-working incubation suites."
-          }
-        ],
-        projects: [
-          {
-            ProjectID: "PROJ-1001",
-            ProjectName: "DLF Horizon Luxury Penthouse - Phase 2",
-            CustomerID: "CUST-1001",
-            ProjectType: "Luxury Residential",
-            Location: "Golf Course Road, Gurugram",
-            StartDate: "2026-08-01",
-            ExpectedCompletionDate: "2026-12-15",
-            ProjectValue: 4500000,
-            EstimatedBudget: 4500000,
-            Status: "In Progress",
-            Notes: "10,500 sq ft duplex penthouse. Turnkey MEP, Italian marble, smart automation, acoustic home theater."
-          },
-          {
-            ProjectID: "PROJ-1002",
-            ProjectName: "Phoenix One Commercial HQ - 4th Floor",
-            CustomerID: "CUST-1002",
-            ProjectType: "Corporate Office Fitout",
-            Location: "Lower Parel, Mumbai",
-            StartDate: "2026-09-01",
-            ExpectedCompletionDate: "2027-02-28",
-            ProjectValue: 8500000,
-            EstimatedBudget: 8500000,
-            Status: "In Progress",
-            Notes: "180 workstation corporate fitout with precision server room and acoustic boardrooms."
-          },
-          {
-            ProjectID: "PROJ-1003",
-            ProjectName: "Prestige Golfshire Villa 12",
-            CustomerID: "CUST-1003",
-            ProjectType: "Turnkey Villa Execution",
-            Location: "Nandi Hills Road, Bengaluru",
-            StartDate: "2026-07-15",
-            ExpectedCompletionDate: "2026-11-30",
-            ProjectValue: 6200000,
-            EstimatedBudget: 6200000,
-            Status: "In Progress",
-            Notes: "High-end bespoke villa. Complete structural redesign, deck woodwork, infinity pool lounge."
-          },
-          {
-            ProjectID: "PROJ-1004",
-            ProjectName: "Godrej Infinity Retail Experience Center",
-            CustomerID: "CUST-1004",
-            ProjectType: "Retail Flagship Showroom",
-            Location: "Koregaon Park, Pune",
-            StartDate: "2026-10-15",
-            ExpectedCompletionDate: "2027-01-31",
-            ProjectValue: 2800000,
-            EstimatedBudget: 2800000,
-            Status: "In Progress",
-            Notes: "Interactive digital retail walkthrough showroom with high-lumen architectural lighting."
-          }
-        ],
-        milestones: [
-          { MilestoneID: "MS-101", ProjectID: "PROJ-1001", MilestoneName: "Site Survey, 3D Elevation & Layout Finalization", Title: "Site Survey & 3D Elevation", DueDate: "2026-08-20", CompletionDate: "2026-08-18", Status: "Completed", Weightage: 15, EstimatedCost: 350000, ActualCost: 320000, AssociateName: "Studio Dimension 3D", AssociateCost: 150000 },
-          { MilestoneID: "MS-102", ProjectID: "PROJ-1001", MilestoneName: "Civil Modifications & Concealed Plumbing", Title: "Civil & Plumbing", DueDate: "2026-09-15", CompletionDate: "2026-09-12", Status: "Completed", Weightage: 25, EstimatedCost: 850000, ActualCost: 825000, AssociateName: "Apex MEP Consultants", AssociateCost: 350000 },
-          { MilestoneID: "MS-103", ProjectID: "PROJ-1001", MilestoneName: "False Ceiling, HVAC Ducting & Wiring", Title: "Ceiling & HVAC", DueDate: "2026-10-20", CompletionDate: "2026-10-19", Status: "Completed", Weightage: 35, EstimatedCost: 1450000, ActualCost: 1420000, AssociateName: "Apex MEP Consultants", AssociateCost: 450000 },
-          { MilestoneID: "MS-104", ProjectID: "PROJ-1001", MilestoneName: "Italian Marble Flooring & Premium Polishing", Title: "Marble Flooring", DueDate: "2026-11-15", Status: "In Progress", Weightage: 15, EstimatedCost: 950000, ActualCost: 500000, AssociateName: "Italian Stoneworks Ltd", AssociateCost: 400000 },
-          { MilestoneID: "MS-105", ProjectID: "PROJ-1001", MilestoneName: "Custom Modular Woodwork, Veneers & Fixtures", Title: "Modular Millwork", DueDate: "2026-12-10", Status: "Pending", Weightage: 10, EstimatedCost: 900000, ActualCost: 0, AssociateName: "CraftWood Millwork", AssociateCost: 650000 },
+      var CITIES = ["Gurugram", "New Delhi", "Noida", "Mumbai", "Bengaluru", "Pune", "Hyderabad", "Ahmedabad", "Chandigarh", "Jaipur"];
+      var STATES = ["Haryana", "Delhi", "Uttar Pradesh", "Maharashtra", "Karnataka", "Maharashtra", "Telangana", "Gujarat", "Punjab", "Rajasthan"];
+      var FIRST_NAMES = ["Rajeev", "Amit", "Vikram", "Sunil", "Rohan", "Ananya", "Pooja", "Sanjay", "Deepak", "Neha", "Karan", "Gaurav", "Naveen", "Rahul", "Meera", "Aditya", "Shweta", "Manish", "Divya", "Tarun", "Ashish", "Sneha", "Alok", "Priya", "Vivek", "Kavita", "Siddharth", "Nidhi", "Harish", "Ritu"];
+      var LAST_NAMES = ["Singhal", "Sharma", "Verma", "Mehta", "Patel", "Kapoor", "Gupta", "Malhotra", "Joshi", "Bansal", "Chopra", "Reddy", "Nair", "Saxena", "Bhatia", "Trivedi", "Agrawal", "Shah", "Iyer", "Rao", "Khanna", "Deshmukh", "Chawla", "Bhardwaj", "Kulkarni", "Mittal", "Sarin", "Dewan", "Goyal", "Seth"];
+      var CORP_PREFIXES = ["DLF", "Oberoi", "Godrej", "Tata", "Lodha", "Prestige", "Sobha", "Brigade", "Hiranandani", "K Raheja", "Mahindra", "Reliance", "Adani", "Piramal", "Embassy", "Salarpuria", "Phoenix", "Shapoorji", "L&T", "GMR"];
+      var CORP_SUFFIXES = ["Properties Ltd", "Realty & Infrastructure", "Developments Pvt Ltd", "Living Spaces", "Commercial Towers", "Projects Corp", "Asset Holdings", "Estates Pvt Ltd", "Builders & Turnkey", "Infrastructure Corp"];
+      var PROJECT_TYPES = ["Luxury Residential", "Corporate Office Fitout", "Turnkey Villa Execution", "Retail Flagship Showroom", "Commercial Kitchen / Food", "Hospitality / Boutique Hotel"];
+      var PROJECT_STATUSES = ["Planning & Design", "In Progress", "In Progress", "In Progress", "Under Review", "Completed", "On Hold"];
+      var TASK_PRIORITIES = ["Critical", "High", "Medium", "Medium", "Low"];
+      var TASK_STATUSES = ["Pending", "In Progress", "In Progress", "Under Review", "Completed", "Completed"];
+      var VISIT_STATUSES = ["Completed", "Completed", "Completed", "Scheduled"];
+      var PROPOSAL_STATUSES = ["Draft", "Sent", "Approved", "Approved", "Revised", "Rejected"];
+      var LEAD_SOURCES = ["Client Referral", "Website Lead", "Architect Referral", "Exhibition", "Direct Inquiry", "LinkedIn"];
+      var LEAD_STATUSES = ["New Inquiry", "Discussion", "Qualified", "Site Visit Scheduled", "Proposal Sent", "Won", "Lost"];
 
-          { MilestoneID: "MS-201", ProjectID: "PROJ-1002", MilestoneName: "Demolition & Structural Grid Layout", Title: "Demolition & Grid", DueDate: "2026-09-20", CompletionDate: "2026-09-18", Status: "Completed", Weightage: 20, EstimatedCost: 1200000, ActualCost: 1150000, AssociateName: "Apex MEP Consultants", AssociateCost: 250000 },
-          { MilestoneID: "MS-202", ProjectID: "PROJ-1002", MilestoneName: "Server Room Precision AC & MEP Conduit Setup", Title: "Server Room PAC & MEP", DueDate: "2026-10-30", CompletionDate: "2026-10-28", Status: "Completed", Weightage: 20, EstimatedCost: 2200000, ActualCost: 2100000, AssociateName: "Apex MEP Consultants", AssociateCost: 650000 },
-          { MilestoneID: "MS-203", ProjectID: "PROJ-1002", MilestoneName: "Acoustic Partitions & Toughened Glass Glazing", Title: "Acoustic Glazing", DueDate: "2026-11-30", Status: "In Progress", Weightage: 30, EstimatedCost: 2800000, ActualCost: 1000000, AssociateName: "GlazeTech Systems", AssociateCost: 850000 },
-          { MilestoneID: "MS-204", ProjectID: "PROJ-1002", MilestoneName: "Workstation Electrical Grids & Carpet Tiles", Title: "Workstations & Carpets", DueDate: "2027-01-15", Status: "Pending", Weightage: 20, EstimatedCost: 1500000, ActualCost: 0, AssociateName: "CraftWood Millwork", AssociateCost: 550000 },
-          { MilestoneID: "MS-205", ProjectID: "PROJ-1002", MilestoneName: "Final Paint, Fire Safety Testing & Handover", Title: "Final Handover", DueDate: "2027-02-25", Status: "Pending", Weightage: 10, EstimatedCost: 800000, ActualCost: 0, AssociateName: "Studio Dimension 3D", AssociateCost: 200000 },
+      var STAFF = [
+        { UserID: "USR-101", FullName: "Mehul Gandhi", RoleID: "Super Admin", Mobile: "9811223344" },
+        { UserID: "USR-102", FullName: "Dhwani Gandhi", RoleID: "Project Manager", Mobile: "9822334455" },
+        { UserID: "USR-103", FullName: "Karan Mehta", RoleID: "Site Engineer", Mobile: "9833445566" },
+        { UserID: "USR-104", FullName: "Ananya Sen", RoleID: "Sales Executive", Mobile: "9844556677" },
+        { UserID: "USR-105", FullName: "Rajesh Kulkarni", RoleID: "Finance Officer", Mobile: "9855667788" },
+        { UserID: "USR-106", FullName: "Siddharth Verma", RoleID: "Project Manager", Mobile: "9866778899" },
+        { UserID: "USR-107", FullName: "Pooja Sharma", RoleID: "Site Engineer", Mobile: "9877889900" },
+        { UserID: "USR-108", FullName: "Vikram Saxena", RoleID: "Site Engineer", Mobile: "9888990011" }
+      ];
 
-          { MilestoneID: "MS-301", ProjectID: "PROJ-1003", MilestoneName: "Landscape Architecture & Civil Plinth Handover", Title: "Landscape & Civil", DueDate: "2026-08-30", CompletionDate: "2026-08-28", Status: "Completed", Weightage: 40, EstimatedCost: 2400000, ActualCost: 2350000, AssociateName: "Studio Dimension 3D", AssociateCost: 200000 },
-          { MilestoneID: "MS-302", ProjectID: "PROJ-1003", MilestoneName: "Interior Turnkey Fitouts & Smart Lighting", Title: "Fitouts & Smart Lighting", DueDate: "2026-11-20", Status: "In Progress", Weightage: 60, EstimatedCost: 3800000, ActualCost: 3200000, AssociateName: "CraftWood Millwork", AssociateCost: 900000 }
-        ],
-        tasks: [
-          { TaskID: "TASK-1001", TaskName: "Inspect marble slab dry-lay with client", ProjectID: "PROJ-1001", Priority: "High", Status: "Pending", AssignedTo: "Karan Mehta", DueDate: "2026-11-06", Description: "Verify vein continuity on master lounge floor before final adhesive setting." },
-          { TaskID: "TASK-1002", TaskName: "Submit HVAC balancing CFM test report", ProjectID: "PROJ-1002", Priority: "High", Status: "Under Review", AssignedTo: "Sanjay Sharma", DueDate: "2026-11-07", Description: "Confirm airflow balance report for server room precision AC unit." },
-          { TaskID: "TASK-1003", TaskName: "Acoustic ceiling baffles installation", ProjectID: "PROJ-1002", Priority: "Medium", Status: "In Progress", AssignedTo: "Amit Verma", DueDate: "2026-11-12", Description: "Hang perforated timber baffles in conference room 4A." },
-          { TaskID: "TASK-1004", TaskName: "Approve veneer polish swatches", ProjectID: "PROJ-1001", Priority: "High", Status: "In Progress", AssignedTo: "Mehul Gandhi", DueDate: "2026-11-08", Description: "Smoked oak sample 3 vs matte walnut for foyer paneling." },
-          { TaskID: "TASK-1005", TaskName: "Poolside deck wood composite treatment", ProjectID: "PROJ-1003", Priority: "Medium", Status: "Completed", AssignedTo: "Karan Mehta", DueDate: "2026-11-02", CompletionDate: "2026-11-02", Description: "Weather-resistant teak composite seal coat applied." },
-          { TaskID: "TASK-1006", TaskName: "Fire suppression sensor wiring test", ProjectID: "PROJ-1002", Priority: "Critical", Status: "Pending", AssignedTo: "Sanjay Sharma", DueDate: "2026-11-09", Description: "Test loop sensors with building management central panel." },
-          { TaskID: "TASK-1007", TaskName: "Retail lighting lux level verification", ProjectID: "PROJ-1004", Priority: "Medium", Status: "In Progress", AssignedTo: "Amit Verma", DueDate: "2026-11-14", Description: "Check focal display spots reach 1200 lux standard." },
-          { TaskID: "TASK-1008", TaskName: "Smart home automation scene programming", ProjectID: "PROJ-1003", Priority: "Low", Status: "Pending", AssignedTo: "Mehul Gandhi", DueDate: "2026-11-18", Description: "Configure lighting presets: Morning, Evening, Party." }
-        ],
-        siteVisits: [
-          {
-            VisitID: "VISIT-1001",
-            ProjectID: "PROJ-1001",
-            VisitDate: "2026-11-02",
-            VisitedBy: "Mehul Gandhi",
-            Purpose: "False ceiling clearance inspection",
-            Remarks: "HVAC plenum height verified; 150mm clearance maintained. Client approved lighting cutouts.",
-            AssignedTo: "Mehul Gandhi",
-            Status: "Completed",
-            BillableAmount: 5000,
-            NextFollowupDate: "2026-11-08"
-          },
-          {
-            VisitID: "VISIT-1002",
-            ProjectID: "PROJ-1002",
-            VisitDate: "2026-11-01",
-            VisitedBy: "Sanjay Sharma",
-            Purpose: "Precision server room baseline inspection",
-            Remarks: "Dual PAC conduits placed. Fire damper clearances verified with MEP consultant.",
-            AssignedTo: "Sanjay Sharma",
-            Status: "Completed",
-            BillableAmount: 7500,
-            NextFollowupDate: "2026-11-07"
-          },
-          {
-            VisitID: "VISIT-1003",
-            LeadID: "LEAD-1002",
-            VisitDate: "2026-11-03",
-            VisitedBy: "Amit Verma",
-            Purpose: "Commercial site measurement & preliminary BOQ",
-            Remarks: "Detailed laser measurements taken. 4,500 sq ft carpet area confirmed.",
-            AssignedTo: "Amit Verma",
-            Status: "Completed",
-            BillableAmount: 0,
-            NextFollowupDate: "2026-11-06"
-          }
-        ],
-        leads: [
-          { LeadID: "LEAD-1001", CustomerName: "Lodha World One Penthouse", CompanyName: "Lodha World One Penthouse", Mobile: "9820011223", Email: "contact@lodhagroup.com", ProjectType: "Luxury Residential", DealValue: 5500000, Status: "Won", Source: "Client Referral", AssignedTo: "Mehul Gandhi", Notes: "Converted to signed design agreement." },
-          { LeadID: "LEAD-1002", CustomerName: "K Raheja Mindspace Office", CompanyName: "K Raheja Mindspace Office", Mobile: "9833445566", Email: "infra@kraheja.com", ProjectType: "Corporate Office Fitout", DealValue: 9200000, Status: "Site Visit Scheduled", Source: "Exhibition", AssignedTo: "Amit Verma", Notes: "4,500 sqft corporate interior" },
-          { LeadID: "LEAD-1003", CustomerName: "Hiranandani Estate Villa", CompanyName: "Hiranandani Estate Villa", Mobile: "9819876543", Email: "villas@hiranandani.net", ProjectType: "Turnkey Villa Execution", DealValue: 4800000, Status: "Discussion", Source: "Website Lead", AssignedTo: "Karan Mehta", Notes: "Floor plan received, preparing 3D proposal" },
-          { LeadID: "LEAD-1004", CustomerName: "TATA Digital Innovation Hub", CompanyName: "TATA Digital Innovation Hub", Mobile: "9820987654", Email: "projects@tatadigital.com", ProjectType: "Corporate Office Fitout", DealValue: 12000000, Status: "Qualified", Source: "Direct Contact", AssignedTo: "Mehul Gandhi", Notes: "RFP response submitted" },
-          { LeadID: "LEAD-1005", CustomerName: "Zomato Dark Kitchen Hub", CompanyName: "Zomato Dark Kitchen Hub", Mobile: "9811122233", Email: "facilities@zomato.com", ProjectType: "Commercial Kitchen / Food", DealValue: 3200000, Status: "Proposal Sent", Source: "Client Referral", AssignedTo: "Sanjay Sharma", Notes: "Equipment layouts and MEP design under review" }
-        ],
-        leadFollowups: [
-          { FollowupID: "FLP-101", LeadID: "LEAD-1002", FollowupDate: "2026-11-03", DiscussionNotes: "Conducted site measurements. Sent proposal draft for review.", NextFollowupDate: "2026-11-06", Mode: "Site Visit" },
-          { FollowupID: "FLP-102", LeadID: "LEAD-1003", FollowupDate: "2026-11-02", DiscussionNotes: "Discussed interior mood boards and Italian marble specs.", NextFollowupDate: "2026-11-07", Mode: "Call" }
-        ],
-        proposals: [
-          {
-            ProposalID: "PROP-1001",
-            Title: "Turnkey Fitout Proposal - Phoenix HQ 4th Floor",
-            CustomerID: "CUST-1002",
-            ProjectName: "Phoenix One Commercial HQ",
-            ProposalDate: "2026-08-25",
-            ValidityDate: "2026-09-25",
-            Amount: 8500000,
-            Subtotal: 7203389.83,
-            TaxRate: 18,
-            TaxAmount: 1296610.17,
-            GrandTotal: 8500000,
-            Status: "Approved",
-            ScopeOfWork: "Turnkey Civil, MEP, HVAC, Acoustic Partitions, Workstations and Lighting"
-          },
-          {
-            ProposalID: "PROP-1002",
-            Title: "Penthouse Interior Architecture - DLF Horizon",
-            CustomerID: "CUST-1001",
-            ProjectName: "DLF Horizon Luxury Penthouse",
-            ProposalDate: "2026-07-20",
-            ValidityDate: "2026-08-20",
-            Amount: 4500000,
-            Subtotal: 3813559.32,
-            TaxRate: 18,
-            TaxAmount: 686440.68,
-            GrandTotal: 4500000,
-            Status: "Approved",
-            ScopeOfWork: "Luxury marble, bespoke millwork, automation, false ceiling, sanitary fittings"
-          },
-          {
-            ProposalID: "PROP-1003",
-            Title: "Corporate Fitout Proposal - K Raheja Mindspace",
-            LeadID: "LEAD-1002",
-            ProjectName: "K Raheja Mindspace Office",
-            ProposalDate: "2026-11-01",
-            ValidityDate: "2026-12-01",
-            Amount: 9200000,
-            Subtotal: 7796610.17,
-            TaxRate: 18,
-            TaxAmount: 1403389.83,
-            GrandTotal: 9200000,
-            Status: "Sent",
-            ScopeOfWork: "Complete 4500 sqft acoustic office execution"
-          }
-        ],
-        vendors: [
-          { VendorID: "VNDR-1001", VendorName: "CraftWood Millwork Pvt Ltd", ContactPerson: "Ramesh Sharma", Mobile: "9810112233", Email: "orders@craftwood.in", Address: "Kirti Nagar Industrial Area, New Delhi", GSTNumber: "07AAACC1234F1Z8", VendorType: "Modular Woodwork & Veneers", Status: "Active" },
-          { VendorID: "VNDR-1002", VendorName: "Apex Electricals & MEP", ContactPerson: "Kishore Kumar", Mobile: "9820223344", Email: "contact@apexelectricals.com", Address: "Andheri East, Mumbai", GSTNumber: "27AABCA5678G1Z1", VendorType: "MEP & Low Voltage", Status: "Active" },
-          { VendorID: "VNDR-1003", VendorName: "Italian Stoneworks Direct", ContactPerson: "Fabio D'Souza", Mobile: "9830334455", Email: "sales@italianstoneworks.in", Address: "Makrana Road, Kishangarh, Rajasthan", GSTNumber: "08AABCI9012H1Z6", VendorType: "Imported Marble & Tiles", Status: "Active" },
-          { VendorID: "VNDR-1004", VendorName: "GlazeTech Architectural Glass", ContactPerson: "Naveen Gupta", Mobile: "9840445566", Email: "info@glazetech.co.in", Address: "Peenya Industrial Area, Bengaluru", GSTNumber: "29AABCG3456J1Z3", VendorType: "Acoustic Glass Partitions", Status: "Active" },
-          { VendorID: "VNDR-1005", VendorName: "Somany Tiles & Sanitary", ContactPerson: "Deepak Verma", Mobile: "9850556677", Email: "corporate@somanytiles.com", Address: "Connaught Place, New Delhi", GSTNumber: "07AABCS7890K1Z9", VendorType: "Sanitaryware & Bath Fittings", Status: "Active" }
-        ],
-        associates: [
-          { AssociateID: "ASSOC-101", AssociateName: "Studio Dimension 3D", FullName: "Studio Dimension 3D", Specialization: "Photorealistic 3D Rendering & Animations", Mobile: "9899112233", Email: "studio@dimension3d.in", RateType: "Per Render / Project", DefaultRate: 150000, Status: "Active" },
-          { AssociateID: "ASSOC-102", AssociateName: "Apex MEP Consultants", FullName: "Apex MEP Consultants", Specialization: "HVAC & Electrical Design Calculations", Mobile: "9899223344", Email: "consulting@apex-mep.com", RateType: "Lumpsum per Project", DefaultRate: 350000, Status: "Active" },
-          { AssociateID: "ASSOC-103", AssociateName: "Italian Stoneworks Ltd", FullName: "Italian Stoneworks Ltd", Specialization: "Master Italian Marble Laying & Diamond Polishing", Mobile: "9899334455", Email: "specialists@stoneworks.in", RateType: "Per SqFt", DefaultRate: 140, Status: "Active" },
-          { AssociateID: "ASSOC-104", AssociateName: "GlazeTech Systems", FullName: "GlazeTech Systems", Specialization: "Double-Glazed Acoustic Acoustic Partition Installation", Mobile: "9899445566", Email: "projects@glazetech.in", RateType: "Lumpsum per Project", DefaultRate: 850000, Status: "Active" }
-        ],
-        transactions: [
-          { TransactionID: "TXN-1001", ProjectID: "PROJ-1001", TransactionDate: "2026-08-05", Type: "Income", Category: "Milestone Advance", Amount: 1500000, BaseAmount: 1271186.44, GSTRate: 18, GSTType: "CGST+SGST", CGST: 114406.78, SGST: 114406.78, TotalGST: 228813.56, PaymentMode: "Bank Transfer (NEFT/RTGS)", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Milestone 1 Advance receipt" },
-          { TransactionID: "TXN-1002", ProjectID: "PROJ-1001", TransactionDate: "2026-09-20", Type: "Income", Category: "Civil & MEP Stage", Amount: 1200000, BaseAmount: 1016949.15, GSTRate: 18, GSTType: "CGST+SGST", CGST: 91525.42, SGST: 91525.42, TotalGST: 183050.85, PaymentMode: "Bank Transfer (NEFT/RTGS)", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Milestone 2 completion payment" },
-          { TransactionID: "TXN-1003", ProjectID: "PROJ-1001", VendorID: "VNDR-1003", TransactionDate: "2026-10-15", Type: "Expense", Category: "Material - Marble & Stone", Amount: 420000, BaseAmount: 355932.20, GSTRate: 18, GSTType: "CGST+SGST", CGST: 32033.90, SGST: 32033.90, TotalGST: 64067.80, PaymentMode: "Bank Transfer", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Botticino Classico slabs delivery" },
-          { TransactionID: "TXN-1004", ProjectID: "PROJ-1001", AssociateName: "Apex MEP Consultants", TransactionDate: "2026-10-22", Type: "Expense", Category: "Subcontractor / Associate", Amount: 180000, BaseAmount: 152542.37, GSTRate: 18, GSTType: "IGST", IGST: 27457.63, TotalGST: 27457.63, PaymentMode: "Bank Transfer", BankAccount: "ICICI Bank - Operational (Acct *4410)", Status: "Cleared", Remarks: "HVAC plenum and concealed wiring supervision fee" },
-          { TransactionID: "TXN-1005", IsProjectRelated: "No", TransactionDate: "2026-10-01", Type: "Expense", Category: "Office Rent", Amount: 125000, BaseAmount: 105932.20, GSTRate: 18, CGST: 9533.90, SGST: 9533.90, TotalGST: 19067.80, PaymentMode: "Bank Transfer", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Corporate office rent - Sector 44 Gurugram" },
-          { TransactionID: "TXN-1006", IsProjectRelated: "No", TransactionDate: "2026-10-31", Type: "Expense", Category: "Staff Salaries", Amount: 280000, BaseAmount: 280000, GSTRate: 0, TotalGST: 0, PaymentMode: "Bank Transfer", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Staff payroll for October 2026" },
-          { TransactionID: "TXN-1007", ProjectID: "PROJ-1002", TransactionDate: "2026-09-10", Type: "Income", Category: "Mobilization Advance", Amount: 2500000, BaseAmount: 2118644.07, GSTRate: 18, GSTType: "CGST+SGST", CGST: 190677.97, SGST: 190677.97, TotalGST: 381355.93, PaymentMode: "Bank Transfer (NEFT/RTGS)", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Mobilization advance for Phoenix One corporate HQ" },
-          { TransactionID: "TXN-1008", ProjectID: "PROJ-1002", VendorID: "VNDR-1002", TransactionDate: "2026-10-25", Type: "Expense", Category: "MEP & Electrical Materials", Amount: 650000, BaseAmount: 550847.46, GSTRate: 18, TotalGST: 99152.54, PaymentMode: "Bank Transfer", BankAccount: "HDFC Bank - Current (Acct *9821)", Status: "Cleared", Remarks: "Armored cables and distribution panels" }
-        ],
-        users: [
-          { UserID: "USR-101", FullName: "Mehul Gandhi", Email: "mehul.gandhi@nexsolve.in", Mobile: "9811223344", RoleID: "Super Admin", Status: "Active", MustChangePassword: "No" },
-          { UserID: "USR-102", FullName: "Karan Mehta", Email: "karan.pm@nexsolve.in", Mobile: "9820112233", RoleID: "Project Manager", Status: "Active", MustChangePassword: "No" },
-          { UserID: "USR-103", FullName: "Sanjay Sharma", Email: "sanjay.site@nexsolve.in", Mobile: "9830112233", RoleID: "Site Engineer", Status: "Active", MustChangePassword: "No" },
-          { UserID: "USR-104", FullName: "Amit Verma", Email: "amit.sales@nexsolve.in", Mobile: "9840112233", RoleID: "Sales Executive", Status: "Active", MustChangePassword: "No" },
-          { UserID: "USR-105", FullName: "Ritu Kapoor", Email: "ritu.accounts@nexsolve.in", Mobile: "9850112233", RoleID: "Finance Officer", Status: "Active", MustChangePassword: "No" }
-        ],
-        rolePermissions: [
-          { RoleID: "Super Admin", Module: "Dashboard", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Customers", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Projects", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "SiteVisits", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Tasks", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Leads", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Proposals", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Vendors", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Associates", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Finance", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Reports", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Users", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Company", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Masters", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true },
-          { RoleID: "Super Admin", Module: "Help", CanView: true, CanAdd: true, CanEdit: true, CanDelete: true }
-        ],
-        dropdowns: {
-          ProjectType: ["Luxury Residential", "Corporate Office Fitout", "Turnkey Villa Execution", "Retail Flagship Showroom", "Commercial Kitchen / Food", "Hospitality & Restaurant"],
-          ProjectStatus: ["In Progress", "Planning & Design", "On Hold", "Completed", "Cancelled"],
-          TaskPriority: ["Critical", "High", "Medium", "Low"],
-          TaskStatus: ["Pending", "In Progress", "Under Review", "Completed", "Cancelled"],
-          LeadSource: ["Client Referral", "Website Lead", "Exhibition", "Direct Contact", "Architect Partner", "Cold Outreach"],
-          LeadStatus: ["New Inquiry", "Discussion", "Qualified", "Site Visit Scheduled", "Proposal Sent", "Won", "Lost"],
-          ExpenseCategory: ["Material - Marble & Stone", "Material - Woodwork & Veneers", "MEP & Electrical Materials", "Subcontractor / Associate", "Office Rent", "Staff Salaries", "Travel & Fuel", "Software Subscriptions", "Tools & Machinery Rent", "General Overheads"],
-          IncomeCategory: ["Milestone Advance", "Mobilization Advance", "Civil & MEP Stage", "Final Handover Payment", "Consulting Fee"],
-          PaymentMode: ["Bank Transfer (NEFT/RTGS)", "UPI / QR", "Cheque", "Credit Card", "Cash Voucher"],
-          UserRole: ["Super Admin", "Project Manager", "Site Engineer", "Sales Executive", "Finance Officer"]
-        },
-        companySetup: {
-          CompanyName: "NexSolve Architecture & Turnkey Solutions Pvt. Ltd.",
-          OfficialEmail: "mehul.gandhi@nexsolve.in",
-          ContactNumber: "+91 98112 23344",
-          Address: "Plot 42, Institutional Area, Sector 44, Gurugram, Haryana - 122003",
-          PANNumber: "AAACN1234F",
-          GSTNumber: "06AAACN1234F1Z9",
-          Website: "https://nexsolve.in",
-          BankAccounts: [
-            { BankName: "HDFC Bank", AccountNumber: "50200012349821", IFSCCode: "HDFC0000123", Branch: "Sector 44 Gurugram", AccountType: "Current", IsPrimary: true },
-            { BankName: "ICICI Bank", AccountNumber: "002105004410", IFSCCode: "ICIC0000021", Branch: "Cyber City Gurugram", AccountType: "Current", IsPrimary: false },
-            { BankName: "State Bank of India", AccountNumber: "38921100234", IFSCCode: "SBIN0004321", Branch: "Institutional Area", AccountType: "Escrow", IsPrimary: false }
-          ]
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+      function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+      function pad2(n) { return String(n).length < 2 ? "0" + n : String(n); }
+      function randDate(y1, y2) { return rand(y1, y2) + "-" + pad2(rand(1, 12)) + "-" + pad2(rand(1, 28)); }
+      function genPAN() {
+        var p = "";
+        var letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for (var i = 0; i < 5; i++) p += pick(letters);
+        for (var i = 0; i < 4; i++) p += rand(0, 9);
+        p += pick(letters);
+        return p;
+      }
+
+      // 1. Customers (125)
+      var customers = [];
+      for (var i = 1; i <= 125; i++) {
+        var cId = "CUST-" + (1000 + i);
+        var cityIdx = (i - 1) % CITIES.length;
+        var city = CITIES[cityIdx];
+        var state = STATES[cityIdx];
+        var pan = genPAN();
+        var gst = pad2((cityIdx % 35) + 1) + pan + "1Z" + pick("123456789ABCDEF");
+        var fn = pick(FIRST_NAMES);
+        var ln = pick(LAST_NAMES);
+        var contact = fn + " " + ln;
+        var isCorp = (i % 3 !== 0);
+        var cName = isCorp ? (pick(CORP_PREFIXES) + " " + pick(CORP_SUFFIXES)) : (contact + " Residence");
+        var mobile = "98" + rand(10000000, 99999999);
+        customers.push({
+          CustomerID: cId, CustomerName: cName, CompanyName: cName, ContactPerson: contact,
+          Designation: isCorp ? pick(["Director", "VP Infrastructure", "Procurement Head"]) : "Owner",
+          Mobile: mobile, NormalizedMobile: mobile, AlternateMobile: "97" + rand(10000000, 99999999),
+          Email: isCorp ? ("contact@" + cName.toLowerCase().replace(/[^a-z0-9]/g, "").substring(0, 15) + ".in") : (fn.toLowerCase() + "." + ln.toLowerCase() + "@gmail.com"),
+          Address: rand(1, 400) + ", Sector " + rand(1, 95) + ", " + city,
+          City: city, State: state, Pincode: String(rand(110001, 800000)),
+          PANCardNumber: pan, GSTNumber: gst,
+          CustomerType: isCorp ? "Enterprise / Commercial" : "HNI Residential",
+          Industry: isCorp ? pick(["Commercial Real Estate", "Corporate Office", "Hospitality", "Retail"]) : "Residential Luxury",
+          Notes: "Active account managed by StudioSpace.", Status: i > 120 ? "Inactive" : "Active",
+          CreatedDate: randDate(2025, 2026), CreatedBy: "Admin", ModifiedDate: randDate(2026, 2026), ModifiedBy: "Admin", Attachments: ""
+        });
+      }
+
+      // 2. Vendors (55)
+      var VENDOR_CATS = ["Modular Woodwork & Veneers", "Italian Marble & Granite", "Sanitaryware & Bath Fittings", "Lighting & Automation", "HVAC & Ducting", "Civil, Masonry & POP", "Glazing & Aluminum Facades", "Upholstery, Curtains & Rugs", "Hardware & Architectural Fittings"];
+      var vendors = [];
+      for (var i = 1; i <= 55; i++) {
+        var vId = "VNDR-" + (1000 + i);
+        var cat = VENDOR_CATS[(i - 1) % VENDOR_CATS.length];
+        var vName = pick(LAST_NAMES) + " " + cat.split(" ")[0] + " & Co.";
+        var pan = genPAN();
+        vendors.push({
+          VendorID: vId, VendorName: vName, ContactPerson: pick(FIRST_NAMES) + " " + pick(LAST_NAMES),
+          Mobile: "99" + rand(10000000, 99999999), Email: "sales@" + vName.toLowerCase().replace(/[^a-z0-9]/g, "").substring(0, 12) + ".in",
+          Address: "Plot " + rand(1, 150) + ", Industrial Area, " + pick(CITIES), GSTNumber: pad2((i % 35) + 1) + pan + "1Z" + pick("123456789ABCDEF"),
+          VendorType: cat, Status: "Active", Notes: "Approved vendor on 30-day payment terms.",
+          CreatedDate: randDate(2025, 2026), CreatedBy: "Admin", ModifiedDate: "", ModifiedBy: "", Attachments: ""
+        });
+      }
+
+      // 3. Associates (35)
+      var ASSOC_SPECS = ["Photorealistic 3D Rendering & Elevation", "MEP & Electrical Consultant", "Structural Engineer", "Acoustics & Home Cinema Specialist", "Landscape & Terrace Garden Architect", "Automation & IoT System Integrator"];
+      var associates = [];
+      for (var i = 1; i <= 35; i++) {
+        var aId = "ASSOC-" + (100 + i);
+        var spec = ASSOC_SPECS[(i - 1) % ASSOC_SPECS.length];
+        var aName = "Studio " + pick(LAST_NAMES) + " Design Partners";
+        associates.push({
+          AssociateID: aId, AssociateName: aName, ContactPerson: pick(FIRST_NAMES) + " " + pick(LAST_NAMES),
+          Mobile: "98" + rand(10000000, 99999999), Email: "contact@" + aName.toLowerCase().replace(/[^a-z0-9]/g, "").substring(0, 15) + ".in",
+          Address: rand(1, 50) + ", Commercial Hub, " + pick(CITIES), GSTNumber: pad2((i % 35) + 1) + genPAN() + "1Z" + pick("123456789ABCDEF"),
+          Status: "Active", Notes: "Specialized in " + spec + ". Rate basis: Lumpsum milestone contract.",
+          CreatedDate: randDate(2025, 2026), CreatedBy: "Admin", ModifiedDate: "", ModifiedBy: ""
+        });
+      }
+
+      // 4. Projects (225) & Milestones (~670)
+      var projects = [];
+      var milestones = [];
+      var msCounter = 1000;
+      var MS_TITLES = [
+        "Site Survey, Demolition & Architectural Floor Plans",
+        "MEP Piping, Electrical Conduiting & HVAC First Fix",
+        "Flooring, False Ceiling Grid & POP Skimming",
+        "Modular Millwork, Veneers & Kitchen Installation",
+        "Surface Painting, Lighting Fixtures & Final Handover"
+      ];
+      for (var i = 1; i <= 225; i++) {
+        var pId = "PROJ-" + (1000 + i);
+        var cust = customers[(i - 1) % customers.length];
+        var pType = pick(PROJECT_TYPES);
+        var status = pick(PROJECT_STATUSES);
+        var budget = rand(18, 250) * 100000;
+        var sDate = randDate(2025, 2026);
+        var eDate = randDate(2026, 2027);
+        var mgr = pick(STAFF.filter(function(s) { return s.RoleID.indexOf("Manager") !== -1 || s.RoleID.indexOf("Admin") !== -1; }));
+        var pName = cust.CustomerName.split(" ")[0] + " - " + pType.split(" ")[0] + " Phase " + (((i - 1) % 3) + 1);
+
+        projects.push({
+          ProjectID: pId, ProjectName: pName, CustomerID: cust.CustomerID,
+          InquiryID: "LEAD-" + (1000 + ((i % 150) + 1)), ProjectType: pType,
+          Location: cust.City + ", " + cust.State, StartDate: sDate, ExpectedCompletionDate: eDate,
+          ActualCompletionDate: status === "Completed" ? eDate : "", ProjectValue: budget,
+          Status: status, Notes: "Turnkey architectural execution. Lead PM: " + mgr.FullName,
+          CreatedDate: sDate, CreatedBy: "Admin", ModifiedDate: randDate(2026, 2026), ModifiedBy: "Admin", Attachments: "",
+          WhatsAppGroupLink: "https://chat.whatsapp.com/sample-" + pId.toLowerCase()
+        });
+
+        var numMs = rand(2, 4);
+        for (var m = 0; m < numMs; m++) {
+          msCounter++;
+          var msId = "MS-" + msCounter;
+          var msStatus = (status === "Completed") ? "Completed" : (m === 0 ? "Completed" : (m === 1 ? "In Progress" : "Pending"));
+          var msWeight = Math.round(100 / numMs);
+          var msBudget = Math.round((budget * msWeight) / 100);
+          var msActual = (msStatus === "Completed") ? Math.round(msBudget * 0.98) : 0;
+          var assoc = pick(associates);
+          milestones.push({
+            MilestoneID: msId, ProjectID: pId, MilestoneName: MS_TITLES[m % MS_TITLES.length],
+            DueDate: randDate(2026, 2026), CompletionDate: msStatus === "Completed" ? randDate(2026, 2026) : "",
+            Status: msStatus, Remarks: "Weightage: " + msWeight + "%. Budget: ₹" + msBudget + ". Actual: ₹" + msActual,
+            CreatedDate: sDate, CreatedBy: "Admin", ModifiedDate: "", ModifiedBy: "",
+            AssociateName: assoc.AssociateName, AssociateCost: Math.round(msBudget * 0.15), AssociateType: "Lumpsum"
+          });
         }
+      }
+
+      // 5. Tasks (1,250)
+      var tasks = [];
+      var TASK_TPLS = [
+        "Inspect marble slab vein continuity on floor", "Review detailed reflected ceiling plan (RCP)",
+        "Coordinate plumbing pressure test with MEP team", "Verify veneer grain matching for master wardrobe",
+        "Site laser levelling for false ceiling channel", "Approve electrical switchboard cutout schedule",
+        "Finalize kitchen island stone bullnosing details", "Test smart automation lighting dimmer circuits",
+        "Conduct acoustic baffle installation audit", "Audit HVAC plenum clearance above false ceiling",
+        "Verify door frame plumb lines and shutter clearances", "Prepare client walkthrough defect snag list",
+        "Inspect waterproofing flood test in terrace/bathrooms", "Review shop drawings submitted by millwork vendor",
+        "Verify paint finish swatch shade under warm lighting"
+      ];
+      for (var i = 1; i <= 1250; i++) {
+        var tId = "TASK-" + (1000 + i);
+        var proj = projects[(i - 1) % projects.length];
+        var staff = pick(STAFF);
+        var status = pick(TASK_STATUSES);
+        var prio = pick(TASK_PRIORITIES);
+        var sDate = randDate(2026, 2026);
+        var dDate = randDate(2026, 2026);
+        var tpl = TASK_TPLS[(i - 1) % TASK_TPLS.length];
+
+        tasks.push({
+          TaskID: tId, ProjectID: proj.ProjectID, TaskName: tpl + " (#" + i + ")",
+          Description: "Ensure strict architectural standards. Project: " + proj.ProjectName,
+          AssignedType: "Staff", AssignedTo: staff.FullName, StartDate: sDate, DueDate: dDate,
+          Priority: prio, Status: status, CompletionDate: status === "Completed" ? dDate : "",
+          Remarks: status === "Completed" ? "Completed and verified on site." : "Work scheduled.",
+          CreatedDate: sDate, CreatedBy: "Admin", ModifiedDate: randDate(2026, 2026), ModifiedBy: "Admin"
+        });
+      }
+
+      // 6. Site Visits (1,050)
+      var siteVisits = [];
+      var VISIT_PURPOSES = [
+        "Routine Quality Audit & Snag Inspection", "Initial Laser Measurement & Layout Verification",
+        "Pre-Cast Slab & MEP Conduiting Inspection", "Client Walkthrough & Finishes Sign-off",
+        "Joinery & Millwork Dry-Fit Inspection", "False Ceiling Plenum & Lighting Audit",
+        "Material Delivery Physical Verification"
+      ];
+      for (var i = 1; i <= 1050; i++) {
+        var vId = "VISIT-" + (1000 + i);
+        var isProj = (i % 6 !== 0);
+        var proj = isProj ? projects[(i - 1) % projects.length] : null;
+        var lId = isProj ? "" : ("LEAD-" + (1000 + ((i % 150) + 1)));
+        var staff = pick(STAFF);
+        var status = pick(VISIT_STATUSES);
+        var vDate = randDate(2026, 2026);
+        var fDate = randDate(2026, 2026);
+        var isBillable = (i % 4 === 0) ? "Yes" : "No";
+        var billAmt = (isBillable === "Yes") ? pick([1500, 2000, 2500, 3500, 5000]) : 0;
+
+        siteVisits.push({
+          VisitID: vId, ProjectID: proj ? proj.ProjectID : "", VisitDate: vDate,
+          Purpose: pick(VISIT_PURPOSES), Remarks: "Site log recorded by " + staff.FullName + ". Quality standards maintained.",
+          NextFollowupDate: status === "Scheduled" ? fDate : (rand(0, 1) ? fDate : ""),
+          Photos: (i % 3 === 0) ? ("https://drive.google.com/sample_visit_" + vId.toLowerCase() + ".jpg") : "",
+          CreatedDate: vDate, CreatedBy: staff.FullName, ModifiedDate: "", ModifiedBy: "",
+          AssignedTo: staff.FullName, Status: status, AssignedType: "Staff", IsBillable: isBillable, BillingAmount: billAmt, LeadID: lId
+        });
+      }
+
+      // 7. Leads (160) & Followups (320)
+      var leads = [];
+      var leadFollowups = [];
+      var flpCounter = 100;
+      for (var i = 1; i <= 160; i++) {
+        var lId = "LEAD-" + (1000 + i);
+        var fn = pick(FIRST_NAMES);
+        var ln = pick(LAST_NAMES);
+        var contact = fn + " " + ln;
+        var pType = pick(PROJECT_TYPES);
+        var status = pick(LEAD_STATUSES);
+        var lDate = randDate(2025, 2026);
+        var staff = pick(STAFF);
+
+        leads.push({
+          LeadID: lId, Date: lDate, CustomerName: contact + " - " + pType.split(" ")[0] + " Scope",
+          ProjectType: pType, Mobile: "98" + rand(10000000, 99999999), Email: fn.toLowerCase() + "." + ln.toLowerCase() + "@outlook.com",
+          ProjectDetails: "Turnkey interior requirement for " + rand(2500, 10000) + " sqft space in " + pick(CITIES),
+          Attachments: "", LeadType: (i % 3 === 0) ? "Commercial" : "Luxury Residential", Status: status,
+          Source: pick(LEAD_SOURCES), AssignedTo: staff.FullName, Remarks: "Active client consultation pipeline.",
+          FollowUpDate: (status !== "Won" && status !== "Lost") ? randDate(2026, 2026) : "",
+          LossReason: status === "Lost" ? "Client opted for modular vendor due to budget." : "",
+          CreatedDate: lDate, CreatedBy: staff.FullName, ModifiedDate: "", ModifiedBy: ""
+        });
+
+        for (var f = 0; f < 2; f++) {
+          flpCounter++;
+          leadFollowups.push({
+            FollowupID: "FLP-" + flpCounter, LeadID: lId, FollowupDate: randDate(2026, 2026), NextFollowupDate: randDate(2026, 2026),
+            DiscussionNotes: "Discussion regarding space planning, moodboards and material specifications.",
+            CreatedDate: lDate, CreatedBy: staff.FullName
+          });
+        }
+      }
+
+      // 8. Proposals (180)
+      var proposals = [];
+      for (var i = 1; i <= 180; i++) {
+        var prId = "PROP-" + (1000 + i);
+        var isCust = (i % 5 !== 0);
+        var cust = isCust ? customers[(i - 1) % customers.length] : null;
+        var lead = !isCust ? leads[(i - 1) % leads.length] : null;
+        var pDate = randDate(2025, 2026);
+        var status = pick(PROPOSAL_STATUSES);
+        var amt = rand(20, 280) * 100000;
+
+        proposals.push({
+          ProposalID: prId, CustomerID: cust ? cust.CustomerID : "",
+          ProjectName: cust ? (cust.CustomerName + " Interior Fitout Scope") : (lead.CustomerName + " Scope Document"),
+          ProposalDate: pDate, Amount: amt, ScopeOfWork: "Turnkey architectural execution: Civil demolition, masonry, electrical/HVAC conduits, false ceiling, premium woodwork, painting, and handover.",
+          ValidityDate: randDate(2026, 2026), Status: status, FollowUpDate: (status === "Sent" || status === "Revised") ? randDate(2026, 2026) : "",
+          Remarks: "Commercial proposal with 18% GST terms. 50% advance, 40% milestone billing, 10% retention.",
+          CreatedDate: pDate, CreatedBy: "Admin", ModifiedDate: "", ModifiedBy: "", Attachments: "", LeadID: lead ? lead.LeadID : ""
+        });
+      }
+
+      // 9. Transactions (650)
+      var transactions = [];
+      var EXPENSE_CATS = ["Material - Marble & Stone", "Material - Woodwork & Veneers", "MEP & Electrical Materials", "Subcontractor / Associate Payout", "Site Labor & Carpentry Wages", "Office Rent & Facility", "Staff Salaries", "Travel, Site Logistics & Fuel"];
+      var MODES = ["Bank Transfer (NEFT/RTGS)", "UPI / QR", "Cheque", "Credit Card"];
+      var BANKS = ["HDFC Bank - Current A/c *9821", "ICICI Bank - Current A/c *4410", "Kotak Mahindra Bank - Current A/c *1109"];
+
+      for (var i = 1; i <= 650; i++) {
+        var txId = "TXN-" + (1000 + i);
+        var isInc = (i % 3 === 0);
+        var type = isInc ? "Income" : "Expense";
+        var proj = projects[(i - 1) % projects.length];
+        var vendor = !isInc ? vendors[(i - 1) % vendors.length] : null;
+        var assoc = (!isInc && i % 4 === 0) ? associates[(i - 1) % associates.length] : null;
+        var cat = isInc ? "Client Milestone Payment" : pick(EXPENSE_CATS);
+        var baseAmt = isInc ? rand(50000, 1500000) : rand(8000, 450000);
+        var gstRate = 18;
+        var gstAmt = Math.round((baseAmt * gstRate) / 100);
+        var total = baseAmt + gstAmt;
+        var tDate = randDate(2025, 2026);
+        var mode = pick(MODES);
+
+        transactions.push({
+          TransactionID: txId, ProjectID: proj.ProjectID, VendorID: vendor ? vendor.VendorID : "",
+          TransactionDate: tDate, Type: type, Category: cat, Amount: total, TaxableAmount: baseAmt,
+          GSTType: "CGST + SGST (18%)", GSTRate: gstRate, CGST: Math.round(gstAmt / 2), SGST: Math.round(gstAmt / 2), IGST: 0, TotalGST: gstAmt,
+          PaymentMode: mode, BankAccount: pick(BANKS), ReferenceNumber: mode.substring(0, 4).toUpperCase() + "-" + rand(100000, 999999),
+          Remarks: isInc ? ("Receipt from " + proj.ProjectID) : ("Payment for " + cat),
+          CreatedDate: tDate, CreatedBy: "Admin", ModifiedDate: "", ModifiedBy: "", AssociateName: assoc ? assoc.AssociateName : "", Attachments: ""
+        });
+      }
+
+      // 10. Users (8)
+      var users = STAFF.map(function(s) {
+        return {
+          UserID: s.UserID, FullName: s.FullName, Email: s.FullName.toLowerCase().replace(" ", ".") + "@nexsolve.in",
+          Mobile: s.Mobile, RoleID: s.RoleID, Status: "Active", MustChangePassword: "No",
+          CreatedDate: "2025-01-01", CreatedBy: "SYSTEM", ReportsTo: s.RoleID === "Super Admin" ? "" : "USR-101"
+        };
+      });
+
+      var dropdowns = {
+        ProjectType: PROJECT_TYPES,
+        ProjectStatus: ["Planning & Design", "In Progress", "Under Review", "Completed", "On Hold", "Cancelled"],
+        TaskPriority: ["Critical", "High", "Medium", "Low"],
+        TaskStatus: ["Pending", "In Progress", "Under Review", "Completed", "Cancelled"],
+        LeadSource: LEAD_SOURCES,
+        LeadStatus: LEAD_STATUSES,
+        ExpenseCategory: EXPENSE_CATS,
+        PaymentMode: MODES,
+        CustomerType: ["Enterprise / Commercial", "HNI Residential", "Boutique Retail", "Government / Institutional"]
+      };
+
+      var companySetup = {
+        CompanyID: "COMP-101",
+        CompanyName: "NexSolve Architecture & Turnkey Solutions Pvt. Ltd.",
+        Address: "Plot 42, Institutional Area, Sector 44, Gurugram, Haryana - 122003",
+        OfficialEmail: "mehul.gandhi@nexsolve.in",
+        ContactNumber: "+91 98112 23344",
+        PANNumber: "AAACN1234F",
+        GSTNumber: "06AAACN1234F1Z9",
+        Website: "https://nexsolve.in",
+        BankName: "HDFC Bank",
+        AccountNumber: "50200012349821",
+        IFSCCode: "HDFC0000123",
+        Branch: "Sector 44 Gurugram",
+        LogoUrl: ""
+      };
+
+      return {
+        customers: customers,
+        vendors: vendors,
+        associates: associates,
+        projects: projects,
+        milestones: milestones,
+        tasks: tasks,
+        siteVisits: siteVisits,
+        leads: leads,
+        leadFollowups: leadFollowups,
+        proposals: proposals,
+        transactions: transactions,
+        users: users,
+        dropdowns: dropdowns,
+        companySetup: companySetup
       };
     }
+
     window.generateEnterpriseDemoData = generateEnterpriseDemoData;
 
     function isDemoMode() {
