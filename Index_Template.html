@@ -71,109 +71,112 @@
     
     <!-- Left Navigation Sidebar -->
     <aside class="app-sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+      <div class="sidebar-header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; white-space: nowrap;" onclick="if(document.getElementById('app-container').classList.contains('sidebar-collapsed')) toggleSidebarCollapse();">
           <div id="header-company-logo-wrapper" style="display: none; background: #ffffff !important; padding: 4px 8px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); align-items: center; justify-content: center; height: 32px;">
             <img id="header-company-logo" style="max-height: 24px; max-width: 80px; object-fit: contain; display: block;" alt="Logo">
           </div>
-          <i class="fas fa-cubes" id="header-default-brand-icon"></i> Nex<span>Milestro</span>
+          <i class="fas fa-cubes" id="header-default-brand-icon"></i> <span class="brand-text">Nex<span>Milestro</span></span>
         </div>
+        <button type="button" class="btn-sidebar-collapse" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse / Expand Sidebar">
+          <i class="fas fa-chevron-left" id="sidebar-collapse-icon"></i>
+        </button>
       </div>
       
       <nav class="sidebar-menu">
         <div class="menu-label">Main Console</div>
         
         <li class="menu-item active" data-view="dashboard">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'dashboard')">
-            <i class="fas fa-chart-line"></i> Dashboard
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'dashboard')" title="Dashboard">
+            <i class="fas fa-chart-line"></i> <span>Dashboard</span>
           </a>
         </li>
         
         <li class="menu-item" data-view="customers">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'customers')">
-            <i class="fas fa-users"></i> Customers
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'customers')" title="Customers">
+            <i class="fas fa-users"></i> <span>Customers</span>
           </a>
         </li>
         
         <li class="menu-item" data-view="projects">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'projects')">
-            <i class="fas fa-project-diagram"></i> Projects
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'projects')" title="Projects">
+            <i class="fas fa-project-diagram"></i> <span>Projects</span>
           </a>
         </li>
         
         <li class="menu-item" data-view="sitevisits">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'sitevisits')">
-            <i class="fas fa-eye"></i> Site Visits
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'sitevisits')" title="Site Visits">
+            <i class="fas fa-eye"></i> <span>Site Visits</span>
           </a>
         </li>
         
         <li class="menu-item" data-view="tasks">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'tasks')">
-            <i class="fas fa-check-square"></i> Tasks & Board
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'tasks')" title="Tasks & Board">
+            <i class="fas fa-check-square"></i> <span>Tasks & Board</span>
           </a>
         </li>
 
         <div class="menu-label" style="margin-top: 1.25rem;">Commercial & Finance</div>
 
         <li class="menu-item" data-view="leads">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'leads')">
-            <i class="fas fa-bullseye"></i> Leads CRM
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'leads')" title="Leads CRM">
+            <i class="fas fa-bullseye"></i> <span>Leads CRM</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="proposals">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'proposals')">
-            <i class="fas fa-file-invoice-dollar"></i> Proposals
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'proposals')" title="Proposals">
+            <i class="fas fa-file-invoice-dollar"></i> <span>Proposals</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="vendors">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'vendors')">
-            <i class="fas fa-truck"></i> Vendors
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'vendors')" title="Vendors">
+            <i class="fas fa-truck"></i> <span>Vendors</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="associates">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'associates')">
-            <i class="fas fa-handshake"></i> Associates
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'associates')" title="Associates">
+            <i class="fas fa-handshake"></i> <span>Associates</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="finance">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'finance')">
-            <i class="fas fa-wallet"></i> Finance Booking
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'finance')" title="Finance Booking">
+            <i class="fas fa-wallet"></i> <span>Finance Booking</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="reports">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'reports')">
-            <i class="fas fa-chart-bar"></i> Reports & Margins
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'reports')" title="Reports & Margins">
+            <i class="fas fa-chart-bar"></i> <span>Reports & Margins</span>
           </a>
         </li>
 
         <div class="menu-label" style="margin-top: 1.25rem;">Administration</div>
         
         <li class="menu-item" data-view="users">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'users')">
-            <i class="fas fa-user-shield"></i> Users & Roles
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'users')" title="Users & Roles">
+            <i class="fas fa-user-shield"></i> <span>Users & Roles</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="company">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'company')">
-            <i class="fas fa-building"></i> Company Setup
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'company')" title="Company Setup">
+            <i class="fas fa-building"></i> <span>Company Setup</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="masters">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'masters')">
-            <i class="fas fa-sliders-h"></i> Masters
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'masters')" title="Masters">
+            <i class="fas fa-sliders-h"></i> <span>Masters</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="help">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'help')">
-            <i class="fas fa-question-circle"></i> User Guide & Support
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'help')" title="User Guide & Support">
+            <i class="fas fa-question-circle"></i> <span>User Guide & Support</span>
           </a>
         </li>
       </nav>
@@ -196,7 +199,7 @@
     <main class="app-main">
       <header class="app-header">
         <div class="header-left">
-          <button class="btn-sidebar-toggle" onclick="toggleSidebar(true)">
+          <button class="btn-sidebar-toggle" onclick="toggleSidebarCollapse()" title="Toggle Sidebar">
             <i class="fas fa-bars"></i>
           </button>
           <div class="header-title-container">
@@ -230,12 +233,73 @@
             <span id="header-role-text">SUPER ADMIN</span>
           </div>
 
-          <!-- User Profile Display -->
-          <div id="header-user-profile-wrap" style="display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border-radius: 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); box-shadow: var(--shadow-sm);">
-            <div id="header-user-avatar-img-wrap" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #0d9488, #0f172a); color: #fff; font-weight: 700; font-size: 0.775rem; border: 1.5px solid var(--primary); flex-shrink: 0;">
-              <span id="header-user-avatar-initials">A</span>
+          <!-- User Profile Display & Popover Wrap -->
+          <div style="position: relative; display: inline-block;">
+            <div id="header-user-profile-wrap" onclick="toggleUserProfilePopover(event)" title="View profile & account options" style="display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border-radius: 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); box-shadow: var(--shadow-sm); cursor: pointer;">
+              <div id="header-user-avatar-img-wrap" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #0d9488, #0f172a); color: #fff; font-weight: 700; font-size: 0.775rem; border: 1.5px solid var(--primary); flex-shrink: 0;">
+                <span id="header-user-avatar-initials">A</span>
+              </div>
+              <span id="header-user-name" style="font-size: 0.825rem; font-weight: 600; color: var(--text-main);">Admin</span>
+              <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: var(--text-muted); margin-left: 2px;"></i>
             </div>
-            <span id="header-user-name" style="font-size: 0.825rem; font-weight: 600; color: var(--text-main);">Admin</span>
+
+            <!-- User Profile Popover Window -->
+            <div id="user-profile-popover" class="user-profile-popover" style="display: none;">
+              <!-- Popover User Details Header -->
+              <div class="popover-user-card">
+                <div class="popover-avatar" id="popover-user-avatar">A</div>
+                <div class="popover-user-details">
+                  <div class="popover-user-name" id="popover-user-name">Mehul Gandhi</div>
+                  <div class="popover-user-email" id="popover-user-email">mehul.gandhi@nexsolve.in</div>
+                  <div class="popover-role-badge" id="popover-user-role">SUPER ADMIN</div>
+                </div>
+              </div>
+
+              <!-- Organization & License info -->
+              <div class="popover-section">
+                <div class="popover-sec-label"><i class="fas fa-building"></i> Organization & License</div>
+                <div class="popover-license-box">
+                  <div class="popover-lic-text">
+                    <span class="popover-lic-org" id="popover-org-name">NexSolve Training & Consulting</span>
+                    <span class="popover-lic-key" id="popover-lic-key">LIC-BUYER1-2026</span>
+                  </div>
+                  <button type="button" class="btn-popover-copy" onclick="copyLicenseFromPopover(event)" title="Copy License Key">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Role Switcher -->
+              <div class="popover-section">
+                <div class="popover-sec-label"><i class="fas fa-user-shield"></i> Switch / Test Role</div>
+                <div class="popover-role-grid">
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Super Admin')"><i class="fas fa-crown" style="color: #d97706;"></i> Super Admin</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Project Manager')"><i class="fas fa-project-diagram" style="color: var(--primary);"></i> Project Mgr</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Site Engineer')"><i class="fas fa-hard-hat" style="color: #059669;"></i> Site Eng</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Sales Executive')"><i class="fas fa-chart-line" style="color: #4f46e5;"></i> Sales Lead</button>
+                </div>
+              </div>
+
+              <!-- Quick Navigation Shortcuts -->
+              <div class="popover-nav-list">
+                <a href="#" onclick="navigateFromPopover('users'); event.preventDefault();" class="popover-nav-item">
+                  <i class="fas fa-users-cog"></i> Users & Role Permissions
+                </a>
+                <a href="#" onclick="navigateFromPopover('company'); event.preventDefault();" class="popover-nav-item">
+                  <i class="fas fa-sliders-h"></i> Company & Brand Settings
+                </a>
+                <a href="#" onclick="forceResyncFromPopover(); event.preventDefault();" class="popover-nav-item">
+                  <i class="fas fa-sync-alt"></i> Force Resync & Reset Cache
+                </a>
+              </div>
+
+              <!-- Sign Out Footer -->
+              <div class="popover-footer">
+                <button type="button" class="btn-popover-logout" onclick="handleLogout()">
+                  <i class="fas fa-sign-out-alt"></i> Sign Out Session
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Refresh Button -->
@@ -1769,6 +1833,123 @@
     }
     window.toggleSidebar = toggleSidebar;
 
+    function toggleSidebarCollapse() {
+      if (window.innerWidth <= 768) {
+        var container = document.getElementById("app-container");
+        var isOpen = container.classList.contains("sidebar-open");
+        toggleSidebar(!isOpen);
+        return;
+      }
+      var container = document.getElementById("app-container");
+      if (!container) return;
+      var isCollapsed = container.classList.toggle("sidebar-collapsed");
+      localStorage.setItem("pm_sidebar_collapsed", isCollapsed ? "true" : "false");
+      var collapseIcon = document.getElementById("sidebar-collapse-icon");
+      if (collapseIcon) {
+        collapseIcon.className = isCollapsed ? "fas fa-chevron-right" : "fas fa-chevron-left";
+      }
+    }
+    window.toggleSidebarCollapse = toggleSidebarCollapse;
+
+    /**
+     * User Profile Popover Management
+     */
+    function toggleUserProfilePopover(e) {
+      if (e) e.stopPropagation();
+      var pop = document.getElementById("user-profile-popover");
+      if (!pop) return;
+      var isVisible = pop.style.display === "block";
+      if (!isVisible) {
+        updateUserProfilePopoverData();
+        pop.style.display = "block";
+      } else {
+        pop.style.display = "none";
+      }
+    }
+    window.toggleUserProfilePopover = toggleUserProfilePopover;
+
+    function updateUserProfilePopoverData() {
+      var user = getSessionUser();
+      var name = user.fullName || user.FullName || "User";
+      var role = user.roleId || user.RoleID || "Executive";
+      var email = user.email || user.Email || user.userId || "user@nexsolve.in";
+      var activeKey = getActiveLicenseKey() || localStorage.getItem("pm_active_license_key") || "LIC-BUYER1-2026";
+      var companyData = (window._dataCache && window._dataCache.companySetup) || JSON.parse(localStorage.getItem("pm_company_setup") || "{}");
+      var orgName = companyData.CompanyName || "NexSolve Training & Consulting";
+
+      var pName = document.getElementById("popover-user-name");
+      var pEmail = document.getElementById("popover-user-email");
+      var pRole = document.getElementById("popover-user-role");
+      var pAvatar = document.getElementById("popover-user-avatar");
+      var pOrg = document.getElementById("popover-org-name");
+      var pKey = document.getElementById("popover-lic-key");
+
+      if (pName) pName.innerText = name;
+      if (pEmail) pEmail.innerText = email;
+      if (pRole) pRole.innerText = role.toUpperCase();
+      if (pAvatar) pAvatar.innerText = name.charAt(0).toUpperCase();
+      if (pOrg) pOrg.innerText = orgName;
+      if (pKey) pKey.innerText = activeKey;
+    }
+    window.updateUserProfilePopoverData = updateUserProfilePopoverData;
+
+    function copyLicenseFromPopover(e) {
+      if (e) e.stopPropagation();
+      var keyEl = document.getElementById("popover-lic-key");
+      var key = keyEl ? keyEl.innerText : "";
+      if (key && navigator.clipboard) {
+        navigator.clipboard.writeText(key).then(function() {
+          showToast("License key copied to clipboard!", "success");
+        }).catch(function() {
+          showToast("License: " + key, "info");
+        });
+      } else if (key) {
+        showToast("License: " + key, "info");
+      }
+    }
+    window.copyLicenseFromPopover = copyLicenseFromPopover;
+
+    function switchUserRole(roleId) {
+      var pop = document.getElementById("user-profile-popover");
+      if (pop) pop.style.display = "none";
+      loginDemoRole(roleId);
+    }
+    window.switchUserRole = switchUserRole;
+
+    function navigateFromPopover(viewId) {
+      var pop = document.getElementById("user-profile-popover");
+      if (pop) pop.style.display = "none";
+      appRouter.navigate(viewId);
+    }
+    window.navigateFromPopover = navigateFromPopover;
+
+    function forceResyncFromPopover() {
+      var pop = document.getElementById("user-profile-popover");
+      if (pop) pop.style.display = "none";
+      cacheClearAll();
+      refreshCurrentView();
+      showToast("Local cache reset. Resyncing workspace data...", "info");
+    }
+    window.forceResyncFromPopover = forceResyncFromPopover;
+
+    // Global click listener to close popover
+    document.addEventListener("click", function(e) {
+      var pop = document.getElementById("user-profile-popover");
+      var wrap = document.getElementById("header-user-profile-wrap");
+      if (pop && pop.style.display === "block") {
+        if (!pop.contains(e.target) && (!wrap || !wrap.contains(e.target))) {
+          pop.style.display = "none";
+        }
+      }
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") {
+        var pop = document.getElementById("user-profile-popover");
+        if (pop && pop.style.display === "block") pop.style.display = "none";
+      }
+    });
+
     /**
      * =========================================================================
      * AUTHENTICATION & LICENSE GATE LIFECYCLE
@@ -3014,6 +3195,14 @@
 
     // System initialization on boot
     document.addEventListener("DOMContentLoaded", function() {
+      // Restore sidebar collapsed preference on desktop
+      if (localStorage.getItem("pm_sidebar_collapsed") === "true" && window.innerWidth > 768) {
+        var appContainer = document.getElementById("app-container");
+        if (appContainer) appContainer.classList.add("sidebar-collapsed");
+        var collapseIcon = document.getElementById("sidebar-collapse-icon");
+        if (collapseIcon) collapseIcon.className = "fas fa-chevron-right";
+      }
+
       var licKey = getActiveLicenseKey();
 
       if (!licKey) {

@@ -1,64 +1,31 @@
 <!-- Dashboard.html -->
 <div class="view-container">
-  <!-- Top Command & Filter Bar -->
-  <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: visible !important; position: relative; z-index: 50;">
-    <!-- Upper Row: Title & Quick Action Launchpad -->
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
-      <div style="display: flex; align-items: center; gap: 0.6rem;">
-        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(30, 58, 138, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-          <i class="fas fa-chart-line"></i>
-        </div>
-        <div>
-          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">Executive Operations Dashboard</h3>
-          <span style="font-size: 0.775rem; color: var(--text-muted);">Real-time performance metrics, milestones, tasks, and financials</span>
-        </div>
-      </div>
-
-      <!-- Quick Action Buttons -->
-      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-        <div class="dropdown" style="position: relative; display: inline-block; z-index: 1050;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="toggleQuickActionMenu(event)" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.55rem 0.95rem; border-radius: var(--radius-md);">
-            <i class="fas fa-plus-circle"></i> Quick Action <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>
-          </button>
-          <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #ffffff !important; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.22), 0 5px 15px rgba(0,0,0,0.1); min-width: 220px; z-index: 999999 !important; overflow: hidden;">
-            <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
-            <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-building" style="color: #059669; width: 16px;"></i> + New Customer</a>
-            <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-tasks" style="color: #d97706; width: 16px;"></i> + New Task</a>
-            <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-map-marker-alt" style="color: #4f46e5; width: 16px;"></i> + Log Site Visit</a>
-            <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; background: #ffffff;"><i class="fas fa-receipt" style="color: #e11d48; width: 16px;"></i> + Book Expense / Income</a>
-          </div>
-        </div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="refreshCurrentView()" title="Force Refresh Workspace Data" style="padding: 0.55rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;">
-          <i class="fas fa-sync-alt"></i> Refresh
-        </button>
-      </div>
-    </div>
-
-    <!-- Lower Row: Omni-Search & Multi-Filter Controls -->
+  <!-- Top Command & Filter Bar (Streamlined Single Row) -->
+  <div class="card" style="margin-bottom: 1.25rem; padding: 0.85rem 1.25rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: visible !important; position: relative; z-index: 50;">
     <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-      <!-- Search Input -->
-      <div class="search-input-wrapper" style="flex: 1; min-width: 230px; position: relative;">
+      <!-- Omni-Search Input -->
+      <div class="search-input-wrapper" style="flex: 1.2; min-width: 250px; position: relative;">
         <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
-        <input type="text" id="dash-search-input" class="search-input" placeholder="Search by Project, Customer, or City..." oninput="applyDashboardFilter()" style="padding-left: 2.5rem; width: 100%;">
+        <input type="text" id="dash-search-input" class="search-input" placeholder="Search by Project, Customer, City, or ID..." oninput="applyDashboardFilter()" style="padding-left: 2.5rem; width: 100%; height: 38px;">
       </div>
 
       <!-- Customer Filter Dropdown -->
-      <div style="min-width: 180px;">
-        <select id="dash-customer-filter" class="form-control select-filter" onchange="onDashboardCustomerChange()" style="font-weight: 600; font-size: 0.85rem;">
+      <div style="min-width: 190px; flex: 1;">
+        <select id="dash-customer-filter" class="form-control select-filter" onchange="onDashboardCustomerChange()">
           <option value="">All Customers</option>
         </select>
       </div>
 
       <!-- Project Filter Dropdown -->
-      <div style="min-width: 180px;">
-        <select id="dash-project-filter" class="form-control select-filter" onchange="applyDashboardFilter()" style="font-weight: 600; font-size: 0.85rem;">
+      <div style="min-width: 190px; flex: 1;">
+        <select id="dash-project-filter" class="form-control select-filter" onchange="applyDashboardFilter()">
           <option value="">All Projects</option>
         </select>
       </div>
 
       <!-- Status Filter Dropdown -->
       <div style="min-width: 140px;">
-        <select id="dash-status-filter" class="form-control select-filter" onchange="applyDashboardFilter()" style="font-weight: 600; font-size: 0.85rem;">
+        <select id="dash-status-filter" class="form-control select-filter" onchange="applyDashboardFilter()">
           <option value="">All Statuses</option>
           <option value="In Progress">In Progress</option>
           <option value="Planning">Planning</option>
@@ -69,9 +36,23 @@
       </div>
 
       <!-- Reset Filters Button -->
-      <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-clear-filter" onclick="clearDashboardFilters()" title="Reset Filters" style="display: none; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--danger);">
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-clear-filter" onclick="clearDashboardFilters()" title="Reset Filters" style="display: none; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--danger); height: 38px;">
         <i class="fas fa-times-circle"></i> Reset
       </button>
+
+      <!-- Quick Action Button -->
+      <div class="dropdown" style="position: relative; display: inline-block;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="toggleQuickActionMenu(event)" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.55rem 1rem; border-radius: var(--radius-md); height: 38px;">
+          <i class="fas fa-plus-circle"></i> Quick Action <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>
+        </button>
+        <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); background: var(--bg-primary) !important; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.22), 0 5px 15px rgba(0,0,0,0.1); min-width: 220px; z-index: 999999 !important; overflow: hidden;">
+          <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--bg-primary);"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
+          <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--bg-primary);"><i class="fas fa-building" style="color: #059669; width: 16px;"></i> + New Customer</a>
+          <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--bg-primary);"><i class="fas fa-tasks" style="color: #d97706; width: 16px;"></i> + New Task</a>
+          <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--bg-primary);"><i class="fas fa-map-marker-alt" style="color: #4f46e5; width: 16px;"></i> + Log Site Visit</a>
+          <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; background: var(--bg-primary);"><i class="fas fa-receipt" style="color: #e11d48; width: 16px;"></i> + Book Expense / Income</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -123,62 +104,60 @@
   </div>
 
   <!-- Main Dashboard Sections -->
-  <div class="form-grid" style="margin-top: 1rem;">
-    <!-- Recent Projects list -->
-    <div class="card">
-      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 class="card-title" id="dash-projects-card-title"><i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 0.5rem;"></i>Active Projects Overview</h3>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('projects')">View All Projects</button>
-      </div>
-      <div class="card-body" style="padding: 0;">
-        <div class="table-wrapper" style="border: none; box-shadow: none;">
-          <table class="data-table" id="dash-projects-table">
-            <thead>
-              <tr>
-                <th>Project Name</th>
-                <th>Customer</th>
-                <th>Type</th>
-                <th>Expected Date</th>
-                <th>Progress (Milestones)</th>
-                <th>Status</th>
-                <th style="text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading projects...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <!-- Active Projects Table (Full Width) -->
+  <div class="card" style="margin-top: 1.25rem; width: 100%;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 class="card-title" id="dash-projects-card-title"><i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 0.5rem;"></i>Active Projects Overview</h3>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('projects')">View All Projects</button>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto;">
+        <table class="data-table" id="dash-projects-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="min-width: 200px;">Project Name</th>
+              <th style="min-width: 160px;">Customer</th>
+              <th style="min-width: 110px;">Type</th>
+              <th style="min-width: 120px;">Expected Date</th>
+              <th style="min-width: 140px;">Progress (Milestones)</th>
+              <th style="min-width: 110px;">Status</th>
+              <th style="text-align: right; min-width: 110px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading projects...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </div>
 
-    <!-- Urgent Tasks checklist -->
-    <div class="card">
-      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 class="card-title" id="dash-tasks-card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
-      </div>
-      <div class="card-body" style="padding: 0;">
-        <div class="table-wrapper" style="border: none; box-shadow: none;">
-          <table class="data-table" id="dash-tasks-table">
-            <thead>
-              <tr>
-                <th>Task Name</th>
-                <th>Project</th>
-                <th>Due Date</th>
-                <th>Priority</th>
-                <th style="text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <!-- Urgent Tasks Table (Full Width) -->
+  <div class="card" style="margin-top: 1.25rem; width: 100%;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 class="card-title" id="dash-tasks-card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto;">
+        <table class="data-table" id="dash-tasks-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="min-width: 220px;">Task Name</th>
+              <th style="min-width: 180px;">Project</th>
+              <th style="min-width: 120px;">Due Date</th>
+              <th style="min-width: 100px;">Priority</th>
+              <th style="text-align: right; min-width: 100px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

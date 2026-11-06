@@ -312,14 +312,351 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1.25rem;
   color: var(--text-muted);
   cursor: pointer;
-  display: none;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
   padding: 0.5rem;
   border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .btn-sidebar-toggle:hover {
   background-color: var(--bg-primary);
+  color: var(--primary);
+}
+
+/* Sidebar Header Collapse Button */
+.btn-sidebar-collapse {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-sidebar-collapse:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+#sidebar-collapse-icon {
+  transition: transform 0.25s ease;
+}
+
+/* Sidebar Collapsed State (Desktop) */
+.app-container.sidebar-collapsed .app-sidebar {
+  width: 68px !important;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-container.sidebar-collapsed .sidebar-header {
+  padding: 0 0.5rem !important;
+  justify-content: center !important;
+}
+
+.app-container.sidebar-collapsed .sidebar-brand {
+  justify-content: center;
+  cursor: pointer;
+}
+
+.app-container.sidebar-collapsed .brand-text,
+.app-container.sidebar-collapsed .sidebar-brand span,
+.app-container.sidebar-collapsed .menu-label,
+.app-container.sidebar-collapsed .menu-link span,
+.app-container.sidebar-collapsed .user-info-text,
+.app-container.sidebar-collapsed .btn-logout {
+  display: none !important;
+}
+
+.app-container.sidebar-collapsed .btn-sidebar-collapse {
+  display: none !important;
+}
+
+.app-container.sidebar-collapsed .sidebar-menu {
+  padding: 1rem 0.35rem !important;
+}
+
+.app-container.sidebar-collapsed .menu-item {
+  margin-bottom: 0.35rem;
+}
+
+.app-container.sidebar-collapsed .menu-link {
+  justify-content: center !important;
+  padding: 0.75rem 0 !important;
+  font-size: 0 !important;
+  border-radius: 10px;
+}
+
+.app-container.sidebar-collapsed .menu-link i {
+  font-size: 1.2rem !important;
+  margin: 0 !important;
+  width: auto !important;
+}
+
+.app-container.sidebar-collapsed .sidebar-footer {
+  padding: 0.75rem 0.25rem !important;
+  justify-content: center !important;
+}
+
+.app-container.sidebar-collapsed .user-profile-summary {
+  justify-content: center !important;
+}
+
+/* User Profile Header Chip & Popover Window */
+#header-user-profile-wrap {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+#header-user-profile-wrap:hover {
+  border-color: var(--primary) !important;
+  background: var(--bg-tertiary) !important;
+  box-shadow: 0 2px 8px rgba(15, 118, 110, 0.15) !important;
+}
+
+.user-profile-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22), 0 5px 15px rgba(0, 0, 0, 0.08);
+  z-index: 9999999 !important;
+  overflow: hidden;
+  animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.popover-user-card {
+  padding: 1.15rem 1.25rem;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08) 0%, rgba(20, 184, 166, 0.04) 100%);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.popover-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #0d9488, #0f172a);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);
+  border: 2px solid var(--primary);
+  flex-shrink: 0;
+}
+
+.popover-user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.popover-user-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popover-user-email {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.popover-role-badge {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.675rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(15, 118, 110, 0.15);
+  color: var(--primary);
+  border: 1px solid rgba(15, 118, 110, 0.3);
+}
+
+.popover-section {
+  padding: 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.popover-sec-label {
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.popover-license-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.popover-lic-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.popover-lic-org {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popover-lic-key {
+  font-size: 0.7rem;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.5px;
+}
+
+.btn-popover-copy {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 7px;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.btn-popover-copy:hover {
+  background: var(--bg-tertiary);
+  color: var(--primary);
+}
+
+.popover-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+}
+
+.btn-role-chip {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-role-chip:hover {
+  background: rgba(15, 118, 110, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.popover-nav-list {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.popover-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.popover-nav-item:hover {
+  background-color: var(--bg-secondary);
+  color: var(--primary);
+}
+
+.popover-nav-item i {
+  width: 16px;
+  text-align: center;
+  color: var(--primary);
+}
+
+.popover-footer {
+  padding: 0.75rem 1.15rem;
+  background: var(--bg-secondary);
+}
+
+.btn-popover-logout {
+  width: 100%;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 0.825rem;
+  padding: 0.55rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-popover-logout:hover {
+  background: #fecaca;
+  color: #b91c1c;
 }
 
 .header-title-container {
@@ -1737,109 +2074,112 @@ textarea.form-control {
     
     <!-- Left Navigation Sidebar -->
     <aside class="app-sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+      <div class="sidebar-header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; white-space: nowrap;" onclick="if(document.getElementById('app-container').classList.contains('sidebar-collapsed')) toggleSidebarCollapse();">
           <div id="header-company-logo-wrapper" style="display: none; background: #ffffff !important; padding: 4px 8px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); align-items: center; justify-content: center; height: 32px;">
             <img id="header-company-logo" style="max-height: 24px; max-width: 80px; object-fit: contain; display: block;" alt="Logo">
           </div>
-          <i class="fas fa-cubes" id="header-default-brand-icon"></i> Nex<span>Milestro</span>
+          <i class="fas fa-cubes" id="header-default-brand-icon"></i> <span class="brand-text">Nex<span>Milestro</span></span>
         </div>
+        <button type="button" class="btn-sidebar-collapse" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse / Expand Sidebar">
+          <i class="fas fa-chevron-left" id="sidebar-collapse-icon"></i>
+        </button>
       </div>
       
       <nav class="sidebar-menu">
         <div class="menu-label">Main Console</div>
         
         <li class="menu-item active" data-view="dashboard">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'dashboard')">
-            <i class="fas fa-chart-line"></i> Dashboard
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'dashboard')" title="Dashboard">
+            <i class="fas fa-chart-line"></i> <span>Dashboard</span>
           </a>
         </li>
         
         <li class="menu-item" data-view="customers">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'customers')">
-            <i class="fas fa-users"></i> Customers
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'customers')" title="Customers">
+            <i class="fas fa-users"></i> <span>Customers</span>
           </a>
         </li>
         
         <li class="menu-item" data-view="projects">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'projects')">
-            <i class="fas fa-project-diagram"></i> Projects
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'projects')" title="Projects">
+            <i class="fas fa-project-diagram"></i> <span>Projects</span>
           </a>
         </li>
         
         <li class="menu-item" data-view="sitevisits">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'sitevisits')">
-            <i class="fas fa-eye"></i> Site Visits
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'sitevisits')" title="Site Visits">
+            <i class="fas fa-eye"></i> <span>Site Visits</span>
           </a>
         </li>
         
         <li class="menu-item" data-view="tasks">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'tasks')">
-            <i class="fas fa-check-square"></i> Tasks & Board
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'tasks')" title="Tasks & Board">
+            <i class="fas fa-check-square"></i> <span>Tasks & Board</span>
           </a>
         </li>
 
         <div class="menu-label" style="margin-top: 1.25rem;">Commercial & Finance</div>
 
         <li class="menu-item" data-view="leads">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'leads')">
-            <i class="fas fa-bullseye"></i> Leads CRM
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'leads')" title="Leads CRM">
+            <i class="fas fa-bullseye"></i> <span>Leads CRM</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="proposals">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'proposals')">
-            <i class="fas fa-file-invoice-dollar"></i> Proposals
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'proposals')" title="Proposals">
+            <i class="fas fa-file-invoice-dollar"></i> <span>Proposals</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="vendors">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'vendors')">
-            <i class="fas fa-truck"></i> Vendors
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'vendors')" title="Vendors">
+            <i class="fas fa-truck"></i> <span>Vendors</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="associates">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'associates')">
-            <i class="fas fa-handshake"></i> Associates
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'associates')" title="Associates">
+            <i class="fas fa-handshake"></i> <span>Associates</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="finance">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'finance')">
-            <i class="fas fa-wallet"></i> Finance Booking
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'finance')" title="Finance Booking">
+            <i class="fas fa-wallet"></i> <span>Finance Booking</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="reports">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'reports')">
-            <i class="fas fa-chart-bar"></i> Reports & Margins
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'reports')" title="Reports & Margins">
+            <i class="fas fa-chart-bar"></i> <span>Reports & Margins</span>
           </a>
         </li>
 
         <div class="menu-label" style="margin-top: 1.25rem;">Administration</div>
         
         <li class="menu-item" data-view="users">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'users')">
-            <i class="fas fa-user-shield"></i> Users & Roles
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'users')" title="Users & Roles">
+            <i class="fas fa-user-shield"></i> <span>Users & Roles</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="company">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'company')">
-            <i class="fas fa-building"></i> Company Setup
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'company')" title="Company Setup">
+            <i class="fas fa-building"></i> <span>Company Setup</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="masters">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'masters')">
-            <i class="fas fa-sliders-h"></i> Masters
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'masters')" title="Masters">
+            <i class="fas fa-sliders-h"></i> <span>Masters</span>
           </a>
         </li>
 
         <li class="menu-item" data-view="help">
-          <a href="#" class="menu-link" onclick="navigateRoute(event, 'help')">
-            <i class="fas fa-question-circle"></i> User Guide & Support
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'help')" title="User Guide & Support">
+            <i class="fas fa-question-circle"></i> <span>User Guide & Support</span>
           </a>
         </li>
       </nav>
@@ -1862,7 +2202,7 @@ textarea.form-control {
     <main class="app-main">
       <header class="app-header">
         <div class="header-left">
-          <button class="btn-sidebar-toggle" onclick="toggleSidebar(true)">
+          <button class="btn-sidebar-toggle" onclick="toggleSidebarCollapse()" title="Toggle Sidebar">
             <i class="fas fa-bars"></i>
           </button>
           <div class="header-title-container">
@@ -1896,12 +2236,73 @@ textarea.form-control {
             <span id="header-role-text">SUPER ADMIN</span>
           </div>
 
-          <!-- User Profile Display -->
-          <div id="header-user-profile-wrap" style="display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border-radius: 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); box-shadow: var(--shadow-sm);">
-            <div id="header-user-avatar-img-wrap" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #0d9488, #0f172a); color: #fff; font-weight: 700; font-size: 0.775rem; border: 1.5px solid var(--primary); flex-shrink: 0;">
-              <span id="header-user-avatar-initials">A</span>
+          <!-- User Profile Display & Popover Wrap -->
+          <div style="position: relative; display: inline-block;">
+            <div id="header-user-profile-wrap" onclick="toggleUserProfilePopover(event)" title="View profile & account options" style="display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border-radius: 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); box-shadow: var(--shadow-sm); cursor: pointer;">
+              <div id="header-user-avatar-img-wrap" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #0d9488, #0f172a); color: #fff; font-weight: 700; font-size: 0.775rem; border: 1.5px solid var(--primary); flex-shrink: 0;">
+                <span id="header-user-avatar-initials">A</span>
+              </div>
+              <span id="header-user-name" style="font-size: 0.825rem; font-weight: 600; color: var(--text-main);">Admin</span>
+              <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: var(--text-muted); margin-left: 2px;"></i>
             </div>
-            <span id="header-user-name" style="font-size: 0.825rem; font-weight: 600; color: var(--text-main);">Admin</span>
+
+            <!-- User Profile Popover Window -->
+            <div id="user-profile-popover" class="user-profile-popover" style="display: none;">
+              <!-- Popover User Details Header -->
+              <div class="popover-user-card">
+                <div class="popover-avatar" id="popover-user-avatar">A</div>
+                <div class="popover-user-details">
+                  <div class="popover-user-name" id="popover-user-name">Mehul Gandhi</div>
+                  <div class="popover-user-email" id="popover-user-email">mehul.gandhi@nexsolve.in</div>
+                  <div class="popover-role-badge" id="popover-user-role">SUPER ADMIN</div>
+                </div>
+              </div>
+
+              <!-- Organization & License info -->
+              <div class="popover-section">
+                <div class="popover-sec-label"><i class="fas fa-building"></i> Organization & License</div>
+                <div class="popover-license-box">
+                  <div class="popover-lic-text">
+                    <span class="popover-lic-org" id="popover-org-name">NexSolve Training & Consulting</span>
+                    <span class="popover-lic-key" id="popover-lic-key">LIC-BUYER1-2026</span>
+                  </div>
+                  <button type="button" class="btn-popover-copy" onclick="copyLicenseFromPopover(event)" title="Copy License Key">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Role Switcher -->
+              <div class="popover-section">
+                <div class="popover-sec-label"><i class="fas fa-user-shield"></i> Switch / Test Role</div>
+                <div class="popover-role-grid">
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Super Admin')"><i class="fas fa-crown" style="color: #d97706;"></i> Super Admin</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Project Manager')"><i class="fas fa-project-diagram" style="color: var(--primary);"></i> Project Mgr</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Site Engineer')"><i class="fas fa-hard-hat" style="color: #059669;"></i> Site Eng</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Sales Executive')"><i class="fas fa-chart-line" style="color: #4f46e5;"></i> Sales Lead</button>
+                </div>
+              </div>
+
+              <!-- Quick Navigation Shortcuts -->
+              <div class="popover-nav-list">
+                <a href="#" onclick="navigateFromPopover('users'); event.preventDefault();" class="popover-nav-item">
+                  <i class="fas fa-users-cog"></i> Users & Role Permissions
+                </a>
+                <a href="#" onclick="navigateFromPopover('company'); event.preventDefault();" class="popover-nav-item">
+                  <i class="fas fa-sliders-h"></i> Company & Brand Settings
+                </a>
+                <a href="#" onclick="forceResyncFromPopover(); event.preventDefault();" class="popover-nav-item">
+                  <i class="fas fa-sync-alt"></i> Force Resync & Reset Cache
+                </a>
+              </div>
+
+              <!-- Sign Out Footer -->
+              <div class="popover-footer">
+                <button type="button" class="btn-popover-logout" onclick="handleLogout()">
+                  <i class="fas fa-sign-out-alt"></i> Sign Out Session
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Refresh Button -->
@@ -2168,65 +2569,32 @@ textarea.form-control {
   <script type="text/html" id="dashboard-view-template">
     <!-- Dashboard.html -->
 <div class="view-container">
-  <!-- Top Command & Filter Bar -->
-  <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: visible !important; position: relative; z-index: 50;">
-    <!-- Upper Row: Title & Quick Action Launchpad -->
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
-      <div style="display: flex; align-items: center; gap: 0.6rem;">
-        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(30, 58, 138, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
-          <i class="fas fa-chart-line"></i>
-        </div>
-        <div>
-          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">Executive Operations Dashboard</h3>
-          <span style="font-size: 0.775rem; color: var(--text-muted);">Real-time performance metrics, milestones, tasks, and financials</span>
-        </div>
-      </div>
-
-      <!-- Quick Action Buttons -->
-      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-        <div class="dropdown" style="position: relative; display: inline-block; z-index: 1050;">
-          <button type="button" class="btn btn-primary btn-sm" onclick="toggleQuickActionMenu(event)" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.55rem 0.95rem; border-radius: var(--radius-md);">
-            <i class="fas fa-plus-circle"></i> Quick Action <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>
-          </button>
-          <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #ffffff !important; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.22), 0 5px 15px rgba(0,0,0,0.1); min-width: 220px; z-index: 999999 !important; overflow: hidden;">
-            <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
-            <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-building" style="color: #059669; width: 16px;"></i> + New Customer</a>
-            <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-tasks" style="color: #d97706; width: 16px;"></i> + New Task</a>
-            <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #ffffff;"><i class="fas fa-map-marker-alt" style="color: #4f46e5; width: 16px;"></i> + Log Site Visit</a>
-            <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: #0f172a; text-decoration: none; font-size: 0.85rem; font-weight: 600; background: #ffffff;"><i class="fas fa-receipt" style="color: #e11d48; width: 16px;"></i> + Book Expense / Income</a>
-          </div>
-        </div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="refreshCurrentView()" title="Force Refresh Workspace Data" style="padding: 0.55rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;">
-          <i class="fas fa-sync-alt"></i> Refresh
-        </button>
-      </div>
-    </div>
-
-    <!-- Lower Row: Omni-Search & Multi-Filter Controls -->
+  <!-- Top Command & Filter Bar (Streamlined Single Row) -->
+  <div class="card" style="margin-bottom: 1.25rem; padding: 0.85rem 1.25rem; background: var(--bg-secondary); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: visible !important; position: relative; z-index: 50;">
     <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-      <!-- Search Input -->
-      <div class="search-input-wrapper" style="flex: 1; min-width: 230px; position: relative;">
+      <!-- Omni-Search Input -->
+      <div class="search-input-wrapper" style="flex: 1.2; min-width: 250px; position: relative;">
         <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
-        <input type="text" id="dash-search-input" class="search-input" placeholder="Search by Project, Customer, or City..." oninput="applyDashboardFilter()" style="padding-left: 2.5rem; width: 100%;">
+        <input type="text" id="dash-search-input" class="search-input" placeholder="Search by Project, Customer, City, or ID..." oninput="applyDashboardFilter()" style="padding-left: 2.5rem; width: 100%; height: 38px;">
       </div>
 
       <!-- Customer Filter Dropdown -->
-      <div style="min-width: 180px;">
-        <select id="dash-customer-filter" class="form-control select-filter" onchange="onDashboardCustomerChange()" style="font-weight: 600; font-size: 0.85rem;">
+      <div style="min-width: 190px; flex: 1;">
+        <select id="dash-customer-filter" class="form-control select-filter" onchange="onDashboardCustomerChange()">
           <option value="">All Customers</option>
         </select>
       </div>
 
       <!-- Project Filter Dropdown -->
-      <div style="min-width: 180px;">
-        <select id="dash-project-filter" class="form-control select-filter" onchange="applyDashboardFilter()" style="font-weight: 600; font-size: 0.85rem;">
+      <div style="min-width: 190px; flex: 1;">
+        <select id="dash-project-filter" class="form-control select-filter" onchange="applyDashboardFilter()">
           <option value="">All Projects</option>
         </select>
       </div>
 
       <!-- Status Filter Dropdown -->
       <div style="min-width: 140px;">
-        <select id="dash-status-filter" class="form-control select-filter" onchange="applyDashboardFilter()" style="font-weight: 600; font-size: 0.85rem;">
+        <select id="dash-status-filter" class="form-control select-filter" onchange="applyDashboardFilter()">
           <option value="">All Statuses</option>
           <option value="In Progress">In Progress</option>
           <option value="Planning">Planning</option>
@@ -2237,9 +2605,23 @@ textarea.form-control {
       </div>
 
       <!-- Reset Filters Button -->
-      <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-clear-filter" onclick="clearDashboardFilters()" title="Reset Filters" style="display: none; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--danger);">
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-dash-clear-filter" onclick="clearDashboardFilters()" title="Reset Filters" style="display: none; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--danger); height: 38px;">
         <i class="fas fa-times-circle"></i> Reset
       </button>
+
+      <!-- Quick Action Button -->
+      <div class="dropdown" style="position: relative; display: inline-block;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="toggleQuickActionMenu(event)" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; padding: 0.55rem 1rem; border-radius: var(--radius-md); height: 38px;">
+          <i class="fas fa-plus-circle"></i> Quick Action <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>
+        </button>
+        <div id="quick-action-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); background: var(--bg-primary) !important; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.22), 0 5px 15px rgba(0,0,0,0.1); min-width: 220px; z-index: 999999 !important; overflow: hidden;">
+          <a href="#" onclick="quickActionCreate('project'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--bg-primary);"><i class="fas fa-project-diagram" style="color: var(--primary); width: 16px;"></i> + New Project</a>
+          <a href="#" onclick="quickActionCreate('customer'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--bg-primary);"><i class="fas fa-building" style="color: #059669; width: 16px;"></i> + New Customer</a>
+          <a href="#" onclick="quickActionCreate('task'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--bg-primary);"><i class="fas fa-tasks" style="color: #d97706; width: 16px;"></i> + New Task</a>
+          <a href="#" onclick="quickActionCreate('visit'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; border-bottom: 1px solid var(--border-color); background: var(--bg-primary);"><i class="fas fa-map-marker-alt" style="color: #4f46e5; width: 16px;"></i> + Log Site Visit</a>
+          <a href="#" onclick="quickActionCreate('expense'); event.preventDefault();" style="display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; background: var(--bg-primary);"><i class="fas fa-receipt" style="color: #e11d48; width: 16px;"></i> + Book Expense / Income</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2291,62 +2673,60 @@ textarea.form-control {
   </div>
 
   <!-- Main Dashboard Sections -->
-  <div class="form-grid" style="margin-top: 1rem;">
-    <!-- Recent Projects list -->
-    <div class="card">
-      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 class="card-title" id="dash-projects-card-title"><i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 0.5rem;"></i>Active Projects Overview</h3>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('projects')">View All Projects</button>
-      </div>
-      <div class="card-body" style="padding: 0;">
-        <div class="table-wrapper" style="border: none; box-shadow: none;">
-          <table class="data-table" id="dash-projects-table">
-            <thead>
-              <tr>
-                <th>Project Name</th>
-                <th>Customer</th>
-                <th>Type</th>
-                <th>Expected Date</th>
-                <th>Progress (Milestones)</th>
-                <th>Status</th>
-                <th style="text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading projects...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <!-- Active Projects Table (Full Width) -->
+  <div class="card" style="margin-top: 1.25rem; width: 100%;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 class="card-title" id="dash-projects-card-title"><i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 0.5rem;"></i>Active Projects Overview</h3>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('projects')">View All Projects</button>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto;">
+        <table class="data-table" id="dash-projects-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="min-width: 200px;">Project Name</th>
+              <th style="min-width: 160px;">Customer</th>
+              <th style="min-width: 110px;">Type</th>
+              <th style="min-width: 120px;">Expected Date</th>
+              <th style="min-width: 140px;">Progress (Milestones)</th>
+              <th style="min-width: 110px;">Status</th>
+              <th style="text-align: right; min-width: 110px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading projects...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </div>
 
-    <!-- Urgent Tasks checklist -->
-    <div class="card">
-      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 class="card-title" id="dash-tasks-card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
-      </div>
-      <div class="card-body" style="padding: 0;">
-        <div class="table-wrapper" style="border: none; box-shadow: none;">
-          <table class="data-table" id="dash-tasks-table">
-            <thead>
-              <tr>
-                <th>Task Name</th>
-                <th>Project</th>
-                <th>Due Date</th>
-                <th>Priority</th>
-                <th style="text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <!-- Urgent Tasks Table (Full Width) -->
+  <div class="card" style="margin-top: 1.25rem; width: 100%;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 class="card-title" id="dash-tasks-card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto;">
+        <table class="data-table" id="dash-tasks-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="min-width: 220px;">Task Name</th>
+              <th style="min-width: 180px;">Project</th>
+              <th style="min-width: 120px;">Due Date</th>
+              <th style="min-width: 100px;">Priority</th>
+              <th style="text-align: right; min-width: 100px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -14167,6 +14547,123 @@ document.addEventListener("click", function() {
     }
     window.toggleSidebar = toggleSidebar;
 
+    function toggleSidebarCollapse() {
+      if (window.innerWidth <= 768) {
+        var container = document.getElementById("app-container");
+        var isOpen = container.classList.contains("sidebar-open");
+        toggleSidebar(!isOpen);
+        return;
+      }
+      var container = document.getElementById("app-container");
+      if (!container) return;
+      var isCollapsed = container.classList.toggle("sidebar-collapsed");
+      localStorage.setItem("pm_sidebar_collapsed", isCollapsed ? "true" : "false");
+      var collapseIcon = document.getElementById("sidebar-collapse-icon");
+      if (collapseIcon) {
+        collapseIcon.className = isCollapsed ? "fas fa-chevron-right" : "fas fa-chevron-left";
+      }
+    }
+    window.toggleSidebarCollapse = toggleSidebarCollapse;
+
+    /**
+     * User Profile Popover Management
+     */
+    function toggleUserProfilePopover(e) {
+      if (e) e.stopPropagation();
+      var pop = document.getElementById("user-profile-popover");
+      if (!pop) return;
+      var isVisible = pop.style.display === "block";
+      if (!isVisible) {
+        updateUserProfilePopoverData();
+        pop.style.display = "block";
+      } else {
+        pop.style.display = "none";
+      }
+    }
+    window.toggleUserProfilePopover = toggleUserProfilePopover;
+
+    function updateUserProfilePopoverData() {
+      var user = getSessionUser();
+      var name = user.fullName || user.FullName || "User";
+      var role = user.roleId || user.RoleID || "Executive";
+      var email = user.email || user.Email || user.userId || "user@nexsolve.in";
+      var activeKey = getActiveLicenseKey() || localStorage.getItem("pm_active_license_key") || "LIC-BUYER1-2026";
+      var companyData = (window._dataCache && window._dataCache.companySetup) || JSON.parse(localStorage.getItem("pm_company_setup") || "{}");
+      var orgName = companyData.CompanyName || "NexSolve Training & Consulting";
+
+      var pName = document.getElementById("popover-user-name");
+      var pEmail = document.getElementById("popover-user-email");
+      var pRole = document.getElementById("popover-user-role");
+      var pAvatar = document.getElementById("popover-user-avatar");
+      var pOrg = document.getElementById("popover-org-name");
+      var pKey = document.getElementById("popover-lic-key");
+
+      if (pName) pName.innerText = name;
+      if (pEmail) pEmail.innerText = email;
+      if (pRole) pRole.innerText = role.toUpperCase();
+      if (pAvatar) pAvatar.innerText = name.charAt(0).toUpperCase();
+      if (pOrg) pOrg.innerText = orgName;
+      if (pKey) pKey.innerText = activeKey;
+    }
+    window.updateUserProfilePopoverData = updateUserProfilePopoverData;
+
+    function copyLicenseFromPopover(e) {
+      if (e) e.stopPropagation();
+      var keyEl = document.getElementById("popover-lic-key");
+      var key = keyEl ? keyEl.innerText : "";
+      if (key && navigator.clipboard) {
+        navigator.clipboard.writeText(key).then(function() {
+          showToast("License key copied to clipboard!", "success");
+        }).catch(function() {
+          showToast("License: " + key, "info");
+        });
+      } else if (key) {
+        showToast("License: " + key, "info");
+      }
+    }
+    window.copyLicenseFromPopover = copyLicenseFromPopover;
+
+    function switchUserRole(roleId) {
+      var pop = document.getElementById("user-profile-popover");
+      if (pop) pop.style.display = "none";
+      loginDemoRole(roleId);
+    }
+    window.switchUserRole = switchUserRole;
+
+    function navigateFromPopover(viewId) {
+      var pop = document.getElementById("user-profile-popover");
+      if (pop) pop.style.display = "none";
+      appRouter.navigate(viewId);
+    }
+    window.navigateFromPopover = navigateFromPopover;
+
+    function forceResyncFromPopover() {
+      var pop = document.getElementById("user-profile-popover");
+      if (pop) pop.style.display = "none";
+      cacheClearAll();
+      refreshCurrentView();
+      showToast("Local cache reset. Resyncing workspace data...", "info");
+    }
+    window.forceResyncFromPopover = forceResyncFromPopover;
+
+    // Global click listener to close popover
+    document.addEventListener("click", function(e) {
+      var pop = document.getElementById("user-profile-popover");
+      var wrap = document.getElementById("header-user-profile-wrap");
+      if (pop && pop.style.display === "block") {
+        if (!pop.contains(e.target) && (!wrap || !wrap.contains(e.target))) {
+          pop.style.display = "none";
+        }
+      }
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") {
+        var pop = document.getElementById("user-profile-popover");
+        if (pop && pop.style.display === "block") pop.style.display = "none";
+      }
+    });
+
     /**
      * =========================================================================
      * AUTHENTICATION & LICENSE GATE LIFECYCLE
@@ -15412,6 +15909,14 @@ document.addEventListener("click", function() {
 
     // System initialization on boot
     document.addEventListener("DOMContentLoaded", function() {
+      // Restore sidebar collapsed preference on desktop
+      if (localStorage.getItem("pm_sidebar_collapsed") === "true" && window.innerWidth > 768) {
+        var appContainer = document.getElementById("app-container");
+        if (appContainer) appContainer.classList.add("sidebar-collapsed");
+        var collapseIcon = document.getElementById("sidebar-collapse-icon");
+        if (collapseIcon) collapseIcon.className = "fas fa-chevron-right";
+      }
+
       var licKey = getActiveLicenseKey();
 
       if (!licKey) {
