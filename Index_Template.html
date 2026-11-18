@@ -297,6 +297,9 @@
                 <a href="#" onclick="forceResyncFromPopover(); event.preventDefault();" class="popover-nav-item">
                   <i class="fas fa-sync-alt"></i> Force Resync & Reset Cache
                 </a>
+                <a href="#" onclick="openLicenseGateModalManual(); event.preventDefault();" class="popover-nav-item" style="color: #0ea5e9;">
+                  <i class="fas fa-key"></i> Switch / Change License Key
+                </a>
               </div>
 
               <!-- Sign Out Footer -->
@@ -381,9 +384,14 @@
           <input type="text" id="license-gate-input" class="form-control" placeholder="e.g. LIC-BUYER1-2026" required style="font-family: monospace; font-size: 1rem; font-weight: 700; text-transform: uppercase; text-align: center; letter-spacing: 1px; padding: 0.75rem 1rem;">
         </div>
 
-        <button type="submit" id="btn-validate-license" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-weight: 700; font-size: 0.95rem; justify-content: center;">
-          <i class="fas fa-shield-check"></i> Connect Database
-        </button>
+        <div style="display: flex; gap: 0.65rem; margin-top: 0.5rem;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-license-gate" onclick="cancelLicenseGateModal()" style="display: none; padding: 0.85rem; font-weight: 600; width: 35%; justify-content: center;">
+            Cancel
+          </button>
+          <button type="submit" id="btn-validate-license" class="btn btn-primary" style="flex-grow: 1; padding: 0.85rem; font-weight: 700; font-size: 0.95rem; justify-content: center;">
+            <i class="fas fa-shield-check"></i> Connect Database
+          </button>
+        </div>
       </form>
 
       <div id="license-gate-feedback" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;"></div>
@@ -905,6 +913,48 @@
         try {
           localStorage.setItem("nexmilestro_data_license_key", licKey);
         } catch(e) {}
+
+        // Synchronize active user session with latest database record (role changes, permissions)
+        try {
+          var sessionUser = getSessionUser();
+          var myUserId = sessionUser.userId || sessionUser.UserID || "";
+          var myEmail = sessionUser.email || sessionUser.Email || "";
+          if (Array.isArray(res.users) && (myUserId || myEmail)) {
+            var freshUser = res.users.find(function(u) {
+              return (myUserId && String(u.UserID || u.userId).toLowerCase() === String(myUserId).toLowerCase()) ||
+                     (myEmail && String(u.Email || u.email).toLowerCase() === String(myEmail).toLowerCase());
+            });
+            if (freshUser) {
+              var freshRoleId = freshUser.RoleID || freshUser.roleId || freshUser.Role || sessionUser.roleId;
+              var roleMap = (res.roles || []).find(function(r) { return (r.RoleID || r.RoleName) === freshRoleId; });
+              var freshPerms = (roleMap && roleMap.Permissions) ? roleMap.Permissions : (sessionUser.permissions || {});
+              if (typeof freshPerms === "string") {
+                try { freshPerms = JSON.parse(freshPerms); } catch(err) {}
+              }
+
+              var updatedUser = Object.assign({}, sessionUser, {
+                userId: freshUser.UserID || freshUser.userId || sessionUser.userId,
+                UserID: freshUser.UserID || freshUser.userId || sessionUser.userId,
+                fullName: freshUser.FullName || freshUser.fullName || sessionUser.fullName,
+                FullName: freshUser.FullName || freshUser.fullName || sessionUser.fullName,
+                email: freshUser.Email || freshUser.email || sessionUser.email,
+                roleId: freshRoleId,
+                RoleID: freshRoleId,
+                permissions: freshPerms
+              });
+
+              if (localStorage.getItem("pm_user")) {
+                localStorage.setItem("pm_user", JSON.stringify(updatedUser));
+              } else if (sessionStorage.getItem("pm_user")) {
+                sessionStorage.setItem("pm_user", JSON.stringify(updatedUser));
+              }
+              populateSidebarUserProfile();
+              applySidebarPermissions();
+            }
+          }
+        } catch(e) {
+          console.warn("Session user sync notice:", e);
+        }
 
         // Seamlessly update current view with fresh database records
         var curr = (window.appRouter && window.appRouter.currentView) || "dashboard";
@@ -3149,20 +3199,33 @@
       if (appCont && show) {
         appCont.style.visibility = "hidden";
       }
+      var cancelBtn = document.getElementById("btn-cancel-license-gate");
+      if (cancelBtn) {
+        var hasKey = Boolean(localStorage.getItem("nexmilestro_license_key"));
+        cancelBtn.style.display = (show && hasKey) ? "inline-flex" : "none";
+      }
     }
     window.showLicenseGateModal = showLicenseGateModal;
 
+    function cancelLicenseGateModal() {
+      showLicenseGateModal(false);
+      if (isAuthenticated()) {
+        var appCont = document.getElementById("app-container");
+        if (appCont) appCont.style.visibility = "visible";
+      } else {
+        showLoginOverlay(true);
+      }
+    }
+    window.cancelLicenseGateModal = cancelLicenseGateModal;
+
     function openLicenseGateModalManual() {
-      localStorage.removeItem("nexmilestro_license_key");
-      localStorage.removeItem("nexmilestro_spreadsheet_id");
-      localStorage.removeItem("nexmilestro_client_name");
-      localStorage.removeItem("pm_user");
-      sessionStorage.clear();
-      showLoginOverlay(false);
+      var pop = document.getElementById("user-profile-popover");
+      if (pop) pop.style.display = "none";
+      var curKey = localStorage.getItem("nexmilestro_license_key") || "";
       var inp = document.getElementById("license-gate-input");
       if (inp) {
-        inp.value = "";
-        inp.focus();
+        inp.value = curKey;
+        setTimeout(function() { inp.focus(); inp.select(); }, 150);
       }
       var feedback = document.getElementById("license-gate-feedback");
       if (feedback) feedback.style.display = "none";
@@ -3249,22 +3312,24 @@
             localStorage.removeItem("pm_user");
           }
 
-          showLoader(true, "Synchronizing workspace data & database tables...");
+          showLoader(false);
+          showLoginOverlay(false);
+          populateSidebarUserProfile();
+          applySidebarPermissions();
+
+          if (response.mustChangePassword === "Yes" || response.mustChangePassword === true) {
+            showPasswordResetModal(true);
+          } else {
+            appRouter.navigate("dashboard");
+            showToast("Welcome back, " + (response.fullName || "User") + "!", "success");
+          }
+
+          // Preload & sync fresh database in background
           preloadAllAppData(function() {
-            showLoader(false);
-            showLoginOverlay(false);
             populateSidebarUserProfile();
             applySidebarPermissions();
-
             if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
               updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
-            }
-
-            if (response.mustChangePassword === "Yes" || response.mustChangePassword === true) {
-              showPasswordResetModal(true);
-            } else {
-              appRouter.navigate("dashboard");
-              showToast("Welcome back, " + (response.fullName || "User") + "!", "success");
             }
           });
         } else {

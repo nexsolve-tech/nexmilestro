@@ -29,7 +29,7 @@
   </div>
 
   <!-- Chat Layout Container -->
-  <div class="team-chat-container">
+  <div class="team-chat-container mobile-show-sidebar" id="team-chat-container">
     
     <!-- Left Sidebar: Channels, Groups & Direct Messages -->
     <div class="chat-sidebar" style="overflow-y: auto;">
@@ -94,17 +94,23 @@
     <div class="chat-main">
       
       <!-- Active Chat Header -->
-      <div style="padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
-        <div>
-          <div style="font-size: 1rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
-            <span id="chat-active-channel-name">#general</span>
-            <span class="badge badge-info" id="chat-channel-badge" style="font-size: 0.7rem; font-weight: 600;">Active Topic</span>
-            <span id="chat-active-project-pill" class="chat-project-pill" style="display: none;">
-              <i class="fas fa-folder"></i> <span id="chat-active-project-name">Project</span>
-            </span>
-          </div>
-          <div id="chat-active-channel-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">
-            Company-wide updates, daily coordination, and priority discussions.
+      <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 0;">
+          <!-- Mobile Back Button to return to Conversations -->
+          <button type="button" class="btn btn-secondary btn-sm btn-chat-mobile-back" onclick="toggleMobileChatView('sidebar')" style="display: none; align-items: center; gap: 0.35rem; border-radius: 50px; font-weight: 700; padding: 0.35rem 0.75rem; flex-shrink: 0;" title="Back to conversations">
+            <i class="fas fa-arrow-left"></i> <span>List</span>
+          </button>
+          <div style="min-width: 0;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+              <span id="chat-active-channel-name">#general</span>
+              <span class="badge badge-info" id="chat-channel-badge" style="font-size: 0.7rem; font-weight: 600;">Active Topic</span>
+              <span id="chat-active-project-pill" class="chat-project-pill" style="display: none;">
+                <i class="fas fa-folder"></i> <span id="chat-active-project-name">Project</span>
+              </span>
+            </div>
+            <div id="chat-active-channel-desc" style="font-size: 0.775rem; color: var(--text-muted); margin-top: 0.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              Company-wide updates, daily coordination, and priority discussions.
+            </div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -636,8 +642,27 @@
 
     renderMessages();
     if (inputEl) inputEl.focus();
+    if (window.innerWidth <= 768) {
+      window.toggleMobileChatView("chat");
+    }
   };
   window.switchChatChannel = window.switchChatConversation;
+
+  window.toggleMobileChatView = function(viewMode) {
+    var container = document.getElementById("team-chat-container");
+    if (!container) return;
+    if (viewMode === "chat") {
+      container.classList.remove("mobile-show-sidebar");
+      container.classList.add("mobile-show-chat");
+      var input = document.getElementById("chat-input-field");
+      if (input && window.innerWidth <= 768) {
+        setTimeout(function() { input.focus(); }, 150);
+      }
+    } else {
+      container.classList.remove("mobile-show-chat");
+      container.classList.add("mobile-show-sidebar");
+    }
+  };
 
   window.handleChatSubmit = function(e) {
     if (e) e.preventDefault();
@@ -870,7 +895,10 @@
     }
 
     Notification.requestPermission().then(function(perm) {
-      window.updateMobilePushUI();
+      if (window.innerWidth <= 768) {
+    window.toggleMobileChatView("sidebar");
+  }
+  window.updateMobilePushUI();
       if (perm === "granted") {
         showToast("Mobile & Browser message notifications enabled!", "success");
         if (typeof window.sendDevicePushNotification === "function") {
@@ -918,6 +946,10 @@
     renderMessages();
     window.updateMobilePushUI();
 
+    if (window.innerWidth <= 768) {
+      window.toggleMobileChatView("sidebar");
+    }
+
     // Check if coming from Project module with a pending group create request
     var pendingProjId = localStorage.getItem("pending_new_chat_group_project_id");
     var pendingProjName = localStorage.getItem("pending_new_chat_group_project_name");
@@ -937,6 +969,9 @@
   renderCustomGroups();
   renderDMUsers();
   renderMessages();
+  if (window.innerWidth <= 768) {
+    window.toggleMobileChatView("sidebar");
+  }
   window.updateMobilePushUI();
 })();
 </script>
