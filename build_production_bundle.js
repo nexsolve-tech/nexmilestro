@@ -47,6 +47,21 @@ if (remainingIncludes) {
   console.log('✓ All include tags resolved successfully!');
 }
 
+// Validate all bundled inline scripts syntax
+const scriptRegex = /<script(?![^>]*type=['"]text\/html['"])[^>]*>([\s\S]*?)<\/script>/gi;
+let match;
+let scriptIdx = 0;
+while ((match = scriptRegex.exec(bundled)) !== null) {
+  scriptIdx++;
+  try {
+    new Function(match[1]);
+  } catch (err) {
+    console.error(`FATAL SYNTAX ERROR in script block #${scriptIdx}:`, err.message);
+    process.exit(1);
+  }
+}
+console.log(`✓ Validated all ${scriptIdx} script blocks successfully!`);
+
 // 1. Output to root index.html (in case GitHub Pages serves from root)
 const rootPath = path.join(baseDir, 'index.html');
 fs.writeFileSync(rootPath, bundled, 'utf8');
