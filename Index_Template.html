@@ -642,12 +642,29 @@
     const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
     try {
-      var localCached = localStorage.getItem("nexmilestro_app_data");
-      if (localCached) {
-        try {
-          window._dataCache = JSON.parse(localCached);
-          populateAllCaches(window._dataCache);
-        } catch(e) {}
+      var licKey = getActiveLicenseKey();
+      var cachedLic = localStorage.getItem("nexmilestro_data_license_key");
+      var isDemoLic = Boolean(licKey && licKey.toUpperCase().indexOf("DEMO") !== -1);
+
+      // If active key is a real license, but cached license was DEMO or doesn't match, discard stale cache
+      if (!isDemoLic && licKey && cachedLic && cachedLic !== licKey) {
+        localStorage.removeItem("nexmilestro_app_data");
+        localStorage.removeItem("nexmilestro_data_license_key");
+      } else {
+        var localCached = localStorage.getItem("nexmilestro_app_data");
+        if (localCached) {
+          try {
+            var parsed = JSON.parse(localCached);
+            // If active license is non-demo, but parsed data has demo company setup, discard mock demo cache
+            if (!isDemoLic && parsed && parsed.companySetup && parsed.companySetup.CompanyName === "NexSolve Architecture & Turnkey Solutions") {
+              localStorage.removeItem("nexmilestro_app_data");
+              localStorage.removeItem("nexmilestro_data_license_key");
+            } else {
+              window._dataCache = parsed;
+              populateAllCaches(window._dataCache);
+            }
+          } catch(e) {}
+        }
       }
     } catch(e) {}
 
@@ -817,8 +834,25 @@
       var res = await apiCall("get_initial_data");
       if (res && res.success !== false) {
         populateAllCaches(res);
+        try {
+          localStorage.setItem("nexmilestro_data_license_key", licKey);
+        } catch(e) {}
+
+        // Seamlessly update current view with fresh database records
+        var curr = (window.appRouter && window.appRouter.currentView) || "dashboard";
+        var loaderHook = "load" + curr.charAt(0).toUpperCase() + curr.slice(1) + "View";
+        if (curr === "sitevisits") loaderHook = "loadSiteVisitsView";
+        if (curr === "finance") loaderHook = "loadFinanceView";
+        if (curr === "company") loaderHook = "loadCompanySetupView";
+        if (typeof window[loaderHook] === "function") {
+          try {
+            window[loaderHook](false);
+          } catch(err) {
+            console.warn("View re-render after preload failed:", err);
+          }
+        }
       }
-      if (typeof callback === "function") callback();
+      if (typeof callback === "function") callback(res);
     }
     window.preloadAllAppData = preloadAllAppData;
 
@@ -1913,7 +1947,50 @@
     function switchUserRole(roleId) {
       var pop = document.getElementById("user-profile-popover");
       if (pop) pop.style.display = "none";
-      loginDemoRole(roleId);
+
+      if (isDemoMode()) {
+        loginDemoRole(roleId);
+        return;
+      }
+
+      var currentUser = getSessionUser();
+      var isSuper = (roleId === "Super Admin");
+      var allMods = ["Dashboard", "Customers", "Projects", "Milestones", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Finance", "Reports", "Users", "Company", "Masters", "Help"];
+      var permissions = {};
+
+      allMods.forEach(function(mod) {
+        if (isSuper) {
+          permissions[mod] = { view: true, add: true, edit: true, delete: true };
+        } else if (roleId === "Project Manager") {
+          var can = ["Dashboard", "Customers", "Projects", "Milestones", "Tasks", "SiteVisits", "Vendors", "Associates", "Proposals", "Help"].indexOf(mod) !== -1;
+          permissions[mod] = { view: can, add: can, edit: can, delete: false };
+        } else if (roleId === "Site Engineer") {
+          var can = ["Dashboard", "Tasks", "SiteVisits", "Help"].indexOf(mod) !== -1;
+          permissions[mod] = { view: can, add: can, edit: can, delete: false };
+        } else if (roleId === "Sales Executive") {
+          var can = ["Dashboard", "Leads", "Customers", "Proposals", "Help"].indexOf(mod) !== -1;
+          permissions[mod] = { view: can, add: can, edit: can, delete: false };
+        } else if (roleId === "Finance Officer") {
+          var can = ["Dashboard", "Finance", "Reports", "Projects", "Vendors", "Customers", "Help"].indexOf(mod) !== -1;
+          permissions[mod] = { view: can, add: can, edit: can, delete: false };
+        } else {
+          permissions[mod] = { view: true, add: false, edit: false, delete: false };
+        }
+      });
+
+      currentUser.roleId = roleId;
+      currentUser.RoleID = roleId;
+      currentUser.permissions = permissions;
+      if (currentUser.user) {
+        currentUser.user.RoleID = roleId;
+      }
+
+      localStorage.setItem("pm_user", JSON.stringify(currentUser));
+      populateSidebarUserProfile();
+      applySidebarPermissions();
+      var curr = (window.appRouter && window.appRouter.currentView) || "dashboard";
+      appRouter.navigate(curr);
+      showToast("Testing role: " + roleId + " (Permissions applied)", "info");
     }
     window.switchUserRole = switchUserRole;
 
@@ -2405,7 +2482,7 @@
 
     function isDemoMode() {
       var k = getActiveLicenseKey();
-      return k.indexOf("DEMO") !== -1 || localStorage.getItem("nexmilestro_is_demo") === "true";
+      return Boolean(k && k.toUpperCase().indexOf("DEMO") !== -1);
     }
     window.isDemoMode = isDemoMode;
 
@@ -2414,6 +2491,7 @@
       localStorage.setItem("nexmilestro_license_key", "DEMO-ENTERPRISE-2026");
       localStorage.setItem("nexmilestro_client_name", "NexSolve Architecture & Turnkey Solutions");
       localStorage.setItem("nexmilestro_is_demo", "true");
+      localStorage.setItem("nexmilestro_data_license_key", "DEMO-ENTERPRISE-2026");
 
       var demoData = generateEnterpriseDemoData();
       populateAllCaches(demoData);
@@ -2429,8 +2507,16 @@
 
     function loginDemoRole(roleId) {
       roleId = roleId || "Super Admin";
-      var demoData = generateEnterpriseDemoData();
-      var user = demoData.users.find(function(u) { return u.RoleID === roleId; }) || demoData.users[0];
+      var demoData = (window._dataCache && window._dataCache.users && window._dataCache.users.length > 0)
+        ? window._dataCache
+        : generateEnterpriseDemoData();
+      var user = (demoData.users && demoData.users.find(function(u) { return u.RoleID === roleId; })) || (demoData.users && demoData.users[0]) || {
+        UserID: "USR-DEMO-1",
+        FullName: "Demo " + roleId,
+        Email: "demo@nexsolve.in",
+        Mobile: "9876543210",
+        RoleID: roleId
+      };
 
       // Build permissions matrix according to role
       var permissions = {};
@@ -2472,7 +2558,9 @@
 
       // Update Header Demo pill
       var demoPill = document.getElementById("header-demo-badge");
-      if (demoPill) demoPill.style.display = "inline-flex";
+      if (demoPill) {
+        demoPill.style.display = isDemoMode() ? "inline-flex" : "none";
+      }
 
       showLoginOverlay(false);
       populateSidebarUserProfile();
@@ -2573,6 +2661,9 @@
         if (sheetId) localStorage.setItem("nexmilestro_spreadsheet_id", sheetId);
         if (clientName) localStorage.setItem("nexmilestro_client_name", clientName);
         localStorage.removeItem("nexmilestro_is_demo");
+        localStorage.removeItem("nexmilestro_app_data");
+        localStorage.removeItem("nexmilestro_data_license_key");
+        window._dataCache = {};
 
         showToast("Connected to Organization: " + clientName, "success");
         showLicenseGateModal(false);
@@ -3260,12 +3351,15 @@
         return;
       }
 
+      var demoPill = document.getElementById("header-demo-badge");
       if (isDemoMode()) {
-        var demoPill = document.getElementById("header-demo-badge");
         if (demoPill) demoPill.style.display = "inline-flex";
         if (!window._dataCache || !window._dataCache.customers || window._dataCache.customers.length === 0) {
           populateAllCaches(generateEnterpriseDemoData());
         }
+      } else {
+        if (demoPill) demoPill.style.display = "none";
+        try { localStorage.removeItem("nexmilestro_is_demo"); } catch(e) {}
       }
 
       updateLoginOrgDisplay();
@@ -3279,8 +3373,11 @@
           updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
         }
 
-        var hasCachedData = window._dataCache && window._dataCache.customers && window._dataCache.customers.length > 0;
-        if (hasCachedData) {
+        var cachedLicense = localStorage.getItem("nexmilestro_data_license_key");
+        var hasValidCachedData = window._dataCache && window._dataCache.customers && window._dataCache.customers.length > 0 &&
+          (isDemoMode() || (!cachedLicense || cachedLicense === licKey));
+
+        if (hasValidCachedData) {
           showLoginOverlay(false);
           appRouter.navigate("dashboard");
           if (!isDemoMode()) {
