@@ -32,6 +32,7 @@
         <i class="fas fa-times-circle"></i> Reset
       </button>
 
+      <button class="btn btn-secondary btn-sm" onclick="exportCustomersCSV()" title="Download Filtered Customers to CSV" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary btn-sm" id="btn-add-customer" onclick="openCustomerModal()" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;"><i class="fas fa-plus"></i> Add Customer</button>
     </div>
   </div>
@@ -517,6 +518,65 @@
     renderCustomers(filtered);
   }
   window.filterCustomers = filterCustomers;
+
+  function exportCustomersCSV() {
+    var searchVal = (document.getElementById("cust-search").value || "").toLowerCase();
+    var custVal = document.getElementById("filter-cust-name").value;
+    var typeVal = document.getElementById("filter-cust-type").value;
+    var statusVal = document.getElementById("filter-cust-status").value;
+
+    var filtered = (allCustomers || []).filter(function(cust) {
+      var name = cust.CustomerName ? String(cust.CustomerName).toLowerCase() : "";
+      var email = cust.Email ? String(cust.Email).toLowerCase() : "";
+      var phone = cust.Mobile ? String(cust.Mobile) : "";
+      var cid = cust.CustomerID ? String(cust.CustomerID).toLowerCase() : "";
+      var matchesSearch = !searchVal || name.includes(searchVal) || email.includes(searchVal) || phone.includes(searchVal) || cid.includes(searchVal);
+      var matchesCust = !custVal || cust.CustomerID === custVal;
+      var matchesType = !typeVal || cust.CustomerType === typeVal;
+      var matchesStatus = !statusVal || (cust.Status || "Active") === statusVal;
+      return matchesSearch && matchesCust && matchesType && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No customer data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Customer ID", "Customer Name", "Mobile", "Email", "Customer Type", "Status", "City", "Address", "Created Date"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(c) {
+      var row = [
+        c.CustomerID || "",
+        c.CustomerName || "",
+        c.Mobile || "",
+        c.Email || "",
+        c.CustomerType || "",
+        c.Status || "Active",
+        c.City || "",
+        c.Address || "",
+        c.CreatedDate || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Customers_Directory_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Customers exported to CSV successfully!", "success");
+  }
+  window.exportCustomersCSV = exportCustomersCSV;
 
   function clearCustomerFilters() {
     var searchInput = document.getElementById("cust-search");

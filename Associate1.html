@@ -15,6 +15,7 @@
       </select>
       
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportAssociatesCSV()" title="Download Filtered Associates to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-associate" onclick="openAssociateModal()"><i class="fas fa-plus"></i> Add Associate</button>
     </div>
   </div>
@@ -238,6 +239,60 @@
     });
     renderAssociates(filtered);
   }
+
+  function exportAssociatesCSV() {
+    var searchVal = (document.getElementById("associate-search-input").value || "").toLowerCase();
+    var statusVal = document.getElementById("filter-associate-status").value;
+
+    var filtered = (associatesList || []).filter(function(assoc) {
+      var name = assoc.AssociateName ? String(assoc.AssociateName).toLowerCase() : "";
+      var contact = assoc.ContactPerson ? String(assoc.ContactPerson).toLowerCase() : "";
+      var aid = assoc.AssociateID ? String(assoc.AssociateID).toLowerCase() : "";
+      var matchesSearch = name.includes(searchVal) || contact.includes(searchVal) || aid.includes(searchVal);
+      var matchesStatus = !statusVal || (assoc.Status || "Active") === statusVal;
+      return matchesSearch && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No associate data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Associate ID", "Associate Name", "Contact Person", "Category / Services", "Mobile", "Email", "GST Number", "Status", "Address"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(a) {
+      var row = [
+        a.AssociateID || "",
+        a.AssociateName || "",
+        a.ContactPerson || "",
+        a.Category || a.AssociateType || "",
+        a.Mobile || "",
+        a.Email || "",
+        a.GSTNumber || "",
+        a.Status || "Active",
+        a.Address || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Associates_Directory_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Associates exported to CSV successfully!", "success");
+  }
+  window.exportAssociatesCSV = exportAssociatesCSV;
   function openAssociateModal(assocObj) {
     if (assocObj === void 0) {
       assocObj = null;

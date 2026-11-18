@@ -20,6 +20,7 @@
       </select>
       
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportTasksCSV()" title="Download Filtered Tasks to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-task" onclick="openTaskModal()"><i class="fas fa-plus"></i> Add Task</button>
     </div>
   </div>
@@ -228,6 +229,15 @@
         localStorage.removeItem("pending_add_task_project_id");
         openTaskModal({ ProjectID: pendingProjId });
       }
+      var pendingEditTaskId = localStorage.getItem("pending_edit_task_id");
+      if (pendingEditTaskId) {
+        localStorage.removeItem("pending_edit_task_id");
+        setTimeout(function() {
+          if (typeof window.editTask === "function") {
+            window.editTask(pendingEditTaskId);
+          }
+        }, 150);
+      }
     }
 
     // Check global cache first for instant render (0ms)
@@ -377,9 +387,7 @@
     }
   };
 
-  // Move task status locally (0ms) + background save
-  window.moveTaskStatus = function(taskId, newStatus, event) {
-    if (event) event.stopPropagation();
+  function applyMoveTaskStatus(taskId, newStatus) {
     var task = (allTasks || []).find(function(t) { return t && t.TaskID === taskId; });
     if (!task) return;
     if (task.Status === newStatus) return;
@@ -406,7 +414,82 @@
     if (google.script && google.script.run && google.script.run.updateTaskStatus) {
       google.script.run.updateTaskStatus(taskId, newStatus, currentUserId);
     }
+  }
+
+  // Move task status locally (0ms) + background save
+  window.moveTaskStatus = function(taskId, newStatus, event) {
+    if (event) event.stopPropagation();
+    if (newStatus === "Completed" && typeof window.openTaskCompletionModal === "function") {
+      window.openTaskCompletionModal(taskId, function() {
+        applyMoveTaskStatus(taskId, newStatus);
+      });
+      return;
+    }
+    applyMoveTaskStatus(taskId, newStatus);
   };
+
+  function exportTasksCSV() {
+    var searchEl = document.getElementById("task-search");
+    var searchVal = (searchEl ? searchEl.value : "").toLowerCase().trim();
+    var projEl = document.getElementById("filter-task-project");
+    var projVal = projEl ? projEl.value : "";
+    var priorityEl = document.getElementById("filter-task-priority");
+    var priorityVal = priorityEl ? priorityEl.value : "";
+
+    var filtered = (allTasks || []).filter(function(t) {
+      var matchesSearch = !searchVal ||
+        (t.TaskName && t.TaskName.toLowerCase().includes(searchVal)) ||
+        (t.TaskID && t.TaskID.toLowerCase().includes(searchVal)) ||
+        (t.AssignedTo && t.AssignedTo.toLowerCase().includes(searchVal));
+      var matchesProj = !projVal || t.ProjectID === projVal;
+      var matchesPriority = !priorityVal || t.Priority === priorityVal;
+      return matchesSearch && matchesProj && matchesPriority;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No task data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Task ID", "Task Name", "Project", "Assigned Type", "Assigned To", "Start Date", "Due Date", "Completion Date", "Priority", "Status", "Remarks"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(t) {
+      var pObj = (projectsCacheList || []).find(function(p) { return p.ProjectID === t.ProjectID; });
+      var pName = pObj ? (pObj.ProjectName + " (" + pObj.ProjectID + ")") : (t.ProjectID || "");
+      var row = [
+        t.TaskID || "",
+        t.TaskName || "",
+        pName,
+        t.AssignedType || "Staff",
+        t.AssignedTo || "",
+        t.StartDate || "",
+        t.DueDate || "",
+        t.CompletionDate || "",
+        t.Priority || "Medium",
+        t.Status || "Pending",
+        t.Remarks || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Tasks_List_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Tasks exported to CSV successfully!", "success");
+  }
+  window.exportTasksCSV = exportTasksCSV;
 
   function renderKanban(tasks) {
     var columns = {

@@ -50,6 +50,7 @@
     
     <div class="filter-group">
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportUsersCSV()" title="Download Filtered Users to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" onclick="openUserModal()"><i class="fas fa-plus"></i> Add New User</button>
     </div>
   </div>
@@ -457,6 +458,53 @@
     );
     renderUsersList(filtered);
   }
+
+  function exportUsersCSV() {
+    var searchVal = (document.getElementById("user-search").value || "").toLowerCase();
+    var filtered = (allUsersList || []).filter(function(user) {
+      return (user.FullName && user.FullName.toLowerCase().includes(searchVal)) ||
+        (user.Email && user.Email.toLowerCase().includes(searchVal)) ||
+        (user.UserID && user.UserID.toLowerCase().includes(searchVal));
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No user data available to export.", "error");
+      return;
+    }
+
+    var headers = ["User ID", "Full Name", "Email", "Mobile", "Role", "Status", "Last Login"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(u) {
+      var row = [
+        u.UserID || "",
+        u.FullName || "",
+        u.Email || "",
+        u.Mobile || "",
+        u.RoleID || "",
+        u.Status || "Active",
+        u.LastLogin || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Users_Directory_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Users exported to CSV successfully!", "success");
+  }
+  window.exportUsersCSV = exportUsersCSV;
   function openUserModal(userObj) {
     if (userObj === void 0) {
       userObj = null;

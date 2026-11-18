@@ -26,6 +26,7 @@
       </select>
       
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportVendorsCSV()" title="Download Filtered Vendors to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-vendor" onclick="openVendorModal()"><i class="fas fa-plus"></i> Add Vendor</button>
     </div>
   </div>
@@ -338,6 +339,60 @@
     });
     renderVendors(filtered);
   }
+
+  function exportVendorsCSV() {
+    var searchVal = (document.getElementById("vendor-search-input").value || "").toLowerCase();
+    var typeVal = document.getElementById("filter-vendor-type").value;
+    var statusVal = document.getElementById("filter-vendor-status").value;
+
+    var filtered = (vendorsDataList || []).filter(function(v) {
+      var matchesSearch = v.VendorName.toLowerCase().includes(searchVal) || (v.ContactPerson && v.ContactPerson.toLowerCase().includes(searchVal)) || v.VendorID.toLowerCase().includes(searchVal);
+      var matchesType = !typeVal || v.VendorType === typeVal;
+      var matchesStatus = !statusVal || v.Status === statusVal;
+      return matchesSearch && matchesType && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No vendor data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Vendor ID", "Vendor Name", "Contact Person", "Mobile", "Email", "Category", "GST Number", "PAN Number", "Status", "Address"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(v) {
+      var row = [
+        v.VendorID || "",
+        v.VendorName || "",
+        v.ContactPerson || "",
+        v.Mobile || "",
+        v.Email || "",
+        v.VendorType || "",
+        v.GSTNumber || "",
+        v.PANNumber || "",
+        v.Status || "Active",
+        v.Address || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Vendors_Directory_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Vendors exported to CSV successfully!", "success");
+  }
+  window.exportVendorsCSV = exportVendorsCSV;
   function openVendorModal(vendorObj) {
     if (vendorObj === void 0) {
       vendorObj = null;

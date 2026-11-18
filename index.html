@@ -2134,6 +2134,272 @@ textarea.form-control {
 .filter-bar, .form-grid, .filter-group {
   overflow: visible !important;
 }
+
+/* Stacking context fix so dropdowns are always on top */
+.searchable-active-parent {
+  position: relative !important;
+  z-index: 999999 !important;
+  overflow: visible !important;
+}
+
+#milestone-add-form {
+  position: relative !important;
+  z-index: 100 !important;
+  overflow: visible !important;
+}
+
+#milestones-modal .modal-body {
+  overflow-y: auto !important;
+  overflow-x: visible !important;
+}
+
+/* Inline Table Status Selector Badge (1-Click Status Update) */
+.inline-status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-size: 0.775rem;
+  font-weight: 700;
+  padding: 0.3rem 1.6rem 0.3rem 0.75rem;
+  border-radius: 50px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+  background-size: 0.65rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%2364748b' d='M143 352.3L7 216.3c-9.4-9.4-9.4-24.6 0-33.9l22.6-22.6c9.4-9.4 24.6-9.4 33.9 0l96.4 96.4 96.4-96.4c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9l-136 136c-9.2 9.5-24.4 9.5-33.8 0z'/%3E%3C/svg%3E");
+  transition: all 0.2s ease;
+  outline: none;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.inline-status-select:hover {
+  filter: brightness(0.95);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+.inline-status-select.status-pending,
+.inline-status-select.badge-pending,
+.inline-status-select.badge-new {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.inline-status-select.status-inprogress,
+.inline-status-select.badge-inprogress,
+.inline-status-select.badge-contacted {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+
+.inline-status-select.status-completed,
+.inline-status-select.badge-completed,
+.inline-status-select.badge-won {
+  background-color: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.inline-status-select.status-onhold,
+.inline-status-select.badge-on-hold,
+.inline-status-select.badge-proposal-sent {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+  border-color: #e9d5ff;
+}
+
+.inline-status-select.status-lost,
+.inline-status-select.badge-inactive,
+.inline-status-select.badge-lost {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+/* Header Notification Bell & Popover */
+.header-icon-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-icon-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.notification-badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.notifications-popover {
+  position: absolute;
+  top: 55px;
+  right: 15px;
+  width: 380px;
+  max-width: calc(100vw - 30px);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.08);
+  z-index: 100000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.notifications-header {
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.notifications-body {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.notification-item:hover {
+  background: var(--bg-secondary);
+}
+
+.notification-item.unread {
+  background: rgba(15, 118, 110, 0.04);
+}
+
+.notification-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+/* Team Chat Styles */
+.team-chat-container {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: calc(100vh - 120px);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.chat-sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-msg-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  max-width: 80%;
+}
+
+.chat-msg-card.outgoing {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.chat-msg-bubble {
+  padding: 0.65rem 0.95rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.chat-msg-card.outgoing .chat-msg-bubble {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.chat-input-area {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .team-chat-container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .chat-sidebar {
+    display: none;
+  }
+}
 </style>
 
 
@@ -2183,7 +2449,7 @@ textarea.form-control {
 <body>
 
   <!-- ==================== MAIN SITE CONTAINER ==================== -->
-  <div class="app-container" id="app-container" style="visibility: hidden;">
+  <div class="app-container sidebar-collapsed" id="app-container" style="visibility: hidden;">
     
     <!-- Sidebar Mobile Backdrop -->
     <div class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
@@ -2198,7 +2464,7 @@ textarea.form-control {
           <i class="fas fa-cubes" id="header-default-brand-icon"></i> <span class="brand-text">Nex<span>Milestro</span></span>
         </div>
         <button type="button" class="btn-sidebar-collapse" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse / Expand Sidebar">
-          <i class="fas fa-chevron-left" id="sidebar-collapse-icon"></i>
+          <i class="fas fa-chevron-right" id="sidebar-collapse-icon"></i>
         </button>
       </div>
       
@@ -2270,6 +2536,12 @@ textarea.form-control {
         <li class="menu-item" data-view="reports">
           <a href="#" class="menu-link" onclick="navigateRoute(event, 'reports')" title="Reports & Margins">
             <i class="fas fa-chart-bar"></i> <span>Reports & Margins</span>
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="teamchat">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'teamchat')" title="Internal Team Chat">
+            <i class="fas fa-comments"></i> <span>Team Chat</span>
           </a>
         </li>
 
@@ -2417,6 +2689,38 @@ textarea.form-control {
                 <button type="button" class="btn-popover-logout" onclick="handleLogout()">
                   <i class="fas fa-sign-out-alt"></i> Sign Out Session
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Team Chat Button -->
+          <button type="button" class="header-icon-btn" onclick="navigateRoute(event, 'teamchat')" title="Internal Team Chat">
+            <i class="fas fa-comments"></i>
+          </button>
+
+          <!-- Notifications Bell & Popover -->
+          <div style="position: relative; display: inline-block;">
+            <button type="button" class="header-icon-btn" id="header-notifications-btn" onclick="toggleNotificationsDrawer(event)" title="Notifications & Activity Stream">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge-count" id="header-notif-badge" style="display: none;">0</span>
+            </button>
+
+            <!-- Notifications Dropdown Popover -->
+            <div class="notifications-popover" id="notifications-popover">
+              <div class="notifications-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <strong style="font-size: 0.9rem; color: var(--text-main);"><i class="fas fa-bell" style="color: var(--primary);"></i> Activity & Notifications</strong>
+                  <span class="badge badge-info" id="notif-count-label" style="font-size: 0.7rem;">0 new</span>
+                </div>
+                <button type="button" onclick="markAllNotificationsAsRead(event)" style="background: none; border: none; font-size: 0.75rem; color: var(--primary); cursor: pointer; font-weight: 600;">
+                  Mark all read
+                </button>
+              </div>
+              <div class="notifications-body" id="notifications-items-container">
+                <!-- Dynamically populated -->
+              </div>
+              <div style="padding: 0.6rem 1rem; text-align: center; border-top: 1px solid var(--border-color); background: var(--bg-secondary);">
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Live system events & task updates</small>
               </div>
             </div>
           </div>
@@ -2677,6 +2981,32 @@ textarea.form-control {
       <div style="display: flex; gap: 0.75rem; justify-content: center;">
         <button type="button" class="btn btn-secondary" onclick="closeCustomConfirm()" style="padding: 0.55rem 1.25rem; font-weight: 600;">Cancel</button>
         <button type="button" class="btn btn-primary" id="custom-confirm-btn" onclick="handleCustomConfirmAccept()" style="padding: 0.55rem 1.25rem; font-weight: 700;"><i class="fas fa-check"></i> Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CENTERED TASK COMPLETION MODAL (YES / NO / REVIEW) ==================== -->
+  <div class="modal-overlay" id="task-completion-modal" style="z-index: 10000; display: none;">
+    <div class="modal-container" style="max-width: 480px; text-align: center; padding: 2rem 1.75rem; border-radius: var(--radius-lg); box-shadow: 0 25px 60px rgba(0,0,0,0.35); background: var(--bg-primary); border: 1px solid var(--border-color);">
+      <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; color: #10b981; font-size: 1.75rem;">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <h3 class="modal-title" style="margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 700; justify-content: center; color: var(--text-main);">
+        Complete Task Confirmation
+      </h3>
+      <p id="task-completion-prompt-text" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.75rem;">
+        Are you sure you want to mark this task as <strong>Completed</strong>?
+      </p>
+      <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary" onclick="closeTaskCompletionModal()" style="padding: 0.55rem 1.25rem; font-weight: 600;">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-info" id="task-completion-review-btn" onclick="handleTaskCompletionReview()" style="padding: 0.55rem 1.25rem; font-weight: 600; background: #0284c7; color: #ffffff; border-color: #0284c7;">
+          <i class="fas fa-edit"></i> Review Details
+        </button>
+        <button type="button" class="btn btn-primary" id="task-completion-yes-btn" onclick="handleTaskCompletionAccept()" style="padding: 0.55rem 1.4rem; font-weight: 700; background: #059669; border-color: #059669;">
+          <i class="fas fa-check"></i> Yes, Mark Done
+        </button>
       </div>
     </div>
   </div>
@@ -3037,21 +3367,33 @@ textarea.form-control {
   // Quick complete a task from dashboard
   window.quickCompleteTaskFromDash = function(taskId, event) {
     if (event) event.stopPropagation();
-    if (!confirm("Mark task " + taskId + " as Completed?")) return;
 
-    var tIdx = rawTasks.findIndex(function(t) { return t.TaskID === taskId; });
-    if (tIdx !== -1) {
-      rawTasks[tIdx].Status = "Completed";
-      if (window._dataCache && window._dataCache.tasks) {
-        var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === taskId; });
-        if (cIdx !== -1) window._dataCache.tasks[cIdx].Status = "Completed";
+    var doComplete = function() {
+      var tIdx = rawTasks.findIndex(function(t) { return t.TaskID === taskId; });
+      if (tIdx !== -1) {
+        rawTasks[tIdx].Status = "Completed";
+        rawTasks[tIdx].CompletionDate = new Date().toISOString().substring(0, 10);
+        if (window._dataCache && window._dataCache.tasks) {
+          var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === taskId; });
+          if (cIdx !== -1) {
+            window._dataCache.tasks[cIdx].Status = "Completed";
+            window._dataCache.tasks[cIdx].CompletionDate = rawTasks[tIdx].CompletionDate;
+          }
+          if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+        }
+        applyDashboardFilter();
+        showToast("Task " + taskId + " marked as Completed!", "success");
+
+        var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+        var currentUserId = currentUser.userId || currentUser.UserID || "Admin";
+        google.script.run.saveTask({ TaskID: taskId, Status: "Completed", CompletionDate: rawTasks[tIdx].CompletionDate }, null, currentUserId);
       }
-      applyDashboardFilter();
-      showToast("Task " + taskId + " marked as Completed!", "success");
+    };
 
-      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
-      var currentUserId = currentUser.userId || currentUser.UserID || "Admin";
-      google.script.run.saveTask({ TaskID: taskId, Status: "Completed" }, null, currentUserId);
+    if (typeof window.openTaskCompletionModal === "function") {
+      window.openTaskCompletionModal(taskId, doComplete);
+    } else {
+      if (confirm("Mark task " + taskId + " as Completed?")) doComplete();
     }
   };
 
@@ -3467,6 +3809,7 @@ textarea.form-control {
         <i class="fas fa-times-circle"></i> Reset
       </button>
 
+      <button class="btn btn-secondary btn-sm" onclick="exportCustomersCSV()" title="Download Filtered Customers to CSV" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary btn-sm" id="btn-add-customer" onclick="openCustomerModal()" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;"><i class="fas fa-plus"></i> Add Customer</button>
     </div>
   </div>
@@ -3953,6 +4296,65 @@ textarea.form-control {
   }
   window.filterCustomers = filterCustomers;
 
+  function exportCustomersCSV() {
+    var searchVal = (document.getElementById("cust-search").value || "").toLowerCase();
+    var custVal = document.getElementById("filter-cust-name").value;
+    var typeVal = document.getElementById("filter-cust-type").value;
+    var statusVal = document.getElementById("filter-cust-status").value;
+
+    var filtered = (allCustomers || []).filter(function(cust) {
+      var name = cust.CustomerName ? String(cust.CustomerName).toLowerCase() : "";
+      var email = cust.Email ? String(cust.Email).toLowerCase() : "";
+      var phone = cust.Mobile ? String(cust.Mobile) : "";
+      var cid = cust.CustomerID ? String(cust.CustomerID).toLowerCase() : "";
+      var matchesSearch = !searchVal || name.includes(searchVal) || email.includes(searchVal) || phone.includes(searchVal) || cid.includes(searchVal);
+      var matchesCust = !custVal || cust.CustomerID === custVal;
+      var matchesType = !typeVal || cust.CustomerType === typeVal;
+      var matchesStatus = !statusVal || (cust.Status || "Active") === statusVal;
+      return matchesSearch && matchesCust && matchesType && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No customer data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Customer ID", "Customer Name", "Mobile", "Email", "Customer Type", "Status", "City", "Address", "Created Date"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(c) {
+      var row = [
+        c.CustomerID || "",
+        c.CustomerName || "",
+        c.Mobile || "",
+        c.Email || "",
+        c.CustomerType || "",
+        c.Status || "Active",
+        c.City || "",
+        c.Address || "",
+        c.CreatedDate || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Customers_Directory_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Customers exported to CSV successfully!", "success");
+  }
+  window.exportCustomersCSV = exportCustomersCSV;
+
   function clearCustomerFilters() {
     var searchInput = document.getElementById("cust-search");
     var custSelect = document.getElementById("filter-cust-name");
@@ -4303,6 +4705,7 @@ textarea.form-control {
         <i class="fas fa-times-circle"></i> Reset
       </button>
 
+      <button class="btn btn-secondary btn-sm" onclick="exportProjectsCSV()" title="Download Filtered Projects to CSV" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary btn-sm" id="btn-add-project" onclick="openProjectModal()" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;"><i class="fas fa-plus"></i> Add Project</button>
     </div>
   </div>
@@ -4462,7 +4865,7 @@ textarea.form-control {
       </div>
 
       <!-- Add Milestone Form (Inline-styled grid) -->
-      <form id="milestone-add-form" onsubmit="handleMilestoneSubmit(event)" style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-md); border: 1px dashed var(--primary-light); margin-bottom: 1.5rem;">
+      <form id="milestone-add-form" onsubmit="handleMilestoneSubmit(event)" style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-md); border: 1px dashed var(--primary-light); margin-bottom: 1.5rem; position: relative; z-index: 100; overflow: visible;">
         <h4 style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: var(--primary); font-weight: 600;"><i class="fas fa-plus-circle" style="margin-right:0.35rem;"></i>Create / Edit Milestone</h4>
         <input type="hidden" id="ms-project-id" name="ProjectID">
         <input type="hidden" id="ms-id" name="MilestoneID">
@@ -5145,8 +5548,108 @@ textarea.form-control {
       var assocName = m.AssociateName ? escapeHtml(m.AssociateName) : "-";
       var assocCost = m.AssociateCost ? formatCurrency(m.AssociateCost) : "-";
       var mIdEscaped = escapeHtml(m.MilestoneID || "");
-      return '\n        <tr>\n          <td style="font-weight:600;">'.concat(escapeHtml(m.MilestoneName || ""), "</td>\n          <td>").concat(formattedDate, '</td>\n          <td style="font-size:0.8rem; font-weight:600; color:var(--success);">').concat(compDate, '</td>\n          <td><span class="badge badge-').concat(statusClass, '">').concat(escapeHtml(m.Status || "Pending"), "</span></td>\n          <td>").concat(assocType, "</td>\n          <td>").concat(assocName, "</td>\n          <td>").concat(assocCost, '</td>\n          <td style="color:var(--text-muted); font-size:0.75rem;">').concat(escapeHtml(m.Remarks || "-"), '</td>\n          <td style="text-align: right;">\n            <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'').concat(mIdEscaped, '\')"><i class="fas fa-pen"></i></button>\n            <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'').concat(mIdEscaped, '\')"><i class="fas fa-trash"></i></button>\n          </td>\n        </tr>\n      ');
+
+      var statusSelectHtml = '<select class="inline-status-select status-' + statusClass + '" onchange="quickUpdateMilestoneStatus(\'' + mIdEscaped + '\', this.value, event)" title="Click to update milestone status">' +
+        '<option value="Pending"' + (m.Status === "Pending" ? " selected" : "") + '>Pending</option>' +
+        '<option value="In Progress"' + (m.Status === "In Progress" ? " selected" : "") + '>In Progress</option>' +
+        '<option value="Completed"' + (m.Status === "Completed" ? " selected" : "") + '>Completed</option>' +
+      '</select>';
+
+      return '\n        <tr>\n          <td style="font-weight:600;">'.concat(escapeHtml(m.MilestoneName || ""), "</td>\n          <td>").concat(formattedDate, '</td>\n          <td style="font-size:0.8rem; font-weight:600; color:var(--success);">').concat(compDate, '</td>\n          <td>').concat(statusSelectHtml, "</td>\n          <td>").concat(assocType, "</td>\n          <td>").concat(assocName, "</td>\n          <td>").concat(assocCost, '</td>\n          <td style="color:var(--text-muted); font-size:0.75rem;">').concat(escapeHtml(m.Remarks || "-"), '</td>\n          <td style="text-align: right;">\n            <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'').concat(mIdEscaped, '\')"><i class="fas fa-pen"></i></button>\n            <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'').concat(mIdEscaped, '\')"><i class="fas fa-trash"></i></button>\n          </td>\n        </tr>\n      ');
     }).join("");
+  }
+
+  function quickUpdateMilestoneStatus(milestoneId, newStatus, event) {
+    if (event) event.stopPropagation();
+    var m = milestonesCacheList.find(function(item) { return item.MilestoneID === milestoneId; });
+    if (!m) return;
+    m.Status = newStatus;
+    if (newStatus === "Completed" && !m.CompletionDate) {
+      m.CompletionDate = new Date().toISOString().substring(0, 10);
+    }
+    // Optimistic cache update
+    if (window._dataCache && window._dataCache.milestones) {
+      var cIdx = window._dataCache.milestones.findIndex(function(x) { return x.MilestoneID === milestoneId; });
+      if (cIdx !== -1) {
+        window._dataCache.milestones[cIdx].Status = newStatus;
+        if (newStatus === "Completed") window._dataCache.milestones[cIdx].CompletionDate = m.CompletionDate;
+      }
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    var projectId = document.getElementById("ms-project-id").value;
+    renderMilestonesTable(projectId);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    google.script.run.withSuccessHandler(function(res) {
+      showToast("Milestone status updated to " + newStatus, "success");
+    }).saveMilestone(m, currentUser.userId);
+  }
+  window.quickUpdateMilestoneStatus = quickUpdateMilestoneStatus;
+
+  function exportProjectsCSV() {
+    var searchVal = (document.getElementById("proj-search").value || "").toLowerCase();
+    var custVal = document.getElementById("filter-proj-customer").value;
+    var typeVal = document.getElementById("filter-proj-type").value;
+    var statusVal = document.getElementById("filter-proj-status").value;
+
+    var filtered = allProjects.filter(function(proj) {
+      var cName = "";
+      if (proj.CustomerID) {
+        var c = customersCache.find(function(item) { return item.CustomerID === proj.CustomerID; });
+        if (c) cName = c.CustomerName.toLowerCase();
+      }
+      var matchesSearch = proj.ProjectName.toLowerCase().includes(searchVal) ||
+        (proj.ProjectID && proj.ProjectID.toLowerCase().includes(searchVal)) ||
+        (proj.City && proj.City.toLowerCase().includes(searchVal)) ||
+        cName.includes(searchVal);
+      var matchesCust = !custVal || proj.CustomerID === custVal;
+      var matchesType = !typeVal || proj.ProjectType === typeVal;
+      var matchesStatus = !statusVal || proj.Status === statusVal;
+      return matchesSearch && matchesCust && matchesType && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No project data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Project ID", "Project Name", "Customer", "Project Type", "Project Value", "Start Date", "Expected Completion", "Status", "City", "Remarks"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(p) {
+      var cObj = customersCache.find(function(c) { return c.CustomerID === p.CustomerID; });
+      var custName = cObj ? cObj.CustomerName : (p.CustomerID || "");
+      var row = [
+        p.ProjectID || "",
+        p.ProjectName || "",
+        custName,
+        p.ProjectType || "",
+        p.ProjectValue || "",
+        p.StartDate || "",
+        p.ExpectedCompletionDate || "",
+        p.Status || "Proposed",
+        p.City || "",
+        p.Remarks || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Projects_Portfolio_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Projects exported to CSV successfully!", "success");
+  }
+  window.exportProjectsCSV = exportProjectsCSV;
   }
   function editMilestoneById(milestoneId) {
     var m = milestonesCacheList.find(function(item) { return item.MilestoneID === milestoneId; });
@@ -5391,6 +5894,7 @@ textarea.form-control {
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
           <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button class="btn btn-secondary" onclick="exportSiteVisitsCSV()" title="Download Filtered Site Visits to CSV"><i class="fas fa-download"></i> Download CSV</button>
           <button class="btn btn-primary" id="btn-add-visit" onclick="openVisitModal()"><i class="fas fa-plus"></i> Log Site Visit</button>
         </div>
       </div>
@@ -6102,6 +6606,98 @@ textarea.form-control {
     renderVisits(filtered);
   }
 
+  function exportSiteVisitsCSV() {
+    var searchInput = document.getElementById("visit-search");
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase().trim() : "";
+    var projSelect = document.getElementById("filter-visit-project");
+    var projVal = projSelect ? (projSelect.value || "").trim() : "";
+    var assigneeSelect = document.getElementById("filter-visit-assignee");
+    var assigneeVal = assigneeSelect ? (assigneeSelect.value || "").toLowerCase().trim() : "";
+    var billingSelect = document.getElementById("filter-visit-billing");
+    var billingVal = billingSelect ? (billingSelect.value || "").trim() : "";
+    var dateFromEl = document.getElementById("filter-visit-date-from");
+    var dateFrom = dateFromEl ? dateFromEl.value : "";
+    var dateToEl = document.getElementById("filter-visit-date-to");
+    var dateTo = dateToEl ? dateToEl.value : "";
+
+    var filtered = (allVisits || []).filter(function(v) {
+      if (projVal) {
+        if (projVal.indexOf("PROJ:") === 0 && v.ProjectID !== projVal.substring(5)) return false;
+        if (projVal.indexOf("LEAD:") === 0 && v.LeadID !== projVal.substring(5)) return false;
+        if (projVal.indexOf("PROJ:") !== 0 && projVal.indexOf("LEAD:") !== 0 && v.ProjectID !== projVal && v.LeadID !== projVal) return false;
+      }
+      if (assigneeVal && String(v.AssignedTo || "").toLowerCase() !== assigneeVal) return false;
+      if (billingVal) {
+        var isBill = String(v.IsBillable).toLowerCase() === "yes" || String(v.IsBillable).toLowerCase() === "true" || (parseFloat(v.BillableAmount) > 0);
+        if (billingVal === "Billable" && !isBill) return false;
+        if (billingVal === "Non-Billable" && isBill) return false;
+      }
+      var vDate = (v.VisitDate || "").substring(0, 10);
+      if (dateFrom && vDate && vDate < dateFrom) return false;
+      if (dateTo && vDate && vDate > dateTo) return false;
+      if (searchVal) {
+        var vid = String(v.VisitID || "").toLowerCase();
+        var purpose = String(v.Purpose || "").toLowerCase();
+        var remarks = String(v.Remarks || "").toLowerCase();
+        var assigned = String(v.AssignedTo || "").toLowerCase();
+        if (vid.indexOf(searchVal) === -1 && purpose.indexOf(searchVal) === -1 && remarks.indexOf(searchVal) === -1 && assigned.indexOf(searchVal) === -1) return false;
+      }
+      return true;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No site visit data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Visit ID", "Target (Project / Lead)", "Visit Date", "Purpose", "Assignee", "Assignee Type", "Billable", "Billable Amount", "Follow-up Date", "Status", "Remarks"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(v) {
+      var targetName = "-";
+      if (v.ProjectID) {
+        var p = (projectsCache || []).find(function(pr) { return pr.ProjectID === v.ProjectID; });
+        targetName = p ? (p.ProjectName + " (Project)") : v.ProjectID;
+      } else if (v.LeadID) {
+        var l = (leadsCacheList || []).find(function(ld) { return ld.LeadID === v.LeadID; });
+        targetName = l ? ((l.CustomerName || l.LeadName) + " (Lead)") : v.LeadID;
+      }
+      var isBill = (String(v.IsBillable).toLowerCase() === "yes" || String(v.IsBillable).toLowerCase() === "true" || (parseFloat(v.BillableAmount) > 0)) ? "Yes" : "No";
+
+      var row = [
+        v.VisitID || "",
+        targetName,
+        v.VisitDate || "",
+        v.Purpose || "",
+        v.AssignedTo || "",
+        v.AssignedType || "Staff",
+        isBill,
+        v.BillableAmount || "0",
+        v.FollowUpDate || "",
+        v.Status || "Completed",
+        v.Remarks || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Site_Visits_Audits_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Site visits exported to CSV successfully!", "success");
+  }
+  window.exportSiteVisitsCSV = exportSiteVisitsCSV;
+
   function openVisitModal(visitObj) {
     if (visitObj === void 0) {
       visitObj = null;
@@ -6514,6 +7110,7 @@ textarea.form-control {
       </select>
       
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportTasksCSV()" title="Download Filtered Tasks to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-task" onclick="openTaskModal()"><i class="fas fa-plus"></i> Add Task</button>
     </div>
   </div>
@@ -6722,6 +7319,15 @@ textarea.form-control {
         localStorage.removeItem("pending_add_task_project_id");
         openTaskModal({ ProjectID: pendingProjId });
       }
+      var pendingEditTaskId = localStorage.getItem("pending_edit_task_id");
+      if (pendingEditTaskId) {
+        localStorage.removeItem("pending_edit_task_id");
+        setTimeout(function() {
+          if (typeof window.editTask === "function") {
+            window.editTask(pendingEditTaskId);
+          }
+        }, 150);
+      }
     }
 
     // Check global cache first for instant render (0ms)
@@ -6871,9 +7477,7 @@ textarea.form-control {
     }
   };
 
-  // Move task status locally (0ms) + background save
-  window.moveTaskStatus = function(taskId, newStatus, event) {
-    if (event) event.stopPropagation();
+  function applyMoveTaskStatus(taskId, newStatus) {
     var task = (allTasks || []).find(function(t) { return t && t.TaskID === taskId; });
     if (!task) return;
     if (task.Status === newStatus) return;
@@ -6900,7 +7504,82 @@ textarea.form-control {
     if (google.script && google.script.run && google.script.run.updateTaskStatus) {
       google.script.run.updateTaskStatus(taskId, newStatus, currentUserId);
     }
+  }
+
+  // Move task status locally (0ms) + background save
+  window.moveTaskStatus = function(taskId, newStatus, event) {
+    if (event) event.stopPropagation();
+    if (newStatus === "Completed" && typeof window.openTaskCompletionModal === "function") {
+      window.openTaskCompletionModal(taskId, function() {
+        applyMoveTaskStatus(taskId, newStatus);
+      });
+      return;
+    }
+    applyMoveTaskStatus(taskId, newStatus);
   };
+
+  function exportTasksCSV() {
+    var searchEl = document.getElementById("task-search");
+    var searchVal = (searchEl ? searchEl.value : "").toLowerCase().trim();
+    var projEl = document.getElementById("filter-task-project");
+    var projVal = projEl ? projEl.value : "";
+    var priorityEl = document.getElementById("filter-task-priority");
+    var priorityVal = priorityEl ? priorityEl.value : "";
+
+    var filtered = (allTasks || []).filter(function(t) {
+      var matchesSearch = !searchVal ||
+        (t.TaskName && t.TaskName.toLowerCase().includes(searchVal)) ||
+        (t.TaskID && t.TaskID.toLowerCase().includes(searchVal)) ||
+        (t.AssignedTo && t.AssignedTo.toLowerCase().includes(searchVal));
+      var matchesProj = !projVal || t.ProjectID === projVal;
+      var matchesPriority = !priorityVal || t.Priority === priorityVal;
+      return matchesSearch && matchesProj && matchesPriority;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No task data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Task ID", "Task Name", "Project", "Assigned Type", "Assigned To", "Start Date", "Due Date", "Completion Date", "Priority", "Status", "Remarks"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(t) {
+      var pObj = (projectsCacheList || []).find(function(p) { return p.ProjectID === t.ProjectID; });
+      var pName = pObj ? (pObj.ProjectName + " (" + pObj.ProjectID + ")") : (t.ProjectID || "");
+      var row = [
+        t.TaskID || "",
+        t.TaskName || "",
+        pName,
+        t.AssignedType || "Staff",
+        t.AssignedTo || "",
+        t.StartDate || "",
+        t.DueDate || "",
+        t.CompletionDate || "",
+        t.Priority || "Medium",
+        t.Status || "Pending",
+        t.Remarks || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Tasks_List_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Tasks exported to CSV successfully!", "success");
+  }
+  window.exportTasksCSV = exportTasksCSV;
 
   function renderKanban(tasks) {
     var columns = {
@@ -7280,6 +7959,7 @@ textarea.form-control {
       </select>
       
       <button class="btn btn-secondary" onclick="loadLeadsView(true)" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportLeadsCSV()" title="Export Filtered Leads to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-lead" onclick="openLeadModal()"><i class="fas fa-plus"></i> Add New Lead</button>
     </div>
   </div>
@@ -7712,6 +8392,15 @@ textarea.form-control {
 
       actionsHtml += '</div></div>';
 
+      var statusSelectHtml = '<select class="inline-status-select badge-' + statusStr.toLowerCase().replace(/\s+/g, "-") + '" onchange="quickUpdateLeadStatus(\'' + leadIdEsc + '\', this.value, event)" title="Click to update pipeline status">' +
+        '<option value="New"' + (statusStr === "New" ? " selected" : "") + '>New</option>' +
+        '<option value="Contacted"' + (statusStr === "Contacted" ? " selected" : "") + '>Contacted</option>' +
+        '<option value="Requirement Gathered"' + (statusStr === "Requirement Gathered" ? " selected" : "") + '>Requirement Gathered</option>' +
+        '<option value="Proposal Sent"' + (statusStr === "Proposal Sent" ? " selected" : "") + '>Proposal Sent</option>' +
+        '<option value="Won"' + (statusStr === "Won" ? " selected" : "") + '>Won</option>' +
+        '<option value="Lost"' + (statusStr === "Lost" ? " selected" : "") + '>Lost</option>' +
+      '</select>';
+
       return '<tr id="row-' + leadIdEsc + '">' +
         '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + leadIdEsc + '</td>' +
         '<td>' + formattedInquiryDate + '</td>' +
@@ -7720,7 +8409,7 @@ textarea.form-control {
         '<td>' + mobileEsc + '</td>' +
         '<td>' + emailEsc + '</td>' +
         '<td>' + sourceEsc + '</td>' +
-        '<td><span class="badge ' + badgeClass + '">' + statusEsc + '</span></td>' +
+        '<td>' + statusSelectHtml + '</td>' +
         '<td style="font-size: 0.85rem; font-weight: 600; color: var(--secondary);">' + nextFollowupDate + '</td>' +
         '<td style="text-align: right;">' + actionsHtml + '</td>' +
       '</tr>';
@@ -7728,6 +8417,95 @@ textarea.form-control {
 
     tbody.innerHTML = rowsHtml;
   }
+
+  function quickUpdateLeadStatus(leadId, newStatus, event) {
+    if (event) event.stopPropagation();
+    var lead = leadsDataList.find(function(l) { return l.LeadID === leadId; });
+    if (!lead) return;
+
+    if (newStatus === "Lost") {
+      var reason = prompt("Please enter the primary reason for losing this lead:", lead.LossReason || "");
+      if (reason) lead.LossReason = reason;
+    }
+
+    lead.Status = newStatus;
+    if (window._dataCache && window._dataCache.leads) {
+      var cIdx = window._dataCache.leads.findIndex(function(x) { return x.LeadID === leadId; });
+      if (cIdx !== -1) window._dataCache.leads[cIdx].Status = newStatus;
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    renderLeads(leadsDataList);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    google.script.run.withSuccessHandler(function(res) {
+      showToast("Lead " + leadId + " status updated to " + newStatus, "success");
+      if (newStatus === "Won") {
+        triggerConvertLead(leadId);
+      }
+    }).saveLead(lead, currentUser.userId);
+  }
+  window.quickUpdateLeadStatus = quickUpdateLeadStatus;
+
+  function exportLeadsCSV() {
+    var searchInput = document.getElementById("lead-search-input");
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+    var sourceSelect = document.getElementById("filter-lead-source");
+    var sourceVal = sourceSelect ? sourceSelect.value : "";
+    var statusSelect = document.getElementById("filter-lead-status");
+    var statusVal = statusSelect ? statusSelect.value : "";
+
+    var filtered = leadsDataList.filter(function(l) {
+      var matchesSearch = !searchVal ||
+        (l.CustomerName && l.CustomerName.toLowerCase().includes(searchVal)) ||
+        (l.LeadID && l.LeadID.toLowerCase().includes(searchVal)) ||
+        (l.Mobile && l.Mobile.includes(searchVal)) ||
+        (l.Email && l.Email.toLowerCase().includes(searchVal));
+      var matchesSource = !sourceVal || l.Source === sourceVal;
+      var matchesStatus = !statusVal || l.Status === statusVal;
+      return matchesSearch && matchesSource && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No lead data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Lead ID", "Inquiry Date", "Customer Name", "Project Type", "Mobile", "Email", "Lead Source", "Lead Status", "Next Follow-up Date", "Loss Reason", "Remarks"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(l) {
+      var row = [
+        l.LeadID || "",
+        l.Date || "",
+        l.CustomerName || "",
+        l.ProjectType || "",
+        l.Mobile || "",
+        l.Email || "",
+        l.Source || "",
+        l.Status || "New",
+        l.FollowUpDate || "",
+        l.LossReason || "",
+        l.ProjectDetails || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Leads_Pipeline_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Leads exported to CSV successfully!", "success");
+  }
+  window.exportLeadsCSV = exportLeadsCSV;
 
   function filterLeadsTable() {
     var searchInput = document.getElementById("lead-search-input");
@@ -8127,6 +8905,8 @@ textarea.form-control {
   window.triggerConvertLead = triggerConvertLead;
   window.triggerConvertCurrentFollowupLead = triggerConvertCurrentFollowupLead;
   window.openLeadFollowupWAShareModal = openLeadFollowupWAShareModal;
+  window.quickUpdateLeadStatus = quickUpdateLeadStatus;
+  window.exportLeadsCSV = exportLeadsCSV;
 
 })();
 </script>
@@ -8158,6 +8938,7 @@ textarea.form-control {
       </select>
       
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportProposalsCSV()" title="Download Filtered Proposals to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-proposal" onclick="openProposalModal()"><i class="fas fa-plus"></i> Record Proposal</button>
     </div>
   </div>
@@ -8614,6 +9395,76 @@ textarea.form-control {
     renderProposals(filtered);
   }
 
+  function exportProposalsCSV() {
+    var searchVal = (document.getElementById("prop-search-input").value || "").toLowerCase();
+    var custVal = document.getElementById("filter-prop-customer").value;
+    var statusVal = document.getElementById("filter-prop-status").value;
+
+    var filtered = (proposalsDataList || []).filter(function(p) {
+      var projName = p.ProjectName ? String(p.ProjectName).toLowerCase() : "";
+      var scope = p.ScopeOfWork ? String(p.ScopeOfWork).toLowerCase() : "";
+      var propId = p.ProposalID ? String(p.ProposalID).toLowerCase() : "";
+      var matchesSearch = projName.includes(searchVal) || scope.includes(searchVal) || propId.includes(searchVal);
+      var matchesCust = true;
+      if (custVal) {
+        if (custVal.startsWith("CUST:")) matchesCust = p.CustomerID === custVal.replace("CUST:", "");
+        else if (custVal.startsWith("LEAD:")) matchesCust = p.LeadID === custVal.replace("LEAD:", "");
+        else matchesCust = (p.CustomerID === custVal || p.LeadID === custVal);
+      }
+      var matchesStatus = !statusVal || p.Status === statusVal;
+      return matchesSearch && matchesCust && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No proposal data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Proposal ID", "Customer / Lead", "Project Name", "Proposal Date", "Total Amount", "Validity Date", "Status", "Scope of Work", "Payment Terms"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(p) {
+      var clientStr = "-";
+      if (p.CustomerID) {
+        var c = customersList.find(function(item) { return item.CustomerID === p.CustomerID; });
+        clientStr = c ? c.CustomerName : p.CustomerID;
+      } else if (p.LeadID) {
+        var l = leadsList.find(function(item) { return item.LeadID === p.LeadID; });
+        clientStr = l ? (l.CustomerName + " (Lead)") : p.LeadID;
+      }
+
+      var row = [
+        p.ProposalID || "",
+        clientStr,
+        p.ProjectName || "",
+        p.ProposalDate || "",
+        p.TotalAmount || "",
+        p.ValidityDate || "",
+        p.Status || "Draft",
+        p.ScopeOfWork || "",
+        p.PaymentTerms || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Proposals_Quotations_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Proposals exported to CSV successfully!", "success");
+  }
+  window.exportProposalsCSV = exportProposalsCSV;
+
   function sendProposalWhatsApp(proposalId) {
     var prop = proposalsDataList.find(function(p) { return p.ProposalID === proposalId; });
     if (!prop) return;
@@ -8884,6 +9735,7 @@ textarea.form-control {
       </select>
       
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportVendorsCSV()" title="Download Filtered Vendors to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-vendor" onclick="openVendorModal()"><i class="fas fa-plus"></i> Add Vendor</button>
     </div>
   </div>
@@ -9196,6 +10048,60 @@ textarea.form-control {
     });
     renderVendors(filtered);
   }
+
+  function exportVendorsCSV() {
+    var searchVal = (document.getElementById("vendor-search-input").value || "").toLowerCase();
+    var typeVal = document.getElementById("filter-vendor-type").value;
+    var statusVal = document.getElementById("filter-vendor-status").value;
+
+    var filtered = (vendorsDataList || []).filter(function(v) {
+      var matchesSearch = v.VendorName.toLowerCase().includes(searchVal) || (v.ContactPerson && v.ContactPerson.toLowerCase().includes(searchVal)) || v.VendorID.toLowerCase().includes(searchVal);
+      var matchesType = !typeVal || v.VendorType === typeVal;
+      var matchesStatus = !statusVal || v.Status === statusVal;
+      return matchesSearch && matchesType && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No vendor data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Vendor ID", "Vendor Name", "Contact Person", "Mobile", "Email", "Category", "GST Number", "PAN Number", "Status", "Address"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(v) {
+      var row = [
+        v.VendorID || "",
+        v.VendorName || "",
+        v.ContactPerson || "",
+        v.Mobile || "",
+        v.Email || "",
+        v.VendorType || "",
+        v.GSTNumber || "",
+        v.PANNumber || "",
+        v.Status || "Active",
+        v.Address || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Vendors_Directory_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Vendors exported to CSV successfully!", "success");
+  }
+  window.exportVendorsCSV = exportVendorsCSV;
   function openVendorModal(vendorObj) {
     if (vendorObj === void 0) {
       vendorObj = null;
@@ -9409,6 +10315,7 @@ textarea.form-control {
       </select>
       
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportAssociatesCSV()" title="Download Filtered Associates to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-associate" onclick="openAssociateModal()"><i class="fas fa-plus"></i> Add Associate</button>
     </div>
   </div>
@@ -9632,6 +10539,60 @@ textarea.form-control {
     });
     renderAssociates(filtered);
   }
+
+  function exportAssociatesCSV() {
+    var searchVal = (document.getElementById("associate-search-input").value || "").toLowerCase();
+    var statusVal = document.getElementById("filter-associate-status").value;
+
+    var filtered = (associatesList || []).filter(function(assoc) {
+      var name = assoc.AssociateName ? String(assoc.AssociateName).toLowerCase() : "";
+      var contact = assoc.ContactPerson ? String(assoc.ContactPerson).toLowerCase() : "";
+      var aid = assoc.AssociateID ? String(assoc.AssociateID).toLowerCase() : "";
+      var matchesSearch = name.includes(searchVal) || contact.includes(searchVal) || aid.includes(searchVal);
+      var matchesStatus = !statusVal || (assoc.Status || "Active") === statusVal;
+      return matchesSearch && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No associate data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Associate ID", "Associate Name", "Contact Person", "Category / Services", "Mobile", "Email", "GST Number", "Status", "Address"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(a) {
+      var row = [
+        a.AssociateID || "",
+        a.AssociateName || "",
+        a.ContactPerson || "",
+        a.Category || a.AssociateType || "",
+        a.Mobile || "",
+        a.Email || "",
+        a.GSTNumber || "",
+        a.Status || "Active",
+        a.Address || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Associates_Directory_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Associates exported to CSV successfully!", "success");
+  }
+  window.exportAssociatesCSV = exportAssociatesCSV;
   function openAssociateModal(assocObj) {
     if (assocObj === void 0) {
       assocObj = null;
@@ -10438,6 +11399,7 @@ textarea.form-control {
     
     <div class="filter-group">
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportUsersCSV()" title="Download Filtered Users to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" onclick="openUserModal()"><i class="fas fa-plus"></i> Add New User</button>
     </div>
   </div>
@@ -10845,6 +11807,53 @@ textarea.form-control {
     );
     renderUsersList(filtered);
   }
+
+  function exportUsersCSV() {
+    var searchVal = (document.getElementById("user-search").value || "").toLowerCase();
+    var filtered = (allUsersList || []).filter(function(user) {
+      return (user.FullName && user.FullName.toLowerCase().includes(searchVal)) ||
+        (user.Email && user.Email.toLowerCase().includes(searchVal)) ||
+        (user.UserID && user.UserID.toLowerCase().includes(searchVal));
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No user data available to export.", "error");
+      return;
+    }
+
+    var headers = ["User ID", "Full Name", "Email", "Mobile", "Role", "Status", "Last Login"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(u) {
+      var row = [
+        u.UserID || "",
+        u.FullName || "",
+        u.Email || "",
+        u.Mobile || "",
+        u.RoleID || "",
+        u.Status || "Active",
+        u.LastLogin || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Users_Directory_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Users exported to CSV successfully!", "success");
+  }
+  window.exportUsersCSV = exportUsersCSV;
   function openUserModal(userObj) {
     if (userObj === void 0) {
       userObj = null;
@@ -12378,6 +13387,458 @@ textarea.form-control {
   };
 
   window.loadHelpView();
+})();
+</script>
+
+  </script>
+
+  <script type="text/html" id="teamchat-view-template">
+    <div class="team-chat-wrapper" style="padding: 1.25rem 1.5rem; height: calc(100vh - 85px); display: flex; flex-direction: column;">
+
+  <!-- View Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div>
+      <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-comments" style="color: var(--primary);"></i> Internal Team Coordination
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
+        Real-time collaboration across project managers, site supervisors, architects, and finance team
+      </p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <span class="badge badge-success" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block;"></span>
+        Team Online
+      </span>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="clearTeamChatHistory()" title="Reset Chat to Default" style="border-radius: 50px;">
+        <i class="fas fa-trash-alt"></i> Reset Chat
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat Layout Container -->
+  <div class="team-chat-container">
+    
+    <!-- Left Sidebar: Channels & Members -->
+    <div class="chat-sidebar">
+      <!-- Channels Section -->
+      <div style="padding: 1rem 1rem 0.5rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+          Channels
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.25rem;" id="chat-channels-list">
+          <button type="button" class="btn-chat-channel active" onclick="switchChatChannel('general', event)" data-channel="general" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.55rem 0.75rem; border-radius: var(--radius-md); border: none; background: rgba(15, 118, 110, 0.12); color: var(--primary); font-weight: 600; cursor: pointer;">
+            <span><i class="fas fa-hashtag" style="margin-right: 0.4rem; opacity: 0.7;"></i> general</span>
+            <span class="badge badge-pill badge-primary" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">All</span>
+          </button>
+          <button type="button" class="btn-chat-channel" onclick="switchChatChannel('site-updates', event)" data-channel="site-updates" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.55rem 0.75rem; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-main); font-weight: 500; cursor: pointer;">
+            <span><i class="fas fa-hard-hat" style="margin-right: 0.4rem; opacity: 0.7;"></i> site-updates</span>
+            <span class="badge badge-pill" style="font-size: 0.7rem; padding: 0.15rem 0.45rem; background: var(--bg-primary); border: 1px solid var(--border-color);">Logs</span>
+          </button>
+          <button type="button" class="btn-chat-channel" onclick="switchChatChannel('project-planning', event)" data-channel="project-planning" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.55rem 0.75rem; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-main); font-weight: 500; cursor: pointer;">
+            <span><i class="fas fa-drafting-compass" style="margin-right: 0.4rem; opacity: 0.7;"></i> project-planning</span>
+          </button>
+          <button type="button" class="btn-chat-channel" onclick="switchChatChannel('finance-orders', event)" data-channel="finance-orders" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.55rem 0.75rem; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-main); font-weight: 500; cursor: pointer;">
+            <span><i class="fas fa-file-invoice-dollar" style="margin-right: 0.4rem; opacity: 0.7;"></i> finance-orders</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 0.5rem 0;" />
+
+      <!-- Team Members Roster -->
+      <div style="padding: 0.5rem 1rem 1rem 1rem; flex-grow: 1; overflow-y: auto;">
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 0.65rem; display: flex; justify-content: space-between; align-items: center;">
+          <span>Team Roster</span>
+          <span id="chat-roster-count" style="font-size: 0.7rem; font-weight: 600; color: var(--primary);">4 Active</span>
+        </div>
+        <div id="chat-roster-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Active Chat Area -->
+    <div class="chat-main">
+      
+      <!-- Chat Header -->
+      <div style="padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-size: 1rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;">
+            <span id="chat-active-channel-name">#general</span>
+            <span class="badge badge-info" id="chat-channel-badge" style="font-size: 0.7rem; font-weight: 600;">Active Topic</span>
+          </div>
+          <div id="chat-active-channel-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">
+            Company-wide updates, daily coordination, and priority discussions.
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="exportChatTranscript()" title="Export Chat Log">
+            <i class="fas fa-download"></i> Log
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="chat-messages" id="chat-messages-container">
+        <!-- Message bubbles populated here -->
+      </div>
+
+      <!-- Quick Action Snippets -->
+      <div style="padding: 0.4rem 1rem; background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; gap: 0.5rem; overflow-x: auto; white-space: nowrap; align-items: center;">
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Quick Share:</span>
+        <button type="button" class="badge" onclick="insertQuickChatSnippet('🏗️ On-site status updated: laser levelling & false ceiling channels aligned.')" style="border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 50px;">
+          🏗️ Site Status
+        </button>
+        <button type="button" class="badge" onclick="insertQuickChatSnippet('✅ Milestone verified and ready for client sign-off.')" style="border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 50px;">
+          ✅ Milestone Verified
+        </button>
+        <button type="button" class="badge" onclick="insertQuickChatSnippet('⚠️ Urgent material delivery required on site for Project execution.')" style="border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 50px;">
+          ⚠️ Material Delay
+        </button>
+        <button type="button" class="badge" onclick="insertQuickChatSnippet('💰 Client payment receipt verified and cleared in finance.')" style="border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 50px;">
+          💰 Payment Cleared
+        </button>
+      </div>
+
+      <!-- Message Input Form -->
+      <form class="chat-input-area" id="chat-send-form" onsubmit="handleChatSubmit(event)">
+        <div style="position: relative; flex-grow: 1;">
+          <input type="text" id="chat-input-field" class="form-control" placeholder="Type a message to team... (Press Enter to send)" autocomplete="off" style="border-radius: 50px; padding: 0.65rem 1.15rem; width: 100%; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); font-size: 0.875rem;" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="border-radius: 50px; padding: 0.65rem 1.25rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <i class="fas fa-paper-plane"></i> <span>Send</span>
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var activeChannel = "general";
+  var channelMeta = {
+    "general": {
+      name: "#general",
+      badge: "All Hands",
+      desc: "Company-wide updates, daily coordination, and priority discussions."
+    },
+    "site-updates": {
+      name: "#site-updates",
+      badge: "Field Operations",
+      desc: "Daily site progress logs, laser checks, contractor attendances, and inspections."
+    },
+    "project-planning": {
+      name: "#project-planning",
+      badge: "Architecture & Design",
+      desc: "Floor plans, 3D renders, architectural revisions, and client milestone delivery."
+    },
+    "finance-orders": {
+      name: "#finance-orders",
+      badge: "Commercial & Billing",
+      desc: "Purchase orders, vendor disbursements, customer milestone invoices, and GST clearances."
+    }
+  };
+
+  var defaultMessages = {
+    "general": [
+      {
+        id: "msg_1",
+        sender: "Mehul Gandhi",
+        role: "Super Admin",
+        text: "Good morning team! Please ensure all urgent tasks for Project 1125 and Project 1148 are updated on the board today.",
+        time: "09:30 AM",
+        initials: "MG"
+      },
+      {
+        id: "msg_2",
+        sender: "Studio Reddy",
+        role: "Project Manager",
+        text: "Morning Mehul. False ceiling channel laser leveling is underway at Project 1125. Milestone is on track for 50% completion.",
+        time: "09:42 AM",
+        initials: "SR"
+      },
+      {
+        id: "msg_3",
+        sender: "Rajesh Kumar",
+        role: "Site Supervisor",
+        text: "Material shipment for Italian marble tiles arrived safely at Site 1148. Inspected and approved by civil team.",
+        time: "10:15 AM",
+        initials: "RK"
+      }
+    ],
+    "site-updates": [
+      {
+        id: "msg_s1",
+        sender: "Rajesh Kumar",
+        role: "Site Supervisor",
+        text: "Laser leveling for false ceiling channel (#1250) completed at Project 1125. No deviations found.",
+        time: "11:00 AM",
+        initials: "RK"
+      },
+      {
+        id: "msg_s2",
+        sender: "Studio Sarin",
+        role: "Contractor Associate",
+        text: "MEP Piping and electrical conduit routing inspected for HVAC first fix. Ready for plastering inspection.",
+        time: "11:35 AM",
+        initials: "SS"
+      }
+    ],
+    "project-planning": [
+      {
+        id: "msg_p1",
+        sender: "Studio Reddy",
+        role: "Project Manager",
+        text: "Client signed off on the revised living room electrical layout for Project 1225 Luxury Phase 3.",
+        time: "Yesterday, 04:30 PM",
+        initials: "SR"
+      },
+      {
+        id: "msg_p2",
+        sender: "Mehul Gandhi",
+        role: "Super Admin",
+        text: "Excellent. Let's create the next milestone and notify the customer via WhatsApp receipt.",
+        time: "Yesterday, 05:10 PM",
+        initials: "MG"
+      }
+    ],
+    "finance-orders": [
+      {
+        id: "msg_f1",
+        sender: "Accounts Desk",
+        role: "Finance Executive",
+        text: "Received customer payment of ₹1,50,000 for Project 1148. Booking entry saved and GST invoice generated.",
+        time: "10:05 AM",
+        initials: "AD"
+      },
+      {
+        id: "msg_f2",
+        sender: "Mehul Gandhi",
+        role: "Super Admin",
+        text: "Noted. Please release advance disbursement to vendor for marble procurement.",
+        time: "10:20 AM",
+        initials: "MG"
+      }
+    ]
+  };
+
+  function getStoredMessages() {
+    try {
+      var raw = localStorage.getItem("nexmilestro_team_messages");
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    localStorage.setItem("nexmilestro_team_messages", JSON.stringify(defaultMessages));
+    return defaultMessages;
+  }
+
+  function saveStoredMessages(data) {
+    try {
+      localStorage.setItem("nexmilestro_team_messages", JSON.stringify(data));
+    } catch(e) {}
+  }
+
+  function renderRoster() {
+    var rosterContainer = document.getElementById("chat-roster-list");
+    var rosterCount = document.getElementById("chat-roster-count");
+    if (!rosterContainer) return;
+
+    var users = (window._dataCache && window._dataCache.users) || [];
+    if (!Array.isArray(users) || users.length === 0) {
+      users = [
+        { FullName: "Mehul Gandhi", RoleID: "Super Admin", Status: "Active" },
+        { FullName: "Studio Reddy", RoleID: "Project Manager", Status: "Active" },
+        { FullName: "Studio Sarin", RoleID: "Contractor Associate", Status: "Active" },
+        { FullName: "Rajesh Kumar", RoleID: "Site Engineer", Status: "Active" }
+      ];
+    }
+
+    if (rosterCount) rosterCount.innerText = users.length + " Active";
+
+    var html = users.map(function(u) {
+      var name = u.FullName || u.UserID || "Team Member";
+      var role = u.RoleID || u.Role || "Member";
+      var initials = name.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() || "TM";
+      return '<div style="display: flex; align-items: center; gap: 0.65rem; padding: 0.35rem 0.5rem; border-radius: var(--radius-sm);">' +
+               '<div style="position: relative; width: 30px; height: 30px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">' +
+                 initials +
+                 '<span style="position: absolute; bottom: 0; right: 0; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; border: 1.5px solid #fff;"></span>' +
+               '</div>' +
+               '<div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' +
+                 '<div style="font-size: 0.825rem; font-weight: 600; color: var(--text-main); line-height: 1.2;">' + escapeHtml(name) + '</div>' +
+                 '<div style="font-size: 0.7rem; color: var(--text-muted);">' + escapeHtml(role) + '</div>' +
+               '</div>' +
+             '</div>';
+    }).join("");
+
+    rosterContainer.innerHTML = html;
+  }
+
+  function renderMessages() {
+    var container = document.getElementById("chat-messages-container");
+    if (!container) return;
+
+    var allMsgs = getStoredMessages();
+    var msgs = allMsgs[activeChannel] || [];
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var currentUserName = currentUser.fullName || currentUser.FullName || currentUser.UserID || "Mehul Gandhi";
+
+    if (msgs.length === 0) {
+      container.innerHTML = '<div style="text-align: center; color: var(--text-muted); margin: 3rem auto; font-size: 0.875rem;">' +
+                              '<i class="fas fa-comment-dots" style="font-size: 2.5rem; opacity: 0.4; margin-bottom: 0.75rem; display: block;"></i>' +
+                              'No messages in <strong>' + escapeHtml(activeChannel) + '</strong> yet. Start the conversation!' +
+                            '</div>';
+      return;
+    }
+
+    var html = msgs.map(function(m) {
+      var isOutgoing = m.isSelf || (m.sender && m.sender.toLowerCase() === currentUserName.toLowerCase());
+      var cardClass = isOutgoing ? "chat-msg-card outgoing" : "chat-msg-card";
+      var initials = m.initials || (m.sender ? m.sender.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() : "TM");
+      var avatarBg = isOutgoing ? "var(--primary)" : "#6366f1";
+
+      return '<div class="' + cardClass + '">' +
+               '<div style="width: 32px; height: 32px; border-radius: 50%; background: ' + avatarBg + '; color: #ffffff; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">' +
+                 initials +
+               '</div>' +
+               '<div style="max-width: 82%;">' +
+                 '<div style="font-size: 0.725rem; color: var(--text-muted); margin-bottom: 0.2rem; display: flex; gap: 0.4rem; align-items: center;' + (isOutgoing ? ' justify-content: flex-end;' : '') + '">' +
+                   '<strong style="color: var(--text-main);">' + escapeHtml(m.sender || "User") + '</strong>' +
+                   '<span style="font-size: 0.675rem; opacity: 0.75;">(' + escapeHtml(m.role || "Team") + ')</span>' +
+                   '<span>•</span>' +
+                   '<span>' + escapeHtml(m.time || "") + '</span>' +
+                 '</div>' +
+                 '<div class="chat-msg-bubble">' +
+                   escapeHtml(m.text || "") +
+                 '</div>' +
+               '</div>' +
+             '</div>';
+    }).join("");
+
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+  }
+
+  window.switchChatChannel = function(channel, e) {
+    if (e) e.preventDefault();
+    activeChannel = channel;
+    
+    // Update channel buttons
+    document.querySelectorAll("#chat-channels-list .btn-chat-channel").forEach(function(btn) {
+      var ch = btn.getAttribute("data-channel");
+      if (ch === channel) {
+        btn.classList.add("active");
+        btn.style.background = "rgba(15, 118, 110, 0.12)";
+        btn.style.color = "var(--primary)";
+        btn.style.fontWeight = "600";
+      } else {
+        btn.classList.remove("active");
+        btn.style.background = "transparent";
+        btn.style.color = "var(--text-main)";
+        btn.style.fontWeight = "500";
+      }
+    });
+
+    // Update active header meta
+    var meta = channelMeta[channel] || { name: "#" + channel, badge: "Topic", desc: "Team discussion" };
+    var nameEl = document.getElementById("chat-active-channel-name");
+    var badgeEl = document.getElementById("chat-channel-badge");
+    var descEl = document.getElementById("chat-active-channel-desc");
+    if (nameEl) nameEl.innerText = meta.name;
+    if (badgeEl) badgeEl.innerText = meta.badge;
+    if (descEl) descEl.innerText = meta.desc;
+
+    var inputEl = document.getElementById("chat-input-field");
+    if (inputEl) {
+      inputEl.placeholder = "Type a message to " + meta.name + "... (Press Enter to send)";
+      inputEl.focus();
+    }
+
+    renderMessages();
+  };
+
+  window.handleChatSubmit = function(e) {
+    if (e) e.preventDefault();
+    var input = document.getElementById("chat-input-field");
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) return;
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var senderName = currentUser.fullName || currentUser.FullName || currentUser.UserID || "Mehul Gandhi";
+    var role = currentUser.roleId || currentUser.RoleID || currentUser.Role || "Super Admin";
+    var initials = senderName.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() || "MG";
+    
+    var now = new Date();
+    var timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    var newMsg = {
+      id: "msg_" + Date.now(),
+      sender: senderName,
+      role: role,
+      text: text,
+      time: timeStr,
+      initials: initials,
+      isSelf: true
+    };
+
+    var allMsgs = getStoredMessages();
+    if (!allMsgs[activeChannel]) allMsgs[activeChannel] = [];
+    allMsgs[activeChannel].push(newMsg);
+    saveStoredMessages(allMsgs);
+
+    input.value = "";
+    renderMessages();
+  };
+
+  window.insertQuickChatSnippet = function(snippetText) {
+    var input = document.getElementById("chat-input-field");
+    if (!input) return;
+    input.value = snippetText;
+    input.focus();
+  };
+
+  window.clearTeamChatHistory = function() {
+    if (confirm("Reset team chat history back to default sample messages?")) {
+      localStorage.removeItem("nexmilestro_team_messages");
+      renderMessages();
+      showToast("Chat reset to defaults.", "info");
+    }
+  };
+
+  window.exportChatTranscript = function() {
+    var allMsgs = getStoredMessages();
+    var msgs = allMsgs[activeChannel] || [];
+    var content = "NEXMILESTRO TEAM CHAT TRANSCRIPT - #" + activeChannel + "\n";
+    content += "Generated: " + new Date().toLocaleString() + "\n";
+    content += "========================================================\n\n";
+    msgs.forEach(function(m) {
+      content += "[" + (m.time || "") + "] " + (m.sender || "User") + " (" + (m.role || "") + "):\n";
+      content += (m.text || "") + "\n\n";
+    });
+
+    var blob = new Blob([content], { type: "text/plain;charset=utf-8;" });
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "TeamChat_" + activeChannel + "_" + Date.now() + ".txt");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  window.loadTeamchatView = function() {
+    renderRoster();
+    renderMessages();
+    var input = document.getElementById("chat-input-field");
+    if (input) input.focus();
+  };
+
+  // Immediate initialize if view already loaded
+  renderRoster();
+  renderMessages();
 })();
 </script>
 
@@ -13955,6 +15416,9 @@ document.addEventListener("click", function() {
             console.warn("View re-render after preload failed:", err);
           }
         }
+        if (typeof window.updateNotificationBadge === "function") {
+          window.updateNotificationBadge();
+        }
       }
       if (typeof callback === "function") callback(res);
     }
@@ -14864,7 +16328,7 @@ document.addEventListener("click", function() {
         if (viewId === "sitevisits") modKey = "SiteVisits";
         var perms = user.permissions || {};
         var perm = perms[modKey] || {};
-        var canView = isSuperAdmin || viewId === "dashboard" || viewId === "help" || perm.view === true;
+        var canView = isSuperAdmin || viewId === "dashboard" || viewId === "help" || viewId === "teamchat" || perm.view === true;
 
         if (!canView) {
           showToast("Access Denied: You do not have permission to view '" + modKey + "'.", "error");
@@ -14955,7 +16419,8 @@ document.addEventListener("click", function() {
         users: { title: "Users & Access Rights", sub: "Staff accounts and Role Permissions Matrix" },
         company: { title: "Company Profile", sub: "Firm branding, logo, GST registration and multi-bank accounts" },
         masters: { title: "Masters Configuration", sub: "Configure categories and dropdown lists for all forms" },
-        help: { title: "User Guide & Support", sub: "Feature documentation and step-by-step instructions" }
+        help: { title: "User Guide & Support", sub: "Feature documentation and step-by-step instructions" },
+        teamchat: { title: "Internal Team Chat", sub: "Live coordination across project managers, site teams and accounts" }
       };
       var meta = metaMap[viewId] || { title: "NexMilestro Operations", sub: "System Console" };
       if (pageTitle) pageTitle.innerText = meta.title;
@@ -15114,7 +16579,7 @@ document.addEventListener("click", function() {
     }
     window.forceResyncFromPopover = forceResyncFromPopover;
 
-    // Global click listener to close popover
+    // Global click listener to close popovers
     document.addEventListener("click", function(e) {
       var pop = document.getElementById("user-profile-popover");
       var wrap = document.getElementById("header-user-profile-wrap");
@@ -15123,15 +16588,345 @@ document.addEventListener("click", function() {
           pop.style.display = "none";
         }
       }
+
+      var notifPop = document.getElementById("notifications-popover");
+      var notifBtn = document.getElementById("header-notifications-btn");
+      if (notifPop && notifPop.style.display === "flex") {
+        if (!notifPop.contains(e.target) && (!notifBtn || !notifBtn.contains(e.target))) {
+          notifPop.style.display = "none";
+        }
+      }
     });
 
     document.addEventListener("keydown", function(e) {
       if (e.key === "Escape") {
         var pop = document.getElementById("user-profile-popover");
         if (pop && pop.style.display === "block") pop.style.display = "none";
+        var notifPop = document.getElementById("notifications-popover");
+        if (notifPop && notifPop.style.display === "flex") notifPop.style.display = "none";
         closeAllTableActionMenus();
       }
     });
+
+    /**
+     * =========================================================================
+     * TASK COMPLETION CENTERED MODAL LOGIC (YES / NO / REVIEW)
+     * =========================================================================
+     */
+    window._activeCompletionTaskId = null;
+    window._activeCompletionCallback = null;
+
+    window.openTaskCompletionModal = function(taskId, callback) {
+      window._activeCompletionTaskId = taskId;
+      window._activeCompletionCallback = callback;
+
+      var modal = document.getElementById("task-completion-modal");
+      var prompt = document.getElementById("task-completion-prompt-text");
+      if (prompt) {
+        prompt.innerHTML = 'Are you sure you want to mark task <strong>' + escapeHtml(taskId) + '</strong> as <strong>Completed</strong>?';
+      }
+      if (modal) modal.style.display = "flex";
+    };
+
+    window.closeTaskCompletionModal = function() {
+      var modal = document.getElementById("task-completion-modal");
+      if (modal) modal.style.display = "none";
+      window._activeCompletionTaskId = null;
+      window._activeCompletionCallback = null;
+    };
+
+    window.handleTaskCompletionAccept = function() {
+      var cb = window._activeCompletionCallback;
+      var taskId = window._activeCompletionTaskId;
+      window.closeTaskCompletionModal();
+      if (typeof cb === "function") {
+        cb();
+      }
+      // Record in activity notifications
+      if (typeof window.addSystemNotification === "function" && taskId) {
+        window.addSystemNotification({
+          title: "Task Marked Completed",
+          message: "Task " + taskId + " marked as Completed by " + ((getSessionUser() && getSessionUser().fullName) || "User"),
+          module: "tasks",
+          recordId: taskId,
+          icon: "fa-check-circle",
+          type: "success"
+        });
+      }
+    };
+
+    window.handleTaskCompletionReview = function() {
+      var taskId = window._activeCompletionTaskId;
+      window.closeTaskCompletionModal();
+      if (!taskId) return;
+      localStorage.setItem("pending_edit_task_id", taskId);
+      if (appRouter.currentView === "tasks") {
+        if (typeof window.editTask === "function") {
+          window.editTask(taskId);
+        }
+      } else {
+        navigateRoute(null, "tasks");
+      }
+    };
+
+    /**
+     * =========================================================================
+     * REAL-TIME ACTIVITY & NOTIFICATIONS ENGINE
+     * =========================================================================
+     */
+    function getStoredNotifications() {
+      try {
+        var raw = localStorage.getItem("nexmilestro_notifications");
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+      return null;
+    }
+
+    function saveStoredNotifications(list) {
+      try {
+        localStorage.setItem("nexmilestro_notifications", JSON.stringify(list));
+      } catch(e) {}
+    }
+
+    function generateDefaultNotifications() {
+      var notifs = [];
+      var cache = window._dataCache || {};
+
+      // Urgent Tasks notifications
+      var tasks = cache.tasks || [];
+      var urgentTasks = tasks.filter(function(t) { return t.Priority === "High" && t.Status !== "Completed"; });
+      if (urgentTasks.length > 0) {
+        var topTask = urgentTasks[0];
+        notifs.push({
+          id: "notif_task_" + (topTask.TaskID || Date.now()),
+          title: "Urgent Task Due",
+          message: (topTask.TaskName || "High priority site activity") + " (" + (topTask.ProjectID || "Active") + ")",
+          module: "tasks",
+          recordId: topTask.TaskID,
+          time: "10m ago",
+          icon: "fa-exclamation-triangle",
+          type: "warning",
+          unread: true
+        });
+      }
+
+      // Recent Site Visits
+      var siteVisits = cache.sitevisits || [];
+      if (siteVisits.length > 0) {
+        var sv = siteVisits[0];
+        notifs.push({
+          id: "notif_sv_" + (sv.VisitID || Date.now()),
+          title: "Site Inspection Logged",
+          message: "Visit recorded for " + (sv.ProjectName || sv.CustomerName || "Site"),
+          module: "sitevisits",
+          recordId: sv.VisitID,
+          time: "25m ago",
+          icon: "fa-hard-hat",
+          type: "info",
+          unread: true
+        });
+      }
+
+      // Recent Finance Entry
+      var finance = cache.finance || [];
+      if (finance.length > 0) {
+        var fn = finance[0];
+        notifs.push({
+          id: "notif_fn_" + (fn.EntryID || Date.now()),
+          title: (fn.Type === "Income" ? "Payment Received" : "Expense Logged"),
+          message: "₹" + Number(fn.Amount || 0).toLocaleString("en-IN") + " recorded for " + (fn.ProjectName || fn.HeadName || "Company"),
+          module: "finance",
+          recordId: fn.EntryID,
+          time: "1h ago",
+          icon: "fa-rupee-sign",
+          type: "success",
+          unread: true
+        });
+      }
+
+      // Project Milestone Update
+      var projects = cache.projects || [];
+      if (projects.length > 0) {
+        var prj = projects[0];
+        notifs.push({
+          id: "notif_prj_" + (prj.ProjectID || Date.now()),
+          title: "Project Progress",
+          message: (prj.ProjectName || "Project") + " progress updated to " + (prj.Progress || "50%"),
+          module: "projects",
+          recordId: prj.ProjectID,
+          time: "2h ago",
+          icon: "fa-cubes",
+          type: "info",
+          unread: false
+        });
+      }
+
+      // Leads CRM
+      var leads = cache.leads || [];
+      if (leads.length > 0) {
+        var ld = leads[0];
+        notifs.push({
+          id: "notif_ld_" + (ld.LeadID || Date.now()),
+          title: "New Lead Inquiry",
+          message: (ld.CustomerName || ld.LeadName || "Prospective client") + " (" + (ld.City || "Inquiry") + ")",
+          module: "leads",
+          recordId: ld.LeadID,
+          time: "3h ago",
+          icon: "fa-user-tag",
+          type: "primary",
+          unread: false
+        });
+      }
+
+      saveStoredNotifications(notifs);
+      return notifs;
+    }
+
+    window.getNotificationsList = function() {
+      var list = getStoredNotifications();
+      if (!list || list.length === 0) {
+        list = generateDefaultNotifications();
+      }
+      return list;
+    };
+
+    window.addSystemNotification = function(notif) {
+      var list = window.getNotificationsList();
+      var item = {
+        id: "notif_" + Date.now(),
+        title: notif.title || "System Activity",
+        message: notif.message || "",
+        module: notif.module || "dashboard",
+        recordId: notif.recordId || "",
+        time: "Just now",
+        icon: notif.icon || "fa-bell",
+        type: notif.type || "info",
+        unread: true
+      };
+      list.unshift(item);
+      if (list.length > 25) list = list.slice(0, 25);
+      saveStoredNotifications(list);
+      window.updateNotificationBadge();
+      var pop = document.getElementById("notifications-popover");
+      if (pop && pop.style.display === "flex") {
+        window.renderNotificationsList();
+      }
+    };
+
+    window.updateNotificationBadge = function() {
+      var list = window.getNotificationsList();
+      var unreadCount = list.filter(function(n) { return n.unread === true; }).length;
+      var badge = document.getElementById("header-notif-badge");
+      var countLabel = document.getElementById("notif-count-label");
+      if (badge) {
+        if (unreadCount > 0) {
+          badge.innerText = unreadCount > 9 ? "9+" : unreadCount;
+          badge.style.display = "flex";
+        } else {
+          badge.style.display = "none";
+        }
+      }
+      if (countLabel) {
+        countLabel.innerText = unreadCount + " new";
+      }
+    };
+
+    window.renderNotificationsList = function() {
+      var container = document.getElementById("notifications-items-container");
+      if (!container) return;
+      var list = window.getNotificationsList();
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted);">' +
+                                '<i class="fas fa-bell-slash" style="font-size: 2rem; opacity: 0.4; margin-bottom: 0.5rem; display: block;"></i>' +
+                                'No notifications right now.' +
+                              '</div>';
+        return;
+      }
+
+      var iconBgMap = {
+        warning: "#fef3c7",
+        success: "#dcfce7",
+        info: "#e0f2fe",
+        primary: "rgba(15, 118, 110, 0.12)",
+        danger: "#fee2e2"
+      };
+      var iconColorMap = {
+        warning: "#d97706",
+        success: "#166534",
+        info: "#0284c7",
+        primary: "var(--primary)",
+        danger: "#dc2626"
+      };
+
+      var html = list.map(function(item) {
+        var unreadClass = item.unread ? " notification-item unread" : " notification-item";
+        var bg = iconBgMap[item.type] || "#f1f5f9";
+        var col = iconColorMap[item.type] || "var(--primary)";
+        var nId = escapeHtml(item.id || "");
+        var mod = escapeHtml(item.module || "dashboard");
+        var rId = escapeHtml(item.recordId || "");
+
+        return '<div class="' + unreadClass + '" onclick="handleNotificationClick(\'' + mod + '\', \'' + rId + '\', \'' + nId + '\')">' +
+                 '<div class="notification-item-icon" style="background: ' + bg + '; color: ' + col + ';">' +
+                   '<i class="fas ' + (item.icon || 'fa-bell') + '"></i>' +
+                 '</div>' +
+                 '<div style="flex-grow: 1; overflow: hidden;">' +
+                   '<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem;">' +
+                     '<strong style="font-size: 0.85rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + escapeHtml(item.title) + '</strong>' +
+                     '<span style="font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0;">' + escapeHtml(item.time || "") + '</span>' +
+                   '</div>' +
+                   '<p style="font-size: 0.775rem; color: var(--text-muted); margin: 0.15rem 0 0 0; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">' +
+                     escapeHtml(item.message) +
+                   '</p>' +
+                 '</div>' +
+                 (item.unread ? '<span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary); align-self: center; flex-shrink: 0;"></span>' : '') +
+               '</div>';
+      }).join("");
+
+      container.innerHTML = html;
+    };
+
+    window.toggleNotificationsDrawer = function(e) {
+      if (e) e.stopPropagation();
+      var pop = document.getElementById("notifications-popover");
+      if (!pop) return;
+      var isVisible = pop.style.display === "flex";
+      if (!isVisible) {
+        window.renderNotificationsList();
+        pop.style.display = "flex";
+      } else {
+        pop.style.display = "none";
+      }
+    };
+
+    window.markAllNotificationsAsRead = function(e) {
+      if (e) e.stopPropagation();
+      var list = window.getNotificationsList();
+      list.forEach(function(item) { item.unread = false; });
+      saveStoredNotifications(list);
+      window.updateNotificationBadge();
+      window.renderNotificationsList();
+      showToast("All notifications marked as read.", "info");
+    };
+
+    window.handleNotificationClick = function(module, recordId, notifId) {
+      var list = window.getNotificationsList();
+      var item = list.find(function(n) { return n.id === notifId; });
+      if (item) item.unread = false;
+      saveStoredNotifications(list);
+      window.updateNotificationBadge();
+
+      var pop = document.getElementById("notifications-popover");
+      if (pop) pop.style.display = "none";
+
+      if (module) {
+        if (recordId && module === "tasks") {
+          localStorage.setItem("pending_edit_task_id", recordId);
+        }
+        navigateRoute(null, module);
+      }
+    };
 
     /**
      * Universal Table Row Action Menu (Nexallot Style)
@@ -16157,6 +17952,11 @@ document.addEventListener("click", function() {
           if (w !== wrapper) {
             w.classList.remove("open");
             w.style.zIndex = "";
+            var prevP = w.parentElement;
+            while (prevP && prevP !== document.body && !prevP.classList.contains("modal-container")) {
+              prevP.classList.remove("searchable-active-parent");
+              prevP = prevP.parentElement;
+            }
           }
         });
 
@@ -16164,10 +17964,22 @@ document.addEventListener("click", function() {
         wrapper.classList.add("open");
         wrapper.style.zIndex = "999999";
 
-        // Flip up if near bottom of viewport
+        // Mark all parent containers as active so no sibling element or card paints over it
+        var p = wrapper.parentElement;
+        while (p && p !== document.body && !p.classList.contains("modal-container")) {
+          p.classList.add("searchable-active-parent");
+          p = p.parentElement;
+        }
+
+        // Smart flip: check distance to viewport bottom and modal bottom
         var rect = trigger.getBoundingClientRect();
         var spaceBelow = window.innerHeight - rect.bottom;
-        if (spaceBelow < 280 && rect.top > 280) {
+        var modalBody = trigger.closest(".modal-body") || trigger.closest(".modal-container");
+        if (modalBody) {
+          var mRect = modalBody.getBoundingClientRect();
+          spaceBelow = Math.min(spaceBelow, mRect.bottom - rect.bottom);
+        }
+        if (spaceBelow < 220 && rect.top > 220) {
           dropdown.classList.add("drop-up");
         } else {
           dropdown.classList.remove("drop-up");
@@ -16181,6 +17993,11 @@ document.addEventListener("click", function() {
       function closeDropdown() {
         wrapper.classList.remove("open");
         wrapper.style.zIndex = "";
+        var p = wrapper.parentElement;
+        while (p && p !== document.body && !p.classList.contains("modal-container")) {
+          p.classList.remove("searchable-active-parent");
+          p = p.parentElement;
+        }
       }
 
       trigger.addEventListener("click", function(e) {
@@ -16440,12 +18257,19 @@ document.addEventListener("click", function() {
 
     // System initialization on boot
     document.addEventListener("DOMContentLoaded", function() {
-      // Restore sidebar collapsed preference on desktop
-      if (localStorage.getItem("pm_sidebar_collapsed") === "true" && window.innerWidth > 768) {
-        var appContainer = document.getElementById("app-container");
-        if (appContainer) appContainer.classList.add("sidebar-collapsed");
-        var collapseIcon = document.getElementById("sidebar-collapse-icon");
-        if (collapseIcon) collapseIcon.className = "fas fa-chevron-right";
+      // Keep sidebar collapsed by default on desktop unless explicitly expanded by user
+      var savedCollapsed = localStorage.getItem("pm_sidebar_collapsed");
+      var isCollapsed = savedCollapsed !== "false" && window.innerWidth > 768;
+      var appContainer = document.getElementById("app-container");
+      var collapseIcon = document.getElementById("sidebar-collapse-icon");
+      if (appContainer) {
+        if (isCollapsed) {
+          appContainer.classList.add("sidebar-collapsed");
+          if (collapseIcon) collapseIcon.className = "fas fa-chevron-right";
+        } else if (savedCollapsed === "false" && window.innerWidth > 768) {
+          appContainer.classList.remove("sidebar-collapsed");
+          if (collapseIcon) collapseIcon.className = "fas fa-chevron-left";
+        }
       }
 
       var licKey = getActiveLicenseKey();
@@ -16475,6 +18299,9 @@ document.addEventListener("click", function() {
         applySidebarPermissions();
         if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
           updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
+        }
+        if (typeof window.updateNotificationBadge === "function") {
+          window.updateNotificationBadge();
         }
 
         var cachedLicense = localStorage.getItem("nexmilestro_data_license_key");

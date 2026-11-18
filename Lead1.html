@@ -17,6 +17,7 @@
       </select>
       
       <button class="btn btn-secondary" onclick="loadLeadsView(true)" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportLeadsCSV()" title="Export Filtered Leads to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-lead" onclick="openLeadModal()"><i class="fas fa-plus"></i> Add New Lead</button>
     </div>
   </div>
@@ -449,6 +450,15 @@
 
       actionsHtml += '</div></div>';
 
+      var statusSelectHtml = '<select class="inline-status-select badge-' + statusStr.toLowerCase().replace(/\s+/g, "-") + '" onchange="quickUpdateLeadStatus(\'' + leadIdEsc + '\', this.value, event)" title="Click to update pipeline status">' +
+        '<option value="New"' + (statusStr === "New" ? " selected" : "") + '>New</option>' +
+        '<option value="Contacted"' + (statusStr === "Contacted" ? " selected" : "") + '>Contacted</option>' +
+        '<option value="Requirement Gathered"' + (statusStr === "Requirement Gathered" ? " selected" : "") + '>Requirement Gathered</option>' +
+        '<option value="Proposal Sent"' + (statusStr === "Proposal Sent" ? " selected" : "") + '>Proposal Sent</option>' +
+        '<option value="Won"' + (statusStr === "Won" ? " selected" : "") + '>Won</option>' +
+        '<option value="Lost"' + (statusStr === "Lost" ? " selected" : "") + '>Lost</option>' +
+      '</select>';
+
       return '<tr id="row-' + leadIdEsc + '">' +
         '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + leadIdEsc + '</td>' +
         '<td>' + formattedInquiryDate + '</td>' +
@@ -457,7 +467,7 @@
         '<td>' + mobileEsc + '</td>' +
         '<td>' + emailEsc + '</td>' +
         '<td>' + sourceEsc + '</td>' +
-        '<td><span class="badge ' + badgeClass + '">' + statusEsc + '</span></td>' +
+        '<td>' + statusSelectHtml + '</td>' +
         '<td style="font-size: 0.85rem; font-weight: 600; color: var(--secondary);">' + nextFollowupDate + '</td>' +
         '<td style="text-align: right;">' + actionsHtml + '</td>' +
       '</tr>';
@@ -465,6 +475,95 @@
 
     tbody.innerHTML = rowsHtml;
   }
+
+  function quickUpdateLeadStatus(leadId, newStatus, event) {
+    if (event) event.stopPropagation();
+    var lead = leadsDataList.find(function(l) { return l.LeadID === leadId; });
+    if (!lead) return;
+
+    if (newStatus === "Lost") {
+      var reason = prompt("Please enter the primary reason for losing this lead:", lead.LossReason || "");
+      if (reason) lead.LossReason = reason;
+    }
+
+    lead.Status = newStatus;
+    if (window._dataCache && window._dataCache.leads) {
+      var cIdx = window._dataCache.leads.findIndex(function(x) { return x.LeadID === leadId; });
+      if (cIdx !== -1) window._dataCache.leads[cIdx].Status = newStatus;
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    renderLeads(leadsDataList);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    google.script.run.withSuccessHandler(function(res) {
+      showToast("Lead " + leadId + " status updated to " + newStatus, "success");
+      if (newStatus === "Won") {
+        triggerConvertLead(leadId);
+      }
+    }).saveLead(lead, currentUser.userId);
+  }
+  window.quickUpdateLeadStatus = quickUpdateLeadStatus;
+
+  function exportLeadsCSV() {
+    var searchInput = document.getElementById("lead-search-input");
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase() : "";
+    var sourceSelect = document.getElementById("filter-lead-source");
+    var sourceVal = sourceSelect ? sourceSelect.value : "";
+    var statusSelect = document.getElementById("filter-lead-status");
+    var statusVal = statusSelect ? statusSelect.value : "";
+
+    var filtered = leadsDataList.filter(function(l) {
+      var matchesSearch = !searchVal ||
+        (l.CustomerName && l.CustomerName.toLowerCase().includes(searchVal)) ||
+        (l.LeadID && l.LeadID.toLowerCase().includes(searchVal)) ||
+        (l.Mobile && l.Mobile.includes(searchVal)) ||
+        (l.Email && l.Email.toLowerCase().includes(searchVal));
+      var matchesSource = !sourceVal || l.Source === sourceVal;
+      var matchesStatus = !statusVal || l.Status === statusVal;
+      return matchesSearch && matchesSource && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No lead data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Lead ID", "Inquiry Date", "Customer Name", "Project Type", "Mobile", "Email", "Lead Source", "Lead Status", "Next Follow-up Date", "Loss Reason", "Remarks"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(l) {
+      var row = [
+        l.LeadID || "",
+        l.Date || "",
+        l.CustomerName || "",
+        l.ProjectType || "",
+        l.Mobile || "",
+        l.Email || "",
+        l.Source || "",
+        l.Status || "New",
+        l.FollowUpDate || "",
+        l.LossReason || "",
+        l.ProjectDetails || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Leads_Pipeline_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Leads exported to CSV successfully!", "success");
+  }
+  window.exportLeadsCSV = exportLeadsCSV;
 
   function filterLeadsTable() {
     var searchInput = document.getElementById("lead-search-input");
@@ -864,6 +963,8 @@
   window.triggerConvertLead = triggerConvertLead;
   window.triggerConvertCurrentFollowupLead = triggerConvertCurrentFollowupLead;
   window.openLeadFollowupWAShareModal = openLeadFollowupWAShareModal;
+  window.quickUpdateLeadStatus = quickUpdateLeadStatus;
+  window.exportLeadsCSV = exportLeadsCSV;
 
 })();
 </script>

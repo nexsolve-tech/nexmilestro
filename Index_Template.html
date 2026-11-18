@@ -64,7 +64,7 @@
 <body>
 
   <!-- ==================== MAIN SITE CONTAINER ==================== -->
-  <div class="app-container" id="app-container" style="visibility: hidden;">
+  <div class="app-container sidebar-collapsed" id="app-container" style="visibility: hidden;">
     
     <!-- Sidebar Mobile Backdrop -->
     <div class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
@@ -79,7 +79,7 @@
           <i class="fas fa-cubes" id="header-default-brand-icon"></i> <span class="brand-text">Nex<span>Milestro</span></span>
         </div>
         <button type="button" class="btn-sidebar-collapse" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse / Expand Sidebar">
-          <i class="fas fa-chevron-left" id="sidebar-collapse-icon"></i>
+          <i class="fas fa-chevron-right" id="sidebar-collapse-icon"></i>
         </button>
       </div>
       
@@ -151,6 +151,12 @@
         <li class="menu-item" data-view="reports">
           <a href="#" class="menu-link" onclick="navigateRoute(event, 'reports')" title="Reports & Margins">
             <i class="fas fa-chart-bar"></i> <span>Reports & Margins</span>
+          </a>
+        </li>
+
+        <li class="menu-item" data-view="teamchat">
+          <a href="#" class="menu-link" onclick="navigateRoute(event, 'teamchat')" title="Internal Team Chat">
+            <i class="fas fa-comments"></i> <span>Team Chat</span>
           </a>
         </li>
 
@@ -298,6 +304,38 @@
                 <button type="button" class="btn-popover-logout" onclick="handleLogout()">
                   <i class="fas fa-sign-out-alt"></i> Sign Out Session
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Team Chat Button -->
+          <button type="button" class="header-icon-btn" onclick="navigateRoute(event, 'teamchat')" title="Internal Team Chat">
+            <i class="fas fa-comments"></i>
+          </button>
+
+          <!-- Notifications Bell & Popover -->
+          <div style="position: relative; display: inline-block;">
+            <button type="button" class="header-icon-btn" id="header-notifications-btn" onclick="toggleNotificationsDrawer(event)" title="Notifications & Activity Stream">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge-count" id="header-notif-badge" style="display: none;">0</span>
+            </button>
+
+            <!-- Notifications Dropdown Popover -->
+            <div class="notifications-popover" id="notifications-popover">
+              <div class="notifications-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <strong style="font-size: 0.9rem; color: var(--text-main);"><i class="fas fa-bell" style="color: var(--primary);"></i> Activity & Notifications</strong>
+                  <span class="badge badge-info" id="notif-count-label" style="font-size: 0.7rem;">0 new</span>
+                </div>
+                <button type="button" onclick="markAllNotificationsAsRead(event)" style="background: none; border: none; font-size: 0.75rem; color: var(--primary); cursor: pointer; font-weight: 600;">
+                  Mark all read
+                </button>
+              </div>
+              <div class="notifications-body" id="notifications-items-container">
+                <!-- Dynamically populated -->
+              </div>
+              <div style="padding: 0.6rem 1rem; text-align: center; border-top: 1px solid var(--border-color); background: var(--bg-secondary);">
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Live system events & task updates</small>
               </div>
             </div>
           </div>
@@ -562,6 +600,32 @@
     </div>
   </div>
 
+  <!-- ==================== CENTERED TASK COMPLETION MODAL (YES / NO / REVIEW) ==================== -->
+  <div class="modal-overlay" id="task-completion-modal" style="z-index: 10000; display: none;">
+    <div class="modal-container" style="max-width: 480px; text-align: center; padding: 2rem 1.75rem; border-radius: var(--radius-lg); box-shadow: 0 25px 60px rgba(0,0,0,0.35); background: var(--bg-primary); border: 1px solid var(--border-color);">
+      <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; color: #10b981; font-size: 1.75rem;">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <h3 class="modal-title" style="margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 700; justify-content: center; color: var(--text-main);">
+        Complete Task Confirmation
+      </h3>
+      <p id="task-completion-prompt-text" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.75rem;">
+        Are you sure you want to mark this task as <strong>Completed</strong>?
+      </p>
+      <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="btn btn-secondary" onclick="closeTaskCompletionModal()" style="padding: 0.55rem 1.25rem; font-weight: 600;">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-info" id="task-completion-review-btn" onclick="handleTaskCompletionReview()" style="padding: 0.55rem 1.25rem; font-weight: 600; background: #0284c7; color: #ffffff; border-color: #0284c7;">
+          <i class="fas fa-edit"></i> Review Details
+        </button>
+        <button type="button" class="btn btn-primary" id="task-completion-yes-btn" onclick="handleTaskCompletionAccept()" style="padding: 0.55rem 1.4rem; font-weight: 700; background: #059669; border-color: #059669;">
+          <i class="fas fa-check"></i> Yes, Mark Done
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== SPA EMBEDDED TEMPLATE ENGINES (15 FULL MODULES) ==================== -->
   <script type="text/html" id="dashboard-view-template">
     <?!= include('Dashboard'); ?>
@@ -621,6 +685,10 @@
 
   <script type="text/html" id="help-view-template">
     <?!= include('Help1'); ?>
+  </script>
+
+  <script type="text/html" id="teamchat-view-template">
+    <?!= include('TeamChat1'); ?>
   </script>
 
   <!-- Include FinanceJS globally so all formulas and event handlers are live -->
@@ -850,6 +918,9 @@
           } catch(err) {
             console.warn("View re-render after preload failed:", err);
           }
+        }
+        if (typeof window.updateNotificationBadge === "function") {
+          window.updateNotificationBadge();
         }
       }
       if (typeof callback === "function") callback(res);
@@ -1760,7 +1831,7 @@
         if (viewId === "sitevisits") modKey = "SiteVisits";
         var perms = user.permissions || {};
         var perm = perms[modKey] || {};
-        var canView = isSuperAdmin || viewId === "dashboard" || viewId === "help" || perm.view === true;
+        var canView = isSuperAdmin || viewId === "dashboard" || viewId === "help" || viewId === "teamchat" || perm.view === true;
 
         if (!canView) {
           showToast("Access Denied: You do not have permission to view '" + modKey + "'.", "error");
@@ -1851,7 +1922,8 @@
         users: { title: "Users & Access Rights", sub: "Staff accounts and Role Permissions Matrix" },
         company: { title: "Company Profile", sub: "Firm branding, logo, GST registration and multi-bank accounts" },
         masters: { title: "Masters Configuration", sub: "Configure categories and dropdown lists for all forms" },
-        help: { title: "User Guide & Support", sub: "Feature documentation and step-by-step instructions" }
+        help: { title: "User Guide & Support", sub: "Feature documentation and step-by-step instructions" },
+        teamchat: { title: "Internal Team Chat", sub: "Live coordination across project managers, site teams and accounts" }
       };
       var meta = metaMap[viewId] || { title: "NexMilestro Operations", sub: "System Console" };
       if (pageTitle) pageTitle.innerText = meta.title;
@@ -2010,7 +2082,7 @@
     }
     window.forceResyncFromPopover = forceResyncFromPopover;
 
-    // Global click listener to close popover
+    // Global click listener to close popovers
     document.addEventListener("click", function(e) {
       var pop = document.getElementById("user-profile-popover");
       var wrap = document.getElementById("header-user-profile-wrap");
@@ -2019,15 +2091,345 @@
           pop.style.display = "none";
         }
       }
+
+      var notifPop = document.getElementById("notifications-popover");
+      var notifBtn = document.getElementById("header-notifications-btn");
+      if (notifPop && notifPop.style.display === "flex") {
+        if (!notifPop.contains(e.target) && (!notifBtn || !notifBtn.contains(e.target))) {
+          notifPop.style.display = "none";
+        }
+      }
     });
 
     document.addEventListener("keydown", function(e) {
       if (e.key === "Escape") {
         var pop = document.getElementById("user-profile-popover");
         if (pop && pop.style.display === "block") pop.style.display = "none";
+        var notifPop = document.getElementById("notifications-popover");
+        if (notifPop && notifPop.style.display === "flex") notifPop.style.display = "none";
         closeAllTableActionMenus();
       }
     });
+
+    /**
+     * =========================================================================
+     * TASK COMPLETION CENTERED MODAL LOGIC (YES / NO / REVIEW)
+     * =========================================================================
+     */
+    window._activeCompletionTaskId = null;
+    window._activeCompletionCallback = null;
+
+    window.openTaskCompletionModal = function(taskId, callback) {
+      window._activeCompletionTaskId = taskId;
+      window._activeCompletionCallback = callback;
+
+      var modal = document.getElementById("task-completion-modal");
+      var prompt = document.getElementById("task-completion-prompt-text");
+      if (prompt) {
+        prompt.innerHTML = 'Are you sure you want to mark task <strong>' + escapeHtml(taskId) + '</strong> as <strong>Completed</strong>?';
+      }
+      if (modal) modal.style.display = "flex";
+    };
+
+    window.closeTaskCompletionModal = function() {
+      var modal = document.getElementById("task-completion-modal");
+      if (modal) modal.style.display = "none";
+      window._activeCompletionTaskId = null;
+      window._activeCompletionCallback = null;
+    };
+
+    window.handleTaskCompletionAccept = function() {
+      var cb = window._activeCompletionCallback;
+      var taskId = window._activeCompletionTaskId;
+      window.closeTaskCompletionModal();
+      if (typeof cb === "function") {
+        cb();
+      }
+      // Record in activity notifications
+      if (typeof window.addSystemNotification === "function" && taskId) {
+        window.addSystemNotification({
+          title: "Task Marked Completed",
+          message: "Task " + taskId + " marked as Completed by " + ((getSessionUser() && getSessionUser().fullName) || "User"),
+          module: "tasks",
+          recordId: taskId,
+          icon: "fa-check-circle",
+          type: "success"
+        });
+      }
+    };
+
+    window.handleTaskCompletionReview = function() {
+      var taskId = window._activeCompletionTaskId;
+      window.closeTaskCompletionModal();
+      if (!taskId) return;
+      localStorage.setItem("pending_edit_task_id", taskId);
+      if (appRouter.currentView === "tasks") {
+        if (typeof window.editTask === "function") {
+          window.editTask(taskId);
+        }
+      } else {
+        navigateRoute(null, "tasks");
+      }
+    };
+
+    /**
+     * =========================================================================
+     * REAL-TIME ACTIVITY & NOTIFICATIONS ENGINE
+     * =========================================================================
+     */
+    function getStoredNotifications() {
+      try {
+        var raw = localStorage.getItem("nexmilestro_notifications");
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+      return null;
+    }
+
+    function saveStoredNotifications(list) {
+      try {
+        localStorage.setItem("nexmilestro_notifications", JSON.stringify(list));
+      } catch(e) {}
+    }
+
+    function generateDefaultNotifications() {
+      var notifs = [];
+      var cache = window._dataCache || {};
+
+      // Urgent Tasks notifications
+      var tasks = cache.tasks || [];
+      var urgentTasks = tasks.filter(function(t) { return t.Priority === "High" && t.Status !== "Completed"; });
+      if (urgentTasks.length > 0) {
+        var topTask = urgentTasks[0];
+        notifs.push({
+          id: "notif_task_" + (topTask.TaskID || Date.now()),
+          title: "Urgent Task Due",
+          message: (topTask.TaskName || "High priority site activity") + " (" + (topTask.ProjectID || "Active") + ")",
+          module: "tasks",
+          recordId: topTask.TaskID,
+          time: "10m ago",
+          icon: "fa-exclamation-triangle",
+          type: "warning",
+          unread: true
+        });
+      }
+
+      // Recent Site Visits
+      var siteVisits = cache.sitevisits || [];
+      if (siteVisits.length > 0) {
+        var sv = siteVisits[0];
+        notifs.push({
+          id: "notif_sv_" + (sv.VisitID || Date.now()),
+          title: "Site Inspection Logged",
+          message: "Visit recorded for " + (sv.ProjectName || sv.CustomerName || "Site"),
+          module: "sitevisits",
+          recordId: sv.VisitID,
+          time: "25m ago",
+          icon: "fa-hard-hat",
+          type: "info",
+          unread: true
+        });
+      }
+
+      // Recent Finance Entry
+      var finance = cache.finance || [];
+      if (finance.length > 0) {
+        var fn = finance[0];
+        notifs.push({
+          id: "notif_fn_" + (fn.EntryID || Date.now()),
+          title: (fn.Type === "Income" ? "Payment Received" : "Expense Logged"),
+          message: "₹" + Number(fn.Amount || 0).toLocaleString("en-IN") + " recorded for " + (fn.ProjectName || fn.HeadName || "Company"),
+          module: "finance",
+          recordId: fn.EntryID,
+          time: "1h ago",
+          icon: "fa-rupee-sign",
+          type: "success",
+          unread: true
+        });
+      }
+
+      // Project Milestone Update
+      var projects = cache.projects || [];
+      if (projects.length > 0) {
+        var prj = projects[0];
+        notifs.push({
+          id: "notif_prj_" + (prj.ProjectID || Date.now()),
+          title: "Project Progress",
+          message: (prj.ProjectName || "Project") + " progress updated to " + (prj.Progress || "50%"),
+          module: "projects",
+          recordId: prj.ProjectID,
+          time: "2h ago",
+          icon: "fa-cubes",
+          type: "info",
+          unread: false
+        });
+      }
+
+      // Leads CRM
+      var leads = cache.leads || [];
+      if (leads.length > 0) {
+        var ld = leads[0];
+        notifs.push({
+          id: "notif_ld_" + (ld.LeadID || Date.now()),
+          title: "New Lead Inquiry",
+          message: (ld.CustomerName || ld.LeadName || "Prospective client") + " (" + (ld.City || "Inquiry") + ")",
+          module: "leads",
+          recordId: ld.LeadID,
+          time: "3h ago",
+          icon: "fa-user-tag",
+          type: "primary",
+          unread: false
+        });
+      }
+
+      saveStoredNotifications(notifs);
+      return notifs;
+    }
+
+    window.getNotificationsList = function() {
+      var list = getStoredNotifications();
+      if (!list || list.length === 0) {
+        list = generateDefaultNotifications();
+      }
+      return list;
+    };
+
+    window.addSystemNotification = function(notif) {
+      var list = window.getNotificationsList();
+      var item = {
+        id: "notif_" + Date.now(),
+        title: notif.title || "System Activity",
+        message: notif.message || "",
+        module: notif.module || "dashboard",
+        recordId: notif.recordId || "",
+        time: "Just now",
+        icon: notif.icon || "fa-bell",
+        type: notif.type || "info",
+        unread: true
+      };
+      list.unshift(item);
+      if (list.length > 25) list = list.slice(0, 25);
+      saveStoredNotifications(list);
+      window.updateNotificationBadge();
+      var pop = document.getElementById("notifications-popover");
+      if (pop && pop.style.display === "flex") {
+        window.renderNotificationsList();
+      }
+    };
+
+    window.updateNotificationBadge = function() {
+      var list = window.getNotificationsList();
+      var unreadCount = list.filter(function(n) { return n.unread === true; }).length;
+      var badge = document.getElementById("header-notif-badge");
+      var countLabel = document.getElementById("notif-count-label");
+      if (badge) {
+        if (unreadCount > 0) {
+          badge.innerText = unreadCount > 9 ? "9+" : unreadCount;
+          badge.style.display = "flex";
+        } else {
+          badge.style.display = "none";
+        }
+      }
+      if (countLabel) {
+        countLabel.innerText = unreadCount + " new";
+      }
+    };
+
+    window.renderNotificationsList = function() {
+      var container = document.getElementById("notifications-items-container");
+      if (!container) return;
+      var list = window.getNotificationsList();
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted);">' +
+                                '<i class="fas fa-bell-slash" style="font-size: 2rem; opacity: 0.4; margin-bottom: 0.5rem; display: block;"></i>' +
+                                'No notifications right now.' +
+                              '</div>';
+        return;
+      }
+
+      var iconBgMap = {
+        warning: "#fef3c7",
+        success: "#dcfce7",
+        info: "#e0f2fe",
+        primary: "rgba(15, 118, 110, 0.12)",
+        danger: "#fee2e2"
+      };
+      var iconColorMap = {
+        warning: "#d97706",
+        success: "#166534",
+        info: "#0284c7",
+        primary: "var(--primary)",
+        danger: "#dc2626"
+      };
+
+      var html = list.map(function(item) {
+        var unreadClass = item.unread ? " notification-item unread" : " notification-item";
+        var bg = iconBgMap[item.type] || "#f1f5f9";
+        var col = iconColorMap[item.type] || "var(--primary)";
+        var nId = escapeHtml(item.id || "");
+        var mod = escapeHtml(item.module || "dashboard");
+        var rId = escapeHtml(item.recordId || "");
+
+        return '<div class="' + unreadClass + '" onclick="handleNotificationClick(\'' + mod + '\', \'' + rId + '\', \'' + nId + '\')">' +
+                 '<div class="notification-item-icon" style="background: ' + bg + '; color: ' + col + ';">' +
+                   '<i class="fas ' + (item.icon || 'fa-bell') + '"></i>' +
+                 '</div>' +
+                 '<div style="flex-grow: 1; overflow: hidden;">' +
+                   '<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem;">' +
+                     '<strong style="font-size: 0.85rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + escapeHtml(item.title) + '</strong>' +
+                     '<span style="font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0;">' + escapeHtml(item.time || "") + '</span>' +
+                   '</div>' +
+                   '<p style="font-size: 0.775rem; color: var(--text-muted); margin: 0.15rem 0 0 0; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">' +
+                     escapeHtml(item.message) +
+                   '</p>' +
+                 '</div>' +
+                 (item.unread ? '<span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary); align-self: center; flex-shrink: 0;"></span>' : '') +
+               '</div>';
+      }).join("");
+
+      container.innerHTML = html;
+    };
+
+    window.toggleNotificationsDrawer = function(e) {
+      if (e) e.stopPropagation();
+      var pop = document.getElementById("notifications-popover");
+      if (!pop) return;
+      var isVisible = pop.style.display === "flex";
+      if (!isVisible) {
+        window.renderNotificationsList();
+        pop.style.display = "flex";
+      } else {
+        pop.style.display = "none";
+      }
+    };
+
+    window.markAllNotificationsAsRead = function(e) {
+      if (e) e.stopPropagation();
+      var list = window.getNotificationsList();
+      list.forEach(function(item) { item.unread = false; });
+      saveStoredNotifications(list);
+      window.updateNotificationBadge();
+      window.renderNotificationsList();
+      showToast("All notifications marked as read.", "info");
+    };
+
+    window.handleNotificationClick = function(module, recordId, notifId) {
+      var list = window.getNotificationsList();
+      var item = list.find(function(n) { return n.id === notifId; });
+      if (item) item.unread = false;
+      saveStoredNotifications(list);
+      window.updateNotificationBadge();
+
+      var pop = document.getElementById("notifications-popover");
+      if (pop) pop.style.display = "none";
+
+      if (module) {
+        if (recordId && module === "tasks") {
+          localStorage.setItem("pending_edit_task_id", recordId);
+        }
+        navigateRoute(null, module);
+      }
+    };
 
     /**
      * Universal Table Row Action Menu (Nexallot Style)
@@ -3053,6 +3455,11 @@
           if (w !== wrapper) {
             w.classList.remove("open");
             w.style.zIndex = "";
+            var prevP = w.parentElement;
+            while (prevP && prevP !== document.body && !prevP.classList.contains("modal-container")) {
+              prevP.classList.remove("searchable-active-parent");
+              prevP = prevP.parentElement;
+            }
           }
         });
 
@@ -3060,10 +3467,22 @@
         wrapper.classList.add("open");
         wrapper.style.zIndex = "999999";
 
-        // Flip up if near bottom of viewport
+        // Mark all parent containers as active so no sibling element or card paints over it
+        var p = wrapper.parentElement;
+        while (p && p !== document.body && !p.classList.contains("modal-container")) {
+          p.classList.add("searchable-active-parent");
+          p = p.parentElement;
+        }
+
+        // Smart flip: check distance to viewport bottom and modal bottom
         var rect = trigger.getBoundingClientRect();
         var spaceBelow = window.innerHeight - rect.bottom;
-        if (spaceBelow < 280 && rect.top > 280) {
+        var modalBody = trigger.closest(".modal-body") || trigger.closest(".modal-container");
+        if (modalBody) {
+          var mRect = modalBody.getBoundingClientRect();
+          spaceBelow = Math.min(spaceBelow, mRect.bottom - rect.bottom);
+        }
+        if (spaceBelow < 220 && rect.top > 220) {
           dropdown.classList.add("drop-up");
         } else {
           dropdown.classList.remove("drop-up");
@@ -3077,6 +3496,11 @@
       function closeDropdown() {
         wrapper.classList.remove("open");
         wrapper.style.zIndex = "";
+        var p = wrapper.parentElement;
+        while (p && p !== document.body && !p.classList.contains("modal-container")) {
+          p.classList.remove("searchable-active-parent");
+          p = p.parentElement;
+        }
       }
 
       trigger.addEventListener("click", function(e) {
@@ -3336,12 +3760,19 @@
 
     // System initialization on boot
     document.addEventListener("DOMContentLoaded", function() {
-      // Restore sidebar collapsed preference on desktop
-      if (localStorage.getItem("pm_sidebar_collapsed") === "true" && window.innerWidth > 768) {
-        var appContainer = document.getElementById("app-container");
-        if (appContainer) appContainer.classList.add("sidebar-collapsed");
-        var collapseIcon = document.getElementById("sidebar-collapse-icon");
-        if (collapseIcon) collapseIcon.className = "fas fa-chevron-right";
+      // Keep sidebar collapsed by default on desktop unless explicitly expanded by user
+      var savedCollapsed = localStorage.getItem("pm_sidebar_collapsed");
+      var isCollapsed = savedCollapsed !== "false" && window.innerWidth > 768;
+      var appContainer = document.getElementById("app-container");
+      var collapseIcon = document.getElementById("sidebar-collapse-icon");
+      if (appContainer) {
+        if (isCollapsed) {
+          appContainer.classList.add("sidebar-collapsed");
+          if (collapseIcon) collapseIcon.className = "fas fa-chevron-right";
+        } else if (savedCollapsed === "false" && window.innerWidth > 768) {
+          appContainer.classList.remove("sidebar-collapsed");
+          if (collapseIcon) collapseIcon.className = "fas fa-chevron-left";
+        }
       }
 
       var licKey = getActiveLicenseKey();
@@ -3371,6 +3802,9 @@
         applySidebarPermissions();
         if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
           updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
+        }
+        if (typeof window.updateNotificationBadge === "function") {
+          window.updateNotificationBadge();
         }
 
         var cachedLicense = localStorage.getItem("nexmilestro_data_license_key");

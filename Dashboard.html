@@ -352,21 +352,33 @@
   // Quick complete a task from dashboard
   window.quickCompleteTaskFromDash = function(taskId, event) {
     if (event) event.stopPropagation();
-    if (!confirm("Mark task " + taskId + " as Completed?")) return;
 
-    var tIdx = rawTasks.findIndex(function(t) { return t.TaskID === taskId; });
-    if (tIdx !== -1) {
-      rawTasks[tIdx].Status = "Completed";
-      if (window._dataCache && window._dataCache.tasks) {
-        var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === taskId; });
-        if (cIdx !== -1) window._dataCache.tasks[cIdx].Status = "Completed";
+    var doComplete = function() {
+      var tIdx = rawTasks.findIndex(function(t) { return t.TaskID === taskId; });
+      if (tIdx !== -1) {
+        rawTasks[tIdx].Status = "Completed";
+        rawTasks[tIdx].CompletionDate = new Date().toISOString().substring(0, 10);
+        if (window._dataCache && window._dataCache.tasks) {
+          var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === taskId; });
+          if (cIdx !== -1) {
+            window._dataCache.tasks[cIdx].Status = "Completed";
+            window._dataCache.tasks[cIdx].CompletionDate = rawTasks[tIdx].CompletionDate;
+          }
+          if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+        }
+        applyDashboardFilter();
+        showToast("Task " + taskId + " marked as Completed!", "success");
+
+        var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+        var currentUserId = currentUser.userId || currentUser.UserID || "Admin";
+        google.script.run.saveTask({ TaskID: taskId, Status: "Completed", CompletionDate: rawTasks[tIdx].CompletionDate }, null, currentUserId);
       }
-      applyDashboardFilter();
-      showToast("Task " + taskId + " marked as Completed!", "success");
+    };
 
-      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
-      var currentUserId = currentUser.userId || currentUser.UserID || "Admin";
-      google.script.run.saveTask({ TaskID: taskId, Status: "Completed" }, null, currentUserId);
+    if (typeof window.openTaskCompletionModal === "function") {
+      window.openTaskCompletionModal(taskId, doComplete);
+    } else {
+      if (confirm("Mark task " + taskId + " as Completed?")) doComplete();
     }
   };
 

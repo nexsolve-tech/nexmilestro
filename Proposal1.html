@@ -22,6 +22,7 @@
       </select>
       
       <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+      <button class="btn btn-secondary" onclick="exportProposalsCSV()" title="Download Filtered Proposals to CSV"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary" id="btn-add-proposal" onclick="openProposalModal()"><i class="fas fa-plus"></i> Record Proposal</button>
     </div>
   </div>
@@ -477,6 +478,76 @@
     });
     renderProposals(filtered);
   }
+
+  function exportProposalsCSV() {
+    var searchVal = (document.getElementById("prop-search-input").value || "").toLowerCase();
+    var custVal = document.getElementById("filter-prop-customer").value;
+    var statusVal = document.getElementById("filter-prop-status").value;
+
+    var filtered = (proposalsDataList || []).filter(function(p) {
+      var projName = p.ProjectName ? String(p.ProjectName).toLowerCase() : "";
+      var scope = p.ScopeOfWork ? String(p.ScopeOfWork).toLowerCase() : "";
+      var propId = p.ProposalID ? String(p.ProposalID).toLowerCase() : "";
+      var matchesSearch = projName.includes(searchVal) || scope.includes(searchVal) || propId.includes(searchVal);
+      var matchesCust = true;
+      if (custVal) {
+        if (custVal.startsWith("CUST:")) matchesCust = p.CustomerID === custVal.replace("CUST:", "");
+        else if (custVal.startsWith("LEAD:")) matchesCust = p.LeadID === custVal.replace("LEAD:", "");
+        else matchesCust = (p.CustomerID === custVal || p.LeadID === custVal);
+      }
+      var matchesStatus = !statusVal || p.Status === statusVal;
+      return matchesSearch && matchesCust && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No proposal data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Proposal ID", "Customer / Lead", "Project Name", "Proposal Date", "Total Amount", "Validity Date", "Status", "Scope of Work", "Payment Terms"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(p) {
+      var clientStr = "-";
+      if (p.CustomerID) {
+        var c = customersList.find(function(item) { return item.CustomerID === p.CustomerID; });
+        clientStr = c ? c.CustomerName : p.CustomerID;
+      } else if (p.LeadID) {
+        var l = leadsList.find(function(item) { return item.LeadID === p.LeadID; });
+        clientStr = l ? (l.CustomerName + " (Lead)") : p.LeadID;
+      }
+
+      var row = [
+        p.ProposalID || "",
+        clientStr,
+        p.ProjectName || "",
+        p.ProposalDate || "",
+        p.TotalAmount || "",
+        p.ValidityDate || "",
+        p.Status || "Draft",
+        p.ScopeOfWork || "",
+        p.PaymentTerms || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Proposals_Quotations_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Proposals exported to CSV successfully!", "success");
+  }
+  window.exportProposalsCSV = exportProposalsCSV;
 
   function sendProposalWhatsApp(proposalId) {
     var prop = proposalsDataList.find(function(p) { return p.ProposalID === proposalId; });

@@ -27,6 +27,7 @@
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
           <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button class="btn btn-secondary" onclick="exportSiteVisitsCSV()" title="Download Filtered Site Visits to CSV"><i class="fas fa-download"></i> Download CSV</button>
           <button class="btn btn-primary" id="btn-add-visit" onclick="openVisitModal()"><i class="fas fa-plus"></i> Log Site Visit</button>
         </div>
       </div>
@@ -737,6 +738,98 @@
 
     renderVisits(filtered);
   }
+
+  function exportSiteVisitsCSV() {
+    var searchInput = document.getElementById("visit-search");
+    var searchVal = searchInput ? (searchInput.value || "").toLowerCase().trim() : "";
+    var projSelect = document.getElementById("filter-visit-project");
+    var projVal = projSelect ? (projSelect.value || "").trim() : "";
+    var assigneeSelect = document.getElementById("filter-visit-assignee");
+    var assigneeVal = assigneeSelect ? (assigneeSelect.value || "").toLowerCase().trim() : "";
+    var billingSelect = document.getElementById("filter-visit-billing");
+    var billingVal = billingSelect ? (billingSelect.value || "").trim() : "";
+    var dateFromEl = document.getElementById("filter-visit-date-from");
+    var dateFrom = dateFromEl ? dateFromEl.value : "";
+    var dateToEl = document.getElementById("filter-visit-date-to");
+    var dateTo = dateToEl ? dateToEl.value : "";
+
+    var filtered = (allVisits || []).filter(function(v) {
+      if (projVal) {
+        if (projVal.indexOf("PROJ:") === 0 && v.ProjectID !== projVal.substring(5)) return false;
+        if (projVal.indexOf("LEAD:") === 0 && v.LeadID !== projVal.substring(5)) return false;
+        if (projVal.indexOf("PROJ:") !== 0 && projVal.indexOf("LEAD:") !== 0 && v.ProjectID !== projVal && v.LeadID !== projVal) return false;
+      }
+      if (assigneeVal && String(v.AssignedTo || "").toLowerCase() !== assigneeVal) return false;
+      if (billingVal) {
+        var isBill = String(v.IsBillable).toLowerCase() === "yes" || String(v.IsBillable).toLowerCase() === "true" || (parseFloat(v.BillableAmount) > 0);
+        if (billingVal === "Billable" && !isBill) return false;
+        if (billingVal === "Non-Billable" && isBill) return false;
+      }
+      var vDate = (v.VisitDate || "").substring(0, 10);
+      if (dateFrom && vDate && vDate < dateFrom) return false;
+      if (dateTo && vDate && vDate > dateTo) return false;
+      if (searchVal) {
+        var vid = String(v.VisitID || "").toLowerCase();
+        var purpose = String(v.Purpose || "").toLowerCase();
+        var remarks = String(v.Remarks || "").toLowerCase();
+        var assigned = String(v.AssignedTo || "").toLowerCase();
+        if (vid.indexOf(searchVal) === -1 && purpose.indexOf(searchVal) === -1 && remarks.indexOf(searchVal) === -1 && assigned.indexOf(searchVal) === -1) return false;
+      }
+      return true;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No site visit data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Visit ID", "Target (Project / Lead)", "Visit Date", "Purpose", "Assignee", "Assignee Type", "Billable", "Billable Amount", "Follow-up Date", "Status", "Remarks"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(v) {
+      var targetName = "-";
+      if (v.ProjectID) {
+        var p = (projectsCache || []).find(function(pr) { return pr.ProjectID === v.ProjectID; });
+        targetName = p ? (p.ProjectName + " (Project)") : v.ProjectID;
+      } else if (v.LeadID) {
+        var l = (leadsCacheList || []).find(function(ld) { return ld.LeadID === v.LeadID; });
+        targetName = l ? ((l.CustomerName || l.LeadName) + " (Lead)") : v.LeadID;
+      }
+      var isBill = (String(v.IsBillable).toLowerCase() === "yes" || String(v.IsBillable).toLowerCase() === "true" || (parseFloat(v.BillableAmount) > 0)) ? "Yes" : "No";
+
+      var row = [
+        v.VisitID || "",
+        targetName,
+        v.VisitDate || "",
+        v.Purpose || "",
+        v.AssignedTo || "",
+        v.AssignedType || "Staff",
+        isBill,
+        v.BillableAmount || "0",
+        v.FollowUpDate || "",
+        v.Status || "Completed",
+        v.Remarks || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Site_Visits_Audits_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Site visits exported to CSV successfully!", "success");
+  }
+  window.exportSiteVisitsCSV = exportSiteVisitsCSV;
 
   function openVisitModal(visitObj) {
     if (visitObj === void 0) {

@@ -39,6 +39,7 @@
         <i class="fas fa-times-circle"></i> Reset
       </button>
 
+      <button class="btn btn-secondary btn-sm" onclick="exportProjectsCSV()" title="Download Filtered Projects to CSV" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;"><i class="fas fa-download"></i> Download CSV</button>
       <button class="btn btn-primary btn-sm" id="btn-add-project" onclick="openProjectModal()" style="height: 38px; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;"><i class="fas fa-plus"></i> Add Project</button>
     </div>
   </div>
@@ -198,7 +199,7 @@
       </div>
 
       <!-- Add Milestone Form (Inline-styled grid) -->
-      <form id="milestone-add-form" onsubmit="handleMilestoneSubmit(event)" style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-md); border: 1px dashed var(--primary-light); margin-bottom: 1.5rem;">
+      <form id="milestone-add-form" onsubmit="handleMilestoneSubmit(event)" style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-md); border: 1px dashed var(--primary-light); margin-bottom: 1.5rem; position: relative; z-index: 100; overflow: visible;">
         <h4 style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: var(--primary); font-weight: 600;"><i class="fas fa-plus-circle" style="margin-right:0.35rem;"></i>Create / Edit Milestone</h4>
         <input type="hidden" id="ms-project-id" name="ProjectID">
         <input type="hidden" id="ms-id" name="MilestoneID">
@@ -881,8 +882,108 @@
       var assocName = m.AssociateName ? escapeHtml(m.AssociateName) : "-";
       var assocCost = m.AssociateCost ? formatCurrency(m.AssociateCost) : "-";
       var mIdEscaped = escapeHtml(m.MilestoneID || "");
-      return '\n        <tr>\n          <td style="font-weight:600;">'.concat(escapeHtml(m.MilestoneName || ""), "</td>\n          <td>").concat(formattedDate, '</td>\n          <td style="font-size:0.8rem; font-weight:600; color:var(--success);">').concat(compDate, '</td>\n          <td><span class="badge badge-').concat(statusClass, '">').concat(escapeHtml(m.Status || "Pending"), "</span></td>\n          <td>").concat(assocType, "</td>\n          <td>").concat(assocName, "</td>\n          <td>").concat(assocCost, '</td>\n          <td style="color:var(--text-muted); font-size:0.75rem;">').concat(escapeHtml(m.Remarks || "-"), '</td>\n          <td style="text-align: right;">\n            <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'').concat(mIdEscaped, '\')"><i class="fas fa-pen"></i></button>\n            <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'').concat(mIdEscaped, '\')"><i class="fas fa-trash"></i></button>\n          </td>\n        </tr>\n      ');
+
+      var statusSelectHtml = '<select class="inline-status-select status-' + statusClass + '" onchange="quickUpdateMilestoneStatus(\'' + mIdEscaped + '\', this.value, event)" title="Click to update milestone status">' +
+        '<option value="Pending"' + (m.Status === "Pending" ? " selected" : "") + '>Pending</option>' +
+        '<option value="In Progress"' + (m.Status === "In Progress" ? " selected" : "") + '>In Progress</option>' +
+        '<option value="Completed"' + (m.Status === "Completed" ? " selected" : "") + '>Completed</option>' +
+      '</select>';
+
+      return '\n        <tr>\n          <td style="font-weight:600;">'.concat(escapeHtml(m.MilestoneName || ""), "</td>\n          <td>").concat(formattedDate, '</td>\n          <td style="font-size:0.8rem; font-weight:600; color:var(--success);">').concat(compDate, '</td>\n          <td>').concat(statusSelectHtml, "</td>\n          <td>").concat(assocType, "</td>\n          <td>").concat(assocName, "</td>\n          <td>").concat(assocCost, '</td>\n          <td style="color:var(--text-muted); font-size:0.75rem;">').concat(escapeHtml(m.Remarks || "-"), '</td>\n          <td style="text-align: right;">\n            <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'').concat(mIdEscaped, '\')"><i class="fas fa-pen"></i></button>\n            <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'').concat(mIdEscaped, '\')"><i class="fas fa-trash"></i></button>\n          </td>\n        </tr>\n      ');
     }).join("");
+  }
+
+  function quickUpdateMilestoneStatus(milestoneId, newStatus, event) {
+    if (event) event.stopPropagation();
+    var m = milestonesCacheList.find(function(item) { return item.MilestoneID === milestoneId; });
+    if (!m) return;
+    m.Status = newStatus;
+    if (newStatus === "Completed" && !m.CompletionDate) {
+      m.CompletionDate = new Date().toISOString().substring(0, 10);
+    }
+    // Optimistic cache update
+    if (window._dataCache && window._dataCache.milestones) {
+      var cIdx = window._dataCache.milestones.findIndex(function(x) { return x.MilestoneID === milestoneId; });
+      if (cIdx !== -1) {
+        window._dataCache.milestones[cIdx].Status = newStatus;
+        if (newStatus === "Completed") window._dataCache.milestones[cIdx].CompletionDate = m.CompletionDate;
+      }
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    var projectId = document.getElementById("ms-project-id").value;
+    renderMilestonesTable(projectId);
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    google.script.run.withSuccessHandler(function(res) {
+      showToast("Milestone status updated to " + newStatus, "success");
+    }).saveMilestone(m, currentUser.userId);
+  }
+  window.quickUpdateMilestoneStatus = quickUpdateMilestoneStatus;
+
+  function exportProjectsCSV() {
+    var searchVal = (document.getElementById("proj-search").value || "").toLowerCase();
+    var custVal = document.getElementById("filter-proj-customer").value;
+    var typeVal = document.getElementById("filter-proj-type").value;
+    var statusVal = document.getElementById("filter-proj-status").value;
+
+    var filtered = allProjects.filter(function(proj) {
+      var cName = "";
+      if (proj.CustomerID) {
+        var c = customersCache.find(function(item) { return item.CustomerID === proj.CustomerID; });
+        if (c) cName = c.CustomerName.toLowerCase();
+      }
+      var matchesSearch = proj.ProjectName.toLowerCase().includes(searchVal) ||
+        (proj.ProjectID && proj.ProjectID.toLowerCase().includes(searchVal)) ||
+        (proj.City && proj.City.toLowerCase().includes(searchVal)) ||
+        cName.includes(searchVal);
+      var matchesCust = !custVal || proj.CustomerID === custVal;
+      var matchesType = !typeVal || proj.ProjectType === typeVal;
+      var matchesStatus = !statusVal || proj.Status === statusVal;
+      return matchesSearch && matchesCust && matchesType && matchesStatus;
+    });
+
+    if (!filtered || filtered.length === 0) {
+      showToast("No project data available to export.", "error");
+      return;
+    }
+
+    var headers = ["Project ID", "Project Name", "Customer", "Project Type", "Project Value", "Start Date", "Expected Completion", "Status", "City", "Remarks"];
+    var csvRows = [];
+    csvRows.push(headers.map(function(h) { return '"' + h.replace(/"/g, '""') + '"'; }).join(","));
+
+    filtered.forEach(function(p) {
+      var cObj = customersCache.find(function(c) { return c.CustomerID === p.CustomerID; });
+      var custName = cObj ? cObj.CustomerName : (p.CustomerID || "");
+      var row = [
+        p.ProjectID || "",
+        p.ProjectName || "",
+        custName,
+        p.ProjectType || "",
+        p.ProjectValue || "",
+        p.StartDate || "",
+        p.ExpectedCompletionDate || "",
+        p.Status || "Proposed",
+        p.City || "",
+        p.Remarks || ""
+      ];
+      csvRows.push(row.map(function(val) {
+        var str = String(val !== undefined && val !== null ? val : "");
+        return '"' + str.replace(/"/g, '""') + '"';
+      }).join(","));
+    });
+
+    var csvContent = "\uFEFF" + csvRows.join("\n");
+    var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.setAttribute("href", url);
+    var dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute("download", "Projects_Portfolio_" + dateStr + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Projects exported to CSV successfully!", "success");
+  }
+  window.exportProjectsCSV = exportProjectsCSV;
   }
   function editMilestoneById(milestoneId) {
     var m = milestonesCacheList.find(function(item) { return item.MilestoneID === milestoneId; });
