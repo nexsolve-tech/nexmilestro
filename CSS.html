@@ -2891,6 +2891,135 @@ textarea.form-control {
   box-shadow: 0 2px 6px rgba(91, 95, 199, 0.25);
 }
 
+/* Real-Time Message Receipts */
+.teams-msg-receipt {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  font-size: 0.725rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.teams-msg-receipt.delivered {
+  color: #a7f3d0;
+}
+
+.teams-msg-receipt.read {
+  color: #67e8f9;
+}
+
+/* Floating Real-Time Incoming Chat Toast Popup */
+.chat-incoming-popup-toast {
+  position: fixed;
+  top: 72px;
+  right: 18px;
+  width: min(390px, calc(100vw - 20px));
+  background: var(--bg-primary);
+  border: 1.5px solid #5b5fc7;
+  border-radius: 14px;
+  box-shadow: 0 12px 35px rgba(91, 95, 199, 0.28), 0 4px 12px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.95rem;
+  z-index: 99999999;
+  cursor: pointer;
+  animation: slideInDownAlert 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+@keyframes slideInDownAlert {
+  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.incoming-popup-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5b5fc7, #7c3aed);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(91, 95, 199, 0.35);
+}
+
+.incoming-popup-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.incoming-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.15rem;
+}
+
+.incoming-popup-header strong {
+  font-size: 0.825rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.incoming-popup-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(91, 95, 199, 0.15);
+  color: #5b5fc7;
+}
+
+.incoming-popup-time {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.incoming-popup-text {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+
+.incoming-popup-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.incoming-popup-close:hover {
+  color: #ef4444;
+}
+
+/* Modal Visibility & Overlay Fixes for Chat Modals */
+#chat-new-group-modal.show,
+#chat-manage-members-modal.show {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 100000 !important;
+}
+
+#chat-new-group-modal.show .modal-container,
+#chat-manage-members-modal.show .modal-container {
+  transform: translateY(0) !important;
+}
+
 /* Quick Action Chips Bar */
 .chat-quick-actions-bar {
   display: flex;
@@ -2993,15 +3122,16 @@ textarea.form-control {
 /* ==================== MOBILE RESPONSIVE CHAT ==================== */
 @media (max-width: 768px) {
   .team-chat-wrapper {
-    padding: 0.25rem 0.35rem !important;
-    height: calc(100dvh - 65px) !important;
-    height: calc(100vh - 65px) !important;
+    padding: 0 !important;
+    height: calc(100dvh - 60px) !important;
+    height: calc(100vh - 60px) !important;
   }
 
   .team-chat-container {
     grid-template-columns: 1fr !important;
     height: 100% !important;
-    border-radius: var(--radius-md) !important;
+    border: none !important;
+    border-radius: 0 !important;
     position: relative !important;
   }
 
@@ -3024,8 +3154,29 @@ textarea.form-control {
     height: 100% !important;
   }
 
+  .chat-sidebar-header {
+    padding: 0.65rem 0.75rem 0.45rem 0.75rem !important;
+    gap: 0.45rem !important;
+  }
+
+  .chat-header-bar {
+    padding: 0.5rem 0.65rem !important;
+    gap: 0.45rem !important;
+  }
+
   .btn-chat-mobile-back {
     display: inline-flex !important;
+    padding: 0.35rem 0.6rem !important;
+    width: auto !important;
+    height: 34px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    gap: 0.25rem !important;
+  }
+
+  .chat-messages {
+    padding: 0.75rem 0.65rem !important;
+    gap: 0.65rem !important;
   }
 
   .chat-mobile-fab {
@@ -3043,6 +3194,17 @@ textarea.form-control {
 
   .chat-quick-actions-bar {
     padding: 0.35rem 0.65rem !important;
+  }
+
+  .chat-incoming-popup-toast {
+    top: 65px !important;
+    right: 8px !important;
+    left: 8px !important;
+    width: auto !important;
+  }
+
+  .hide-mobile-sm {
+    display: none !important;
   }
 }
 

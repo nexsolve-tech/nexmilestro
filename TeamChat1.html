@@ -18,14 +18,14 @@
               <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">NexMilestro Collaboration</span>
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 0.35rem;">
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
             <!-- Mobile Alert Bell Toggle -->
             <button type="button" class="teams-icon-btn" id="btn-chat-mobile-push" onclick="toggleMobilePushNotifications()" title="Toggle Device Push Alerts">
               <i class="fas fa-bell" id="chat-mobile-push-icon" style="color: #f59e0b;"></i>
             </button>
-            <!-- New Group Button -->
-            <button type="button" class="teams-icon-btn primary" onclick="openNewGroupModal()" title="Create New Group">
-              <i class="fas fa-plus"></i>
+            <!-- Prominent New Group Button -->
+            <button type="button" class="btn btn-primary btn-sm btn-new-group-prominent" onclick="openNewGroupModal()" title="Create New Group / Project Team" style="background: #5b5fc7; border-color: #5b5fc7; border-radius: 20px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.75rem; font-size: 0.775rem; box-shadow: 0 2px 6px rgba(91, 95, 199, 0.35); cursor: pointer;">
+              <i class="fas fa-plus-circle"></i> <span>New Group</span>
             </button>
           </div>
         </div>
@@ -65,9 +65,9 @@
       <!-- Teams Conversation Header -->
       <div class="chat-header-bar">
         <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0; flex-grow: 1;">
-          <!-- Mobile Back to List Button -->
+          <!-- Mobile Back to List Button with Clear Label -->
           <button type="button" class="btn-chat-mobile-back" onclick="toggleMobileChatView('sidebar')" title="Back to conversations list">
-            <i class="fas fa-chevron-left"></i>
+            <i class="fas fa-chevron-left"></i> <span style="font-size: 0.775rem; font-weight: 700;">Back</span>
           </button>
 
           <!-- Active Contact / Team Avatar -->
@@ -93,6 +93,12 @@
         </div>
 
         <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
+          <!-- Manage Members Button (Visible when viewing any Project/Team Group) -->
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-manage-group-members" onclick="openManageGroupMembersModal()" title="View and add or remove members from this group" style="display: none; border-radius: 20px; font-weight: 600; font-size: 0.75rem; padding: 0.35rem 0.75rem; align-items: center; gap: 0.35rem; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); cursor: pointer;">
+            <i class="fas fa-user-friends" style="color: #5b5fc7;"></i>
+            <span>Members (<strong id="chat-header-member-count">0</strong>)</span>
+          </button>
+
           <button type="button" class="teams-icon-btn" onclick="exportChatTranscript()" title="Download Chat History Transcript">
             <i class="fas fa-download"></i>
           </button>
@@ -137,14 +143,14 @@
     </div>
   </div>
 
-  <!-- ==================== CREATE NEW GROUP MODAL (MS TEAMS STYLE) ==================== -->
+  <!-- ==================== CREATE NEW GROUP MODAL ==================== -->
   <div class="modal-overlay" id="chat-new-group-modal" style="display: none; z-index: 100000;">
     <div class="modal-container" style="max-width: 500px; padding: 1.5rem; border-radius: 16px; background: var(--bg-primary); box-shadow: 0 25px 60px rgba(0,0,0,0.35); border: 1px solid var(--border-color);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
         <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.45rem;">
           <i class="fas fa-users" style="color: #5b5fc7;"></i> Create Project Team / Group
         </h3>
-        <button type="button" class="icon-btn" onclick="closeNewGroupModal()" style="font-size: 1.1rem; color: var(--text-muted);">
+        <button type="button" class="icon-btn" onclick="closeNewGroupModal()" style="font-size: 1.1rem; color: var(--text-muted); background: none; border: none; cursor: pointer;">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -209,6 +215,74 @@
     </div>
   </div>
 
+  <!-- ==================== MANAGE GROUP MEMBERS MODAL ==================== -->
+  <div class="modal-overlay" id="chat-manage-members-modal" style="display: none; z-index: 100000;">
+    <div class="modal-container" style="max-width: 520px; padding: 1.5rem; border-radius: 16px; background: var(--bg-primary); box-shadow: 0 25px 60px rgba(0,0,0,0.35); border: 1px solid var(--border-color);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.45rem;">
+            <i class="fas fa-users-cog" style="color: #5b5fc7;"></i> Manage Group Members
+          </h3>
+          <span style="font-size: 0.75rem; color: var(--text-muted);" id="manage-group-subtitle">Group details</span>
+        </div>
+        <button type="button" class="icon-btn" onclick="closeManageGroupMembersModal()" style="font-size: 1.1rem; color: var(--text-muted); background: none; border: none; cursor: pointer;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="chat-manage-members-form" onsubmit="handleUpdateGroupMembersSubmit(event)">
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.35rem;">
+              Team / Group Name
+            </label>
+            <input type="text" id="manage-group-name" required class="form-control" style="width: 100%; border-radius: 8px;" />
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.35rem;">
+              Topic / Purpose
+            </label>
+            <input type="text" id="manage-group-topic" class="form-control" style="width: 100%; border-radius: 8px;" />
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin: 0;">
+                Select Group Members
+              </label>
+              <div style="display: flex; gap: 0.5rem; font-size: 0.75rem;">
+                <a href="#" onclick="toggleManageMemberCheckboxes(true); return false;" style="color: #5b5fc7; text-decoration: none; font-weight: 700;">Select All</a>
+                <span>|</span>
+                <a href="#" onclick="toggleManageMemberCheckboxes(false); return false;" style="color: var(--text-muted); text-decoration: none;">Clear</a>
+              </div>
+            </div>
+            <div id="manage-group-members-container" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; background: var(--bg-secondary);">
+              <!-- Checkboxes populated dynamically -->
+            </div>
+            <small style="font-size: 0.725rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
+              <i class="fas fa-shield-alt" style="color: #5b5fc7;"></i> Only selected members will have access to view and send messages in this group.
+            </small>
+          </div>
+
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          <button type="button" class="btn btn-outline-danger btn-sm" onclick="handleDeleteActiveGroup()" id="btn-delete-active-group" style="border-radius: 8px; font-weight: 600; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); background: transparent; cursor: pointer; padding: 0.4rem 0.75rem;">
+            <i class="fas fa-trash-alt"></i> Delete Group
+          </button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeManageGroupMembersModal()" style="border-radius: 8px;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="font-weight: 700; border-radius: 8px; background: #5b5fc7; border-color: #5b5fc7; cursor: pointer;">
+              <i class="fas fa-save"></i> Save Members
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </div>
 
 <!-- ==================== TEAMS CHAT RUNTIME JAVASCRIPT ==================== -->
@@ -218,6 +292,32 @@
   var activeConversationType = "channel"; // "channel" | "group" | "dm"
   var currentFilterTab = "all"; // "all" | "dms" | "groups"
   var searchFilterQuery = "";
+  var _chatPollTimer = null;
+  var _broadcastChannel = null;
+
+  try {
+    if ("BroadcastChannel" in window) {
+      _broadcastChannel = new BroadcastChannel("nexmilestro_team_chat_channel");
+      _broadcastChannel.onmessage = function(event) {
+        if (event && event.data && event.data.type === "new_message") {
+          handleIncomingBroadcastMessage(event.data.message);
+        } else if (event && event.data && event.data.type === "groups_updated") {
+          renderConversationsList();
+        }
+      };
+    }
+  } catch(e) {}
+
+  window.addEventListener("storage", function(e) {
+    if (e.key === "nexmilestro_last_sent_msg" && e.newValue) {
+      try {
+        var msg = JSON.parse(e.newValue);
+        handleIncomingBroadcastMessage(msg);
+      } catch(err) {}
+    } else if (e.key === "nexmilestro_chat_groups") {
+      renderConversationsList();
+    }
+  });
 
   var defaultChannels = {
     "general": {
@@ -254,82 +354,122 @@
     "general": [
       {
         id: "msg_1",
+        conversationId: "general",
         sender: "Mehul Gandhi",
         role: "Super Admin",
         text: "Good morning team! Please ensure all urgent tasks for Project 1125 and Project 1148 are updated on the board today.",
         time: "09:30 AM",
+        timestamp: Date.now() - 3600000,
         initials: "MG"
       },
       {
         id: "msg_2",
+        conversationId: "general",
         sender: "Studio Reddy",
         role: "Project Manager",
         text: "Morning Mehul. False ceiling channel laser leveling is underway at Project 1125. Milestone is on track for 50% completion.",
         time: "09:42 AM",
+        timestamp: Date.now() - 3000000,
         initials: "SR"
       },
       {
         id: "msg_3",
+        conversationId: "general",
         sender: "Rajesh Kumar",
         role: "Site Supervisor",
         text: "Material shipment for Italian marble tiles arrived safely at Site 1148. Inspected and approved by civil team.",
         time: "10:15 AM",
+        timestamp: Date.now() - 2400000,
         initials: "RK"
       }
     ],
     "site-updates": [
       {
         id: "msg_s1",
+        conversationId: "site-updates",
         sender: "Rajesh Kumar",
         role: "Site Supervisor",
         text: "Laser leveling for false ceiling channel (#1250) completed at Project 1125. No deviations found.",
         time: "11:00 AM",
+        timestamp: Date.now() - 1800000,
         initials: "RK"
       },
       {
         id: "msg_s2",
+        conversationId: "site-updates",
         sender: "Studio Sarin",
         role: "Contractor Associate",
         text: "MEP Piping and electrical conduit routing inspected for HVAC first fix. Ready for plastering inspection.",
         time: "11:35 AM",
+        timestamp: Date.now() - 1200000,
         initials: "SS"
       }
     ],
     "project-planning": [
       {
         id: "msg_p1",
+        conversationId: "project-planning",
         sender: "Studio Reddy",
         role: "Project Manager",
         text: "Client signed off on the revised living room electrical layout for Project 1225 Luxury Phase 3.",
         time: "Yesterday, 04:30 PM",
+        timestamp: Date.now() - 86400000,
         initials: "SR"
       }
     ],
     "finance-orders": [
       {
         id: "msg_f1",
+        conversationId: "finance-orders",
         sender: "Accounts Desk",
         role: "Finance Executive",
         text: "Received customer payment of ₹1,50,000 for Project 1148. Booking entry saved and GST invoice generated.",
         time: "10:05 AM",
+        timestamp: Date.now() - 4000000,
         initials: "AD"
       }
     ]
   };
 
   function getCurrentUser() {
-    return JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var raw = localStorage.getItem("pm_user");
+    if (raw) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (parsed.user) return parsed.user;
+        return parsed;
+      } catch(e) {}
+    }
+    return { fullName: "Mehul Gandhi", userId: "USR-ADMIN", roleId: "Super Admin" };
   }
 
-  function getCurrentUserId() {
+  function getCurrentUserName() {
     var u = getCurrentUser();
-    return u.userId || u.UserID || u.fullName || u.FullName || "Admin";
+    return u.fullName || u.FullName || u.UserID || u.userId || "User";
   }
 
   function isSuperAdmin() {
     var u = getCurrentUser();
-    var r = u.roleId || u.RoleID || "";
-    return r === "Super Admin" || r.toLowerCase() === "superadmin";
+    var r = String(u.roleId || u.RoleID || "").toLowerCase();
+    return r.indexOf("super") !== -1 || r.indexOf("admin") !== -1;
+  }
+
+  function getNormalizedUserKey(userOrName) {
+    if (!userOrName) return "";
+    var s = "";
+    if (typeof userOrName === "object") {
+      s = userOrName.FullName || userOrName.fullName || userOrName.UserID || userOrName.userId || "";
+    } else {
+      s = String(userOrName);
+    }
+    return s.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
+  function getDMKey(partnerUserOrName) {
+    var myKey = getNormalizedUserKey(getCurrentUser());
+    var otherKey = getNormalizedUserKey(partnerUserOrName);
+    var pair = [myKey, otherKey].sort();
+    return "dm__" + pair[0] + "__" + pair[1];
   }
 
   function getStoredGroups() {
@@ -345,7 +485,7 @@
         projectName: "Project 1125 - Retail Phase 2",
         topic: "False ceiling, laser leveling & floor tiles",
         creator: "Mehul Gandhi",
-        members: ["Mehul Gandhi", "Studio Reddy", "Rajesh Kumar", "Admin", "Super Admin"],
+        members: ["Mehul Gandhi", "Dhwani Gandhi", "Studio Reddy", "Rajesh Kumar", "Super Admin"],
         createdDate: "18 Nov 2026"
       }
     ];
@@ -356,6 +496,9 @@
   function saveStoredGroups(groups) {
     try {
       localStorage.setItem("nexmilestro_chat_groups", JSON.stringify(groups));
+      if (_broadcastChannel) {
+        _broadcastChannel.postMessage({ type: "groups_updated" });
+      }
     } catch(e) {}
   }
 
@@ -389,13 +532,6 @@
     return users;
   }
 
-  function getDMKey(partnerIdentifier) {
-    var myId = String(getCurrentUserId()).trim().toLowerCase();
-    var otherId = String(partnerIdentifier).trim().toLowerCase();
-    var pair = [myId, otherId].sort();
-    return "dm__" + pair[0].replace(/[^a-zA-Z0-9_-]/g, "_") + "__" + pair[1].replace(/[^a-zA-Z0-9_-]/g, "_");
-  }
-
   function getLastMessageInfo(convId) {
     var allMsgs = getStoredMessages();
     var list = allMsgs[convId] || [];
@@ -413,8 +549,7 @@
     if (!container) return;
 
     var curUser = getCurrentUser();
-    var curUserId = String(getCurrentUserId()).trim().toLowerCase();
-    var curUserName = String(curUser.fullName || curUser.FullName || "").trim().toLowerCase();
+    var curNormalized = getNormalizedUserKey(curUser);
     var superAdmin = isSuperAdmin();
     var query = searchFilterQuery.toLowerCase().trim();
 
@@ -457,8 +592,8 @@
         if (!superAdmin) {
           if (!g.members || !Array.isArray(g.members)) return false;
           var isMember = g.members.some(function(m) {
-            var mStr = String(m).trim().toLowerCase();
-            return mStr === curUserId || mStr === curUserName || mStr === "all";
+            var mNorm = getNormalizedUserKey(m);
+            return mNorm === curNormalized || mNorm === "all";
           });
           if (!isMember) return false;
         }
@@ -495,12 +630,12 @@
     if (currentFilterTab === "all" || currentFilterTab === "dms") {
       var allUsers = getAllUsersList();
       var dmPartners = allUsers.filter(function(u) {
-        var uId = String(u.UserID || u.userId || "").trim().toLowerCase();
-        var uName = String(u.FullName || u.fullName || "").trim().toLowerCase();
-        if (uId === curUserId || uName === curUserName) return false;
+        var uNorm = getNormalizedUserKey(u);
+        if (uNorm === curNormalized) return false;
         if (query) {
+          var uName = String(u.FullName || u.fullName || "").toLowerCase();
           var role = String(u.RoleID || u.roleId || "").toLowerCase();
-          return uName.includes(query) || uId.includes(query) || role.includes(query);
+          return uName.includes(query) || role.includes(query);
         }
         return true;
       });
@@ -510,8 +645,7 @@
         dmPartners.forEach(function(u) {
           var name = u.FullName || u.fullName || u.UserID || "Employee";
           var role = u.RoleID || u.roleId || u.Role || "Staff";
-          var identifier = u.UserID || name;
-          var dmKey = getDMKey(identifier);
+          var dmKey = getDMKey(u);
           var isActive = activeConversationId === dmKey;
           var initials = name.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() || "EM";
           var lastMsg = getLastMessageInfo(dmKey);
@@ -538,7 +672,8 @@
     if (!html) {
       html = '<div style="text-align: center; color: var(--text-muted); padding: 3rem 1.5rem; font-size: 0.85rem;">' +
                '<i class="fas fa-search" style="font-size: 2rem; opacity: 0.35; margin-bottom: 0.5rem; display: block;"></i>' +
-               'No matching conversations found.' +
+               'No matching conversations found.<br/>' +
+               '<button type="button" class="btn btn-primary btn-sm" onclick="openNewGroupModal()" style="margin-top: 1rem; border-radius: 20px; font-weight: 700; background: #5b5fc7; border-color: #5b5fc7;"><i class="fas fa-plus"></i> Create New Group</button>' +
              '</div>';
     }
 
@@ -552,8 +687,8 @@
 
     var allMsgs = getStoredMessages();
     var msgs = allMsgs[activeConversationId] || [];
-    var currentUser = getCurrentUser();
-    var currentUserName = currentUser.fullName || currentUser.FullName || currentUser.UserID || "Mehul Gandhi";
+    var currentUserName = getCurrentUserName();
+    var curNormalized = getNormalizedUserKey(currentUserName);
 
     if (msgs.length === 0) {
       var nameEl = document.getElementById("chat-active-channel-name");
@@ -569,10 +704,12 @@
     var html = '<div class="teams-date-divider"><span>Today</span></div>';
 
     html += msgs.map(function(m) {
-      var isOutgoing = m.isSelf || (m.sender && m.sender.toLowerCase() === currentUserName.toLowerCase());
+      var senderNorm = getNormalizedUserKey(m.sender);
+      var isOutgoing = m.isSelf || (senderNorm && senderNorm === curNormalized);
       var cardClass = isOutgoing ? "teams-msg-row outgoing" : "teams-msg-row incoming";
       var initials = m.initials || (m.sender ? m.sender.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() : "TM");
       var avatarBg = isOutgoing ? "var(--primary)" : "#5b5fc7";
+      var receiptHtml = isOutgoing ? '<span class="teams-msg-receipt delivered" title="Delivered"><i class="fas fa-check-double"></i></span>' : '';
 
       return '<div class="' + cardClass + '">' +
                '<div class="teams-msg-avatar" style="background: ' + avatarBg + ';">' + initials + '</div>' +
@@ -583,7 +720,7 @@
                    '<span class="teams-msg-time">' + escapeHtml(m.time || "") + '</span>' +
                  '</div>' +
                  '<div class="teams-msg-content">' +
-                   escapeHtml(m.text || "") +
+                   escapeHtml(m.text || "") + receiptHtml +
                  '</div>' +
                '</div>' +
              '</div>';
@@ -605,8 +742,11 @@
     var projNameEl = document.getElementById("chat-active-project-name");
     var initialsEl = document.getElementById("chat-header-initials");
     var inputEl = document.getElementById("chat-input-field");
+    var manageMembersBtn = document.getElementById("btn-manage-group-members");
+    var memberCountEl = document.getElementById("chat-header-member-count");
 
     if (projPill) projPill.style.display = "none";
+    if (manageMembersBtn) manageMembersBtn.style.display = "none";
 
     // 1. Public Channel
     if (defaultChannels[convId]) {
@@ -619,18 +759,18 @@
       if (inputEl) inputEl.placeholder = "Message " + ch.name + "...";
     }
     // 2. Direct Message (1:1)
-    else if (convId.startsWith("dm__")) {
+    else if (convId.indexOf("dm__") === 0) {
       activeConversationType = "dm";
       var displayName = partnerName || "Team Member";
       var displayRole = partnerRole || "Internal Staff";
 
       if (!partnerName) {
         var users = getAllUsersList();
-        var curUserId = String(getCurrentUserId()).trim().toLowerCase();
+        var curNormalized = getNormalizedUserKey(getCurrentUser());
         var parts = convId.replace("dm__", "").split("__");
-        var otherIdent = parts[0] === curUserId ? parts[1] : parts[0];
+        var otherNorm = parts[0] === curNormalized ? parts[1] : parts[0];
         var found = users.find(function(u) {
-          return String(u.UserID || u.FullName || "").trim().toLowerCase() === otherIdent;
+          return getNormalizedUserKey(u) === otherNorm;
         });
         if (found) {
           displayName = found.FullName || found.UserID;
@@ -651,8 +791,9 @@
       var groups = getStoredGroups();
       var grp = groups.find(function(g) { return g.id === convId; });
       if (grp) {
+        var mCount = (grp.members && Array.isArray(grp.members)) ? grp.members.length : 1;
         if (nameEl) nameEl.innerText = grp.name;
-        if (badgeEl) badgeEl.innerText = (grp.members ? grp.members.length : 2) + " Members";
+        if (badgeEl) badgeEl.innerText = mCount + " Members";
         if (descEl) descEl.innerText = grp.topic || ("Created by " + (grp.creator || "Admin"));
         if (initialsEl) initialsEl.innerHTML = '<i class="fas fa-users"></i>';
         if (grp.projectId && projPill && projNameEl) {
@@ -660,6 +801,12 @@
           projPill.style.display = "inline-flex";
         }
         if (inputEl) inputEl.placeholder = "Message " + grp.name + "...";
+
+        // Show Manage Members Button for Team Groups
+        if (manageMembersBtn) {
+          manageMembersBtn.style.display = "inline-flex";
+          if (memberCountEl) memberCountEl.innerText = mCount;
+        }
       }
     }
 
@@ -737,11 +884,14 @@
 
     var newMsg = {
       id: "msg_" + Date.now(),
+      conversationId: activeConversationId,
       sender: senderName,
       role: role,
       text: text,
       time: timeStr,
+      timestamp: Date.now(),
       initials: initials,
+      receipt: "delivered",
       isSelf: true
     };
 
@@ -750,11 +900,33 @@
     allMsgs[activeConversationId].push(newMsg);
     saveStoredMessages(allMsgs);
 
+    // Multi-tab / Same-Device Broadcast
+    try {
+      localStorage.setItem("nexmilestro_last_sent_msg", JSON.stringify(newMsg));
+      if (_broadcastChannel) {
+        _broadcastChannel.postMessage({ type: "new_message", message: newMsg });
+      }
+    } catch(err) {}
+
     input.value = "";
     renderConversationsList();
     renderMessages();
 
-    // 1. Log System Notification (Notification Bell 🔔)
+    // 1. Send to server backend with graceful fallback
+    if (typeof window.apiCall === "function") {
+      window.apiCall("save_chat_message", { message: newMsg, conversationId: activeConversationId })
+        .then(function(res) {
+          if (!res || !res.success) {
+            // Fallback to masters sheet option save which works on existing deployed GAS web app
+            window.apiCall("save_master_option", {
+              category: "CHAT_MSG",
+              value: JSON.stringify(newMsg)
+            });
+          }
+        }).catch(function() {});
+    }
+
+    // 2. Log System Notification (Notification Bell 🔔)
     var nameEl = document.getElementById("chat-active-channel-name");
     var targetLabel = nameEl ? nameEl.innerText.trim() : "Team Chat";
     if (typeof window.addSystemNotification === "function") {
@@ -768,7 +940,7 @@
       });
     }
 
-    // 2. Trigger Device / Mobile Push Notification
+    // 3. Trigger Device / Mobile Push Notification
     if (typeof window.sendDevicePushNotification === "function") {
       window.sendDevicePushNotification("NexMilestro • " + targetLabel, {
         body: senderName + ": " + text,
@@ -783,6 +955,109 @@
     input.value = snippetText;
     input.focus();
   };
+
+  // ==================== REAL-TIME INCOMING SYNC HANDLERS ====================
+  function handleIncomingBroadcastMessage(msg) {
+    if (!msg || !msg.conversationId) return;
+    var allMsgs = getStoredMessages();
+    if (!allMsgs[msg.conversationId]) allMsgs[msg.conversationId] = [];
+    var exists = allMsgs[msg.conversationId].some(function(m) { return m.id === msg.id; });
+    if (!exists) {
+      allMsgs[msg.conversationId].push(msg);
+      saveStoredMessages(allMsgs);
+
+      var curUser = getCurrentUser();
+      var curNorm = getNormalizedUserKey(curUser);
+      var senderNorm = getNormalizedUserKey(msg.sender);
+
+      if (senderNorm !== curNorm) {
+        // Show floating toast alert popup
+        if (typeof window.showChatIncomingPopup === "function") {
+          window.showChatIncomingPopup(msg.sender, msg.text, msg.conversationId);
+        }
+        // Play gentle audio chime
+        if (typeof window.playIncomingChatChime === "function") {
+          window.playIncomingChatChime();
+        }
+      }
+
+      if (activeConversationId === msg.conversationId) {
+        renderMessages();
+      }
+      renderConversationsList();
+    }
+  }
+
+  function startChatSyncPolling() {
+    if (_chatPollTimer) clearInterval(_chatPollTimer);
+    _chatPollTimer = setInterval(function() {
+      if (typeof window.apiCall !== "function") return;
+      window.apiCall("get_chat_messages").then(function(res) {
+        if (res && res.success && Array.isArray(res.chatMessages)) {
+          syncIncomingServerMessages(res.chatMessages);
+        } else {
+          // Fallback: poll master options for CHAT_MSG
+          if (window._dataCache && window._dataCache.dropdowns && window._dataCache.dropdowns["CHAT_MSG"]) {
+            var rawList = window._dataCache.dropdowns["CHAT_MSG"].map(function(item) {
+              try { return JSON.parse(item); } catch(e) { return null; }
+            }).filter(Boolean);
+            syncIncomingServerMessages(rawList);
+          }
+        }
+      }).catch(function() {});
+    }, 3800);
+  }
+
+  function syncIncomingServerMessages(serverMsgList) {
+    if (!Array.isArray(serverMsgList) || serverMsgList.length === 0) return;
+    var allMsgs = getStoredMessages();
+    var curUser = getCurrentUser();
+    var curNorm = getNormalizedUserKey(curUser);
+    var updated = false;
+
+    serverMsgList.forEach(function(sMsg) {
+      var convId = sMsg.ConversationID || sMsg.conversationId || "general";
+      var msgId = sMsg.MessageID || sMsg.id || ("msg_" + (sMsg.Timestamp || Date.now()));
+      var sender = sMsg.Sender || sMsg.sender || "User";
+      var text = sMsg.Text || sMsg.text || "";
+      var role = sMsg.Role || sMsg.role || "Team";
+      var time = sMsg.Time || sMsg.time || "";
+
+      if (!allMsgs[convId]) allMsgs[convId] = [];
+      var exists = allMsgs[convId].some(function(m) { return m.id === msgId; });
+      if (!exists) {
+        var cleanMsg = {
+          id: msgId,
+          conversationId: convId,
+          sender: sender,
+          role: role,
+          text: text,
+          time: time,
+          timestamp: sMsg.Timestamp || Date.now(),
+          initials: sender.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() || "TM",
+          receipt: "delivered"
+        };
+        allMsgs[convId].push(cleanMsg);
+        updated = true;
+
+        var senderNorm = getNormalizedUserKey(sender);
+        if (senderNorm !== curNorm) {
+          if (typeof window.showChatIncomingPopup === "function") {
+            window.showChatIncomingPopup(sender, text, convId);
+          }
+          if (typeof window.playIncomingChatChime === "function") {
+            window.playIncomingChatChime();
+          }
+        }
+      }
+    });
+
+    if (updated) {
+      saveStoredMessages(allMsgs);
+      renderConversationsList();
+      renderMessages();
+    }
+  }
 
   // ==================== NEW GROUP CREATION ====================
   window.openNewGroupModal = function(preselectedProjectId, prefilledProjectName) {
@@ -810,12 +1085,12 @@
     if (membersContainer) {
       var users = getAllUsersList();
       var curUser = getCurrentUser();
-      var curName = curUser.fullName || curUser.FullName || curUser.UserID || "Admin";
+      var curName = getCurrentUserName();
 
       membersContainer.innerHTML = users.map(function(u) {
         var name = u.FullName || u.fullName || u.UserID || "Member";
         var role = u.RoleID || u.roleId || "Staff";
-        var isMe = (name.toLowerCase() === curName.toLowerCase());
+        var isMe = (getNormalizedUserKey(name) === getNormalizedUserKey(curName));
         var isChecked = isMe ? " checked disabled" : " checked";
 
         return '<label class="member-picker-item">' +
@@ -827,11 +1102,17 @@
     }
 
     modal.style.display = "flex";
+    modal.style.opacity = "1";
+    modal.style.visibility = "visible";
+    modal.classList.add("show");
   };
 
   window.closeNewGroupModal = function() {
     var modal = document.getElementById("chat-new-group-modal");
-    if (modal) modal.style.display = "none";
+    if (modal) {
+      modal.classList.remove("show");
+      modal.style.display = "none";
+    }
   };
 
   window.toggleAllMemberCheckboxes = function(check) {
@@ -864,9 +1145,7 @@
     var pObj = projects.find(function(p) { return p.ProjectID === projId; });
     var projName = pObj ? pObj.ProjectName : "";
 
-    var curUser = getCurrentUser();
-    var curName = curUser.fullName || curUser.FullName || curUser.UserID || "Admin";
-
+    var curName = getCurrentUserName();
     var members = [curName];
     document.querySelectorAll('#new-group-members-container input[name="group_member"]:checked').forEach(function(cb) {
       if (!members.includes(cb.value)) members.push(cb.value);
@@ -888,10 +1167,161 @@
     groups.unshift(newGroup);
     saveStoredGroups(groups);
 
+    // Sync to backend
+    if (typeof window.apiCall === "function") {
+      window.apiCall("save_chat_group", { group: newGroup }).catch(function() {});
+      window.apiCall("save_master_option", { category: "CHAT_GROUP", value: JSON.stringify(newGroup) }).catch(function() {});
+    }
+
     closeNewGroupModal();
     renderConversationsList();
     switchChatConversation(newGroupId);
     showToast("Team '" + name + "' created successfully!", "success");
+  };
+
+  // ==================== MANAGE GROUP MEMBERS MODAL ====================
+  window.openManageGroupMembersModal = function() {
+    var modal = document.getElementById("chat-manage-members-modal");
+    if (!modal) return;
+
+    var groups = getStoredGroups();
+    var grp = groups.find(function(g) { return g.id === activeConversationId; });
+    if (!grp) {
+      showToast("Please select a team group to manage its members.", "warning");
+      return;
+    }
+
+    var subEl = document.getElementById("manage-group-subtitle");
+    if (subEl) subEl.innerText = grp.name + (grp.projectName ? (" • " + grp.projectName) : "");
+
+    var nameInput = document.getElementById("manage-group-name");
+    if (nameInput) nameInput.value = grp.name || "";
+
+    var topicInput = document.getElementById("manage-group-topic");
+    if (topicInput) topicInput.value = grp.topic || "";
+
+    var container = document.getElementById("manage-group-members-container");
+    if (container) {
+      var allUsers = getAllUsersList();
+      var curUser = getCurrentUser();
+      var curName = getCurrentUserName();
+      var currentMembers = (grp.members || []).map(function(m) { return getNormalizedUserKey(m); });
+
+      container.innerHTML = allUsers.map(function(u) {
+        var name = u.FullName || u.fullName || u.UserID || "Member";
+        var role = u.RoleID || u.roleId || "Staff";
+        var isMe = (getNormalizedUserKey(name) === getNormalizedUserKey(curName));
+        var isMember = currentMembers.includes(getNormalizedUserKey(name)) || isMe;
+        var isChecked = isMember ? " checked" : "";
+        var isDisabled = isMe ? " disabled" : "";
+
+        return '<label class="member-picker-item">' +
+                 '<input type="checkbox" name="manage_group_member" value="' + escapeHtml(name) + '"' + isChecked + isDisabled + ' />' +
+                 '<span style="font-size: 0.825rem; font-weight: 600; color: var(--text-main);">' + escapeHtml(name) + '</span>' +
+                 '<span style="font-size: 0.7rem; color: var(--text-muted); margin-left: auto;">' + escapeHtml(role) + (isMe ? ' (You)' : '') + '</span>' +
+               '</label>';
+      }).join("");
+    }
+
+    modal.style.display = "flex";
+    modal.style.opacity = "1";
+    modal.style.visibility = "visible";
+    modal.classList.add("show");
+  };
+
+  window.closeManageGroupMembersModal = function() {
+    var modal = document.getElementById("chat-manage-members-modal");
+    if (modal) {
+      modal.classList.remove("show");
+      modal.style.display = "none";
+    }
+  };
+
+  window.toggleManageMemberCheckboxes = function(check) {
+    document.querySelectorAll('#manage-group-members-container input[name="manage_group_member"]').forEach(function(cb) {
+      if (!cb.disabled) cb.checked = check;
+    });
+  };
+
+  window.handleUpdateGroupMembersSubmit = function(e) {
+    if (e) e.preventDefault();
+    var groups = getStoredGroups();
+    var grpIdx = groups.findIndex(function(g) { return g.id === activeConversationId; });
+    if (grpIdx === -1) {
+      showToast("Group not found.", "error");
+      return;
+    }
+
+    var grp = groups[grpIdx];
+    var updatedName = (document.getElementById("manage-group-name").value || grp.name).trim();
+    var updatedTopic = (document.getElementById("manage-group-topic").value || "").trim();
+
+    var curName = getCurrentUserName();
+    var updatedMembers = [curName];
+
+    document.querySelectorAll('#manage-group-members-container input[name="manage_group_member"]:checked').forEach(function(cb) {
+      if (!updatedMembers.includes(cb.value)) updatedMembers.push(cb.value);
+    });
+
+    grp.name = updatedName;
+    grp.topic = updatedTopic;
+    grp.members = updatedMembers;
+    grp.modifiedDate = new Date().toLocaleDateString();
+
+    groups[grpIdx] = grp;
+    saveStoredGroups(groups);
+
+    // Sync to backend
+    if (typeof window.apiCall === "function") {
+      window.apiCall("save_chat_group", { group: grp }).catch(function() {});
+      window.apiCall("save_master_option", { category: "CHAT_GROUP", value: JSON.stringify(grp) }).catch(function() {});
+    }
+
+    // Insert system audit message
+    var allMsgs = getStoredMessages();
+    if (!allMsgs[grp.id]) allMsgs[grp.id] = [];
+    allMsgs[grp.id].push({
+      id: "sys_" + Date.now(),
+      conversationId: grp.id,
+      sender: "System",
+      role: "Log",
+      text: "👥 " + curName + " updated team membership (" + updatedMembers.length + " total members).",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: Date.now(),
+      initials: "SYS"
+    });
+    saveStoredMessages(allMsgs);
+
+    closeManageGroupMembersModal();
+    renderConversationsList();
+    switchChatConversation(grp.id);
+    showToast("Group members updated successfully!", "success");
+  };
+
+  window.handleDeleteActiveGroup = function() {
+    var groups = getStoredGroups();
+    var grp = groups.find(function(g) { return g.id === activeConversationId; });
+    if (!grp) return;
+
+    if (!confirm("Are you sure you want to delete the team group '" + grp.name + "'? All messages in this group will be deleted.")) {
+      return;
+    }
+
+    var updatedGroups = groups.filter(function(g) { return g.id !== activeConversationId; });
+    saveStoredGroups(updatedGroups);
+
+    // Delete from backend
+    if (typeof window.apiCall === "function") {
+      window.apiCall("delete_chat_group", { groupId: activeConversationId }).catch(function() {});
+    }
+
+    var allMsgs = getStoredMessages();
+    delete allMsgs[activeConversationId];
+    saveStoredMessages(allMsgs);
+
+    closeManageGroupMembersModal();
+    switchChatConversation("general");
+    showToast("Group '" + grp.name + "' deleted.", "info");
   };
 
   // ==================== BROWSER PUSH NOTIFICATIONS ====================
@@ -969,6 +1399,7 @@
     renderConversationsList();
     renderMessages();
     window.updateMobilePushUI();
+    startChatSyncPolling();
 
     if (window.innerWidth <= 768) {
       window.toggleMobileChatView("sidebar");
@@ -992,5 +1423,6 @@
     window.toggleMobileChatView("sidebar");
   }
   window.updateMobilePushUI();
+  startChatSyncPolling();
 })();
 </script>

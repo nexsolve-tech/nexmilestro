@@ -203,6 +203,22 @@
 
     <!-- Main Workspace Area -->
     <main class="app-main">
+      <!-- Floating Real-Time Incoming Chat Toast Popup -->
+      <div id="chat-incoming-popup-toast" class="chat-incoming-popup-toast" style="display: none;" onclick="handleIncomingChatPopupClick()">
+        <div class="incoming-popup-avatar" id="incoming-popup-avatar">MG</div>
+        <div class="incoming-popup-content">
+          <div class="incoming-popup-header">
+            <strong id="incoming-popup-sender">Mehul Gandhi</strong>
+            <span class="incoming-popup-tag" id="incoming-popup-conv">Team Chat</span>
+            <span class="incoming-popup-time">Just now</span>
+          </div>
+          <div class="incoming-popup-text" id="incoming-popup-text">New message received...</div>
+        </div>
+        <button type="button" class="incoming-popup-close" onclick="event.stopPropagation(); closeIncomingChatPopup();" title="Dismiss">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
       <header class="app-header">
         <div class="header-left">
           <button class="btn-sidebar-toggle" onclick="toggleSidebarCollapse()" title="Toggle Sidebar">
@@ -2400,6 +2416,101 @@
         window.renderNotificationsList();
       }
     };
+
+    /**
+     * Real-Time Incoming Chat Toast Popup & Audio Chime
+     */
+    var _incomingPopupTimer = null;
+    var _incomingPopupConvId = null;
+
+    function showChatIncomingPopup(sender, text, convId) {
+      var toast = document.getElementById("chat-incoming-popup-toast");
+      if (!toast) return;
+      _incomingPopupConvId = convId || "general";
+
+      var senderEl = document.getElementById("incoming-popup-sender");
+      var textEl = document.getElementById("incoming-popup-text");
+      var avatarEl = document.getElementById("incoming-popup-avatar");
+      var convEl = document.getElementById("incoming-popup-conv");
+
+      if (senderEl) senderEl.innerText = sender || "Team Member";
+      if (textEl) textEl.innerText = text || "New message";
+      if (convEl) {
+        var label = "Chat";
+        if (convId && convId.indexOf("dm__") === 0) label = "Direct Message";
+        else if (convId && convId.indexOf("group_") === 0) label = "Team Group";
+        else if (convId) label = "#" + convId;
+        convEl.innerText = label;
+      }
+      if (avatarEl) {
+        var init = (sender || "TM").split(" ").map(function(w) { return w[0]; }).join("").substring(0, 2).toUpperCase();
+        avatarEl.innerText = init;
+      }
+
+      toast.style.display = "flex";
+      playIncomingChatChime();
+
+      if (_incomingPopupTimer) clearTimeout(_incomingPopupTimer);
+      _incomingPopupTimer = setTimeout(function() {
+        closeIncomingChatPopup();
+      }, 7000);
+    }
+    window.showChatIncomingPopup = showChatIncomingPopup;
+
+    function closeIncomingChatPopup() {
+      var toast = document.getElementById("chat-incoming-popup-toast");
+      if (toast) toast.style.display = "none";
+      if (_incomingPopupTimer) {
+        clearTimeout(_incomingPopupTimer);
+        _incomingPopupTimer = null;
+      }
+    }
+    window.closeIncomingChatPopup = closeIncomingChatPopup;
+
+    function handleIncomingChatPopupClick() {
+      var convId = _incomingPopupConvId || "general";
+      closeIncomingChatPopup();
+      if (window.appRouter && window.appRouter.navigate) {
+        window.appRouter.navigate("teamchat");
+      }
+      setTimeout(function() {
+        if (typeof window.switchChatConversation === "function") {
+          window.switchChatConversation(convId);
+        }
+      }, 150);
+    }
+    window.handleIncomingChatPopupClick = handleIncomingChatPopupClick;
+
+    function playIncomingChatChime() {
+      try {
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        var ctx = new AudioCtx();
+        if (ctx.state === "suspended") ctx.resume();
+        var now = ctx.currentTime;
+        var osc1 = ctx.createOscillator();
+        var osc2 = ctx.createOscillator();
+        var gain = ctx.createGain();
+
+        osc1.type = "sine";
+        osc1.frequency.setValueAtTime(587.33, now); // D5
+        osc2.type = "sine";
+        osc2.frequency.setValueAtTime(880.00, now + 0.08); // A5
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc1.stop(now + 0.12);
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.35);
+      } catch(e) {}
+    }
+    window.playIncomingChatChime = playIncomingChatChime;
 
     window.updateNotificationBadge = function() {
       var list = window.getNotificationsList();

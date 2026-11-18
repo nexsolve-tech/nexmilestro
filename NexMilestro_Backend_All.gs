@@ -277,6 +277,12 @@ const SHEET_HEADERS = {
     "CompanyID", "CompanyName", "Address", "OfficialEmail", "ContactNumber",
     "PANNumber", "GSTNumber", "Website", "BankName", "AccountNumber",
     "IFSCCode", "Branch", "LogoUrl", "BankAccounts", "ModifiedDate", "ModifiedBy"
+  ],
+  "ChatMessages": [
+    "MessageID", "ConversationID", "Sender", "Role", "Text", "Time", "Timestamp", "Initials", "CreatedDate", "CreatedBy"
+  ],
+  "ChatGroups": [
+    "GroupID", "GroupName", "ProjectID", "ProjectName", "Topic", "Creator", "Members", "CreatedDate", "ModifiedDate"
   ]
 };
 
@@ -294,7 +300,9 @@ const ID_PREFIXES = {
   "Transactions": "TXN-",
   "RolePermissions": "PERM-",
   "UserPermissions": "UPERM-",
-  "Milestones": "MS-"
+  "Milestones": "MS-",
+  "ChatMessages": "MSG-",
+  "ChatGroups": "GRP-"
 };
 
 /**
@@ -617,6 +625,8 @@ function getInitialAppData(licenseKey, userId, role) {
     const rolePermissions = sheetToObjects(ensureSheetWithHeaders(ss, "RolePermissions"));
     const userPermissions = sheetToObjects(ensureSheetWithHeaders(ss, "UserPermissions"));
     const companyRows = sheetToObjects(ensureSheetWithHeaders(ss, "CompanySetup"));
+    const chatMessages = sheetToObjects(ensureSheetWithHeaders(ss, "ChatMessages"));
+    const chatGroups = sheetToObjects(ensureSheetWithHeaders(ss, "ChatGroups"));
 
     // Map Masters sheet to clean Dropdowns object: { ProjectType: [...], Status: [...] }
     const dropdowns = {};
@@ -676,7 +686,9 @@ function getInitialAppData(licenseKey, userId, role) {
       transactions: transactions,
       dropdowns: dropdowns,
       rolePermissions: rolePermissions,
-      userPermissions: userPermissions
+      userPermissions: userPermissions,
+      chatMessages: chatMessages,
+      chatGroups: chatGroups
     };
 
   } catch (err) {
@@ -1396,6 +1408,63 @@ function deleteTransactionRecord(licenseKey, txnId) {
   }
 }
 
+// ── TEAM CHAT & GROUPS ──────────────────────────────────────────────────
+function saveChatMessageRecord(licenseKey, data, userId) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const msgId = data.id || data.MessageID || ("MSG-" + Date.now());
+    const payload = {
+      MessageID: msgId,
+      ConversationID: data.conversationId || data.ConversationID || "general",
+      Sender: data.sender || data.Sender || userId || "User",
+      Role: data.role || data.Role || "Staff",
+      Text: data.text || data.Text || "",
+      Time: data.time || data.Time || "",
+      Timestamp: data.timestamp || Date.now(),
+      Initials: data.initials || data.Initials || "",
+      CreatedDate: (new Date()).toISOString(),
+      CreatedBy: userId || "User"
+    };
+    writeTableRow(ss, "ChatMessages", "MessageID", "", payload, userId);
+    return { success: true, messageId: msgId, message: "Chat message saved." };
+  } catch (err) {
+    return { success: false, error: "Failed to save chat message: " + err.message };
+  }
+}
+
+function saveChatGroupRecord(licenseKey, data, userId) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const grpId = data.id || data.GroupID || ("group_" + Date.now());
+    const membersStr = Array.isArray(data.members) ? JSON.stringify(data.members) : (data.members || "[]");
+    const payload = {
+      GroupID: grpId,
+      GroupName: data.name || data.GroupName || "Team Group",
+      ProjectID: data.projectId || data.ProjectID || "",
+      ProjectName: data.projectName || data.ProjectName || "",
+      Topic: data.topic || data.Topic || "",
+      Creator: data.creator || data.Creator || userId || "Admin",
+      Members: membersStr,
+      CreatedDate: data.createdDate || data.CreatedDate || (new Date()).toISOString(),
+      ModifiedDate: (new Date()).toISOString()
+    };
+    writeTableRow(ss, "ChatGroups", "GroupID", grpId, payload, userId);
+    return { success: true, groupId: grpId, message: "Group saved successfully." };
+  } catch (err) {
+    return { success: false, error: "Failed to save chat group: " + err.message };
+  }
+}
+
+function deleteChatGroupRecord(licenseKey, groupId) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const ok = deleteTableRow(ss, "ChatGroups", "GroupID", groupId);
+    return { success: ok, message: ok ? "Chat group deleted." : "Chat group not found." };
+  } catch (err) {
+    return { success: false, error: "Failed to delete chat group: " + err.message };
+  }
+}
+
 
 
 // >>>>>> FILE: Code.gs <<<<<<
@@ -1604,6 +1673,31 @@ function handleUniversalApiRequest(action, params) {
         break;
       case 'delete_transaction':
         response = deleteTransactionRecord(licenseKey, dataObj.transactionId || params.transactionId);
+        break;
+
+      // ── TEAM CHAT & COLLABORATION ─────────────────────────────────────────
+      case 'save_chat_message':
+      case 'send_chat_message':
+        response = saveChatMessageRecord(licenseKey, dataObj.message || dataObj, userId);
+        break;
+
+      case 'save_chat_group':
+        response = saveChatGroupRecord(licenseKey, dataObj.group || dataObj, userId);
+        break;
+
+      case 'delete_chat_group':
+        response = deleteChatGroupRecord(licenseKey, dataObj.groupId || params.groupId);
+        break;
+
+      case 'get_chat_messages':
+        try {
+          const { ss: chatSs } = getClientSpreadsheet(licenseKey);
+          const msgs = sheetToObjects(ensureSheetWithHeaders(chatSs, "ChatMessages"));
+          const grps = sheetToObjects(ensureSheetWithHeaders(chatSs, "ChatGroups"));
+          response = { success: true, chatMessages: msgs, chatGroups: grps };
+        } catch(chatErr) {
+          response = { success: false, error: chatErr.message };
+        }
         break;
 
       // ── FALLBACK FOR ARBITRARY FUNCTIONS ─────────────────────────────────
