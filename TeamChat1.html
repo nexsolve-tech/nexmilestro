@@ -1,166 +1,148 @@
-<div class="team-chat-wrapper" style="padding: 1.25rem 1.5rem; height: calc(100vh - 85px); display: flex; flex-direction: column;">
+<div class="team-chat-wrapper">
 
-  <!-- View Header -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.75rem;">
-    <div>
-      <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="fas fa-comments" style="color: var(--primary);"></i> Internal Team Communication & Chat
-      </h2>
-      <p style="font-size: 0.825rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-        Direct 1-on-1 employee messaging, project coordination groups, and real-time operational logs
-      </p>
-    </div>
-    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-      <!-- Mobile / Browser Push Notification Status Button -->
-      <button type="button" class="btn btn-secondary btn-sm" id="btn-chat-mobile-push" onclick="toggleMobilePushNotifications()" title="Enable or check device push alerts for mobile browser" style="border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem;">
-        <i class="fas fa-bell" id="chat-mobile-push-icon" style="color: #f59e0b;"></i>
-        <span id="chat-mobile-push-label">Mobile Alerts: Off</span>
-      </button>
-
-      <!-- New Group Button -->
-      <button type="button" class="btn btn-primary btn-sm" onclick="openNewGroupModal()" style="border-radius: 50px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
-        <i class="fas fa-plus-circle"></i> New Group
-      </button>
-
-      <button type="button" class="btn btn-secondary btn-sm" onclick="clearTeamChatHistory()" title="Reset Chat to Default" style="border-radius: 50px;">
-        <i class="fas fa-trash-alt"></i> Reset
-      </button>
-    </div>
-  </div>
-
-  <!-- Chat Layout Container -->
+  <!-- ==================== MAIN MS TEAMS STYLE CONTAINER ==================== -->
   <div class="team-chat-container mobile-show-sidebar" id="team-chat-container">
     
-    <!-- Left Sidebar: Channels, Groups & Direct Messages -->
-    <div class="chat-sidebar" style="overflow-y: auto;">
+    <!-- ==================== LEFT PANE: CONVERSATION HUB ==================== -->
+    <div class="chat-sidebar" id="chat-sidebar">
       
-      <!-- Public Channels Section -->
-      <div style="padding: 0.85rem 0.85rem 0.4rem 0.85rem;">
-        <div style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 0.4rem;">
-          Public Channels
+      <!-- Hub Top Header -->
+      <div class="chat-sidebar-header">
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="teams-logo-icon">
+              <i class="fas fa-comments"></i>
+            </div>
+            <div>
+              <h2 style="font-size: 1.05rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: -0.3px;">Team Chat</h2>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">NexMilestro Collaboration</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <!-- Mobile Alert Bell Toggle -->
+            <button type="button" class="teams-icon-btn" id="btn-chat-mobile-push" onclick="toggleMobilePushNotifications()" title="Toggle Device Push Alerts">
+              <i class="fas fa-bell" id="chat-mobile-push-icon" style="color: #f59e0b;"></i>
+            </button>
+            <!-- New Group Button -->
+            <button type="button" class="teams-icon-btn primary" onclick="openNewGroupModal()" title="Create New Group">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 0.2rem;" id="chat-channels-list">
-          <button type="button" class="btn-chat-channel active" onclick="switchChatConversation('general', event)" data-channel="general" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.5rem 0.7rem; border-radius: var(--radius-md); border: none; background: rgba(15, 118, 110, 0.12); color: var(--primary); font-weight: 600; cursor: pointer;">
-            <span><i class="fas fa-hashtag" style="margin-right: 0.4rem; opacity: 0.7;"></i> general</span>
-            <span class="badge badge-pill badge-primary" style="font-size: 0.65rem; padding: 0.15rem 0.4rem;">All</span>
+
+        <!-- MS Teams Style Search Bar -->
+        <div class="teams-search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="chat-filter-search" placeholder="Search people, teams, or messages..." oninput="filterConversationsList(this.value)" autocomplete="off" />
+          <button type="button" id="chat-search-clear" onclick="clearConversationSearch()" style="display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px;">
+            <i class="fas fa-times-circle"></i>
           </button>
-          <button type="button" class="btn-chat-channel" onclick="switchChatConversation('site-updates', event)" data-channel="site-updates" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.5rem 0.7rem; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-main); font-weight: 500; cursor: pointer;">
-            <span><i class="fas fa-hard-hat" style="margin-right: 0.4rem; opacity: 0.7;"></i> site-updates</span>
-            <span class="badge badge-pill" style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: var(--bg-primary); border: 1px solid var(--border-color);">Logs</span>
-          </button>
-          <button type="button" class="btn-chat-channel" onclick="switchChatConversation('project-planning', event)" data-channel="project-planning" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.5rem 0.7rem; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-main); font-weight: 500; cursor: pointer;">
-            <span><i class="fas fa-drafting-compass" style="margin-right: 0.4rem; opacity: 0.7;"></i> project-planning</span>
-          </button>
-          <button type="button" class="btn-chat-channel" onclick="switchChatConversation('finance-orders', event)" data-channel="finance-orders" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.5rem 0.7rem; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-main); font-weight: 500; cursor: pointer;">
-            <span><i class="fas fa-file-invoice-dollar" style="margin-right: 0.4rem; opacity: 0.7;"></i> finance-orders</span>
-          </button>
+        </div>
+
+        <!-- Filter Segmented Chips (All | People | Teams) -->
+        <div class="teams-segmented-tabs">
+          <button type="button" class="teams-seg-tab active" data-tab="all" onclick="switchSidebarFilter('all', event)">All</button>
+          <button type="button" class="teams-seg-tab" data-tab="dms" onclick="switchSidebarFilter('dms', event)">People (1:1)</button>
+          <button type="button" class="teams-seg-tab" data-tab="groups" onclick="switchSidebarFilter('groups', event)">Project Teams</button>
         </div>
       </div>
 
-      <!-- Custom & Project Groups Section -->
-      <div style="padding: 0.5rem 0.85rem 0.4rem 0.85rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
-          <span style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">
-            Project & Team Groups
-          </span>
-          <button type="button" onclick="openNewGroupModal()" class="icon-btn" title="Create New Chat Group" style="font-size: 0.8rem; color: var(--primary); padding: 2px 4px;">
-            <i class="fas fa-plus"></i>
-          </button>
-        </div>
-        <div id="chat-custom-groups-list" style="display: flex; flex-direction: column; gap: 0.25rem;">
-          <!-- Dynamically populated filtered by membership -->
-        </div>
+      <!-- Scrollable Conversation Cards List -->
+      <div class="chat-conversations-feed" id="chat-conversations-feed">
+        <!-- Rendered dynamically -->
       </div>
 
-      <!-- Divider -->
-      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 0.4rem 0.85rem;" />
-
-      <!-- Direct Messages (1-on-1 Internal Chat) -->
-      <div style="padding: 0.5rem 0.85rem 1rem 0.85rem; flex-grow: 1;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span style="font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">
-            Direct Messages (1-on-1)
-          </span>
-          <span id="chat-dm-user-count" style="font-size: 0.7rem; font-weight: 600; color: var(--primary);">0</span>
-        </div>
-        <div id="chat-dm-users-list" style="display: flex; flex-direction: column; gap: 0.25rem;">
-          <!-- Populated dynamically with all employees -->
-        </div>
-      </div>
+      <!-- Floating Action Button for Mobile -->
+      <button type="button" class="chat-mobile-fab" onclick="openNewGroupModal()" title="New Group / Project Team">
+        <i class="fas fa-user-plus"></i>
+      </button>
 
     </div>
 
-    <!-- Right: Active Chat Area -->
-    <div class="chat-main">
+    <!-- ==================== RIGHT PANE: ACTIVE CHAT CONVERSATION ==================== -->
+    <div class="chat-main" id="chat-main">
       
-      <!-- Active Chat Header -->
-      <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 0;">
-          <!-- Mobile Back Button to return to Conversations -->
-          <button type="button" class="btn btn-secondary btn-sm btn-chat-mobile-back" onclick="toggleMobileChatView('sidebar')" style="display: none; align-items: center; gap: 0.35rem; border-radius: 50px; font-weight: 700; padding: 0.35rem 0.75rem; flex-shrink: 0;" title="Back to conversations">
-            <i class="fas fa-arrow-left"></i> <span>List</span>
+      <!-- Teams Conversation Header -->
+      <div class="chat-header-bar">
+        <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0; flex-grow: 1;">
+          <!-- Mobile Back to List Button -->
+          <button type="button" class="btn-chat-mobile-back" onclick="toggleMobileChatView('sidebar')" title="Back to conversations list">
+            <i class="fas fa-chevron-left"></i>
           </button>
-          <div style="min-width: 0;">
-            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
-              <span id="chat-active-channel-name">#general</span>
-              <span class="badge badge-info" id="chat-channel-badge" style="font-size: 0.7rem; font-weight: 600;">Active Topic</span>
+
+          <!-- Active Contact / Team Avatar -->
+          <div class="chat-header-avatar" id="chat-header-avatar">
+            <span id="chat-header-initials">#</span>
+            <span class="chat-header-presence-dot" id="chat-header-presence"></span>
+          </div>
+
+          <div style="min-width: 0; flex-grow: 1;">
+            <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+              <span id="chat-active-channel-name" style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                #general
+              </span>
+              <span class="badge badge-info" id="chat-channel-badge" style="font-size: 0.675rem; font-weight: 600;">Channel</span>
               <span id="chat-active-project-pill" class="chat-project-pill" style="display: none;">
                 <i class="fas fa-folder"></i> <span id="chat-active-project-name">Project</span>
               </span>
             </div>
-            <div id="chat-active-channel-desc" style="font-size: 0.775rem; color: var(--text-muted); margin-top: 0.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-              Company-wide updates, daily coordination, and priority discussions.
+            <div id="chat-active-channel-desc" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              Company-wide updates and priority discussions.
             </div>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="exportChatTranscript()" title="Export Chat Log">
-            <i class="fas fa-download"></i> Log
+
+        <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
+          <button type="button" class="teams-icon-btn" onclick="exportChatTranscript()" title="Download Chat History Transcript">
+            <i class="fas fa-download"></i>
+          </button>
+          <button type="button" class="teams-icon-btn danger" onclick="clearTeamChatHistory()" title="Reset Chat to Default">
+            <i class="fas fa-trash-alt"></i>
           </button>
         </div>
       </div>
 
-      <!-- Messages Stream -->
+      <!-- Messages Stream Area -->
       <div class="chat-messages" id="chat-messages-container">
         <!-- Message bubbles populated here -->
       </div>
 
-      <!-- Quick Action Snippets -->
-      <div style="padding: 0.4rem 1rem; background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; gap: 0.5rem; overflow-x: auto; white-space: nowrap; align-items: center;">
-        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Quick Share:</span>
-        <button type="button" class="badge" onclick="insertQuickChatSnippet('🏗️ On-site status updated: laser levelling & false ceiling channels aligned.')" style="border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 50px;">
-          🏗️ Site Status
+      <!-- Quick Action Chips Bar (Teams Format) -->
+      <div class="chat-quick-actions-bar">
+        <span class="quick-chip-label"><i class="fas fa-bolt" style="color: #f59e0b;"></i> Quick:</span>
+        <button type="button" class="quick-chip" onclick="insertQuickChatSnippet('🏗️ On-site update: laser levelling & false ceiling channel completed.')">
+          🏗️ Site Update
         </button>
-        <button type="button" class="badge" onclick="insertQuickChatSnippet('✅ Milestone verified and ready for client sign-off.')" style="border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 50px;">
-          ✅ Milestone Verified
+        <button type="button" class="quick-chip" onclick="insertQuickChatSnippet('✅ Milestone verified and ready for client sign-off.')">
+          ✅ Milestone Ready
         </button>
-        <button type="button" class="badge" onclick="insertQuickChatSnippet('⚠️ Urgent material delivery required on site for Project execution.')" style="border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 50px;">
+        <button type="button" class="quick-chip" onclick="insertQuickChatSnippet('⚠️ Urgent material delivery required on site for execution.')">
           ⚠️ Material Delay
         </button>
-        <button type="button" class="badge" onclick="insertQuickChatSnippet('💰 Client payment receipt verified and cleared in finance.')" style="border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 50px;">
+        <button type="button" class="quick-chip" onclick="insertQuickChatSnippet('💰 Client payment receipt verified and cleared in finance.')">
           💰 Payment Cleared
         </button>
       </div>
 
-      <!-- Message Input Form -->
+      <!-- MS Teams Style Message Composition Area -->
       <form class="chat-input-area" id="chat-send-form" onsubmit="handleChatSubmit(event)">
-        <div style="position: relative; flex-grow: 1;">
-          <input type="text" id="chat-input-field" class="form-control" placeholder="Type a message to team... (Press Enter to send)" autocomplete="off" style="border-radius: 50px; padding: 0.65rem 1.15rem; width: 100%; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); font-size: 0.875rem;" />
+        <div style="flex-grow: 1; position: relative;">
+          <textarea id="chat-input-field" class="teams-input-box" rows="1" placeholder="Type a message... (Press Enter to send)" onkeydown="handleInputKeydown(event)" autocomplete="off"></textarea>
         </div>
-        <button type="submit" class="btn btn-primary" style="border-radius: 50px; padding: 0.65rem 1.25rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem;">
-          <i class="fas fa-paper-plane"></i> <span>Send</span>
+        <button type="submit" class="btn-teams-send" title="Send message (Enter)">
+          <i class="fas fa-paper-plane"></i>
         </button>
       </form>
 
     </div>
   </div>
 
-  <!-- ==================== CREATE NEW GROUP MODAL ==================== -->
-  <div class="modal-overlay" id="chat-new-group-modal" style="display: none; z-index: 10000;">
-    <div class="modal-container" style="max-width: 520px; padding: 1.5rem; border-radius: var(--radius-lg); background: var(--bg-primary); box-shadow: 0 25px 60px rgba(0,0,0,0.35); border: 1px solid var(--border-color);">
+  <!-- ==================== CREATE NEW GROUP MODAL (MS TEAMS STYLE) ==================== -->
+  <div class="modal-overlay" id="chat-new-group-modal" style="display: none; z-index: 100000;">
+    <div class="modal-container" style="max-width: 500px; padding: 1.5rem; border-radius: 16px; background: var(--bg-primary); box-shadow: 0 25px 60px rgba(0,0,0,0.35); border: 1px solid var(--border-color);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
-          <i class="fas fa-users" style="color: var(--primary);"></i> Create New Chat Group
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.45rem;">
+          <i class="fas fa-users" style="color: #5b5fc7;"></i> Create Project Team / Group
         </h3>
         <button type="button" class="icon-btn" onclick="closeNewGroupModal()" style="font-size: 1.1rem; color: var(--text-muted);">
           <i class="fas fa-times"></i>
@@ -171,57 +153,56 @@
         <div style="display: flex; flex-direction: column; gap: 1rem;">
           
           <div>
-            <label style="font-size: 0.825rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.35rem;">
-              Group Name *
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.35rem;">
+              Team / Group Name *
             </label>
-            <input type="text" id="new-group-name" required class="form-control" placeholder="e.g. Luxury Phase 3 Site Crew" style="width: 100%;" />
+            <input type="text" id="new-group-name" required class="form-control" placeholder="e.g. Luxury Phase 3 Electrical Team" style="width: 100%; border-radius: 8px;" />
           </div>
 
           <div>
-            <label style="font-size: 0.825rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.35rem;">
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.35rem;">
               Link to Project (Optional)
             </label>
-            <select id="new-group-project-id" class="form-control" style="width: 100%;" onchange="handleNewGroupProjectSelect(this.value)">
-              <option value="">-- No Project Linked (Independent Group) --</option>
-              <!-- Populated dynamically from projects -->
+            <select id="new-group-project-id" class="form-control" style="width: 100%; border-radius: 8px;" onchange="handleNewGroupProjectSelect(this.value)">
+              <option value="">-- No Project Linked (General Team) --</option>
             </select>
             <small style="font-size: 0.725rem; color: var(--text-muted); margin-top: 0.2rem; display: block;">
-              Linking to a project tags the chat and makes it accessible directly from the Project Module.
+              Linking to a project pins the team to that project and creates a 1-click shortcut in the Project module.
             </small>
           </div>
 
           <div>
-            <label style="font-size: 0.825rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.35rem;">
-              Group Description / Topic
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.35rem;">
+              Topic / Purpose
             </label>
-            <input type="text" id="new-group-topic" class="form-control" placeholder="e.g. Electrical conduits, MEP coordination and daily log" style="width: 100%;" />
+            <input type="text" id="new-group-topic" class="form-control" placeholder="e.g. False ceiling, wiring and lighting conduits coordination" style="width: 100%; border-radius: 8px;" />
           </div>
 
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-              <label style="font-size: 0.825rem; font-weight: 600; color: var(--text-main); margin: 0;">
-                Select Group Members *
+              <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin: 0;">
+                Add Team Members *
               </label>
               <div style="display: flex; gap: 0.5rem; font-size: 0.75rem;">
-                <a href="#" onclick="toggleAllMemberCheckboxes(true); return false;" style="color: var(--primary); text-decoration: none; font-weight: 600;">Select All</a>
+                <a href="#" onclick="toggleAllMemberCheckboxes(true); return false;" style="color: #5b5fc7; text-decoration: none; font-weight: 700;">Select All</a>
                 <span>|</span>
                 <a href="#" onclick="toggleAllMemberCheckboxes(false); return false;" style="color: var(--text-muted); text-decoration: none;">Clear</a>
               </div>
             </div>
-            <div id="new-group-members-container" style="max-height: 170px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; background: var(--bg-secondary);">
-              <!-- Populated dynamically with checkboxes -->
+            <div id="new-group-members-container" style="max-height: 160px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; background: var(--bg-secondary);">
+              <!-- Checkboxes populated dynamically -->
             </div>
             <small style="font-size: 0.725rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
-              <i class="fas fa-lock" style="font-size: 0.7rem;"></i> Only selected members will be able to view and message inside this group.
+              <i class="fas fa-lock" style="font-size: 0.7rem;"></i> Private: Only selected members can view this team's messages.
             </small>
           </div>
 
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-          <button type="button" class="btn btn-secondary" onclick="closeNewGroupModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary" style="font-weight: 700;">
-            <i class="fas fa-check-circle"></i> Create Group
+          <button type="button" class="btn btn-secondary" onclick="closeNewGroupModal()" style="border-radius: 8px;">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="font-weight: 700; border-radius: 8px; background: #5b5fc7; border-color: #5b5fc7;">
+            <i class="fas fa-check-circle"></i> Create Team
           </button>
         </div>
       </form>
@@ -230,10 +211,13 @@
 
 </div>
 
+<!-- ==================== TEAMS CHAT RUNTIME JAVASCRIPT ==================== -->
 <script>
 (function() {
   var activeConversationId = "general";
   var activeConversationType = "channel"; // "channel" | "group" | "dm"
+  var currentFilterTab = "all"; // "all" | "dms" | "groups"
+  var searchFilterQuery = "";
 
   var defaultChannels = {
     "general": {
@@ -254,14 +238,14 @@
       id: "project-planning",
       name: "#project-planning",
       type: "channel",
-      badge: "Architecture & Design",
+      badge: "Design & Milestones",
       desc: "Floor plans, 3D renders, architectural revisions, and client milestone delivery."
     },
     "finance-orders": {
       id: "finance-orders",
       name: "#finance-orders",
       type: "channel",
-      badge: "Commercial & Billing",
+      badge: "Finance & POs",
       desc: "Purchase orders, vendor disbursements, customer milestone invoices, and GST clearances."
     }
   };
@@ -353,7 +337,6 @@
       var raw = localStorage.getItem("nexmilestro_chat_groups");
       if (raw) return JSON.parse(raw);
     } catch(e) {}
-    // Seed sample project group if empty
     var sampleGroups = [
       {
         id: "group_proj_1125",
@@ -396,6 +379,7 @@
     if (!Array.isArray(users) || users.length === 0) {
       users = [
         { FullName: "Mehul Gandhi", UserID: "mehul", RoleID: "Super Admin", Status: "Active" },
+        { FullName: "Dhwani Gandhi", UserID: "dhwani", RoleID: "Super Admin", Status: "Active" },
         { FullName: "Studio Reddy", UserID: "sreddy", RoleID: "Project Manager", Status: "Active" },
         { FullName: "Studio Sarin", UserID: "ssarin", RoleID: "Contractor Associate", Status: "Active" },
         { FullName: "Rajesh Kumar", UserID: "rajesh", RoleID: "Site Engineer", Status: "Active" },
@@ -412,97 +396,156 @@
     return "dm__" + pair[0].replace(/[^a-zA-Z0-9_-]/g, "_") + "__" + pair[1].replace(/[^a-zA-Z0-9_-]/g, "_");
   }
 
-  function renderCustomGroups() {
-    var container = document.getElementById("chat-custom-groups-list");
+  function getLastMessageInfo(convId) {
+    var allMsgs = getStoredMessages();
+    var list = allMsgs[convId] || [];
+    if (list.length === 0) return { text: "No messages yet", time: "" };
+    var last = list[list.length - 1];
+    return {
+      text: (last.sender ? (last.sender.split(" ")[0] + ": ") : "") + (last.text || ""),
+      time: last.time || ""
+    };
+  }
+
+  // ==================== SIDEBAR RENDERING (TEAMS HUB) ====================
+  function renderConversationsList() {
+    var container = document.getElementById("chat-conversations-feed");
     if (!container) return;
 
-    var groups = getStoredGroups();
     var curUser = getCurrentUser();
     var curUserId = String(getCurrentUserId()).trim().toLowerCase();
     var curUserName = String(curUser.fullName || curUser.FullName || "").trim().toLowerCase();
     var superAdmin = isSuperAdmin();
+    var query = searchFilterQuery.toLowerCase().trim();
 
-    // Security: Filter groups where current user is member (or Super Admin)
-    var visibleGroups = groups.filter(function(g) {
-      if (superAdmin) return true;
-      if (!g.members || !Array.isArray(g.members)) return false;
-      return g.members.some(function(m) {
-        var mStr = String(m).trim().toLowerCase();
-        return mStr === curUserId || mStr === curUserName || mStr === "all";
+    var html = "";
+
+    // 1. PUBLIC CHANNELS (Shown if 'all' or 'groups')
+    if (currentFilterTab === "all" || currentFilterTab === "groups") {
+      var channelsList = Object.keys(defaultChannels).map(function(k) { return defaultChannels[k]; });
+      if (query) {
+        channelsList = channelsList.filter(function(ch) {
+          return ch.name.toLowerCase().includes(query) || ch.desc.toLowerCase().includes(query);
+        });
+      }
+
+      if (channelsList.length > 0) {
+        html += '<div class="teams-section-title"><i class="fas fa-hashtag"></i> Public Channels</div>';
+        channelsList.forEach(function(ch) {
+          var isActive = activeConversationId === ch.id;
+          var lastMsg = getLastMessageInfo(ch.id);
+          html += '<div class="teams-chat-card' + (isActive ? ' active' : '') + '" onclick="switchChatConversation(\'' + escapeHtml(ch.id) + '\', event)">' +
+                    '<div class="teams-avatar channel">' +
+                      '<i class="fas fa-hashtag"></i>' +
+                    '</div>' +
+                    '<div class="teams-chat-info">' +
+                      '<div class="teams-chat-row-top">' +
+                        '<span class="teams-chat-name">' + escapeHtml(ch.name) + '</span>' +
+                        '<span class="teams-chat-time">' + escapeHtml(lastMsg.time) + '</span>' +
+                      '</div>' +
+                      '<div class="teams-chat-preview">' + escapeHtml(lastMsg.text) + '</div>' +
+                    '</div>' +
+                  '</div>';
+        });
+      }
+    }
+
+    // 2. PROJECT & TEAM GROUPS (Member-only visibility)
+    if (currentFilterTab === "all" || currentFilterTab === "groups") {
+      var groups = getStoredGroups();
+      var visibleGroups = groups.filter(function(g) {
+        if (!superAdmin) {
+          if (!g.members || !Array.isArray(g.members)) return false;
+          var isMember = g.members.some(function(m) {
+            var mStr = String(m).trim().toLowerCase();
+            return mStr === curUserId || mStr === curUserName || mStr === "all";
+          });
+          if (!isMember) return false;
+        }
+        if (query) {
+          return g.name.toLowerCase().includes(query) || (g.projectName && g.projectName.toLowerCase().includes(query)) || (g.topic && g.topic.toLowerCase().includes(query));
+        }
+        return true;
       });
-    });
 
-    if (visibleGroups.length === 0) {
-      container.innerHTML = '<div style="font-size: 0.75rem; color: var(--text-muted); padding: 0.35rem 0.5rem; font-style: italic;">No private groups yet.</div>';
-      return;
+      if (visibleGroups.length > 0) {
+        html += '<div class="teams-section-title"><i class="fas fa-users"></i> Project Teams & Groups (' + visibleGroups.length + ')</div>';
+        visibleGroups.forEach(function(g) {
+          var isActive = activeConversationId === g.id;
+          var lastMsg = getLastMessageInfo(g.id);
+          var projLabel = g.projectId ? '<span class="teams-pill-proj">' + escapeHtml(g.projectId) + '</span>' : '';
+
+          html += '<div class="teams-chat-card' + (isActive ? ' active' : '') + '" onclick="switchChatConversation(\'' + escapeHtml(g.id) + '\', event)">' +
+                    '<div class="teams-avatar group">' +
+                      '<i class="fas fa-users"></i>' +
+                    '</div>' +
+                    '<div class="teams-chat-info">' +
+                      '<div class="teams-chat-row-top">' +
+                        '<span class="teams-chat-name">' + escapeHtml(g.name) + projLabel + '</span>' +
+                        '<span class="teams-chat-time">' + escapeHtml(lastMsg.time) + '</span>' +
+                      '</div>' +
+                      '<div class="teams-chat-preview">' + escapeHtml(lastMsg.text) + '</div>' +
+                    '</div>' +
+                  '</div>';
+        });
+      }
     }
 
-    var html = visibleGroups.map(function(g) {
-      var isActive = activeConversationId === g.id;
-      var activeBg = isActive ? "rgba(15, 118, 110, 0.12)" : "transparent";
-      var activeCol = isActive ? "var(--primary)" : "var(--text-main)";
-      var activeWeight = isActive ? "600" : "500";
-      var projBadge = g.projectId ? '<span class="chat-project-pill" title="' + escapeHtml(g.projectName || g.projectId) + '"><i class="fas fa-folder"></i> ' + escapeHtml(g.projectId) + '</span>' : '';
+    // 3. DIRECT MESSAGES (1:1 PEOPLE)
+    if (currentFilterTab === "all" || currentFilterTab === "dms") {
+      var allUsers = getAllUsersList();
+      var dmPartners = allUsers.filter(function(u) {
+        var uId = String(u.UserID || u.userId || "").trim().toLowerCase();
+        var uName = String(u.FullName || u.fullName || "").trim().toLowerCase();
+        if (uId === curUserId || uName === curUserName) return false;
+        if (query) {
+          var role = String(u.RoleID || u.roleId || "").toLowerCase();
+          return uName.includes(query) || uId.includes(query) || role.includes(query);
+        }
+        return true;
+      });
 
-      return '<button type="button" class="btn-chat-channel' + (isActive ? ' active' : '') + '" onclick="switchChatConversation(\'' + escapeHtml(g.id) + '\', event)" data-channel="' + escapeHtml(g.id) + '" style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 0.45rem 0.65rem; border-radius: var(--radius-md); border: none; background: ' + activeBg + '; color: ' + activeCol + '; font-weight: ' + activeWeight + '; cursor: pointer; gap: 0.4rem;">' +
-               '<div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 0.35rem;">' +
-                 '<i class="fas fa-users" style="opacity: 0.7; font-size: 0.8rem;"></i>' +
-                 '<span style="font-size: 0.825rem;">' + escapeHtml(g.name) + '</span>' +
-               '</div>' +
-               projBadge +
-             '</button>';
-    }).join("");
+      if (dmPartners.length > 0) {
+        html += '<div class="teams-section-title"><i class="fas fa-user-friends"></i> Direct Messages (' + dmPartners.length + ')</div>';
+        dmPartners.forEach(function(u) {
+          var name = u.FullName || u.fullName || u.UserID || "Employee";
+          var role = u.RoleID || u.roleId || u.Role || "Staff";
+          var identifier = u.UserID || name;
+          var dmKey = getDMKey(identifier);
+          var isActive = activeConversationId === dmKey;
+          var initials = name.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() || "EM";
+          var lastMsg = getLastMessageInfo(dmKey);
+
+          html += '<div class="teams-chat-card' + (isActive ? ' active' : '') + '" onclick="switchChatConversation(\'' + escapeHtml(dmKey) + '\', event, \'' + escapeHtml(name) + '\', \'' + escapeHtml(role) + '\')">' +
+                    '<div class="teams-avatar dm">' +
+                      initials +
+                      '<span class="teams-online-dot"></span>' +
+                    '</div>' +
+                    '<div class="teams-chat-info">' +
+                      '<div class="teams-chat-row-top">' +
+                        '<span class="teams-chat-name">' + escapeHtml(name) + '</span>' +
+                        '<span class="teams-chat-time">' + escapeHtml(lastMsg.time) + '</span>' +
+                      '</div>' +
+                      '<div class="teams-chat-preview">' +
+                        '<span style="font-weight: 500; opacity: 0.85;">' + escapeHtml(role) + ' • </span>' + escapeHtml(lastMsg.text) +
+                      '</div>' +
+                    '</div>' +
+                  '</div>';
+        });
+      }
+    }
+
+    if (!html) {
+      html = '<div style="text-align: center; color: var(--text-muted); padding: 3rem 1.5rem; font-size: 0.85rem;">' +
+               '<i class="fas fa-search" style="font-size: 2rem; opacity: 0.35; margin-bottom: 0.5rem; display: block;"></i>' +
+               'No matching conversations found.' +
+             '</div>';
+    }
 
     container.innerHTML = html;
   }
 
-  function renderDMUsers() {
-    var container = document.getElementById("chat-dm-users-list");
-    var countEl = document.getElementById("chat-dm-user-count");
-    if (!container) return;
-
-    var users = getAllUsersList();
-    var curUser = getCurrentUser();
-    var curUserId = String(getCurrentUserId()).trim().toLowerCase();
-    var curUserName = String(curUser.fullName || curUser.FullName || "").trim().toLowerCase();
-
-    // Filter out oneself from DM selection list
-    var dmPartners = users.filter(function(u) {
-      var uId = String(u.UserID || u.userId || "").trim().toLowerCase();
-      var uName = String(u.FullName || u.fullName || "").trim().toLowerCase();
-      return uId !== curUserId && uName !== curUserName;
-    });
-
-    if (countEl) countEl.innerText = dmPartners.length + " Available";
-
-    if (dmPartners.length === 0) {
-      container.innerHTML = '<div style="font-size: 0.75rem; color: var(--text-muted); padding: 0.35rem 0.5rem; font-style: italic;">No other employees found.</div>';
-      return;
-    }
-
-    var html = dmPartners.map(function(u) {
-      var name = u.FullName || u.fullName || u.UserID || "Employee";
-      var role = u.RoleID || u.roleId || u.Role || "Staff";
-      var identifier = u.UserID || name;
-      var dmKey = getDMKey(identifier);
-      var isActive = activeConversationId === dmKey;
-      var initials = name.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() || "EM";
-
-      return '<button type="button" class="chat-dm-item' + (isActive ? ' active' : '') + '" onclick="switchChatConversation(\'' + escapeHtml(dmKey) + '\', event, \'' + escapeHtml(name) + '\', \'' + escapeHtml(role) + '\')" data-dm-key="' + escapeHtml(dmKey) + '">' +
-               '<div style="position: relative; width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">' +
-                 initials +
-                 '<span style="position: absolute; bottom: -1px; right: -1px; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; border: 1.5px solid #fff;"></span>' +
-               '</div>' +
-               '<div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1;">' +
-                 '<div style="font-size: 0.8rem; font-weight: 600; line-height: 1.2;">' + escapeHtml(name) + '</div>' +
-                 '<div style="font-size: 0.675rem; color: var(--text-muted);">' + escapeHtml(role) + '</div>' +
-               '</div>' +
-             '</button>';
-    }).join("");
-
-    container.innerHTML = html;
-  }
-
+  // ==================== MESSAGES STREAM RENDERING ====================
   function renderMessages() {
     var container = document.getElementById("chat-messages-container");
     if (!container) return;
@@ -515,31 +558,31 @@
     if (msgs.length === 0) {
       var nameEl = document.getElementById("chat-active-channel-name");
       var titleText = nameEl ? nameEl.innerText : "this conversation";
-      container.innerHTML = '<div style="text-align: center; color: var(--text-muted); margin: 3rem auto; font-size: 0.875rem;">' +
-                              '<i class="fas fa-comment-dots" style="font-size: 2.5rem; opacity: 0.4; margin-bottom: 0.75rem; display: block;"></i>' +
-                              'No messages in <strong>' + escapeHtml(titleText) + '</strong> yet. Start the conversation!' +
+      container.innerHTML = '<div class="teams-empty-chat">' +
+                              '<div class="teams-empty-icon"><i class="fas fa-comments"></i></div>' +
+                              '<h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0 0 0.35rem 0;">No messages yet</h3>' +
+                              '<p style="font-size: 0.825rem; color: var(--text-muted); margin: 0;">Start the conversation with <strong>' + escapeHtml(titleText) + '</strong>.</p>' +
                             '</div>';
       return;
     }
 
-    var html = msgs.map(function(m) {
+    var html = '<div class="teams-date-divider"><span>Today</span></div>';
+
+    html += msgs.map(function(m) {
       var isOutgoing = m.isSelf || (m.sender && m.sender.toLowerCase() === currentUserName.toLowerCase());
-      var cardClass = isOutgoing ? "chat-msg-card outgoing" : "chat-msg-card";
+      var cardClass = isOutgoing ? "teams-msg-row outgoing" : "teams-msg-row incoming";
       var initials = m.initials || (m.sender ? m.sender.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() : "TM");
-      var avatarBg = isOutgoing ? "var(--primary)" : "#6366f1";
+      var avatarBg = isOutgoing ? "var(--primary)" : "#5b5fc7";
 
       return '<div class="' + cardClass + '">' +
-               '<div style="width: 32px; height: 32px; border-radius: 50%; background: ' + avatarBg + '; color: #ffffff; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">' +
-                 initials +
-               '</div>' +
-               '<div style="max-width: 82%;">' +
-                 '<div style="font-size: 0.725rem; color: var(--text-muted); margin-bottom: 0.2rem; display: flex; gap: 0.4rem; align-items: center;' + (isOutgoing ? ' justify-content: flex-end;' : '') + '">' +
-                   '<strong style="color: var(--text-main);">' + escapeHtml(m.sender || "User") + '</strong>' +
-                   '<span style="font-size: 0.675rem; opacity: 0.75;">(' + escapeHtml(m.role || "Team") + ')</span>' +
-                   '<span>•</span>' +
-                   '<span>' + escapeHtml(m.time || "") + '</span>' +
+               '<div class="teams-msg-avatar" style="background: ' + avatarBg + ';">' + initials + '</div>' +
+               '<div class="teams-msg-body">' +
+                 '<div class="teams-msg-meta">' +
+                   '<strong class="teams-msg-sender">' + escapeHtml(m.sender || "User") + '</strong>' +
+                   '<span class="teams-msg-role">' + escapeHtml(m.role || "Team") + '</span>' +
+                   '<span class="teams-msg-time">' + escapeHtml(m.time || "") + '</span>' +
                  '</div>' +
-                 '<div class="chat-msg-bubble">' +
+                 '<div class="teams-msg-content">' +
                    escapeHtml(m.text || "") +
                  '</div>' +
                '</div>' +
@@ -550,6 +593,7 @@
     container.scrollTop = container.scrollHeight;
   }
 
+  // ==================== INTERACTION HANDLERS ====================
   window.switchChatConversation = function(convId, e, partnerName, partnerRole) {
     if (e) e.preventDefault();
     activeConversationId = convId;
@@ -559,26 +603,27 @@
     var descEl = document.getElementById("chat-active-channel-desc");
     var projPill = document.getElementById("chat-active-project-pill");
     var projNameEl = document.getElementById("chat-active-project-name");
+    var initialsEl = document.getElementById("chat-header-initials");
     var inputEl = document.getElementById("chat-input-field");
 
     if (projPill) projPill.style.display = "none";
 
-    // 1. Is it a default channel?
+    // 1. Public Channel
     if (defaultChannels[convId]) {
       activeConversationType = "channel";
       var ch = defaultChannels[convId];
       if (nameEl) nameEl.innerText = ch.name;
       if (badgeEl) badgeEl.innerText = ch.badge;
       if (descEl) descEl.innerText = ch.desc;
-      if (inputEl) inputEl.placeholder = "Type message to " + ch.name + "...";
+      if (initialsEl) initialsEl.innerHTML = '<i class="fas fa-hashtag"></i>';
+      if (inputEl) inputEl.placeholder = "Message " + ch.name + "...";
     }
-    // 2. Is it a Direct Message (1-on-1)?
+    // 2. Direct Message (1:1)
     else if (convId.startsWith("dm__")) {
       activeConversationType = "dm";
       var displayName = partnerName || "Team Member";
       var displayRole = partnerRole || "Internal Staff";
 
-      // If partnerName not passed directly, look it up
       if (!partnerName) {
         var users = getAllUsersList();
         var curUserId = String(getCurrentUserId()).trim().toLowerCase();
@@ -593,57 +638,40 @@
         }
       }
 
-      if (nameEl) nameEl.innerHTML = '<i class="fas fa-user-lock" style="color: var(--primary); margin-right: 0.35rem;"></i> ' + escapeHtml(displayName);
-      if (badgeEl) badgeEl.innerText = "Direct 1-on-1";
-      if (descEl) descEl.innerText = "Private direct conversation with " + displayName + " (" + displayRole + ").";
-      if (inputEl) inputEl.placeholder = "Send private message to " + displayName + "...";
+      var init = displayName.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() || "DM";
+      if (nameEl) nameEl.innerText = displayName;
+      if (badgeEl) badgeEl.innerText = "1:1 Private";
+      if (descEl) descEl.innerText = displayRole + " • Direct Message";
+      if (initialsEl) initialsEl.innerText = init;
+      if (inputEl) inputEl.placeholder = "Send direct message to " + displayName + "...";
     }
-    // 3. Is it a Custom Group?
+    // 3. Custom Group
     else {
       activeConversationType = "group";
       var groups = getStoredGroups();
       var grp = groups.find(function(g) { return g.id === convId; });
       if (grp) {
-        if (nameEl) nameEl.innerHTML = '<i class="fas fa-users" style="color: var(--primary); margin-right: 0.35rem;"></i> ' + escapeHtml(grp.name);
-        if (badgeEl) badgeEl.innerText = grp.members ? grp.members.length + " Members" : "Private Group";
+        if (nameEl) nameEl.innerText = grp.name;
+        if (badgeEl) badgeEl.innerText = (grp.members ? grp.members.length : 2) + " Members";
         if (descEl) descEl.innerText = grp.topic || ("Created by " + (grp.creator || "Admin"));
+        if (initialsEl) initialsEl.innerHTML = '<i class="fas fa-users"></i>';
         if (grp.projectId && projPill && projNameEl) {
           projNameEl.innerText = grp.projectName || grp.projectId;
           projPill.style.display = "inline-flex";
         }
-        if (inputEl) inputEl.placeholder = "Message group " + grp.name + "...";
+        if (inputEl) inputEl.placeholder = "Message " + grp.name + "...";
       }
     }
 
-    // Update active highlight classes in sidebar
-    document.querySelectorAll("#chat-channels-list .btn-chat-channel, #chat-custom-groups-list .btn-chat-channel").forEach(function(btn) {
-      var c = btn.getAttribute("data-channel");
-      if (c === convId) {
-        btn.classList.add("active");
-        btn.style.background = "rgba(15, 118, 110, 0.12)";
-        btn.style.color = "var(--primary)";
-        btn.style.fontWeight = "600";
-      } else {
-        btn.classList.remove("active");
-        btn.style.background = "transparent";
-        btn.style.color = "var(--text-main)";
-        btn.style.fontWeight = "500";
-      }
-    });
-
-    document.querySelectorAll("#chat-dm-users-list .chat-dm-item").forEach(function(item) {
-      var k = item.getAttribute("data-dm-key");
-      if (k === convId) {
-        item.classList.add("active");
-      } else {
-        item.classList.remove("active");
-      }
-    });
-
+    renderConversationsList();
     renderMessages();
-    if (inputEl) inputEl.focus();
+
+    // On mobile screens, automatically show the active chat view
     if (window.innerWidth <= 768) {
       window.toggleMobileChatView("chat");
+    }
+    if (inputEl) {
+      setTimeout(function() { inputEl.focus(); }, 150);
     }
   };
   window.switchChatChannel = window.switchChatConversation;
@@ -654,13 +682,41 @@
     if (viewMode === "chat") {
       container.classList.remove("mobile-show-sidebar");
       container.classList.add("mobile-show-chat");
-      var input = document.getElementById("chat-input-field");
-      if (input && window.innerWidth <= 768) {
-        setTimeout(function() { input.focus(); }, 150);
-      }
     } else {
       container.classList.remove("mobile-show-chat");
       container.classList.add("mobile-show-sidebar");
+    }
+  };
+
+  window.switchSidebarFilter = function(tabName, event) {
+    if (event) event.preventDefault();
+    currentFilterTab = tabName;
+    document.querySelectorAll(".teams-seg-tab").forEach(function(t) {
+      t.classList.toggle("active", t.getAttribute("data-tab") === tabName);
+    });
+    renderConversationsList();
+  };
+
+  window.filterConversationsList = function(q) {
+    searchFilterQuery = q || "";
+    var clearBtn = document.getElementById("chat-search-clear");
+    if (clearBtn) clearBtn.style.display = searchFilterQuery ? "block" : "none";
+    renderConversationsList();
+  };
+
+  window.clearConversationSearch = function() {
+    var input = document.getElementById("chat-filter-search");
+    if (input) input.value = "";
+    searchFilterQuery = "";
+    var clearBtn = document.getElementById("chat-search-clear");
+    if (clearBtn) clearBtn.style.display = "none";
+    renderConversationsList();
+  };
+
+  window.handleInputKeydown = function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      window.handleChatSubmit(e);
     }
   };
 
@@ -695,6 +751,7 @@
     saveStoredMessages(allMsgs);
 
     input.value = "";
+    renderConversationsList();
     renderMessages();
 
     // 1. Log System Notification (Notification Bell 🔔)
@@ -727,7 +784,7 @@
     input.focus();
   };
 
-  // Group Modal Logic
+  // ==================== NEW GROUP CREATION ====================
   window.openNewGroupModal = function(preselectedProjectId, prefilledProjectName) {
     var modal = document.getElementById("chat-new-group-modal");
     if (!modal) return;
@@ -736,21 +793,16 @@
     var projSelect = document.getElementById("new-group-project-id");
     if (projSelect) {
       var projects = (window._dataCache && window._dataCache.projects) || [];
-      projSelect.innerHTML = '<option value="">-- No Project Linked (Independent Group) --</option>' +
+      projSelect.innerHTML = '<option value="">-- No Project Linked (General Team) --</option>' +
         projects.map(function(p) {
           var sel = (preselectedProjectId && p.ProjectID === preselectedProjectId) ? ' selected' : '';
           return '<option value="' + escapeHtml(p.ProjectID) + '"' + sel + '>' + escapeHtml(p.ProjectName) + ' (' + escapeHtml(p.ProjectID) + ')</option>';
         }).join("");
     }
 
-    // Pre-fill group name if linked from project
     var nameInput = document.getElementById("new-group-name");
     if (nameInput) {
-      if (prefilledProjectName) {
-        nameInput.value = prefilledProjectName + " Team";
-      } else {
-        nameInput.value = "";
-      }
+      nameInput.value = prefilledProjectName ? (prefilledProjectName + " Team") : "";
     }
 
     // Populate member checkboxes
@@ -760,7 +812,7 @@
       var curUser = getCurrentUser();
       var curName = curUser.fullName || curUser.FullName || curUser.UserID || "Admin";
 
-      membersContainer.innerHTML = users.map(function(u, idx) {
+      membersContainer.innerHTML = users.map(function(u) {
         var name = u.FullName || u.fullName || u.UserID || "Member";
         var role = u.RoleID || u.roleId || "Staff";
         var isMe = (name.toLowerCase() === curName.toLowerCase());
@@ -826,7 +878,7 @@
       name: name,
       projectId: projId,
       projectName: projName,
-      topic: topic || ("Coordinated group for " + (projName || name)),
+      topic: topic || ("Coordinated team for " + (projName || name)),
       creator: curName,
       members: members,
       createdDate: new Date().toLocaleDateString()
@@ -837,84 +889,57 @@
     saveStoredGroups(groups);
 
     closeNewGroupModal();
-    renderCustomGroups();
+    renderConversationsList();
     switchChatConversation(newGroupId);
-    showToast("Chat group '" + name + "' created successfully!", "success");
+    showToast("Team '" + name + "' created successfully!", "success");
   };
 
-  // Browser / Mobile Web Push Notification Handler
+  // ==================== BROWSER PUSH NOTIFICATIONS ====================
   window.updateMobilePushUI = function() {
-    var btn = document.getElementById("btn-chat-mobile-push");
     var icon = document.getElementById("chat-mobile-push-icon");
-    var label = document.getElementById("chat-mobile-push-label");
-    if (!btn || !label) return;
-
-    if (!("Notification" in window)) {
-      label.innerText = "Alerts Unsupported";
-      btn.style.opacity = "0.6";
-      return;
-    }
-
+    if (!("Notification" in window) || !icon) return;
     if (Notification.permission === "granted") {
-      label.innerText = "Mobile Alerts: ON";
-      btn.classList.add("btn-success");
-      btn.classList.remove("btn-secondary");
-      if (icon) {
-        icon.className = "fas fa-bell";
-        icon.style.color = "#ffffff";
-      }
+      icon.className = "fas fa-bell";
+      icon.style.color = "#10b981";
     } else if (Notification.permission === "denied") {
-      label.innerText = "Alerts Blocked";
-      if (icon) {
-        icon.className = "fas fa-bell-slash";
-        icon.style.color = "#ef4444";
-      }
+      icon.className = "fas fa-bell-slash";
+      icon.style.color = "#ef4444";
     } else {
-      label.innerText = "Enable Mobile Alerts";
-      if (icon) {
-        icon.className = "fas fa-bell";
-        icon.style.color = "#f59e0b";
-      }
+      icon.className = "fas fa-bell";
+      icon.style.color = "#f59e0b";
     }
   };
 
   window.toggleMobilePushNotifications = function() {
     if (!("Notification" in window)) {
-      alert("Web push notifications are not supported by this browser engine. On iPhone/iPad, please tap Share -> 'Add to Home Screen' to enable native Web Push alerts.");
+      alert("Web push notifications are not supported on this browser. On iPhone, please tap Share -> 'Add to Home Screen' to enable Web Push.");
       return;
     }
-
     if (Notification.permission === "granted") {
-      showToast("Mobile and browser notifications are already active on this device!", "success");
+      showToast("Mobile & Browser alerts are active on this device!", "success");
       return;
     }
-
     if (Notification.permission === "denied") {
-      alert("Browser alerts are currently blocked. To receive mobile message alerts, please tap the lock/tune icon near your browser's address bar and set Notifications to 'Allow'.");
+      alert("Browser notifications are blocked. Please enable Notifications in your browser settings for this site.");
       return;
     }
-
     Notification.requestPermission().then(function(perm) {
-      if (window.innerWidth <= 768) {
-    window.toggleMobileChatView("sidebar");
-  }
-  window.updateMobilePushUI();
+      window.updateMobilePushUI();
       if (perm === "granted") {
-        showToast("Mobile & Browser message notifications enabled!", "success");
+        showToast("Mobile message alerts activated!", "success");
         if (typeof window.sendDevicePushNotification === "function") {
           window.sendDevicePushNotification("NexMilestro Alerts Active", {
-            body: "You will now receive instant team chat updates on your mobile device!"
+            body: "You will now receive instant team chat notifications on your mobile device!"
           });
         }
-      } else {
-        showToast("Notifications permission not granted.", "warning");
       }
     });
   };
 
   window.clearTeamChatHistory = function() {
-    if (confirm("Reset team chat history back to default sample messages?")) {
+    if (confirm("Reset chat history back to default sample conversations?")) {
       localStorage.removeItem("nexmilestro_team_messages");
+      renderConversationsList();
       renderMessages();
       showToast("Chat reset to defaults.", "info");
     }
@@ -941,8 +966,7 @@
   };
 
   window.loadTeamchatView = function() {
-    renderCustomGroups();
-    renderDMUsers();
+    renderConversationsList();
     renderMessages();
     window.updateMobilePushUI();
 
@@ -950,7 +974,6 @@
       window.toggleMobileChatView("sidebar");
     }
 
-    // Check if coming from Project module with a pending group create request
     var pendingProjId = localStorage.getItem("pending_new_chat_group_project_id");
     var pendingProjName = localStorage.getItem("pending_new_chat_group_project_name");
     if (pendingProjId) {
@@ -960,14 +983,10 @@
         openNewGroupModal(pendingProjId, pendingProjName);
       }, 200);
     }
-
-    var input = document.getElementById("chat-input-field");
-    if (input) input.focus();
   };
 
   // Immediate initialization
-  renderCustomGroups();
-  renderDMUsers();
+  renderConversationsList();
   renderMessages();
   if (window.innerWidth <= 768) {
     window.toggleMobileChatView("sidebar");

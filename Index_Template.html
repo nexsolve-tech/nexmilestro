@@ -241,7 +241,7 @@
 
           <!-- User Profile Display & Popover Wrap -->
           <div style="position: relative; display: inline-block;">
-            <div id="header-user-profile-wrap" onclick="toggleUserProfilePopover(event)" title="View profile & account options" style="display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border-radius: 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); box-shadow: var(--shadow-sm); cursor: pointer;">
+            <div id="header-user-profile-wrap" onclick="toggleUserProfilePopover(event)" ontouchend="toggleUserProfilePopover(event)" title="View profile & account options" style="display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border-radius: 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); box-shadow: var(--shadow-sm); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
               <div id="header-user-avatar-img-wrap" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #0d9488, #0f172a); color: #fff; font-weight: 700; font-size: 0.775rem; border: 1.5px solid var(--primary); flex-shrink: 0;">
                 <span id="header-user-avatar-initials">A</span>
               </div>
@@ -2024,12 +2024,24 @@
     /**
      * User Profile Popover Management
      */
+    var _lastProfileToggleTimestamp = 0;
     function toggleUserProfilePopover(e) {
-      if (e) e.stopPropagation();
+      if (e) {
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.type === "touchend" && e.preventDefault) e.preventDefault();
+      }
+      var now = Date.now();
+      if (now - _lastProfileToggleTimestamp < 280) {
+        return; // Debounce synthetic click following touchend on mobile
+      }
+      _lastProfileToggleTimestamp = now;
+
       var pop = document.getElementById("user-profile-popover");
       if (!pop) return;
-      var isVisible = pop.style.display === "block";
+      var isVisible = (pop.style.display === "block");
       if (!isVisible) {
+        var notifPop = document.getElementById("notifications-popover");
+        if (notifPop) notifPop.style.display = "none";
         updateUserProfilePopoverData();
         pop.style.display = "block";
       } else {
@@ -2160,6 +2172,16 @@
       if (notifPop && notifPop.style.display === "flex") {
         if (!notifPop.contains(e.target) && (!notifBtn || !notifBtn.contains(e.target))) {
           notifPop.style.display = "none";
+        }
+      }
+    });
+
+    document.addEventListener("touchend", function(e) {
+      var pop = document.getElementById("user-profile-popover");
+      var wrap = document.getElementById("header-user-profile-wrap");
+      if (pop && pop.style.display === "block") {
+        if (!pop.contains(e.target) && (!wrap || !wrap.contains(e.target))) {
+          pop.style.display = "none";
         }
       }
     });
