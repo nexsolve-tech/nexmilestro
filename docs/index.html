@@ -12117,7 +12117,7 @@ textarea.form-control {
       }
     }).withFailureHandler(function(err) {
       showToast(err.message, "error");
-    }).addDropdownValue(key, val, userId);
+    }).saveDropdownValue(key, val, userId);
   }
   function deleteMasterOption(key, value) {
     if (confirm('Are you sure you want to delete option "'.concat(value, '"? This will not alter existing sheet records, but it will remove it from future form select lists.'))) {
@@ -14233,7 +14233,7 @@ document.addEventListener("click", function() {
         return { success: true, message: "User deleted successfully." };
       }
 
-      if (fnName === "saveDropdownValue") {
+      if (fnName === "saveDropdownValue" || fnName === "addDropdownValue") {
         var cat = payload.category;
         var val = payload.value;
         window._dataCache.dropdowns = window._dataCache.dropdowns || {};
@@ -14642,6 +14642,7 @@ document.addEventListener("click", function() {
         deleteUser: "delete_user",
         saveRolePermissions: "save_role_permissions",
         saveDropdownValue: "save_master_option",
+        addDropdownValue: "save_master_option",
         deleteDropdownValue: "delete_master_option",
         saveCompanySetup: "save_company_setup",
         uploadFileToDrive: "uploadFile",
@@ -14674,7 +14675,7 @@ document.addEventListener("click", function() {
             payload.associateId = args[0];
             payload.transactionId = args[0];
             payload.targetUserId = args[0];
-          } else if (fnName === "saveDropdownValue" || fnName === "deleteDropdownValue") {
+          } else if (fnName === "saveDropdownValue" || fnName === "addDropdownValue" || fnName === "deleteDropdownValue") {
             payload.category = args[0];
             payload.value = args[1];
           } else if (fnName === "saveRolePermissions") {

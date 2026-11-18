@@ -1587,11 +1587,14 @@ function handleUniversalApiRequest(action, params) {
 
       case 'save_master_option':
       case 'saveDropdownValue':
+      case 'addDropdownValue':
+      case 'add_dropdown_value':
         response = saveDropdownValue(licenseKey, dataObj.category || dataObj.DropdownKey || params.category, dataObj.value || dataObj.DropdownValue || params.value, userId);
         break;
 
       case 'delete_master_option':
       case 'deleteDropdownValue':
+      case 'delete_dropdown_value':
         response = deleteDropdownValue(licenseKey, dataObj.category || dataObj.DropdownKey || params.category, dataObj.value || dataObj.DropdownValue || params.value);
         break;
 

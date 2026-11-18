@@ -142,7 +142,7 @@
       }
     }).withFailureHandler(function(err) {
       showToast(err.message, "error");
-    }).addDropdownValue(key, val, userId);
+    }).saveDropdownValue(key, val, userId);
   }
   function deleteMasterOption(key, value) {
     if (confirm('Are you sure you want to delete option "'.concat(value, '"? This will not alter existing sheet records, but it will remove it from future form select lists.'))) {
