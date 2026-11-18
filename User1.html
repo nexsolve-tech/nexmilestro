@@ -417,6 +417,24 @@
       var uStatusStr = String(user.Status || "Active");
       var uStatusEsc = typeof escapeHtml === "function" ? escapeHtml(uStatusStr) : uStatusStr;
       var uNameEscForJs = uNameEsc.replace(/'/g, "\\'");
+      var menuId = "act-user-" + uIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); openUserPermissionsModal(\'' + uIdEsc + '\', \'' + uNameEscForJs + '\', \'' + uRoleEsc + '\');">' +
+            '<i class="fas fa-user-shield" style="color: #0284c7;"></i> <span>User Permissions</span>' +
+          '</button>' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editUser(\'' + uIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit User</span>' +
+          '</button>' +
+          '<div class="table-action-divider"></div>' +
+          '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteUser(\'' + uIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete User</span>' +
+          '</button>' +
+        '</div></div>';
 
       return '<tr id="row-' + uIdEsc + '">' +
         '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + uIdEsc + '</td>' +
@@ -426,11 +444,7 @@
         '<td><span class="badge badge-on-hold">' + uRoleEsc + '</span></td>' +
         '<td><span class="badge badge-' + uStatusStr.toLowerCase() + '">' + uStatusEsc + '</span></td>' +
         '<td style="font-size: 0.8rem; color: var(--text-muted);">' + lastLoginStr + '</td>' +
-        '<td style="text-align: right;">' +
-          '<button class="icon-btn" title="User Permissions" onclick="openUserPermissionsModal(\'' + uIdEsc + '\', \'' + uNameEscForJs + '\', \'' + uRoleEsc + '\')" style="background: rgba(14, 165, 233, 0.15); color: var(--primary);"><i class="fas fa-user-shield"></i></button>' +
-          '<button class="icon-btn btn-edit" title="Edit User" onclick="editUser(\'' + uIdEsc + '\')"><i class="fas fa-pen"></i></button>' +
-          '<button class="icon-btn btn-delete" title="Delete User" onclick="deleteUser(\'' + uIdEsc + '\')"><i class="fas fa-trash"></i></button>' +
-        '</td>' +
+        '<td style="text-align: right;">' + actionsHtml + '</td>' +
       '</tr>';
     }).join("");
   }

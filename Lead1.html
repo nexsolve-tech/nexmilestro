@@ -37,7 +37,7 @@
               <th>Lead Source</th>
               <th>Lead Status</th>
               <th>Next Follow-up Date</th>
-              <th style="text-align: right; width: 140px;">Actions</th>
+              <th style="text-align: right; width: 120px;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -404,7 +404,6 @@
       if (statusStr === "Lost") badgeClass = "badge-inactive";
       if (statusStr === "Proposal Sent") badgeClass = "badge-on-hold";
 
-      var actionsHtml = "";
       var leadIdEsc = escapeHtml(lead.LeadID || "");
       var custNameEsc = escapeHtml(lead.CustomerName || "");
       var projTypeEsc = escapeHtml(lead.ProjectType || "");
@@ -413,19 +412,42 @@
       var sourceEsc = escapeHtml(lead.Source || "-");
       var statusEsc = escapeHtml(statusStr);
 
+      var menuId = "act-lead-" + leadIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+      var actionsHtml = '<div class="action-dropdown-wrap">' +
+        '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
+          '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
+        '</button>' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">';
+
       if (lead.Mobile) {
-        actionsHtml += '<button type="button" data-lead-id="' + leadIdEsc + '" class="icon-btn" style="color: #25D366; cursor: pointer;" title="Chat with Lead on WhatsApp" onclick="sendLeadWhatsApp(this.getAttribute(\'data-lead-id\'))"><i class="fab fa-whatsapp"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); sendLeadWhatsApp(\'' + leadIdEsc + '\');">' +
+            '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Chat on WhatsApp</span>' +
+          '</button>';
       }
 
       if (canEdit) {
-        actionsHtml += '<button class="icon-btn" style="color: var(--primary);" title="Convert to Customer" onclick="triggerConvertLead(\'' + leadIdEsc + '\')"><i class="fas fa-user-plus"></i></button>';
-        actionsHtml += '<button class="icon-btn" style="color: var(--secondary);" title="Manage Follow-ups" onclick="openLeadFollowupModal(\'' + leadIdEsc + '\')"><i class="fas fa-history"></i></button>';
-        actionsHtml += '<button class="icon-btn btn-edit" title="Edit Lead" onclick="editLead(\'' + leadIdEsc + '\')"><i class="fas fa-pen"></i></button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); triggerConvertLead(\'' + leadIdEsc + '\');">' +
+            '<i class="fas fa-user-plus" style="color: #0f766e;"></i> <span>Convert to Customer</span>' +
+          '</button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); openLeadFollowupModal(\'' + leadIdEsc + '\');">' +
+            '<i class="fas fa-history" style="color: #0284c7;"></i> <span>Manage Follow-ups</span>' +
+          '</button>';
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editLead(\'' + leadIdEsc + '\');">' +
+            '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Lead</span>' +
+          '</button>';
       }
 
       if (canDelete) {
-        actionsHtml += '<button class="icon-btn btn-delete" title="Delete Lead" onclick="deleteLead(\'' + leadIdEsc + '\')"><i class="fas fa-trash"></i></button>';
+        if (lead.Mobile || canEdit) {
+          actionsHtml += '<div class="table-action-divider"></div>';
+        }
+        actionsHtml += '<button type="button" class="table-action-item item-danger" onclick="event.stopPropagation(); closeAllTableActionMenus(); deleteLead(\'' + leadIdEsc + '\');">' +
+            '<i class="fas fa-trash"></i> <span>Delete Lead</span>' +
+          '</button>';
       }
+
+      actionsHtml += '</div></div>';
 
       return '<tr id="row-' + leadIdEsc + '">' +
         '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + leadIdEsc + '</td>' +
