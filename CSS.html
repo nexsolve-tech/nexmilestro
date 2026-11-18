@@ -2382,4 +2382,16 @@ textarea.form-control {
     display: none;
   }
 }
+
+/* Smooth Record Highlight Glow for Notifications */
+@keyframes recordPulseHighlight {
+  0% { background-color: rgba(15, 118, 110, 0.35) !important; box-shadow: 0 0 15px rgba(15, 118, 110, 0.4); }
+  50% { background-color: rgba(15, 118, 110, 0.15) !important; }
+  100% { background-color: transparent; box-shadow: none; }
+}
+
+.record-highlight-target {
+  animation: recordPulseHighlight 3.5s ease-out !important;
+  transition: all 0.3s ease;
+}
 </style>

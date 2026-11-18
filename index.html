@@ -2400,6 +2400,18 @@ textarea.form-control {
     display: none;
   }
 }
+
+/* Smooth Record Highlight Glow for Notifications */
+@keyframes recordPulseHighlight {
+  0% { background-color: rgba(15, 118, 110, 0.35) !important; box-shadow: 0 0 15px rgba(15, 118, 110, 0.4); }
+  50% { background-color: rgba(15, 118, 110, 0.15) !important; }
+  100% { background-color: transparent; box-shadow: none; }
+}
+
+.record-highlight-target {
+  animation: recordPulseHighlight 3.5s ease-out !important;
+  transition: all 0.3s ease;
+}
 </style>
 
 
@@ -7647,7 +7659,7 @@ textarea.form-control {
           quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Completed\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--success); font-weight:600;"><i class="fas fa-check-double"></i> Approve</button>';
         }
 
-        return '<div class="kanban-card" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: grab;">' +
+        return '<div class="kanban-card" id="card-' + tIdEsc + '" data-id="' + tIdEsc + '" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: grab;">' +
           '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">' +
             '<span class="kanban-card-title">' + tNameEsc + '</span>' +
             '<div style="display:flex; align-items:center; gap:0.35rem;">' +
@@ -16371,6 +16383,19 @@ document.addEventListener("click", function() {
             setTimeout(function() { window.upgradeAllSelects(appContent); }, 150);
           }
           this.currentView = viewId;
+
+          // Directly navigate and open specific record if queued from notifications
+          var targetRecId = localStorage.getItem("pending_target_record_id");
+          var targetMod = localStorage.getItem("pending_target_module");
+          if (targetRecId && (!targetMod || targetMod === viewId)) {
+            localStorage.removeItem("pending_target_record_id");
+            localStorage.removeItem("pending_target_module");
+            setTimeout(function() {
+              if (typeof window.openSpecificRecord === "function") {
+                window.openSpecificRecord(viewId, targetRecId);
+              }
+            }, 300);
+          }
         }
 
         toggleSidebar(false);
@@ -16910,6 +16935,74 @@ document.addEventListener("click", function() {
       showToast("All notifications marked as read.", "info");
     };
 
+    window.openSpecificRecord = function(module, rawRecordId) {
+      if (!rawRecordId || !module) return;
+      var recordId = String(rawRecordId).trim();
+      var recLower = recordId.toLowerCase();
+
+      // 1. Scroll to and pulse highlight element (table row or kanban card)
+      var targetEl = document.getElementById("row-" + recordId) ||
+                     document.getElementById("card-" + recordId) ||
+                     document.getElementById("row-" + recordId.replace(/[^a-zA-Z0-9_-]/g, "_")) ||
+                     document.querySelector('[data-id="' + recordId + '"]') ||
+                     document.querySelector('[data-record-id="' + recordId + '"]');
+
+      if (targetEl) {
+        try {
+          targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetEl.classList.remove("record-highlight-target");
+          void targetEl.offsetWidth; // trigger reflow
+          targetEl.classList.add("record-highlight-target");
+        } catch(e) {}
+      }
+
+      // 2. Open edit/details modal for specific module
+      if (module === "tasks") {
+        if (typeof window.editTask === "function") {
+          window.editTask(recordId);
+        } else if (typeof window.openTaskModal === "function") {
+          var tList = (window._dataCache && window._dataCache.tasks) || [];
+          var tObj = tList.find(function(t) { return String(t.TaskID).toLowerCase() === recLower; });
+          if (tObj) window.openTaskModal(tObj);
+        }
+      } else if (module === "projects") {
+        if (typeof window.editProject === "function") {
+          window.editProject(recordId);
+        } else if (typeof window.openProjectModal === "function") {
+          var pList = (window._dataCache && window._dataCache.projects) || [];
+          var pObj = pList.find(function(p) { return String(p.ProjectID).toLowerCase() === recLower; });
+          if (pObj) window.openProjectModal(pObj);
+        }
+      } else if (module === "sitevisits" || module === "sitevisit") {
+        if (typeof window.editVisit === "function") {
+          window.editVisit(recordId);
+        } else if (typeof window.openVisitModal === "function") {
+          var svList = (window._dataCache && window._dataCache.sitevisits) || [];
+          var svObj = svList.find(function(v) { return String(v.VisitID).toLowerCase() === recLower; });
+          if (svObj) window.openVisitModal(svObj);
+        }
+      } else if (module === "leads") {
+        if (typeof window.editLead === "function") {
+          window.editLead(recordId);
+        } else if (typeof window.openLeadModal === "function") {
+          var lList = (window._dataCache && window._dataCache.leads) || [];
+          var lObj = lList.find(function(l) { return String(l.LeadID).toLowerCase() === recLower; });
+          if (lObj) window.openLeadModal(lObj);
+        }
+      } else if (module === "finance") {
+        if (typeof window.editTxn === "function") {
+          window.editTxn(recordId);
+        }
+      } else if (module === "customers") {
+        if (typeof window.editCustomer === "function") {
+          window.editCustomer(recordId);
+        }
+      }
+
+      showToast("Opened " + module.toUpperCase() + " record: " + recordId, "info");
+    };
+    window.openSpecificRecord = window.openSpecificRecord;
+
     window.handleNotificationClick = function(module, recordId, notifId) {
       var list = window.getNotificationsList();
       var item = list.find(function(n) { return n.id === notifId; });
@@ -16921,10 +17014,24 @@ document.addEventListener("click", function() {
       if (pop) pop.style.display = "none";
 
       if (module) {
-        if (recordId && module === "tasks") {
-          localStorage.setItem("pending_edit_task_id", recordId);
+        if (recordId) {
+          localStorage.setItem("pending_target_module", module);
+          localStorage.setItem("pending_target_record_id", recordId);
+          if (module === "tasks") {
+            localStorage.setItem("pending_edit_task_id", recordId);
+          }
         }
-        navigateRoute(null, module);
+        
+        // If already on that view, directly open and highlight
+        if (appRouter.currentView === module) {
+          if (recordId && typeof window.openSpecificRecord === "function") {
+            localStorage.removeItem("pending_target_record_id");
+            localStorage.removeItem("pending_target_module");
+            window.openSpecificRecord(module, recordId);
+          }
+        } else {
+          navigateRoute(null, module);
+        }
       }
     };
 

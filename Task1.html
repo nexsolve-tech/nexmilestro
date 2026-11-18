@@ -557,7 +557,7 @@
           quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Completed\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--success); font-weight:600;"><i class="fas fa-check-double"></i> Approve</button>';
         }
 
-        return '<div class="kanban-card" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: grab;">' +
+        return '<div class="kanban-card" id="card-' + tIdEsc + '" data-id="' + tIdEsc + '" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: grab;">' +
           '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">' +
             '<span class="kanban-card-title">' + tNameEsc + '</span>' +
             '<div style="display:flex; align-items:center; gap:0.35rem;">' +
