@@ -2488,11 +2488,50 @@
         if (typeof window.editCustomer === "function") {
           window.editCustomer(recordId);
         }
+      } else if (module === "teamchat") {
+        if (typeof window.switchChatConversation === "function") {
+          window.switchChatConversation(recordId);
+        }
       }
 
-      showToast("Opened " + module.toUpperCase() + " record: " + recordId, "info");
+      showToast("Viewing " + module.toUpperCase() + " record: " + recordId, "info");
     };
     window.openSpecificRecord = window.openSpecificRecord;
+
+    /**
+     * Browser & Mobile Web Push Notification Dispatcher
+     */
+    window.sendDevicePushNotification = function(title, options) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        try {
+          var opts = options || {};
+          var notif = new Notification(title, {
+            body: opts.body || "",
+            icon: opts.icon || "https://img.icons8.com/color/96/chat--v1.png",
+            badge: opts.badge || "https://img.icons8.com/color/96/chat--v1.png",
+            vibrate: [200, 100, 200],
+            data: opts.data || {}
+          });
+          notif.onclick = function() {
+            window.focus();
+            if (opts.data && opts.data.conversationId) {
+              if (appRouter.currentView !== "teamchat") {
+                navigateRoute(null, "teamchat");
+              }
+              setTimeout(function() {
+                if (typeof window.switchChatConversation === "function") {
+                  window.switchChatConversation(opts.data.conversationId);
+                }
+              }, 250);
+            }
+            this.close();
+          };
+        } catch(e) {
+          console.warn("Device push notification error:", e);
+        }
+      }
+    };
 
     window.handleNotificationClick = function(module, recordId, notifId) {
       var list = window.getNotificationsList();

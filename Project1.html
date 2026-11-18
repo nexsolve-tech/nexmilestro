@@ -515,6 +515,9 @@
           '</button>' +
           '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); editProject(\'' + pjIdEsc + '\');">' +
             '<i class="fas fa-pen" style="color: #3b82f6;"></i> <span>Edit Project</span>' +
+          '</button>' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); createChatGroupForProject(\'' + pjIdEsc + '\', \'' + pjNameEscaped + '\');">' +
+            '<i class="fas fa-comments" style="color: #0d9488;"></i> <span>Create Chat Group</span>' +
           '</button>';
       }
 
@@ -1134,6 +1137,12 @@
   });
   window.openProjectModal = openProjectModal;
   window.closeProjectModal = closeProjectModal;
+  function createChatGroupForProject(projectId, projectName) {
+    localStorage.setItem("pending_new_chat_group_project_id", projectId);
+    localStorage.setItem("pending_new_chat_group_project_name", projectName || projectId);
+    navigateRoute(null, "teamchat");
+  }
+  window.createChatGroupForProject = createChatGroupForProject;
   window.editProject = editProject;
   window.deleteProject = deleteProject;
   window.filterProjects = filterProjects;
