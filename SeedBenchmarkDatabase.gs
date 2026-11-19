@@ -474,3 +474,73 @@ function executeHighVolumeSeeding(ss) {
 
   return { success: true, message: msg };
 }
+
+
+/**
+ * 🧹 Clean Slate: Clears all test/sample records from operational data sheets
+ * while strictly retaining the 3 target users and company setup.
+ */
+function setupDatabaseTabs() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const targetSheets = [
+    "Customers", "Projects", "SiteVisits", "Tasks", "Leads",
+    "LeadFollowups", "Proposals", "Vendors", "Associates", "Transactions", "Milestones", "ChatMessages", "ChatGroups"
+  ];
+
+  let clearedCount = 0;
+  targetSheets.forEach(function(sheetName) {
+    try {
+      const sh = ss.getSheetByName(sheetName);
+      if (sh) {
+        const lastRow = sh.getLastRow();
+        if (lastRow > 1) {
+          sh.getRange(2, 1, lastRow - 1, sh.getLastColumn()).clearContent();
+          clearedCount++;
+        }
+      }
+    } catch(e) {
+      Logger.log("Error clearing sheet " + sheetName + ": " + e.message);
+    }
+  });
+
+  // Ensure Users sheet contains strictly the 3 users
+  try {
+    const userSh = ss.getSheetByName("Users");
+    if (userSh) {
+      const userHeaders = ["UserID", "FullName", "Email", "Mobile", "PasswordHash", "MustChangePassword", "RoleID", "Status", "LastLogin", "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy", "ReportsTo"];
+      userSh.clear();
+      userSh.getRange(1, 1, 1, userHeaders.length).setValues([userHeaders]);
+      userSh.getRange(1, 1, 1, userHeaders.length).setBackground("#0f766e").setFontColor("#ffffff").setFontWeight("bold");
+      userSh.setFrozenRows(1);
+
+      // Hashes for Mehul@123, Dhwani@123, Meghal@123
+      const u1Hash = typeof hashPassword === "function" ? hashPassword("Mehul@123") : "5f4dcc3b5aa765d61d8327deb882cf99";
+      const u2Hash = typeof hashPassword === "function" ? hashPassword("Dhwani@123") : "5f4dcc3b5aa765d61d8327deb882cf99";
+      const u3Hash = typeof hashPassword === "function" ? hashPassword("Meghal@123") : "5f4dcc3b5aa765d61d8327deb882cf99";
+
+      const cleanUsers = [
+        ["USR-101", "Mehul Gandhi", "mehul.gandhi@nexsolve.in", "9811223344", u1Hash, "No", "Super Admin", "Active", "", new Date().toISOString(), "SYSTEM", new Date().toISOString(), "SYSTEM", ""],
+        ["USR-102", "Dhwani Gandhi", "dhwani.gandhi@nexsolve.in", "9822334455", u2Hash, "No", "Designer", "Active", "", new Date().toISOString(), "SYSTEM", new Date().toISOString(), "SYSTEM", "USR-101"],
+        ["USR-103", "Meghal Sadhu", "meghal.sadhu@nexsolve.in", "9833445566", u3Hash, "No", "Sales Head", "Active", "", new Date().toISOString(), "SYSTEM", new Date().toISOString(), "SYSTEM", "USR-101"]
+      ];
+      userSh.getRange(2, 1, cleanUsers.length, userHeaders.length).setValues(cleanUsers);
+    }
+  } catch(uErr) {
+    Logger.log("Error resetting users table: " + uErr.message);
+  }
+
+  const msg = "🧹 Clean Slate Database Reset Complete!\n\n" +
+    "• " + clearedCount + " operational data sheets wiped clean.\n" +
+    "• Strictly 3 core users retained with exact passwords and roles:\n" +
+    "  1. Mehul Gandhi (Super Admin)\n" +
+    "  2. Dhwani Gandhi (Designer)\n" +
+    "  3. Meghal Sadhu (Sales Head)\n\n" +
+    "NexMilestro is ready with a clean production slate.";
+
+  try {
+    SpreadsheetApp.getUi().alert("NexMilestro Database Reset", msg, SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch(e) {
+    Logger.log(msg);
+  }
+  return { success: true, message: msg };
+}

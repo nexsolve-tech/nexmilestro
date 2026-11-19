@@ -353,80 +353,15 @@
   var defaultMessages = {
     "general": [
       {
-        id: "msg_1",
+        id: "msg_welcome",
         conversationId: "general",
         sender: "Mehul Gandhi",
         role: "Super Admin",
-        text: "Good morning team! Please ensure all urgent tasks for Project 1125 and Project 1148 are updated on the board today.",
-        time: "09:30 AM",
-        timestamp: Date.now() - 3600000,
-        initials: "MG"
-      },
-      {
-        id: "msg_2",
-        conversationId: "general",
-        sender: "Studio Reddy",
-        role: "Project Manager",
-        text: "Morning Mehul. False ceiling channel laser leveling is underway at Project 1125. Milestone is on track for 50% completion.",
-        time: "09:42 AM",
-        timestamp: Date.now() - 3000000,
-        initials: "SR"
-      },
-      {
-        id: "msg_3",
-        conversationId: "general",
-        sender: "Rajesh Kumar",
-        role: "Site Supervisor",
-        text: "Material shipment for Italian marble tiles arrived safely at Site 1148. Inspected and approved by civil team.",
-        time: "10:15 AM",
-        timestamp: Date.now() - 2400000,
-        initials: "RK"
-      }
-    ],
-    "site-updates": [
-      {
-        id: "msg_s1",
-        conversationId: "site-updates",
-        sender: "Rajesh Kumar",
-        role: "Site Supervisor",
-        text: "Laser leveling for false ceiling channel (#1250) completed at Project 1125. No deviations found.",
-        time: "11:00 AM",
-        timestamp: Date.now() - 1800000,
-        initials: "RK"
-      },
-      {
-        id: "msg_s2",
-        conversationId: "site-updates",
-        sender: "Studio Sarin",
-        role: "Contractor Associate",
-        text: "MEP Piping and electrical conduit routing inspected for HVAC first fix. Ready for plastering inspection.",
-        time: "11:35 AM",
-        timestamp: Date.now() - 1200000,
-        initials: "SS"
-      }
-    ],
-    "project-planning": [
-      {
-        id: "msg_p1",
-        conversationId: "project-planning",
-        sender: "Studio Reddy",
-        role: "Project Manager",
-        text: "Client signed off on the revised living room electrical layout for Project 1225 Luxury Phase 3.",
-        time: "Yesterday, 04:30 PM",
-        timestamp: Date.now() - 86400000,
-        initials: "SR"
-      }
-    ],
-    "finance-orders": [
-      {
-        id: "msg_f1",
-        conversationId: "finance-orders",
-        sender: "Accounts Desk",
-        role: "Finance Executive",
-        text: "Received customer payment of ₹1,50,000 for Project 1148. Booking entry saved and GST invoice generated.",
-        time: "10:05 AM",
-        timestamp: Date.now() - 4000000,
-        initials: "AD"
+        text: "Welcome to NexMilestro Team Chat. Connect, collaborate and coordinate projects in real-time.",
+        time: "Just now",
+        timestamp: Date.now(),
+        initials: "MG",
+        receipt: "delivered"
       }
     ]
   };
@@ -456,13 +391,24 @@
 
   function getNormalizedUserKey(userOrName) {
     if (!userOrName) return "";
-    var s = "";
+    var rawStr = "";
     if (typeof userOrName === "object") {
-      s = userOrName.FullName || userOrName.fullName || userOrName.UserID || userOrName.userId || "";
+      rawStr = userOrName.FullName || userOrName.fullName || "";
+      if (!rawStr) rawStr = userOrName.UserID || userOrName.userId || userOrName.email || userOrName.Email || "";
     } else {
-      s = String(userOrName);
+      rawStr = String(userOrName).trim();
     }
-    return s.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    // Match against active users to resolve ID or Email to canonical FullName
+    var all = getAllUsersList();
+    var match = all.find(function(u) {
+      return (u.UserID && String(u.UserID).toLowerCase() === rawStr.toLowerCase()) ||
+             (u.Email && String(u.Email).toLowerCase() === rawStr.toLowerCase()) ||
+             (u.FullName && String(u.FullName).toLowerCase() === rawStr.toLowerCase());
+    });
+    if (match && match.FullName) {
+      rawStr = match.FullName;
+    }
+    return rawStr.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
   }
 
   function getDMKey(partnerUserOrName) {
@@ -475,22 +421,12 @@
   function getStoredGroups() {
     try {
       var raw = localStorage.getItem("nexmilestro_chat_groups");
-      if (raw) return JSON.parse(raw);
-    } catch(e) {}
-    var sampleGroups = [
-      {
-        id: "group_proj_1125",
-        name: "Project 1125 Execution Crew",
-        projectId: "PROJ-1125",
-        projectName: "Project 1125 - Retail Phase 2",
-        topic: "False ceiling, laser leveling & floor tiles",
-        creator: "Mehul Gandhi",
-        members: ["Mehul Gandhi", "Dhwani Gandhi", "Studio Reddy", "Rajesh Kumar", "Super Admin"],
-        createdDate: "18 Nov 2026"
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
       }
-    ];
-    localStorage.setItem("nexmilestro_chat_groups", JSON.stringify(sampleGroups));
-    return sampleGroups;
+    } catch(e) {}
+    return [];
   }
 
   function saveStoredGroups(groups) {
@@ -518,18 +454,17 @@
   }
 
   function getAllUsersList() {
-    var users = (window._dataCache && window._dataCache.users) || [];
-    if (!Array.isArray(users) || users.length === 0) {
-      users = [
-        { FullName: "Mehul Gandhi", UserID: "mehul", RoleID: "Super Admin", Status: "Active" },
-        { FullName: "Dhwani Gandhi", UserID: "dhwani", RoleID: "Super Admin", Status: "Active" },
-        { FullName: "Studio Reddy", UserID: "sreddy", RoleID: "Project Manager", Status: "Active" },
-        { FullName: "Studio Sarin", UserID: "ssarin", RoleID: "Contractor Associate", Status: "Active" },
-        { FullName: "Rajesh Kumar", UserID: "rajesh", RoleID: "Site Engineer", Status: "Active" },
-        { FullName: "Accounts Desk", UserID: "accounts", RoleID: "Finance Executive", Status: "Active" }
-      ];
+    var rawUsers = (window._dataCache && window._dataCache.users) || [];
+    if (Array.isArray(rawUsers) && rawUsers.length > 0) {
+      return rawUsers.filter(function(u) {
+        return (u.Status || "Active").toLowerCase() !== "deleted";
+      });
     }
-    return users;
+    return [
+      { FullName: "Mehul Gandhi", UserID: "USR-101", RoleID: "Super Admin", Email: "mehul.gandhi@nexsolve.in", Status: "Active" },
+      { FullName: "Dhwani Gandhi", UserID: "USR-102", RoleID: "Designer", Email: "dhwani.gandhi@nexsolve.in", Status: "Active" },
+      { FullName: "Meghal Sadhu", UserID: "USR-103", RoleID: "Sales Head", Email: "meghal.sadhu@nexsolve.in", Status: "Active" }
+    ];
   }
 
   function getLastMessageInfo(convId) {
@@ -912,19 +847,8 @@
     renderConversationsList();
     renderMessages();
 
-    // 1. Send to server backend with graceful fallback
-    if (typeof window.apiCall === "function") {
-      window.apiCall("save_chat_message", { message: newMsg, conversationId: activeConversationId })
-        .then(function(res) {
-          if (!res || !res.success) {
-            // Fallback to masters sheet option save which works on existing deployed GAS web app
-            window.apiCall("save_master_option", {
-              category: "CHAT_MSG",
-              value: JSON.stringify(newMsg)
-            });
-          }
-        }).catch(function() {});
-    }
+    // 1. Send to server backend with dual-tier cloud persistence
+    persistMessageToCloud(newMsg, activeConversationId);
 
     // 2. Log System Notification (Notification Bell 🔔)
     var nameEl = document.getElementById("chat-active-channel-name");
@@ -988,24 +912,200 @@
     }
   }
 
+  function persistMessageToCloud(msg, convId) {
+    if (typeof window.apiCall !== "function") return;
+    window.apiCall("save_chat_message", { message: msg, conversationId: convId })
+      .then(function(res) {
+        if (!res || !res.success) {
+          saveChatMessageViaTaskFallback(msg, convId);
+        } else {
+          markMessageDelivered(convId, msg.id);
+        }
+      })
+      .catch(function() {
+        saveChatMessageViaTaskFallback(msg, convId);
+      });
+  }
+
+  function saveChatMessageViaTaskFallback(msg, convId) {
+    if (typeof window.apiCall !== "function") return;
+    window.apiCall("save_task", {
+      data: {
+        TaskID: msg.id,
+        ProjectID: "SYSTEM_CHAT",
+        TaskName: convId,
+        AssignedType: msg.sender,
+        AssignedTo: msg.role,
+        Priority: msg.time,
+        Status: String(msg.timestamp),
+        Remarks: msg.text,
+        Description: JSON.stringify(msg)
+      }
+    }).then(function(res) {
+      if (res && res.success) {
+        markMessageDelivered(convId, msg.id);
+      }
+    }).catch(function() {});
+  }
+
+  function markMessageDelivered(convId, msgId) {
+    var all = getStoredMessages();
+    if (all[convId]) {
+      var m = all[convId].find(function(x) { return x.id === msgId; });
+      if (m) {
+        m.receipt = "delivered";
+        saveStoredMessages(all);
+        if (activeConversationId === convId) {
+          renderMessages();
+        }
+      }
+    }
+  }
+
+  function persistGroupToCloud(group) {
+    if (typeof window.apiCall !== "function") return;
+    window.apiCall("save_chat_group", { group: group })
+      .then(function(res) {
+        if (!res || !res.success) {
+          saveChatGroupViaTaskFallback(group);
+        }
+      })
+      .catch(function() {
+        saveChatGroupViaTaskFallback(group);
+      });
+  }
+
+  function saveChatGroupViaTaskFallback(group) {
+    if (typeof window.apiCall !== "function") return;
+    window.apiCall("save_task", {
+      data: {
+        TaskID: group.id,
+        ProjectID: "SYSTEM_CHAT_GROUP",
+        TaskName: group.name,
+        AssignedType: group.creator,
+        AssignedTo: group.topic || "",
+        Priority: group.projectId || "",
+        Status: group.projectName || "",
+        Remarks: group.name,
+        Description: JSON.stringify(group)
+      }
+    }).catch(function() {});
+  }
+
   function startChatSyncPolling() {
     if (_chatPollTimer) clearInterval(_chatPollTimer);
     _chatPollTimer = setInterval(function() {
-      if (typeof window.apiCall !== "function") return;
-      window.apiCall("get_chat_messages").then(function(res) {
-        if (res && res.success && Array.isArray(res.chatMessages)) {
-          syncIncomingServerMessages(res.chatMessages);
-        } else {
-          // Fallback: poll master options for CHAT_MSG
-          if (window._dataCache && window._dataCache.dropdowns && window._dataCache.dropdowns["CHAT_MSG"]) {
-            var rawList = window._dataCache.dropdowns["CHAT_MSG"].map(function(item) {
-              try { return JSON.parse(item); } catch(e) { return null; }
-            }).filter(Boolean);
-            syncIncomingServerMessages(rawList);
-          }
+      pollServerChatUpdates();
+    }, 3500);
+  }
+
+  function pollServerChatUpdates() {
+    if (typeof window.apiCall !== "function") return;
+    window.apiCall("get_chat_messages").then(function(res) {
+      if (res && res.success && Array.isArray(res.chatMessages)) {
+        syncIncomingServerMessages(res.chatMessages);
+        if (Array.isArray(res.chatGroups)) {
+          syncIncomingServerGroups(res.chatGroups);
         }
-      }).catch(function() {});
-    }, 3800);
+      } else {
+        pollChatUpdatesViaTasks();
+      }
+    }).catch(function() {
+      pollChatUpdatesViaTasks();
+    });
+  }
+
+  function pollChatUpdatesViaTasks() {
+    if (typeof window.apiCall !== "function") return;
+    window.apiCall("get_initial_data").then(function(res) {
+      if (!res || !Array.isArray(res.tasks)) return;
+      var chatTasks = res.tasks.filter(function(t) { return t.ProjectID === "SYSTEM_CHAT"; });
+      var groupTasks = res.tasks.filter(function(t) { return t.ProjectID === "SYSTEM_CHAT_GROUP"; });
+      if (chatTasks.length > 0) {
+        window.syncIncomingChatFromTasks(chatTasks);
+      }
+      if (groupTasks.length > 0) {
+        window.syncIncomingGroupsFromTasks(groupTasks);
+      }
+    }).catch(function() {});
+  }
+
+  window.syncIncomingChatFromTasks = function(taskRows) {
+    if (!Array.isArray(taskRows) || taskRows.length === 0) return;
+    var parsedMsgs = taskRows.map(function(t) {
+      try {
+        if (t.Description && t.Description.startsWith("{")) {
+          return JSON.parse(t.Description);
+        }
+      } catch(e) {}
+      return {
+        id: t.TaskID,
+        conversationId: t.TaskName,
+        sender: t.AssignedType || "User",
+        role: t.AssignedTo || "Team",
+        text: t.Remarks || "",
+        time: t.Priority || "",
+        timestamp: parseInt(t.Status, 10) || Date.now(),
+        receipt: "delivered"
+      };
+    }).filter(Boolean);
+    syncIncomingServerMessages(parsedMsgs);
+  };
+
+  window.syncIncomingGroupsFromTasks = function(groupRows) {
+    if (!Array.isArray(groupRows) || groupRows.length === 0) return;
+    var parsedGroups = groupRows.map(function(t) {
+      try {
+        if (t.Description && t.Description.startsWith("{")) {
+          return JSON.parse(t.Description);
+        }
+      } catch(e) {}
+      return {
+        id: t.TaskID,
+        name: t.TaskName,
+        creator: t.AssignedType || "Admin",
+        topic: t.AssignedTo || "",
+        projectId: t.Priority || "",
+        projectName: t.Status || "",
+        members: []
+      };
+    }).filter(Boolean);
+    syncIncomingServerGroups(parsedGroups);
+  };
+
+  function syncIncomingServerGroups(serverGroups) {
+    if (!Array.isArray(serverGroups) || serverGroups.length === 0) return;
+    var groups = getStoredGroups();
+    var curName = getCurrentUserName();
+    var updated = false;
+
+    serverGroups.forEach(function(sGrp) {
+      var grpId = sGrp.id || sGrp.GroupID || ("grp_" + Date.now());
+      var exists = groups.some(function(g) { return g.id === grpId; });
+      if (!exists) {
+        var members = sGrp.members || sGrp.Members || [];
+        if (typeof members === "string") {
+          try { members = JSON.parse(members); } catch(e) { members = [sGrp.creator || curName]; }
+        }
+        var newGrp = {
+          id: grpId,
+          name: sGrp.name || sGrp.GroupName || "Team Group",
+          projectId: sGrp.projectId || sGrp.ProjectID || "",
+          projectName: sGrp.projectName || sGrp.ProjectName || "",
+          topic: sGrp.topic || sGrp.Topic || "",
+          creator: sGrp.creator || sGrp.Creator || curName,
+          members: Array.isArray(members) ? members : [curName],
+          createdDate: sGrp.createdDate || sGrp.CreatedDate || (new Date()).toLocaleDateString()
+        };
+        groups.push(newGrp);
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      saveStoredGroups(groups);
+      renderConversationsList();
+    }
   }
 
   function syncIncomingServerMessages(serverMsgList) {
@@ -1047,6 +1147,22 @@
           }
           if (typeof window.playIncomingChatChime === "function") {
             window.playIncomingChatChime();
+          }
+          if (typeof window.sendDevicePushNotification === "function") {
+            window.sendDevicePushNotification("NexMilestro • " + sender, {
+              body: text,
+              data: { conversationId: convId }
+            });
+          }
+          if (typeof window.addSystemNotification === "function") {
+            window.addSystemNotification({
+              title: "Chat: " + sender,
+              message: text,
+              module: "teamchat",
+              recordId: convId,
+              icon: "fa-comments",
+              type: "info"
+            });
           }
         }
       }
@@ -1167,11 +1283,8 @@
     groups.unshift(newGroup);
     saveStoredGroups(groups);
 
-    // Sync to backend
-    if (typeof window.apiCall === "function") {
-      window.apiCall("save_chat_group", { group: newGroup }).catch(function() {});
-      window.apiCall("save_master_option", { category: "CHAT_GROUP", value: JSON.stringify(newGroup) }).catch(function() {});
-    }
+    // Sync to backend via dual-tier cloud persistence
+    persistGroupToCloud(newGroup);
 
     closeNewGroupModal();
     renderConversationsList();
@@ -1271,11 +1384,8 @@
     groups[grpIdx] = grp;
     saveStoredGroups(groups);
 
-    // Sync to backend
-    if (typeof window.apiCall === "function") {
-      window.apiCall("save_chat_group", { group: grp }).catch(function() {});
-      window.apiCall("save_master_option", { category: "CHAT_GROUP", value: JSON.stringify(grp) }).catch(function() {});
-    }
+    // Sync to backend via dual-tier cloud persistence
+    persistGroupToCloud(grp);
 
     // Insert system audit message
     var allMsgs = getStoredMessages();

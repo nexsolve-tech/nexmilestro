@@ -1467,6 +1467,42 @@ function deleteChatGroupRecord(licenseKey, groupId) {
 
 
 
+
+// ── CLEAR OPERATIONAL DATA / CLEAN SLATE ─────────────────────────────────
+function clearClientOperationalData(licenseKey, userId) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const targetSheets = [
+      "Customers", "Projects", "SiteVisits", "Tasks", "Leads",
+      "LeadFollowups", "Proposals", "Vendors", "Associates", "Transactions", "Milestones", "ChatMessages", "ChatGroups"
+    ];
+
+    let clearedCount = 0;
+    targetSheets.forEach(function(sheetName) {
+      try {
+        const sh = ss.getSheetByName(sheetName);
+        if (sh) {
+          const lastRow = sh.getLastRow();
+          if (lastRow > 1) {
+            sh.getRange(2, 1, lastRow - 1, sh.getLastColumn()).clearContent();
+            clearedCount++;
+          }
+        }
+      } catch(sheetErr) {
+        Logger.log("Error clearing sheet " + sheetName + ": " + sheetErr.message);
+      }
+    });
+
+    return {
+      success: true,
+      message: "Client operational data wiped successfully. " + clearedCount + " sheets cleared."
+    };
+  } catch(err) {
+    return { success: false, error: "Failed to clear operational data: " + err.message };
+  }
+}
+
+
 // >>>>>> FILE: Code.gs <<<<<<
 /**
  * =========================================================================
@@ -1698,6 +1734,13 @@ function handleUniversalApiRequest(action, params) {
         } catch(chatErr) {
           response = { success: false, error: chatErr.message };
         }
+        break;
+
+            // ── DATABASE CLEAN SLATE & RESET ─────────────────────────────────────
+      case 'clear_operational_data':
+      case 'erase_all_system_data':
+      case 'reset_database':
+        response = clearClientOperationalData(licenseKey, userId);
         break;
 
       // ── FALLBACK FOR ARBITRARY FUNCTIONS ─────────────────────────────────
