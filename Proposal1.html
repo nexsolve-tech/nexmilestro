@@ -212,7 +212,7 @@
     }
 
     function applyProposalsData(result) {
-      clientsCacheList = result.customers || [];
+      clientsCacheList = window.RLS ? window.RLS.filterCustomers(result.customers || []) : (result.customers || []);
       var select = document.getElementById("prop-customer-select");
       if (select) {
         select.innerHTML = '<option value="">Select Client</option>' + clientsCacheList.filter(function(c) {
@@ -223,8 +223,8 @@
         if (window.makeSearchableSelect) window.makeSearchableSelect(select, { placeholder: "Select Client" });
       }
 
-      leadsCacheList = result.leads || [];
-      window.leadsCacheList = result.leads || [];
+      leadsCacheList = window.RLS ? window.RLS.filterLeads(result.leads || []) : (result.leads || []);
+      window.leadsCacheList = leadsCacheList;
       var leadSelect = document.getElementById("prop-lead-select");
       if (leadSelect) {
         leadSelect.innerHTML = '<option value="">Select Lead</option>' + leadsCacheList.filter(function(l) {
@@ -236,7 +236,7 @@
         if (window.makeSearchableSelect) window.makeSearchableSelect(leadSelect, { placeholder: "Select Lead" });
       }
 
-      proposalsDataList = result.proposals || [];
+      proposalsDataList = window.RLS ? window.RLS.filterProposals(result.proposals || []) : (result.proposals || []);
       dropdownsCache = result.dropdowns || {};
       checkCompletion();
     }
@@ -313,7 +313,7 @@
       }
       checkLegacyCompletion();
     }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getLeads();
-    google.script.run.withSuccessHandler(function(data) { proposalsDataList = data || []; checkLegacyCompletion(); }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getProposals();
+    google.script.run.withSuccessHandler(function(data) { proposalsDataList = window.RLS ? window.RLS.filterProposals(data || []) : (data || []); checkLegacyCompletion(); }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getProposals();
     google.script.run.withSuccessHandler(function(data) { dropdownsCache = data || {}; checkLegacyCompletion(); }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getDropdownValues();
   }
 

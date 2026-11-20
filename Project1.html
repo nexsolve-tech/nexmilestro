@@ -347,9 +347,12 @@
   };
 
   function applyProjectsAggregatedData(res) {
-    allProjects = res.projects || [];
-    customersCache = res.customers || [];
-    milestonesCacheList = res.milestones || [];
+    var rawProj = res.projects || [];
+    allProjects = window.RLS ? window.RLS.filterProjects(rawProj) : rawProj;
+    var rawCust = res.customers || [];
+    customersCache = window.RLS ? window.RLS.filterCustomers(rawCust) : rawCust;
+    var rawMs = res.milestones || [];
+    milestonesCacheList = window.RLS ? window.RLS.filterMilestones(rawMs) : rawMs;
     associatesCache = res.associates || [];
     vendorsCache = res.vendors || [];
     staffCacheList = res.users || [];
@@ -390,7 +393,7 @@
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getUsers();
     google.script.run.withSuccessHandler(function(data) {
-      customersCache = data || [];
+      customersCache = window.RLS ? window.RLS.filterCustomers(data || []) : (data || []);
       var select = document.getElementById("proj-customer-id");
       if (select) {
         select.innerHTML = '<option value="">Select Customer</option>' + customersCache.filter(function(c) {
@@ -402,7 +405,7 @@
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getCustomers();
     google.script.run.withSuccessHandler(function(data) {
-      allProjects = data || [];
+      allProjects = window.RLS ? window.RLS.filterProjects(data || []) : (data || []);
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getProjects();
     google.script.run.withSuccessHandler(function(data) {

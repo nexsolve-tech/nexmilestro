@@ -2955,6 +2955,243 @@
     }
     window.getSessionUser = getSessionUser;
 
+    /**
+     * =========================================================================
+     * UNIVERSAL ROW-LEVEL SECURITY (RLS) & TEAM HIERARCHY ENGINE
+     * Enforces strict team data isolation across all modules & dashboard.
+     * =========================================================================
+     */
+    window.RLS = {
+      getScope: function() {
+        var user = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+        if (!user) return { isSuperAdmin: true };
+        var role = String(user.roleId || (user.user && user.user.RoleID) || "").trim();
+        var isSuperAdmin = (role === "Super Admin" || role === "Administrator" || role === "Admin");
+        if (isSuperAdmin) {
+          return { isSuperAdmin: true };
+        }
+
+        var myId = String(user.userId || user.UserID || (user.user && (user.user.UserID || user.user.userId)) || "").trim().toLowerCase();
+        var myName = String(user.fullName || user.FullName || (user.user && (user.user.FullName || user.user.fullName)) || "").trim().toLowerCase();
+        var myEmail = String(user.email || user.Email || (user.user && (user.user.Email || user.user.email)) || "").trim().toLowerCase();
+
+        var allUsers = (window._dataCache && Array.isArray(window._dataCache.users) && window._dataCache.users.length > 0)
+          ? window._dataCache.users
+          : ((window.usersCacheList && window.usersCacheList.length > 0) ? window.usersCacheList : []);
+
+        var teamUserIds = new Set();
+        var teamNames = new Set();
+        var teamEmails = new Set();
+
+        if (myId) teamUserIds.add(myId);
+        if (myName) teamNames.add(myName);
+        if (myEmail) teamEmails.add(myEmail);
+
+        // Queue of identifiers to search subordinates for
+        var queue = [];
+        if (myId) queue.push(myId);
+        if (myName) queue.push(myName);
+        if (myEmail) queue.push(myEmail);
+
+        var processed = new Set();
+
+        while (queue.length > 0) {
+          var curMgr = queue.shift();
+          if (!curMgr || processed.has(curMgr)) continue;
+          processed.add(curMgr);
+
+          allUsers.forEach(function(u) {
+            if (!u) return;
+            var rTo = String(u.ReportsTo || "").trim().toLowerCase();
+            var uId = String(u.UserID || u.userId || "").trim().toLowerCase();
+            var uName = String(u.FullName || u.fullName || "").trim().toLowerCase();
+            var uEmail = String(u.Email || u.email || "").trim().toLowerCase();
+
+            if (rTo && rTo === curMgr) {
+              if (uId && !teamUserIds.has(uId)) {
+                teamUserIds.add(uId);
+                queue.push(uId);
+              }
+              if (uName && !teamNames.has(uName)) {
+                teamNames.add(uName);
+                queue.push(uName);
+              }
+              if (uEmail && !teamEmails.has(uEmail)) {
+                teamEmails.add(uEmail);
+                queue.push(uEmail);
+              }
+            }
+          });
+        }
+
+        return {
+          isSuperAdmin: false,
+          myId: myId,
+          myName: myName,
+          myEmail: myEmail,
+          teamUserIds: teamUserIds,
+          teamNames: teamNames,
+          teamEmails: teamEmails
+        };
+      },
+
+      isMatch: function(assignedVal, createdByVal, scope) {
+        scope = scope || window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return true;
+
+        var assigned = String(assignedVal || "").trim().toLowerCase();
+        var created = String(createdByVal || "").trim().toLowerCase();
+
+        // Check createdBy
+        if (created) {
+          if (scope.teamUserIds.has(created) || scope.teamEmails.has(created) || scope.teamNames.has(created)) return true;
+        }
+
+        // Check assignedTo
+        if (assigned) {
+          if (scope.teamUserIds.has(assigned) || scope.teamNames.has(assigned) || scope.teamEmails.has(assigned)) return true;
+          for (var name of scope.teamNames) {
+            if (name && (assigned.indexOf(name) !== -1 || name.indexOf(assigned) !== -1)) return true;
+          }
+          for (var uid of scope.teamUserIds) {
+            if (uid && assigned.indexOf(uid) !== -1) return true;
+          }
+        }
+
+        return false;
+      },
+
+      filterTasks: function(tasksList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return tasksList || [];
+        return (tasksList || []).filter(function(t) {
+          if (!t) return false;
+          return window.RLS.isMatch(t.AssignedTo, t.CreatedBy, scope);
+        });
+      },
+
+      filterSiteVisits: function(visitsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return visitsList || [];
+        return (visitsList || []).filter(function(v) {
+          if (!v) return false;
+          return window.RLS.isMatch(v.AssignedTo || v.EngineerName, v.CreatedBy, scope);
+        });
+      },
+
+      filterLeads: function(leadsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return leadsList || [];
+        return (leadsList || []).filter(function(l) {
+          if (!l) return false;
+          return window.RLS.isMatch(l.AssignedTo, l.CreatedBy, scope);
+        });
+      },
+
+      filterProjects: function(projectsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return projectsList || [];
+
+        var tasks = (window._dataCache && window._dataCache.tasks) || [];
+        var visits = (window._dataCache && window._dataCache.siteVisits) || [];
+        var milestones = (window._dataCache && window._dataCache.milestones) || [];
+
+        var allowedProjIds = new Set();
+        tasks.forEach(function(t) {
+          if (t && t.ProjectID && window.RLS.isMatch(t.AssignedTo, t.CreatedBy, scope)) {
+            allowedProjIds.add(String(t.ProjectID).trim().toLowerCase());
+          }
+        });
+        visits.forEach(function(v) {
+          if (v && v.ProjectID && window.RLS.isMatch(v.AssignedTo, v.CreatedBy, scope)) {
+            allowedProjIds.add(String(v.ProjectID).trim().toLowerCase());
+          }
+        });
+        milestones.forEach(function(m) {
+          if (m && m.ProjectID && window.RLS.isMatch(m.AssociateName, m.CreatedBy, scope)) {
+            allowedProjIds.add(String(m.ProjectID).trim().toLowerCase());
+          }
+        });
+
+        return (projectsList || []).filter(function(p) {
+          if (!p) return false;
+          if (window.RLS.isMatch("", p.CreatedBy, scope)) return true;
+          var pid = String(p.ProjectID || "").trim().toLowerCase();
+          if (pid && allowedProjIds.has(pid)) return true;
+          return false;
+        });
+      },
+
+      filterCustomers: function(customersList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return customersList || [];
+
+        var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
+        var allowedCustIds = new Set(allowedProjects.map(function(p) { return String(p.CustomerID || "").trim().toLowerCase(); }));
+
+        var allowedLeads = window.RLS.filterLeads((window._dataCache && window._dataCache.leads) || []);
+        allowedLeads.forEach(function(l) {
+          if (l && l.CustomerName) allowedCustIds.add(String(l.CustomerName).trim().toLowerCase());
+        });
+
+        return (customersList || []).filter(function(c) {
+          if (!c) return false;
+          if (window.RLS.isMatch("", c.CreatedBy, scope)) return true;
+          var cid = String(c.CustomerID || "").trim().toLowerCase();
+          var cName = String(c.CustomerName || c.CompanyFirmName || "").trim().toLowerCase();
+          if (cid && allowedCustIds.has(cid)) return true;
+          if (cName && allowedCustIds.has(cName)) return true;
+          return false;
+        });
+      },
+
+      filterMilestones: function(milestonesList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return milestonesList || [];
+        var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
+        var allowedProjIds = new Set(allowedProjects.map(function(p) { return String(p.ProjectID || "").trim().toLowerCase(); }));
+
+        return (milestonesList || []).filter(function(m) {
+          if (!m) return false;
+          if (window.RLS.isMatch(m.AssociateName, m.CreatedBy, scope)) return true;
+          var pid = String(m.ProjectID || "").trim().toLowerCase();
+          if (pid && allowedProjIds.has(pid)) return true;
+          return false;
+        });
+      },
+
+      filterProposals: function(proposalsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return proposalsList || [];
+        var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
+        var allowedProjNames = new Set(allowedProjects.map(function(p) { return String(p.ProjectName || "").trim().toLowerCase(); }));
+
+        return (proposalsList || []).filter(function(prop) {
+          if (!prop) return false;
+          if (window.RLS.isMatch("", prop.CreatedBy, scope)) return true;
+          var pName = String(prop.ProjectName || "").trim().toLowerCase();
+          if (pName && allowedProjNames.has(pName)) return true;
+          return false;
+        });
+      },
+
+      filterTransactions: function(txnsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return txnsList || [];
+        var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
+        var allowedProjIds = new Set(allowedProjects.map(function(p) { return String(p.ProjectID || "").trim().toLowerCase(); }));
+
+        return (txnsList || []).filter(function(t) {
+          if (!t) return false;
+          if (window.RLS.isMatch("", t.CreatedBy, scope)) return true;
+          var pid = String(t.ProjectID || "").trim().toLowerCase();
+          if (pid && allowedProjIds.has(pid)) return true;
+          return false;
+        });
+      }
+    };
+
+
     
     /**
      * =========================================================================

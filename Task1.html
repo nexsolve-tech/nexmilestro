@@ -191,7 +191,8 @@
 
     function applyTasksData(result) {
       result = result || {};
-      projectsCacheList = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      var rawProj = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      projectsCacheList = window.RLS ? window.RLS.filterProjects(rawProj) : rawProj;
       var projSelect = document.getElementById("task-project-id");
       if (projSelect) {
         projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
@@ -215,7 +216,8 @@
         if (window.makeSearchableSelect) window.makeSearchableSelect(userSelect, { placeholder: "Select Staff" });
       }
 
-      allTasks = Array.isArray(result.tasks) ? result.tasks : ((window._dataCache && window._dataCache.tasks) || []);
+      var rawTasks = Array.isArray(result.tasks) ? result.tasks : ((window._dataCache && window._dataCache.tasks) || []);
+      allTasks = window.RLS ? window.RLS.filterTasks(rawTasks) : rawTasks;
       dropdownsCache = result.dropdowns || (window._dataCache && window._dataCache.dropdowns) || {};
       vendorsCacheList = (Array.isArray(result.vendors) && result.vendors.length > 0) ? result.vendors : ((window._dataCache && window._dataCache.vendors) || []);
       associatesCacheList = (Array.isArray(result.associates) && result.associates.length > 0) ? result.associates : ((window._dataCache && window._dataCache.associates) || []);
@@ -289,7 +291,7 @@
       }
     }
     google.script.run.withSuccessHandler(function(data) {
-      projectsCacheList = data || [];
+      projectsCacheList = window.RLS ? window.RLS.filterProjects(data || []) : (data || []);
       var select = document.getElementById("task-project-id");
       if (select) {
         select.innerHTML = '<option value="">Select Project</option>' + projectsCacheList.filter(function(p) {
@@ -316,7 +318,7 @@
       }
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getUsers();
-    google.script.run.withSuccessHandler(function(data) { allTasks = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getTasks();
+    google.script.run.withSuccessHandler(function(data) { allTasks = window.RLS ? window.RLS.filterTasks(data || []) : (data || []); checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getTasks();
     google.script.run.withSuccessHandler(function(data) { dropdownsCache = data || {}; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getDropdownValues();
     google.script.run.withSuccessHandler(function(data) { vendorsCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getVendors();
     google.script.run.withSuccessHandler(function(data) { associatesCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getAssociates();

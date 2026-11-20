@@ -1149,12 +1149,14 @@ window.loadFinanceView = function(forceRefresh) {
     try {
       if (typeof showLoader === "function") showLoader(false);
       res = res || {};
-      window.txnsDataList = res.transactions || (Array.isArray(res) ? res : []);
-      window.projsCacheList = res.projects || [];
+      var rawTxns = res.transactions || (Array.isArray(res) ? res : []);
+      var rawProjs = res.projects || [];
+      window.txnsDataList = window.RLS ? window.RLS.filterTransactions(rawTxns) : rawTxns;
+      window.projsCacheList = window.RLS ? window.RLS.filterProjects(rawProjs) : rawProjs;
       window.vndrsCacheList = res.vendors || [];
       window.associatesCacheList = res.associates || [];
-      window.customersCacheList = res.customers || [];
-      window.siteVisitsCacheList = res.siteVisits || [];
+      window.customersCacheList = window.RLS ? window.RLS.filterCustomers(res.customers || []) : (res.customers || []);
+      window.siteVisitsCacheList = window.RLS ? window.RLS.filterSiteVisits(res.siteVisits || []) : (res.siteVisits || []);
       window.dropdownsCache = res.dropdowns || {};
 
       try { window.populateDropdownsFromCache(); } catch(e){ console.error(e); }

@@ -277,7 +277,8 @@
     });
     populateSelectOptions("lead-assigned-select", staffOpts, "Select Staff");
 
-    leadsDataList = result.leads || [];
+    var rawLeads = result.leads || [];
+    leadsDataList = window.RLS ? window.RLS.filterLeads(rawLeads) : rawLeads;
     dropdownsCache = result.dropdowns || {};
     checkCompletion();
   }
@@ -352,7 +353,7 @@
 
     google.script.run
       .withSuccessHandler(function(data) {
-        leadsDataList = data || [];
+        leadsDataList = window.RLS ? window.RLS.filterLeads(data || []) : (data || []);
         checkLegacyCompletion();
       })
       .withFailureHandler(function() { checkLegacyCompletion(); })

@@ -234,6 +234,35 @@
   var rawLeads = [];
   var rawTransactions = [];
 
+  function setDashboardRawData(data) {
+    data = data || {};
+    var allCust = data.customers || [];
+    var allProj = data.projects || [];
+    var allTasks = data.tasks || [];
+    var allVisits = data.siteVisits || [];
+    var allMilestones = data.milestones || [];
+    var allLeads = data.leads || [];
+    var allTxns = data.transactions || [];
+
+    if (window.RLS) {
+      rawTasks = window.RLS.filterTasks(allTasks);
+      rawSiteVisits = window.RLS.filterSiteVisits(allVisits);
+      rawLeads = window.RLS.filterLeads(allLeads);
+      rawProjects = window.RLS.filterProjects(allProj);
+      rawMilestones = window.RLS.filterMilestones(allMilestones);
+      rawCustomers = window.RLS.filterCustomers(allCust);
+      rawTransactions = window.RLS.filterTransactions(allTxns);
+    } else {
+      rawCustomers = allCust;
+      rawProjects = allProj;
+      rawTasks = allTasks;
+      rawSiteVisits = allVisits;
+      rawMilestones = allMilestones;
+      rawLeads = allLeads;
+      rawTransactions = allTxns;
+    }
+  }
+
   window.loadDashboardView = function(forceRefresh) {
     // 0ms instant render from memory cache
     var data = (window._dataCache && window._dataCache.customers && window._dataCache.customers.length > 0)
@@ -241,13 +270,7 @@
       : (cacheGet("dashboardData") || window._dataCache || {});
 
     if (data && data.customers && !forceRefresh) {
-      rawCustomers = data.customers || [];
-      rawProjects = data.projects || [];
-      rawTasks = data.tasks || [];
-      rawSiteVisits = data.siteVisits || [];
-      rawMilestones = data.milestones || [];
-      rawLeads = data.leads || [];
-      rawTransactions = data.transactions || [];
+      setDashboardRawData(data);
       try {
         populateDashboardFilters();
         applyDashboardFilter();
@@ -265,13 +288,7 @@
       google.script.run.withSuccessHandler(function(result) {
         if (forceRefresh) showLoader(false);
         if (result && result.success !== false) {
-          rawCustomers = result.customers || [];
-          rawProjects = result.projects || [];
-          rawTasks = result.tasks || [];
-          rawSiteVisits = result.siteVisits || [];
-          rawMilestones = result.milestones || [];
-          rawLeads = result.leads || [];
-          rawTransactions = result.transactions || [];
+          setDashboardRawData(result);
           cacheSet("dashboardData", result);
           try {
             populateDashboardFilters();

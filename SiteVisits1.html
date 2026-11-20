@@ -306,10 +306,12 @@
 
     function applySiteVisitsData(result) {
       if (!result) return;
-      customersCacheList = (Array.isArray(result.customers) && result.customers.length > 0) ? result.customers : ((window._dataCache && window._dataCache.customers) || []);
+      var rawCust = (Array.isArray(result.customers) && result.customers.length > 0) ? result.customers : ((window._dataCache && window._dataCache.customers) || []);
+      customersCacheList = window.RLS ? window.RLS.filterCustomers(rawCust) : rawCust;
       window.customersCacheList = customersCacheList;
 
-      projectsCache = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      var rawProj = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      projectsCache = window.RLS ? window.RLS.filterProjects(rawProj) : rawProj;
       window.projectsCache = projectsCache;
       var select = document.getElementById("visit-project-id");
       if (select) {
@@ -320,7 +322,8 @@
         }).join("");
       }
 
-      leadsCacheList = (Array.isArray(result.leads) && result.leads.length > 0) ? result.leads : ((window._dataCache && window._dataCache.leads) || []);
+      var rawLeads = (Array.isArray(result.leads) && result.leads.length > 0) ? result.leads : ((window._dataCache && window._dataCache.leads) || []);
+      leadsCacheList = window.RLS ? window.RLS.filterLeads(rawLeads) : rawLeads;
       window.leadsCacheList = leadsCacheList;
       var leadSelect = document.getElementById("visit-lead-id");
       if (leadSelect) {
@@ -332,7 +335,8 @@
         }).join("");
       }
 
-      allVisits = Array.isArray(result.siteVisits) ? result.siteVisits : ((window._dataCache && window._dataCache.siteVisits) || []);
+      var rawVisits = Array.isArray(result.siteVisits) ? result.siteVisits : ((window._dataCache && window._dataCache.siteVisits) || []);
+      allVisits = window.RLS ? window.RLS.filterSiteVisits(rawVisits) : rawVisits;
       staffCacheList = (Array.isArray(result.users) && result.users.length > 0) ? result.users : ((window._dataCache && window._dataCache.users) || []);
       vendorsCacheList = (Array.isArray(result.vendors) && result.vendors.length > 0) ? result.vendors : ((window._dataCache && window._dataCache.vendors) || []);
       associatesCacheList = (Array.isArray(result.associates) && result.associates.length > 0) ? result.associates : ((window._dataCache && window._dataCache.associates) || []);
@@ -418,7 +422,7 @@
       }
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getLeads();
-    google.script.run.withSuccessHandler(function(data) { allVisits = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getSiteVisits();
+    google.script.run.withSuccessHandler(function(data) { allVisits = window.RLS ? window.RLS.filterSiteVisits(data || []) : (data || []); checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getSiteVisits();
     google.script.run.withSuccessHandler(function(usersList) { staffCacheList = usersList || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getUsers();
     google.script.run.withSuccessHandler(function(data) { vendorsCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getVendors();
     google.script.run.withSuccessHandler(function(data) { associatesCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getAssociates();

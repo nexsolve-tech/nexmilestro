@@ -251,7 +251,8 @@
     }
 
     function applyCustomersData(result) {
-      allCustomers = result.customers || [];
+      var rawCust = result.customers || [];
+      allCustomers = window.RLS ? window.RLS.filterCustomers(rawCust) : rawCust;
       var staffList = result.users || [];
       var select = document.getElementById("cust-created-by");
       if (select) {
@@ -303,7 +304,7 @@
         showLoader(false);
       }
     }
-    google.script.run.withSuccessHandler(function(data) { allCustomers = data || []; checkLegacyCompleted(); }).withFailureHandler(function(err) { checkLegacyCompleted(); }).getCustomers();
+    google.script.run.withSuccessHandler(function(data) { allCustomers = window.RLS ? window.RLS.filterCustomers(data || []) : (data || []); checkLegacyCompleted(); }).withFailureHandler(function(err) { checkLegacyCompleted(); }).getCustomers();
     google.script.run.withSuccessHandler(function(data) {
       var select = document.getElementById("cust-created-by");
       var staffList = data || [];

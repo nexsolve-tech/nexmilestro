@@ -4155,6 +4155,35 @@ textarea.form-control {
   var rawLeads = [];
   var rawTransactions = [];
 
+  function setDashboardRawData(data) {
+    data = data || {};
+    var allCust = data.customers || [];
+    var allProj = data.projects || [];
+    var allTasks = data.tasks || [];
+    var allVisits = data.siteVisits || [];
+    var allMilestones = data.milestones || [];
+    var allLeads = data.leads || [];
+    var allTxns = data.transactions || [];
+
+    if (window.RLS) {
+      rawTasks = window.RLS.filterTasks(allTasks);
+      rawSiteVisits = window.RLS.filterSiteVisits(allVisits);
+      rawLeads = window.RLS.filterLeads(allLeads);
+      rawProjects = window.RLS.filterProjects(allProj);
+      rawMilestones = window.RLS.filterMilestones(allMilestones);
+      rawCustomers = window.RLS.filterCustomers(allCust);
+      rawTransactions = window.RLS.filterTransactions(allTxns);
+    } else {
+      rawCustomers = allCust;
+      rawProjects = allProj;
+      rawTasks = allTasks;
+      rawSiteVisits = allVisits;
+      rawMilestones = allMilestones;
+      rawLeads = allLeads;
+      rawTransactions = allTxns;
+    }
+  }
+
   window.loadDashboardView = function(forceRefresh) {
     // 0ms instant render from memory cache
     var data = (window._dataCache && window._dataCache.customers && window._dataCache.customers.length > 0)
@@ -4162,13 +4191,7 @@ textarea.form-control {
       : (cacheGet("dashboardData") || window._dataCache || {});
 
     if (data && data.customers && !forceRefresh) {
-      rawCustomers = data.customers || [];
-      rawProjects = data.projects || [];
-      rawTasks = data.tasks || [];
-      rawSiteVisits = data.siteVisits || [];
-      rawMilestones = data.milestones || [];
-      rawLeads = data.leads || [];
-      rawTransactions = data.transactions || [];
+      setDashboardRawData(data);
       try {
         populateDashboardFilters();
         applyDashboardFilter();
@@ -4186,13 +4209,7 @@ textarea.form-control {
       google.script.run.withSuccessHandler(function(result) {
         if (forceRefresh) showLoader(false);
         if (result && result.success !== false) {
-          rawCustomers = result.customers || [];
-          rawProjects = result.projects || [];
-          rawTasks = result.tasks || [];
-          rawSiteVisits = result.siteVisits || [];
-          rawMilestones = result.milestones || [];
-          rawLeads = result.leads || [];
-          rawTransactions = result.transactions || [];
+          setDashboardRawData(result);
           cacheSet("dashboardData", result);
           try {
             populateDashboardFilters();
@@ -4934,7 +4951,8 @@ textarea.form-control {
     }
 
     function applyCustomersData(result) {
-      allCustomers = result.customers || [];
+      var rawCust = result.customers || [];
+      allCustomers = window.RLS ? window.RLS.filterCustomers(rawCust) : rawCust;
       var staffList = result.users || [];
       var select = document.getElementById("cust-created-by");
       if (select) {
@@ -4986,7 +5004,7 @@ textarea.form-control {
         showLoader(false);
       }
     }
-    google.script.run.withSuccessHandler(function(data) { allCustomers = data || []; checkLegacyCompleted(); }).withFailureHandler(function(err) { checkLegacyCompleted(); }).getCustomers();
+    google.script.run.withSuccessHandler(function(data) { allCustomers = window.RLS ? window.RLS.filterCustomers(data || []) : (data || []); checkLegacyCompleted(); }).withFailureHandler(function(err) { checkLegacyCompleted(); }).getCustomers();
     google.script.run.withSuccessHandler(function(data) {
       var select = document.getElementById("cust-created-by");
       var staffList = data || [];
@@ -5919,9 +5937,12 @@ textarea.form-control {
   };
 
   function applyProjectsAggregatedData(res) {
-    allProjects = res.projects || [];
-    customersCache = res.customers || [];
-    milestonesCacheList = res.milestones || [];
+    var rawProj = res.projects || [];
+    allProjects = window.RLS ? window.RLS.filterProjects(rawProj) : rawProj;
+    var rawCust = res.customers || [];
+    customersCache = window.RLS ? window.RLS.filterCustomers(rawCust) : rawCust;
+    var rawMs = res.milestones || [];
+    milestonesCacheList = window.RLS ? window.RLS.filterMilestones(rawMs) : rawMs;
     associatesCache = res.associates || [];
     vendorsCache = res.vendors || [];
     staffCacheList = res.users || [];
@@ -5962,7 +5983,7 @@ textarea.form-control {
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getUsers();
     google.script.run.withSuccessHandler(function(data) {
-      customersCache = data || [];
+      customersCache = window.RLS ? window.RLS.filterCustomers(data || []) : (data || []);
       var select = document.getElementById("proj-customer-id");
       if (select) {
         select.innerHTML = '<option value="">Select Customer</option>' + customersCache.filter(function(c) {
@@ -5974,7 +5995,7 @@ textarea.form-control {
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getCustomers();
     google.script.run.withSuccessHandler(function(data) {
-      allProjects = data || [];
+      allProjects = window.RLS ? window.RLS.filterProjects(data || []) : (data || []);
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getProjects();
     google.script.run.withSuccessHandler(function(data) {
@@ -7088,10 +7109,12 @@ textarea.form-control {
 
     function applySiteVisitsData(result) {
       if (!result) return;
-      customersCacheList = (Array.isArray(result.customers) && result.customers.length > 0) ? result.customers : ((window._dataCache && window._dataCache.customers) || []);
+      var rawCust = (Array.isArray(result.customers) && result.customers.length > 0) ? result.customers : ((window._dataCache && window._dataCache.customers) || []);
+      customersCacheList = window.RLS ? window.RLS.filterCustomers(rawCust) : rawCust;
       window.customersCacheList = customersCacheList;
 
-      projectsCache = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      var rawProj = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      projectsCache = window.RLS ? window.RLS.filterProjects(rawProj) : rawProj;
       window.projectsCache = projectsCache;
       var select = document.getElementById("visit-project-id");
       if (select) {
@@ -7102,7 +7125,8 @@ textarea.form-control {
         }).join("");
       }
 
-      leadsCacheList = (Array.isArray(result.leads) && result.leads.length > 0) ? result.leads : ((window._dataCache && window._dataCache.leads) || []);
+      var rawLeads = (Array.isArray(result.leads) && result.leads.length > 0) ? result.leads : ((window._dataCache && window._dataCache.leads) || []);
+      leadsCacheList = window.RLS ? window.RLS.filterLeads(rawLeads) : rawLeads;
       window.leadsCacheList = leadsCacheList;
       var leadSelect = document.getElementById("visit-lead-id");
       if (leadSelect) {
@@ -7114,7 +7138,8 @@ textarea.form-control {
         }).join("");
       }
 
-      allVisits = Array.isArray(result.siteVisits) ? result.siteVisits : ((window._dataCache && window._dataCache.siteVisits) || []);
+      var rawVisits = Array.isArray(result.siteVisits) ? result.siteVisits : ((window._dataCache && window._dataCache.siteVisits) || []);
+      allVisits = window.RLS ? window.RLS.filterSiteVisits(rawVisits) : rawVisits;
       staffCacheList = (Array.isArray(result.users) && result.users.length > 0) ? result.users : ((window._dataCache && window._dataCache.users) || []);
       vendorsCacheList = (Array.isArray(result.vendors) && result.vendors.length > 0) ? result.vendors : ((window._dataCache && window._dataCache.vendors) || []);
       associatesCacheList = (Array.isArray(result.associates) && result.associates.length > 0) ? result.associates : ((window._dataCache && window._dataCache.associates) || []);
@@ -7200,7 +7225,7 @@ textarea.form-control {
       }
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getLeads();
-    google.script.run.withSuccessHandler(function(data) { allVisits = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getSiteVisits();
+    google.script.run.withSuccessHandler(function(data) { allVisits = window.RLS ? window.RLS.filterSiteVisits(data || []) : (data || []); checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getSiteVisits();
     google.script.run.withSuccessHandler(function(usersList) { staffCacheList = usersList || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getUsers();
     google.script.run.withSuccessHandler(function(data) { vendorsCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getVendors();
     google.script.run.withSuccessHandler(function(data) { associatesCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getAssociates();
@@ -8196,7 +8221,8 @@ textarea.form-control {
 
     function applyTasksData(result) {
       result = result || {};
-      projectsCacheList = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      var rawProj = (Array.isArray(result.projects) && result.projects.length > 0) ? result.projects : ((window._dataCache && window._dataCache.projects) || []);
+      projectsCacheList = window.RLS ? window.RLS.filterProjects(rawProj) : rawProj;
       var projSelect = document.getElementById("task-project-id");
       if (projSelect) {
         projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
@@ -8220,7 +8246,8 @@ textarea.form-control {
         if (window.makeSearchableSelect) window.makeSearchableSelect(userSelect, { placeholder: "Select Staff" });
       }
 
-      allTasks = Array.isArray(result.tasks) ? result.tasks : ((window._dataCache && window._dataCache.tasks) || []);
+      var rawTasks = Array.isArray(result.tasks) ? result.tasks : ((window._dataCache && window._dataCache.tasks) || []);
+      allTasks = window.RLS ? window.RLS.filterTasks(rawTasks) : rawTasks;
       dropdownsCache = result.dropdowns || (window._dataCache && window._dataCache.dropdowns) || {};
       vendorsCacheList = (Array.isArray(result.vendors) && result.vendors.length > 0) ? result.vendors : ((window._dataCache && window._dataCache.vendors) || []);
       associatesCacheList = (Array.isArray(result.associates) && result.associates.length > 0) ? result.associates : ((window._dataCache && window._dataCache.associates) || []);
@@ -8294,7 +8321,7 @@ textarea.form-control {
       }
     }
     google.script.run.withSuccessHandler(function(data) {
-      projectsCacheList = data || [];
+      projectsCacheList = window.RLS ? window.RLS.filterProjects(data || []) : (data || []);
       var select = document.getElementById("task-project-id");
       if (select) {
         select.innerHTML = '<option value="">Select Project</option>' + projectsCacheList.filter(function(p) {
@@ -8321,7 +8348,7 @@ textarea.form-control {
       }
       checkLoaded();
     }).withFailureHandler(function(err) { checkLoaded(); }).getUsers();
-    google.script.run.withSuccessHandler(function(data) { allTasks = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getTasks();
+    google.script.run.withSuccessHandler(function(data) { allTasks = window.RLS ? window.RLS.filterTasks(data || []) : (data || []); checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getTasks();
     google.script.run.withSuccessHandler(function(data) { dropdownsCache = data || {}; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getDropdownValues();
     google.script.run.withSuccessHandler(function(data) { vendorsCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getVendors();
     google.script.run.withSuccessHandler(function(data) { associatesCacheList = data || []; checkLoaded(); }).withFailureHandler(function(err) { checkLoaded(); }).getAssociates();
@@ -9134,7 +9161,8 @@ textarea.form-control {
     });
     populateSelectOptions("lead-assigned-select", staffOpts, "Select Staff");
 
-    leadsDataList = result.leads || [];
+    var rawLeads = result.leads || [];
+    leadsDataList = window.RLS ? window.RLS.filterLeads(rawLeads) : rawLeads;
     dropdownsCache = result.dropdowns || {};
     checkCompletion();
   }
@@ -9209,7 +9237,7 @@ textarea.form-control {
 
     google.script.run
       .withSuccessHandler(function(data) {
-        leadsDataList = data || [];
+        leadsDataList = window.RLS ? window.RLS.filterLeads(data || []) : (data || []);
         checkLegacyCompletion();
       })
       .withFailureHandler(function() { checkLegacyCompletion(); })
@@ -10043,7 +10071,7 @@ textarea.form-control {
     }
 
     function applyProposalsData(result) {
-      clientsCacheList = result.customers || [];
+      clientsCacheList = window.RLS ? window.RLS.filterCustomers(result.customers || []) : (result.customers || []);
       var select = document.getElementById("prop-customer-select");
       if (select) {
         select.innerHTML = '<option value="">Select Client</option>' + clientsCacheList.filter(function(c) {
@@ -10054,8 +10082,8 @@ textarea.form-control {
         if (window.makeSearchableSelect) window.makeSearchableSelect(select, { placeholder: "Select Client" });
       }
 
-      leadsCacheList = result.leads || [];
-      window.leadsCacheList = result.leads || [];
+      leadsCacheList = window.RLS ? window.RLS.filterLeads(result.leads || []) : (result.leads || []);
+      window.leadsCacheList = leadsCacheList;
       var leadSelect = document.getElementById("prop-lead-select");
       if (leadSelect) {
         leadSelect.innerHTML = '<option value="">Select Lead</option>' + leadsCacheList.filter(function(l) {
@@ -10067,7 +10095,7 @@ textarea.form-control {
         if (window.makeSearchableSelect) window.makeSearchableSelect(leadSelect, { placeholder: "Select Lead" });
       }
 
-      proposalsDataList = result.proposals || [];
+      proposalsDataList = window.RLS ? window.RLS.filterProposals(result.proposals || []) : (result.proposals || []);
       dropdownsCache = result.dropdowns || {};
       checkCompletion();
     }
@@ -10144,7 +10172,7 @@ textarea.form-control {
       }
       checkLegacyCompletion();
     }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getLeads();
-    google.script.run.withSuccessHandler(function(data) { proposalsDataList = data || []; checkLegacyCompletion(); }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getProposals();
+    google.script.run.withSuccessHandler(function(data) { proposalsDataList = window.RLS ? window.RLS.filterProposals(data || []) : (data || []); checkLegacyCompletion(); }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getProposals();
     google.script.run.withSuccessHandler(function(data) { dropdownsCache = data || {}; checkLegacyCompletion(); }).withFailureHandler(function(err) { checkLegacyCompletion(); }).getDropdownValues();
   }
 
@@ -17042,12 +17070,14 @@ window.loadFinanceView = function(forceRefresh) {
     try {
       if (typeof showLoader === "function") showLoader(false);
       res = res || {};
-      window.txnsDataList = res.transactions || (Array.isArray(res) ? res : []);
-      window.projsCacheList = res.projects || [];
+      var rawTxns = res.transactions || (Array.isArray(res) ? res : []);
+      var rawProjs = res.projects || [];
+      window.txnsDataList = window.RLS ? window.RLS.filterTransactions(rawTxns) : rawTxns;
+      window.projsCacheList = window.RLS ? window.RLS.filterProjects(rawProjs) : rawProjs;
       window.vndrsCacheList = res.vendors || [];
       window.associatesCacheList = res.associates || [];
-      window.customersCacheList = res.customers || [];
-      window.siteVisitsCacheList = res.siteVisits || [];
+      window.customersCacheList = window.RLS ? window.RLS.filterCustomers(res.customers || []) : (res.customers || []);
+      window.siteVisitsCacheList = window.RLS ? window.RLS.filterSiteVisits(res.siteVisits || []) : (res.siteVisits || []);
       window.dropdownsCache = res.dropdowns || {};
 
       try { window.populateDropdownsFromCache(); } catch(e){ console.error(e); }
@@ -19470,6 +19500,243 @@ document.addEventListener("click", function() {
       return JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     }
     window.getSessionUser = getSessionUser;
+
+    /**
+     * =========================================================================
+     * UNIVERSAL ROW-LEVEL SECURITY (RLS) & TEAM HIERARCHY ENGINE
+     * Enforces strict team data isolation across all modules & dashboard.
+     * =========================================================================
+     */
+    window.RLS = {
+      getScope: function() {
+        var user = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
+        if (!user) return { isSuperAdmin: true };
+        var role = String(user.roleId || (user.user && user.user.RoleID) || "").trim();
+        var isSuperAdmin = (role === "Super Admin" || role === "Administrator" || role === "Admin");
+        if (isSuperAdmin) {
+          return { isSuperAdmin: true };
+        }
+
+        var myId = String(user.userId || user.UserID || (user.user && (user.user.UserID || user.user.userId)) || "").trim().toLowerCase();
+        var myName = String(user.fullName || user.FullName || (user.user && (user.user.FullName || user.user.fullName)) || "").trim().toLowerCase();
+        var myEmail = String(user.email || user.Email || (user.user && (user.user.Email || user.user.email)) || "").trim().toLowerCase();
+
+        var allUsers = (window._dataCache && Array.isArray(window._dataCache.users) && window._dataCache.users.length > 0)
+          ? window._dataCache.users
+          : ((window.usersCacheList && window.usersCacheList.length > 0) ? window.usersCacheList : []);
+
+        var teamUserIds = new Set();
+        var teamNames = new Set();
+        var teamEmails = new Set();
+
+        if (myId) teamUserIds.add(myId);
+        if (myName) teamNames.add(myName);
+        if (myEmail) teamEmails.add(myEmail);
+
+        // Queue of identifiers to search subordinates for
+        var queue = [];
+        if (myId) queue.push(myId);
+        if (myName) queue.push(myName);
+        if (myEmail) queue.push(myEmail);
+
+        var processed = new Set();
+
+        while (queue.length > 0) {
+          var curMgr = queue.shift();
+          if (!curMgr || processed.has(curMgr)) continue;
+          processed.add(curMgr);
+
+          allUsers.forEach(function(u) {
+            if (!u) return;
+            var rTo = String(u.ReportsTo || "").trim().toLowerCase();
+            var uId = String(u.UserID || u.userId || "").trim().toLowerCase();
+            var uName = String(u.FullName || u.fullName || "").trim().toLowerCase();
+            var uEmail = String(u.Email || u.email || "").trim().toLowerCase();
+
+            if (rTo && rTo === curMgr) {
+              if (uId && !teamUserIds.has(uId)) {
+                teamUserIds.add(uId);
+                queue.push(uId);
+              }
+              if (uName && !teamNames.has(uName)) {
+                teamNames.add(uName);
+                queue.push(uName);
+              }
+              if (uEmail && !teamEmails.has(uEmail)) {
+                teamEmails.add(uEmail);
+                queue.push(uEmail);
+              }
+            }
+          });
+        }
+
+        return {
+          isSuperAdmin: false,
+          myId: myId,
+          myName: myName,
+          myEmail: myEmail,
+          teamUserIds: teamUserIds,
+          teamNames: teamNames,
+          teamEmails: teamEmails
+        };
+      },
+
+      isMatch: function(assignedVal, createdByVal, scope) {
+        scope = scope || window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return true;
+
+        var assigned = String(assignedVal || "").trim().toLowerCase();
+        var created = String(createdByVal || "").trim().toLowerCase();
+
+        // Check createdBy
+        if (created) {
+          if (scope.teamUserIds.has(created) || scope.teamEmails.has(created) || scope.teamNames.has(created)) return true;
+        }
+
+        // Check assignedTo
+        if (assigned) {
+          if (scope.teamUserIds.has(assigned) || scope.teamNames.has(assigned) || scope.teamEmails.has(assigned)) return true;
+          for (var name of scope.teamNames) {
+            if (name && (assigned.indexOf(name) !== -1 || name.indexOf(assigned) !== -1)) return true;
+          }
+          for (var uid of scope.teamUserIds) {
+            if (uid && assigned.indexOf(uid) !== -1) return true;
+          }
+        }
+
+        return false;
+      },
+
+      filterTasks: function(tasksList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return tasksList || [];
+        return (tasksList || []).filter(function(t) {
+          if (!t) return false;
+          return window.RLS.isMatch(t.AssignedTo, t.CreatedBy, scope);
+        });
+      },
+
+      filterSiteVisits: function(visitsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return visitsList || [];
+        return (visitsList || []).filter(function(v) {
+          if (!v) return false;
+          return window.RLS.isMatch(v.AssignedTo || v.EngineerName, v.CreatedBy, scope);
+        });
+      },
+
+      filterLeads: function(leadsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return leadsList || [];
+        return (leadsList || []).filter(function(l) {
+          if (!l) return false;
+          return window.RLS.isMatch(l.AssignedTo, l.CreatedBy, scope);
+        });
+      },
+
+      filterProjects: function(projectsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return projectsList || [];
+
+        var tasks = (window._dataCache && window._dataCache.tasks) || [];
+        var visits = (window._dataCache && window._dataCache.siteVisits) || [];
+        var milestones = (window._dataCache && window._dataCache.milestones) || [];
+
+        var allowedProjIds = new Set();
+        tasks.forEach(function(t) {
+          if (t && t.ProjectID && window.RLS.isMatch(t.AssignedTo, t.CreatedBy, scope)) {
+            allowedProjIds.add(String(t.ProjectID).trim().toLowerCase());
+          }
+        });
+        visits.forEach(function(v) {
+          if (v && v.ProjectID && window.RLS.isMatch(v.AssignedTo, v.CreatedBy, scope)) {
+            allowedProjIds.add(String(v.ProjectID).trim().toLowerCase());
+          }
+        });
+        milestones.forEach(function(m) {
+          if (m && m.ProjectID && window.RLS.isMatch(m.AssociateName, m.CreatedBy, scope)) {
+            allowedProjIds.add(String(m.ProjectID).trim().toLowerCase());
+          }
+        });
+
+        return (projectsList || []).filter(function(p) {
+          if (!p) return false;
+          if (window.RLS.isMatch("", p.CreatedBy, scope)) return true;
+          var pid = String(p.ProjectID || "").trim().toLowerCase();
+          if (pid && allowedProjIds.has(pid)) return true;
+          return false;
+        });
+      },
+
+      filterCustomers: function(customersList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return customersList || [];
+
+        var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
+        var allowedCustIds = new Set(allowedProjects.map(function(p) { return String(p.CustomerID || "").trim().toLowerCase(); }));
+
+        var allowedLeads = window.RLS.filterLeads((window._dataCache && window._dataCache.leads) || []);
+        allowedLeads.forEach(function(l) {
+          if (l && l.CustomerName) allowedCustIds.add(String(l.CustomerName).trim().toLowerCase());
+        });
+
+        return (customersList || []).filter(function(c) {
+          if (!c) return false;
+          if (window.RLS.isMatch("", c.CreatedBy, scope)) return true;
+          var cid = String(c.CustomerID || "").trim().toLowerCase();
+          var cName = String(c.CustomerName || c.CompanyFirmName || "").trim().toLowerCase();
+          if (cid && allowedCustIds.has(cid)) return true;
+          if (cName && allowedCustIds.has(cName)) return true;
+          return false;
+        });
+      },
+
+      filterMilestones: function(milestonesList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return milestonesList || [];
+        var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
+        var allowedProjIds = new Set(allowedProjects.map(function(p) { return String(p.ProjectID || "").trim().toLowerCase(); }));
+
+        return (milestonesList || []).filter(function(m) {
+          if (!m) return false;
+          if (window.RLS.isMatch(m.AssociateName, m.CreatedBy, scope)) return true;
+          var pid = String(m.ProjectID || "").trim().toLowerCase();
+          if (pid && allowedProjIds.has(pid)) return true;
+          return false;
+        });
+      },
+
+      filterProposals: function(proposalsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return proposalsList || [];
+        var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
+        var allowedProjNames = new Set(allowedProjects.map(function(p) { return String(p.ProjectName || "").trim().toLowerCase(); }));
+
+        return (proposalsList || []).filter(function(prop) {
+          if (!prop) return false;
+          if (window.RLS.isMatch("", prop.CreatedBy, scope)) return true;
+          var pName = String(prop.ProjectName || "").trim().toLowerCase();
+          if (pName && allowedProjNames.has(pName)) return true;
+          return false;
+        });
+      },
+
+      filterTransactions: function(txnsList) {
+        var scope = window.RLS.getScope();
+        if (!scope || scope.isSuperAdmin) return txnsList || [];
+        var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
+        var allowedProjIds = new Set(allowedProjects.map(function(p) { return String(p.ProjectID || "").trim().toLowerCase(); }));
+
+        return (txnsList || []).filter(function(t) {
+          if (!t) return false;
+          if (window.RLS.isMatch("", t.CreatedBy, scope)) return true;
+          var pid = String(t.ProjectID || "").trim().toLowerCase();
+          if (pid && allowedProjIds.has(pid)) return true;
+          return false;
+        });
+      }
+    };
+
 
     
     /**
