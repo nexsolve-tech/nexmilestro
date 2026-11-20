@@ -25,7 +25,7 @@
       top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(12px);
-      z-index: 99999;
+      z-index: 10000005 !important;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -3400,6 +3400,9 @@
     function showLicenseGateModal(show) {
       var el = document.getElementById("license-gate-modal");
       if (el) el.style.display = show ? "flex" : "none";
+      if (show) {
+        showLoginOverlay(false);
+      }
       var appCont = document.getElementById("app-container");
       if (appCont && show) {
         appCont.style.visibility = "hidden";
@@ -3416,7 +3419,10 @@
       showLicenseGateModal(false);
       if (isAuthenticated()) {
         var appCont = document.getElementById("app-container");
-        if (appCont) appCont.style.visibility = "visible";
+        if (appCont) {
+          appCont.style.visibility = "visible";
+          appCont.style.display = "flex";
+        }
       } else {
         showLoginOverlay(true);
       }
@@ -3501,50 +3507,85 @@
     }
 
     async function handleLoginSubmit(e) {
-      e.preventDefault();
-      var email = document.getElementById("login-email").value.trim();
-      var pass = document.getElementById("login-password").value;
-      var remember = document.getElementById("login-remember-me").checked;
+      if (e && e.preventDefault) e.preventDefault();
+      var emailEl = document.getElementById("login-email");
+      var passEl = document.getElementById("login-password");
+      var remEl = document.getElementById("login-remember-me");
+      var email = emailEl ? emailEl.value.trim() : "";
+      var pass = passEl ? passEl.value : "";
+      var remember = remEl ? remEl.checked : true;
 
-      showLoader(true, "Authenticating user credentials...");
-      google.script.run.withSuccessHandler(function(response) {
+      var submitBtn = document.querySelector("#login-form .btn-login-submit") || document.querySelector(".btn-login-submit");
+      var originalBtnHtml = submitBtn ? submitBtn.innerHTML : "Access Account";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+      }
+
+      try {
+        var response = await apiCall("login", { identifier: email, password: pass });
         if (response && response.success) {
+          var userObj = response.user || response;
+          var authPayload = {
+            success: true,
+            userId: userObj.userId || userObj.UserID,
+            fullName: userObj.fullName || userObj.FullName,
+            email: userObj.email || userObj.Email,
+            mobile: userObj.mobile || userObj.Mobile,
+            roleId: userObj.roleId || userObj.RoleID,
+            permissions: userObj.permissions || {},
+            mustChangePassword: userObj.mustChangePassword || "No",
+            user: userObj
+          };
+
           if (remember) {
-            localStorage.setItem("pm_user", JSON.stringify(response));
+            localStorage.setItem("pm_user", JSON.stringify(authPayload));
             sessionStorage.removeItem("pm_user");
           } else {
-            sessionStorage.setItem("pm_user", JSON.stringify(response));
+            sessionStorage.setItem("pm_user", JSON.stringify(authPayload));
             localStorage.removeItem("pm_user");
           }
 
-          showLoader(false);
           showLoginOverlay(false);
+          var appCont = document.getElementById("app-container");
+          if (appCont) {
+            appCont.style.visibility = "visible";
+            appCont.style.display = "flex";
+          }
           populateSidebarUserProfile();
           applySidebarPermissions();
 
-          if (response.mustChangePassword === "Yes" || response.mustChangePassword === true) {
+          if (authPayload.mustChangePassword === "Yes" || authPayload.mustChangePassword === true) {
             showPasswordResetModal(true);
           } else {
             appRouter.navigate("dashboard");
-            showToast("Welcome back, " + (response.fullName || "User") + "!", "success");
+            showToast("Welcome back, " + (authPayload.fullName || "User") + "!", "success");
           }
 
-          // Preload & sync fresh database in background
-          preloadAllAppData(function() {
-            populateSidebarUserProfile();
-            applySidebarPermissions();
-            if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
-              updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
-            }
-          });
+          // Preload & sync fresh database in background safely
+          setTimeout(function() {
+            preloadAllAppData(function() {
+              populateSidebarUserProfile();
+              applySidebarPermissions();
+              if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
+                updateHeaderCompanyLogo(window._dataCache.companySetup.LogoUrl);
+              }
+            });
+          }, 150);
         } else {
-          showLoader(false);
-          showToast(response ? response.message : "Invalid credentials", "error");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHtml;
+          }
+          showToast(response ? (response.message || response.error) : "Invalid credentials", "error");
         }
-      }).withFailureHandler(function(err) {
-        showLoader(false);
-        showToast(err.message, "error");
-      }).authenticateUser(email, pass);
+      } catch (err) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+        showToast(err.message || "Login failed. Please check connection.", "error");
+      }
     }
     window.handleLoginSubmit = handleLoginSubmit;
 
@@ -3601,7 +3642,7 @@
       menuItems.forEach(function(item) {
         var viewId = item.getAttribute("data-view");
         if (!viewId) return;
-        if (viewId === "dashboard" || viewId === "help") {
+        if (viewId === "dashboard" || viewId === "help" || viewId === "teamchat") {
           item.style.display = "block";
           return;
         }

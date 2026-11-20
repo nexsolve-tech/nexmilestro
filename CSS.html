@@ -1437,9 +1437,9 @@ textarea.form-control {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.3);
-  backdrop-filter: blur(2px);
-  z-index: 1000;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(3px);
+  z-index: 10000010 !important;
   display: none;
   align-items: center;
   justify-content: center;
@@ -2897,15 +2897,19 @@ textarea.form-control {
   align-items: center;
   margin-left: 0.35rem;
   font-size: 0.725rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.teams-msg-receipt.sent {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .teams-msg-receipt.delivered {
-  color: #a7f3d0;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .teams-msg-receipt.read {
-  color: #67e8f9;
+  color: #38bdf8;
 }
 
 /* Floating Real-Time Incoming Chat Toast Popup */

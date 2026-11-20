@@ -102,7 +102,7 @@
           <button type="button" class="teams-icon-btn" onclick="exportChatTranscript()" title="Download Chat History Transcript">
             <i class="fas fa-download"></i>
           </button>
-          <button type="button" class="teams-icon-btn danger" onclick="clearTeamChatHistory()" title="Reset Chat to Default">
+          <button type="button" class="teams-icon-btn danger" id="btn-header-delete-group" onclick="handleDeleteActiveGroup()" title="Delete This Group" style="display: none;">
             <i class="fas fa-trash-alt"></i>
           </button>
         </div>
@@ -145,7 +145,7 @@
 
   <!-- ==================== CREATE NEW GROUP MODAL ==================== -->
   <div class="modal-overlay" id="chat-new-group-modal" style="display: none; z-index: 100000;">
-    <div class="modal-container" style="max-width: 500px; padding: 1.5rem; border-radius: 16px; background: var(--bg-primary); box-shadow: 0 25px 60px rgba(0,0,0,0.35); border: 1px solid var(--border-color);">
+    <div class="modal-container" style="max-width: 500px; width: 95%; max-height: min(90vh, 90dvh); overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 1.5rem; border-radius: 16px; background: var(--bg-primary); box-shadow: 0 25px 60px rgba(0,0,0,0.35); border: 1px solid var(--border-color);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
         <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.45rem;">
           <i class="fas fa-users" style="color: #5b5fc7;"></i> Create Project Team / Group
@@ -217,7 +217,7 @@
 
   <!-- ==================== MANAGE GROUP MEMBERS MODAL ==================== -->
   <div class="modal-overlay" id="chat-manage-members-modal" style="display: none; z-index: 100000;">
-    <div class="modal-container" style="max-width: 520px; padding: 1.5rem; border-radius: 16px; background: var(--bg-primary); box-shadow: 0 25px 60px rgba(0,0,0,0.35); border: 1px solid var(--border-color);">
+    <div class="modal-container" style="max-width: 520px; width: 95%; max-height: min(90vh, 90dvh); overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 1.5rem; border-radius: 16px; background: var(--bg-primary); box-shadow: 0 25px 60px rgba(0,0,0,0.35); border: 1px solid var(--border-color);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
         <div>
           <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.45rem;">
@@ -644,7 +644,12 @@
       var cardClass = isOutgoing ? "teams-msg-row outgoing" : "teams-msg-row incoming";
       var initials = m.initials || (m.sender ? m.sender.split(" ").map(function(n) { return n[0]; }).join("").substring(0, 2).toUpperCase() : "TM");
       var avatarBg = isOutgoing ? "var(--primary)" : "#5b5fc7";
-      var receiptHtml = isOutgoing ? '<span class="teams-msg-receipt delivered" title="Delivered"><i class="fas fa-check-double"></i></span>' : '';
+      var isDelivered = m.receipt === "delivered" || m.receipt === "read";
+      var isRead = m.receipt === "read";
+      var receiptIcon = isDelivered ? '<i class="fas fa-check-double"></i>' : '<i class="fas fa-check"></i>';
+      var receiptClass = isRead ? 'read' : (isDelivered ? 'delivered' : 'sent');
+      var receiptTitle = isRead ? 'Read' : (isDelivered ? 'Delivered' : 'Sent');
+      var receiptHtml = isOutgoing ? '<span class="teams-msg-receipt ' + receiptClass + '" title="' + receiptTitle + '">' + receiptIcon + '</span>' : '';
 
       return '<div class="' + cardClass + '">' +
                '<div class="teams-msg-avatar" style="background: ' + avatarBg + ';">' + initials + '</div>' +
@@ -745,6 +750,13 @@
       }
     }
 
+    var delHeaderBtn = document.getElementById("btn-header-delete-group");
+    if (delHeaderBtn) {
+      var curUser = getCurrentUser();
+      var isAdmin = isSuperAdmin() || (curUser && curUser.roleId === "Admin");
+      delHeaderBtn.style.display = (activeConversationType === "group" && isAdmin) ? "inline-flex" : "none";
+    }
+
     renderConversationsList();
     renderMessages();
 
@@ -826,7 +838,7 @@
       time: timeStr,
       timestamp: Date.now(),
       initials: initials,
-      receipt: "delivered",
+      receipt: "sent",
       isSelf: true
     };
 
@@ -992,15 +1004,27 @@
     }).catch(function() {});
   }
 
+  var _isChatPolling = false;
+  var _chatPollTimeout = null;
+  var _lastTasksPoll = 0;
+
+  function scheduleNextChatPoll(delayMs) {
+    if (_chatPollTimeout) clearTimeout(_chatPollTimeout);
+    _chatPollTimeout = setTimeout(pollServerChatUpdates, delayMs || 4000);
+  }
+
   function startChatSyncPolling() {
-    if (_chatPollTimer) clearInterval(_chatPollTimer);
-    _chatPollTimer = setInterval(function() {
-      pollServerChatUpdates();
-    }, 3500);
+    scheduleNextChatPoll(2000);
   }
 
   function pollServerChatUpdates() {
-    if (typeof window.apiCall !== "function") return;
+    if (_isChatPolling) return;
+    if (typeof window.apiCall !== "function") {
+      scheduleNextChatPoll(5000);
+      return;
+    }
+    _isChatPolling = true;
+
     window.apiCall("get_chat_messages").then(function(res) {
       if (res && res.success && Array.isArray(res.chatMessages)) {
         syncIncomingServerMessages(res.chatMessages);
@@ -1012,11 +1036,19 @@
       }
     }).catch(function() {
       pollChatUpdatesViaTasks();
+    }).finally(function() {
+      _isChatPolling = false;
+      scheduleNextChatPoll(4500);
     });
   }
 
   function pollChatUpdatesViaTasks() {
     if (typeof window.apiCall !== "function") return;
+    var now = Date.now();
+    // Throttle tasks polling to prevent GAS queue stacking
+    if (now - _lastTasksPoll < 8000) return;
+    _lastTasksPoll = now;
+
     window.apiCall("get_initial_data").then(function(res) {
       if (!res || !Array.isArray(res.tasks)) return;
       var chatTasks = res.tasks.filter(function(t) { return t.ProjectID === "SYSTEM_CHAT"; });
@@ -1294,6 +1326,10 @@
 
   // ==================== MANAGE GROUP MEMBERS MODAL ====================
   window.openManageGroupMembersModal = function() {
+    var curUser = getCurrentUser();
+    var isAdmin = isSuperAdmin() || (curUser && curUser.roleId === "Admin");
+    var delBtn = document.getElementById("btn-delete-active-group");
+    if (delBtn) delBtn.style.display = isAdmin ? "inline-block" : "none";
     var modal = document.getElementById("chat-manage-members-modal");
     if (!modal) return;
 
