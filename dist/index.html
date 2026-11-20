@@ -14607,7 +14607,8 @@ textarea.form-control {
 
   try {
     if ("BroadcastChannel" in window) {
-      _broadcastChannel = new BroadcastChannel("nexmilestro_team_chat_channel");
+    var _bcName = "nexmilestro_chat_" + ((typeof getActiveLicenseKey === "function" ? getActiveLicenseKey() : "") || "default").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+    _broadcastChannel = new BroadcastChannel(_bcName);
       _broadcastChannel.onmessage = function(event) {
         if (event && event.data && event.data.type === "new_message") {
           handleIncomingBroadcastMessage(event.data.message);
@@ -14728,9 +14729,14 @@ textarea.form-control {
     return "dm__" + pair[0] + "__" + pair[1];
   }
 
+  function getChatStoragePrefix() {
+    var key = (typeof getActiveLicenseKey === "function" ? getActiveLicenseKey() : "") || "default";
+    return "nexmilestro_" + key.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_") + "_";
+  }
+
   function getStoredGroups() {
     try {
-      var raw = localStorage.getItem("nexmilestro_chat_groups");
+      var raw = localStorage.getItem(getChatStoragePrefix() + "chat_groups");
       if (raw) {
         var parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) return parsed;
@@ -14741,7 +14747,7 @@ textarea.form-control {
 
   function saveStoredGroups(groups) {
     try {
-      localStorage.setItem("nexmilestro_chat_groups", JSON.stringify(groups));
+      localStorage.setItem(getChatStoragePrefix() + "chat_groups", JSON.stringify(groups));
       if (_broadcastChannel) {
         _broadcastChannel.postMessage({ type: "groups_updated" });
       }
@@ -14750,16 +14756,16 @@ textarea.form-control {
 
   function getStoredMessages() {
     try {
-      var raw = localStorage.getItem("nexmilestro_team_messages");
+      var raw = localStorage.getItem(getChatStoragePrefix() + "team_messages");
       if (raw) return JSON.parse(raw);
     } catch(e) {}
-    localStorage.setItem("nexmilestro_team_messages", JSON.stringify(defaultMessages));
+    localStorage.setItem(getChatStoragePrefix() + "team_messages", JSON.stringify(defaultMessages));
     return defaultMessages;
   }
 
   function saveStoredMessages(data) {
     try {
-      localStorage.setItem("nexmilestro_team_messages", JSON.stringify(data));
+      localStorage.setItem(getChatStoragePrefix() + "team_messages", JSON.stringify(data));
     } catch(e) {}
   }
 
@@ -15824,7 +15830,7 @@ textarea.form-control {
 
   window.clearTeamChatHistory = function() {
     if (confirm("Reset chat history back to default sample conversations?")) {
-      localStorage.removeItem("nexmilestro_team_messages");
+      localStorage.removeItem(getChatStoragePrefix() + "team_messages");
       renderConversationsList();
       renderMessages();
       showToast("Chat reset to defaults.", "info");
@@ -19983,6 +19989,8 @@ document.addEventListener("click", function() {
         localStorage.removeItem("nexmilestro_is_demo");
         localStorage.removeItem("nexmilestro_app_data");
         localStorage.removeItem("nexmilestro_data_license_key");
+        localStorage.removeItem("pm_user");
+        sessionStorage.removeItem("pm_user");
         window._dataCache = {};
 
         showToast("Connected to Organization: " + clientName, "success");
@@ -20000,7 +20008,11 @@ document.addEventListener("click", function() {
             feedback.style.display = "block";
             feedback.style.background = "#fee2e2";
             feedback.style.color = "#dc2626";
-            feedback.innerText = res ? (res.error || "License Key invalid or not registered.") : "Validation failed.";
+            var errMsg = res ? (res.error || "License Key invalid or not registered.") : "Validation failed.";
+            if (errMsg.includes("permission to access")) {
+              errMsg = "Database Permission Denied: The Google Spreadsheet linked to this license is private. In Google Drive, please set Share -> 'Anyone with the link can edit'.";
+            }
+            feedback.innerText = errMsg;
           }
         }
       }

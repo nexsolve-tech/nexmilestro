@@ -3473,6 +3473,8 @@
         localStorage.removeItem("nexmilestro_is_demo");
         localStorage.removeItem("nexmilestro_app_data");
         localStorage.removeItem("nexmilestro_data_license_key");
+        localStorage.removeItem("pm_user");
+        sessionStorage.removeItem("pm_user");
         window._dataCache = {};
 
         showToast("Connected to Organization: " + clientName, "success");
@@ -3490,7 +3492,11 @@
             feedback.style.display = "block";
             feedback.style.background = "#fee2e2";
             feedback.style.color = "#dc2626";
-            feedback.innerText = res ? (res.error || "License Key invalid or not registered.") : "Validation failed.";
+            var errMsg = res ? (res.error || "License Key invalid or not registered.") : "Validation failed.";
+            if (errMsg.includes("permission to access")) {
+              errMsg = "Database Permission Denied: The Google Spreadsheet linked to this license is private. In Google Drive, please set Share -> 'Anyone with the link can edit'.";
+            }
+            feedback.innerText = errMsg;
           }
         }
       }

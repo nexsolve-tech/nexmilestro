@@ -160,7 +160,7 @@ function validateClientLicense(licenseOrEmail) {
 
     // Cache the result for 6 hours
     try {
-      CacheService.getScriptCache().put("lic_v2_" + query, JSON.stringify(licenseInfo), 21600);
+      CacheService.getScriptCache().put("lic_v2_" + query, JSON.stringify(licenseInfo), 30);
     } catch (e) {}
 
     return licenseInfo;
@@ -178,7 +178,7 @@ function validateClientLicense(licenseOrEmail) {
  * Caches spreadsheet handle within execution scope for 5x faster reads.
  */
 function getClientSpreadsheet(licenseKey) {
-  if (_CACHED_CLIENT_SS) {
+  if (_CACHED_CLIENT_SS && _CACHED_CLIENT_SS.license && _CACHED_CLIENT_SS.license.licenseKey === licenseKey) {
     return _CACHED_CLIENT_SS;
   }
 
