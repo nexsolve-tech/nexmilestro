@@ -17487,10 +17487,56 @@ document.addEventListener("click", function() {
             });
             if (freshUser) {
               var freshRoleId = freshUser.RoleID || freshUser.roleId || freshUser.Role || sessionUser.roleId;
-              var roleMap = (res.roles || []).find(function(r) { return (r.RoleID || r.RoleName) === freshRoleId; });
-              var freshPerms = (roleMap && roleMap.Permissions) ? roleMap.Permissions : (sessionUser.permissions || {});
-              if (typeof freshPerms === "string") {
-                try { freshPerms = JSON.parse(freshPerms); } catch(err) {}
+
+              // Dynamically recompute permissions map from rolePermissions and userPermissions
+              var freshPerms = {};
+              var isSuperAdmin = (freshRoleId === "Super Admin" || freshRoleId === "Administrator" || freshRoleId === "Admin");
+
+              var allModuleKeys = ["Dashboard", "Customers", "Projects", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Finance", "Users", "Company", "Masters", "Help", "Teamchat", "Milestones", "Reports"];
+              allModuleKeys.forEach(function(m) {
+                freshPerms[m] = {
+                  view: isSuperAdmin,
+                  add: isSuperAdmin,
+                  edit: isSuperAdmin,
+                  del: isSuperAdmin
+                };
+              });
+
+              if (!isSuperAdmin) {
+                // 1. Role Defaults
+                if (Array.isArray(res.rolePermissions)) {
+                  res.rolePermissions.forEach(function(rp) {
+                    if (String(rp.RoleID || "").trim().toLowerCase() === String(freshRoleId || "").trim().toLowerCase()) {
+                      var mKey = rp.Module;
+                      if (mKey) {
+                        freshPerms[mKey] = {
+                          view: rp.CanView === true || String(rp.CanView).toUpperCase() === "TRUE",
+                          add: rp.CanAdd === true || String(rp.CanAdd).toUpperCase() === "TRUE",
+                          edit: rp.CanEdit === true || String(rp.CanEdit).toUpperCase() === "TRUE",
+                          del: rp.CanDelete === true || String(rp.CanDelete).toUpperCase() === "TRUE"
+                        };
+                      }
+                    }
+                  });
+                }
+
+                // 2. User-specific custom overrides
+                if (Array.isArray(res.userPermissions)) {
+                  var myUid = String(freshUser.UserID || freshUser.userId || myUserId || "").trim().toLowerCase();
+                  res.userPermissions.forEach(function(up) {
+                    if (String(up.UserID || "").trim().toLowerCase() === myUid) {
+                      var mKey = up.Module;
+                      if (mKey) {
+                        freshPerms[mKey] = {
+                          view: up.CanView === true || String(up.CanView).toUpperCase() === "TRUE",
+                          add: up.CanAdd === true || String(up.CanAdd).toUpperCase() === "TRUE",
+                          edit: up.CanEdit === true || String(up.CanEdit).toUpperCase() === "TRUE",
+                          del: up.CanDelete === true || String(up.CanDelete).toUpperCase() === "TRUE"
+                        };
+                      }
+                    }
+                  });
+                }
               }
 
               var updatedUser = Object.assign({}, sessionUser, {
