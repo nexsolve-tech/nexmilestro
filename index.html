@@ -991,6 +991,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
+  min-height: 280px;
 }
 
 .data-table {
@@ -19428,6 +19429,7 @@ document.addEventListener("click", function() {
       var targetMenu = document.getElementById(menuId);
       if (!targetMenu) return;
 
+      var btn = (e && (e.currentTarget || e.target)) ? (e.currentTarget.closest(".btn-table-action") || e.currentTarget) : targetMenu.previousElementSibling;
       var wrap = targetMenu.closest(".action-dropdown-wrap");
       var isCurrentlyOpen = targetMenu.style.display === "block";
 
@@ -19435,17 +19437,31 @@ document.addEventListener("click", function() {
 
       if (!isCurrentlyOpen) {
         targetMenu.style.display = "block";
+        targetMenu.style.position = "fixed";
+        targetMenu.style.zIndex = "99999";
         if (wrap) wrap.classList.add("open");
 
-        // Viewport collision detection: open upwards if near screen bottom
-        var rect = targetMenu.getBoundingClientRect();
-        if (rect.bottom > window.innerHeight - 20) {
-          targetMenu.style.top = "auto";
-          targetMenu.style.bottom = "calc(100% + 5px)";
-        } else {
-          targetMenu.style.top = "calc(100% + 5px)";
-          targetMenu.style.bottom = "auto";
+        var btnRect = btn ? btn.getBoundingClientRect() : wrap.getBoundingClientRect();
+        var menuWidth = targetMenu.offsetWidth || 210;
+        var menuHeight = targetMenu.offsetHeight || 220;
+
+        // Align right edge of menu with right edge of button
+        var left = btnRect.right - menuWidth;
+        if (left < 10) left = 10;
+        if (left + menuWidth > window.innerWidth - 10) left = window.innerWidth - menuWidth - 10;
+
+        // Viewport collision detection
+        var spaceBelow = window.innerHeight - btnRect.bottom;
+        var top = btnRect.bottom + 5;
+        if (spaceBelow < menuHeight + 15 && btnRect.top > menuHeight + 15) {
+          // Open upwards
+          top = btnRect.top - menuHeight - 5;
         }
+
+        targetMenu.style.left = left + "px";
+        targetMenu.style.top = top + "px";
+        targetMenu.style.right = "auto";
+        targetMenu.style.bottom = "auto";
       }
     }
     window.toggleTableRowActionMenu = toggleTableRowActionMenu;
@@ -19464,6 +19480,14 @@ document.addEventListener("click", function() {
         closeAllTableActionMenus();
       }
     });
+
+    window.addEventListener("scroll", function() {
+      closeAllTableActionMenus();
+    }, { passive: true, capture: true });
+
+    window.addEventListener("resize", function() {
+      closeAllTableActionMenus();
+    }, { passive: true });
 
     /**
      * =========================================================================
