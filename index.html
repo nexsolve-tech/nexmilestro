@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>NexMilestro - Project & Milestone Operations Suite | NexSolve</title>
-  
+
   <!-- FontAwesome 6 Icons & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
   <!-- Chart.js for Visual Executive Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
@@ -1175,6 +1178,10 @@ h1, h2, h3, h4, h5, h6 {
   color: #075985;
 }
 
+.priority-critical {
+  background-color: #7f1d1d;
+  color: #ffffff;
+}
 .priority-high {
   background-color: #fee2e2;
   color: #b91c1c;
@@ -2356,6 +2363,15 @@ textarea.form-control {
   background: rgba(15, 118, 110, 0.04);
 }
 
+.notification-item.overdue {
+  background: #fff5f5 !important;
+  border-left: 4px solid var(--danger, #ef4444) !important;
+}
+
+.notification-item.overdue:hover {
+  background: #fee2e2 !important;
+}
+
 .notification-item-icon {
   width: 36px;
   height: 36px;
@@ -3287,7 +3303,10 @@ textarea.form-control {
     /* License Gate Modal Specifics */
     .license-gate-overlay {
       position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(12px);
       z-index: 10000005 !important;
@@ -3296,6 +3315,7 @@ textarea.form-control {
       justify-content: center;
       padding: 1.5rem;
     }
+
     .license-gate-card {
       background: #ffffff;
       border-radius: 20px;
@@ -3307,10 +3327,19 @@ textarea.form-control {
       border: 1px solid #e2e8f0;
       animation: popIn 0.25s ease-out;
     }
+
     @keyframes popIn {
-      from { transform: scale(0.92); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      from {
+        transform: scale(0.92);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
+
     .license-gate-logo {
       width: 64px;
       height: 64px;
@@ -3326,55 +3355,63 @@ textarea.form-control {
     }
   </style>
 </head>
+
 <body>
 
   <!-- ==================== MAIN SITE CONTAINER ==================== -->
   <div class="app-container sidebar-collapsed" id="app-container" style="visibility: hidden;">
-    
+
     <!-- Sidebar Mobile Backdrop -->
     <div class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
-    
+
     <!-- Left Navigation Sidebar -->
     <aside class="app-sidebar">
-      <div class="sidebar-header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-        <div class="sidebar-brand" style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; white-space: nowrap;" onclick="if(document.getElementById('app-container').classList.contains('sidebar-collapsed')) toggleSidebarCollapse();">
-          <div id="header-company-logo-wrapper" style="display: none; background: #ffffff !important; padding: 4px 8px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); align-items: center; justify-content: center; height: 32px;">
-            <img id="header-company-logo" style="max-height: 24px; max-width: 80px; object-fit: contain; display: block;" alt="Logo">
+      <div class="sidebar-header"
+        style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div class="sidebar-brand"
+          style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; white-space: nowrap;"
+          onclick="if(document.getElementById('app-container').classList.contains('sidebar-collapsed')) toggleSidebarCollapse();">
+          <div id="header-company-logo-wrapper"
+            style="display: none; background: #ffffff !important; padding: 4px 8px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); align-items: center; justify-content: center; height: 32px;">
+            <img id="header-company-logo"
+              style="max-height: 24px; max-width: 80px; object-fit: contain; display: block;" alt="Logo">
           </div>
-          <i class="fas fa-cubes" id="header-default-brand-icon"></i> <span class="brand-text">Nex<span>Milestro</span></span>
+          <i class="fas fa-cubes" id="header-default-brand-icon"></i> <span
+            class="brand-text">Nex<span>Milestro</span></span>
         </div>
-        <button type="button" class="btn-sidebar-collapse" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse / Expand Sidebar">
+        <button type="button" class="btn-sidebar-collapse" id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()"
+          title="Collapse / Expand Sidebar">
           <i class="fas fa-chevron-right" id="sidebar-collapse-icon"></i>
         </button>
       </div>
-      
+
       <nav class="sidebar-menu">
         <div class="menu-label">Main Console</div>
-        
+
         <li class="menu-item active" data-view="dashboard">
           <a href="#" class="menu-link" onclick="navigateRoute(event, 'dashboard')" title="Dashboard">
             <i class="fas fa-chart-line"></i> <span>Dashboard</span>
           </a>
         </li>
-        
+
         <li class="menu-item" data-view="customers">
           <a href="#" class="menu-link" onclick="navigateRoute(event, 'customers')" title="Customers">
             <i class="fas fa-users"></i> <span>Customers</span>
           </a>
         </li>
-        
+
         <li class="menu-item" data-view="projects">
           <a href="#" class="menu-link" onclick="navigateRoute(event, 'projects')" title="Projects">
             <i class="fas fa-project-diagram"></i> <span>Projects</span>
           </a>
         </li>
-        
+
         <li class="menu-item" data-view="sitevisits">
           <a href="#" class="menu-link" onclick="navigateRoute(event, 'sitevisits')" title="Site Visits">
             <i class="fas fa-eye"></i> <span>Site Visits</span>
           </a>
         </li>
-        
+
         <li class="menu-item" data-view="tasks">
           <a href="#" class="menu-link" onclick="navigateRoute(event, 'tasks')" title="Tasks & Board">
             <i class="fas fa-check-square"></i> <span>Tasks & Board</span>
@@ -3426,7 +3463,7 @@ textarea.form-control {
         </li>
 
         <div class="menu-label" style="margin-top: 1.25rem;">Administration</div>
-        
+
         <li class="menu-item" data-view="users">
           <a href="#" class="menu-link" onclick="navigateRoute(event, 'users')" title="Users & Roles">
             <i class="fas fa-user-shield"></i> <span>Users & Roles</span>
@@ -3451,7 +3488,7 @@ textarea.form-control {
           </a>
         </li>
       </nav>
-      
+
       <div class="sidebar-footer">
         <div class="user-profile-summary">
           <div class="user-avatar" id="nav-user-avatar">A</div>
@@ -3469,7 +3506,8 @@ textarea.form-control {
     <!-- Main Workspace Area -->
     <main class="app-main">
       <!-- Floating Real-Time Incoming Chat Toast Popup -->
-      <div id="chat-incoming-popup-toast" class="chat-incoming-popup-toast" style="display: none;" onclick="handleIncomingChatPopupClick()">
+      <div id="chat-incoming-popup-toast" class="chat-incoming-popup-toast" style="display: none;"
+        onclick="handleIncomingChatPopupClick()">
         <div class="incoming-popup-avatar" id="incoming-popup-avatar">MG</div>
         <div class="incoming-popup-content">
           <div class="incoming-popup-header">
@@ -3479,7 +3517,8 @@ textarea.form-control {
           </div>
           <div class="incoming-popup-text" id="incoming-popup-text">New message received...</div>
         </div>
-        <button type="button" class="incoming-popup-close" onclick="event.stopPropagation(); closeIncomingChatPopup();" title="Dismiss">
+        <button type="button" class="incoming-popup-close" onclick="event.stopPropagation(); closeIncomingChatPopup();"
+          title="Dismiss">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -3494,40 +3533,49 @@ textarea.form-control {
             <span class="header-subtitle" id="page-subtitle">Project manager analytics overview</span>
           </div>
         </div>
-        
+
         <div class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
           <!-- Demo Evaluation Mode Pill -->
-          <div id="header-demo-badge" style="display: none; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+          <div id="header-demo-badge"
+            style="display: none; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
             <i class="fas fa-sparkles"></i>
             <span>Interactive Demo</span>
           </div>
 
           <!-- License Expiry Warning Badge -->
-          <div id="license-expiry-warning-badge" style="display: none; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent;">
+          <div id="license-expiry-warning-badge"
+            style="display: none; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent;">
             <i class="fas fa-exclamation-triangle"></i>
             <span id="license-expiry-warning-text">License Expiry</span>
           </div>
 
           <!-- Real-Time Sync Status Indicator (Zero-Loss Guarantee) -->
-          <div id="header-sync-status-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); transition: all 0.3s ease;">
+          <div id="header-sync-status-badge"
+            style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); transition: all 0.3s ease;">
             <i class="fas fa-check-circle" id="header-sync-icon" style="font-size: 0.75rem;"></i>
             <span id="header-sync-text">All synced</span>
           </div>
 
           <!-- Authenticated Role Badge -->
-          <div id="header-user-role-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(15,118,110,0.12); border: 1px solid var(--primary); color: var(--primary); font-size: 0.8rem; font-weight: 700;">
+          <div id="header-user-role-badge"
+            style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(15,118,110,0.12); border: 1px solid var(--primary); color: var(--primary); font-size: 0.8rem; font-weight: 700;">
             <i class="fas fa-shield-alt"></i>
             <span id="header-role-text">SUPER ADMIN</span>
           </div>
 
           <!-- User Profile Display & Popover Wrap -->
           <div style="position: relative; display: inline-block;">
-            <div id="header-user-profile-wrap" onclick="toggleUserProfilePopover(event)" ontouchend="toggleUserProfilePopover(event)" title="View profile & account options" style="display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border-radius: 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); box-shadow: var(--shadow-sm); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
-              <div id="header-user-avatar-img-wrap" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #0d9488, #0f172a); color: #fff; font-weight: 700; font-size: 0.775rem; border: 1.5px solid var(--primary); flex-shrink: 0;">
+            <div id="header-user-profile-wrap" onclick="toggleUserProfilePopover(event)"
+              ontouchend="toggleUserProfilePopover(event)" title="View profile & account options"
+              style="display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 2px; border-radius: 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); box-shadow: var(--shadow-sm); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
+              <div id="header-user-avatar-img-wrap"
+                style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 30% 30%, #0d9488, #0f172a); color: #fff; font-weight: 700; font-size: 0.775rem; border: 1.5px solid var(--primary); flex-shrink: 0;">
                 <span id="header-user-avatar-initials">A</span>
               </div>
-              <span id="header-user-name" style="font-size: 0.825rem; font-weight: 600; color: var(--text-main);">Admin</span>
-              <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: var(--text-muted); margin-left: 2px;"></i>
+              <span id="header-user-name"
+                style="font-size: 0.825rem; font-weight: 600; color: var(--text-main);">Admin</span>
+              <i class="fas fa-chevron-down"
+                style="font-size: 0.65rem; color: var(--text-muted); margin-left: 2px;"></i>
             </div>
 
             <!-- User Profile Popover Window -->
@@ -3550,7 +3598,8 @@ textarea.form-control {
                     <span class="popover-lic-org" id="popover-org-name">NexSolve Training & Consulting</span>
                     <span class="popover-lic-key" id="popover-lic-key">LIC-BUYER1-2026</span>
                   </div>
-                  <button type="button" class="btn-popover-copy" onclick="copyLicenseFromPopover(event)" title="Copy License Key">
+                  <button type="button" class="btn-popover-copy" onclick="copyLicenseFromPopover(event)"
+                    title="Copy License Key">
                     <i class="fas fa-copy"></i>
                   </button>
                 </div>
@@ -3560,10 +3609,14 @@ textarea.form-control {
               <div class="popover-section">
                 <div class="popover-sec-label"><i class="fas fa-user-shield"></i> Switch / Test Role</div>
                 <div class="popover-role-grid">
-                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Super Admin')"><i class="fas fa-crown" style="color: #d97706;"></i> Super Admin</button>
-                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Project Manager')"><i class="fas fa-project-diagram" style="color: var(--primary);"></i> Project Mgr</button>
-                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Site Engineer')"><i class="fas fa-hard-hat" style="color: #059669;"></i> Site Eng</button>
-                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Sales Executive')"><i class="fas fa-chart-line" style="color: #4f46e5;"></i> Sales Lead</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Super Admin')"><i
+                      class="fas fa-crown" style="color: #d97706;"></i> Super Admin</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Project Manager')"><i
+                      class="fas fa-project-diagram" style="color: var(--primary);"></i> Project Mgr</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Site Engineer')"><i
+                      class="fas fa-hard-hat" style="color: #059669;"></i> Site Eng</button>
+                  <button type="button" class="btn-role-chip" onclick="switchUserRole('Sales Executive')"><i
+                      class="fas fa-chart-line" style="color: #4f46e5;"></i> Sales Lead</button>
                 </div>
               </div>
 
@@ -3578,10 +3631,12 @@ textarea.form-control {
                 <a href="#" onclick="forceResyncFromPopover(); event.preventDefault();" class="popover-nav-item">
                   <i class="fas fa-sync-alt"></i> Force Resync & Reset Cache
                 </a>
-                <a href="#" onclick="openLicenseGateModalManual(); event.preventDefault();" class="popover-nav-item" style="color: #0ea5e9;">
+                <a href="#" onclick="openLicenseGateModalManual(); event.preventDefault();" class="popover-nav-item"
+                  style="color: #0ea5e9;">
                   <i class="fas fa-key"></i> Switch / Change License Key
                 </a>
-                <a href="#" onclick="handleResetDatabaseClick(); event.preventDefault();" class="popover-nav-item" style="color: #ef4444; font-weight: 600;">
+                <a href="#" onclick="handleResetDatabaseClick(); event.preventDefault();" class="popover-nav-item"
+                  style="color: #ef4444; font-weight: 600;">
                   <i class="fas fa-trash-alt"></i> 🧹 Clean Slate / Wipe All Data
                 </a>
               </div>
@@ -3596,13 +3651,15 @@ textarea.form-control {
           </div>
 
           <!-- Quick Team Chat Button -->
-          <button type="button" class="header-icon-btn" onclick="navigateRoute(event, 'teamchat')" title="Internal Team Chat">
+          <button type="button" class="header-icon-btn" onclick="navigateRoute(event, 'teamchat')"
+            title="Internal Team Chat">
             <i class="fas fa-comments"></i>
           </button>
 
           <!-- Notifications Bell & Popover -->
           <div style="position: relative; display: inline-block;">
-            <button type="button" class="header-icon-btn" id="header-notifications-btn" onclick="toggleNotificationsDrawer(event)" title="Notifications & Activity Stream">
+            <button type="button" class="header-icon-btn" id="header-notifications-btn"
+              onclick="toggleNotificationsDrawer(event)" title="Notifications & Activity Stream">
               <i class="fas fa-bell"></i>
               <span class="notification-badge-count" id="header-notif-badge" style="display: none;">0</span>
             </button>
@@ -3611,36 +3668,41 @@ textarea.form-control {
             <div class="notifications-popover" id="notifications-popover">
               <div class="notifications-header">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <strong style="font-size: 0.9rem; color: var(--text-main);"><i class="fas fa-bell" style="color: var(--primary);"></i> Activity & Notifications</strong>
+                  <strong style="font-size: 0.9rem; color: var(--text-main);"><i class="fas fa-bell"
+                      style="color: var(--primary);"></i> Activity & Notifications</strong>
                   <span class="badge badge-info" id="notif-count-label" style="font-size: 0.7rem;">0 new</span>
                 </div>
-                <button type="button" onclick="markAllNotificationsAsRead(event)" style="background: none; border: none; font-size: 0.75rem; color: var(--primary); cursor: pointer; font-weight: 600;">
+                <button type="button" onclick="markAllNotificationsAsRead(event)"
+                  style="background: none; border: none; font-size: 0.75rem; color: var(--primary); cursor: pointer; font-weight: 600;">
                   Mark all read
                 </button>
               </div>
               <div class="notifications-body" id="notifications-items-container">
                 <!-- Dynamically populated -->
               </div>
-              <div style="padding: 0.6rem 1rem; text-align: center; border-top: 1px solid var(--border-color); background: var(--bg-secondary);">
+              <div
+                style="padding: 0.6rem 1rem; text-align: center; border-top: 1px solid var(--border-color); background: var(--bg-secondary);">
                 <small style="color: var(--text-muted); font-size: 0.75rem;">Live system events & task updates</small>
               </div>
             </div>
           </div>
 
           <!-- Refresh Button -->
-          <button class="btn btn-secondary btn-sm" id="header-refresh-btn" onclick="refreshCurrentView()" title="Refresh Data" style="display: inline-flex; align-items: center; gap: 0.4rem; border-radius: 50px;">
+          <button class="btn btn-secondary btn-sm" id="header-refresh-btn" onclick="refreshCurrentView()"
+            title="Refresh Data" style="display: inline-flex; align-items: center; gap: 0.4rem; border-radius: 50px;">
             <i class="fas fa-sync-alt" id="header-refresh-icon" style="color: var(--primary);"></i> <span>Refresh</span>
           </button>
         </div>
       </header>
-      
+
       <!-- Responsive Viewport Container -->
       <div class="page-viewport" id="app-content">
         <!-- SPA view is dynamically loaded here -->
       </div>
 
       <!-- Persistent Brand Footer Strip -->
-      <footer class="brand-footer-strip" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff; padding: 0.65rem 1.5rem; font-size: 0.8rem; display: flex; justify-content: center; align-items: center; border-top: 2px solid var(--primary); margin-top: auto; z-index: 10;">
+      <footer class="brand-footer-strip"
+        style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff; padding: 0.65rem 1.5rem; font-size: 0.8rem; display: flex; justify-content: center; align-items: center; border-top: 2px solid var(--primary); margin-top: auto; z-index: 10;">
         <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
           <i class="fas fa-certificate" style="color: #38bdf8;"></i>
           <span>Powered by <strong>NexSolve Training & Consulting</strong></span>
@@ -3662,41 +3724,53 @@ textarea.form-control {
 
       <form id="license-gate-form" onsubmit="handleLicenseGateSubmit(event)">
         <div style="margin-bottom: 1.25rem; text-align: left;">
-          <label style="display: block; font-size: 0.775rem; font-weight: 700; text-transform: uppercase; color: #475569; margin-bottom: 0.5rem; letter-spacing: 0.5px;">
+          <label
+            style="display: block; font-size: 0.775rem; font-weight: 700; text-transform: uppercase; color: #475569; margin-bottom: 0.5rem; letter-spacing: 0.5px;">
             License Key
           </label>
-          <input type="text" id="license-gate-input" class="form-control" placeholder="e.g. LIC-BUYER1-2026" required style="font-family: monospace; font-size: 1rem; font-weight: 700; text-transform: uppercase; text-align: center; letter-spacing: 1px; padding: 0.75rem 1rem;">
+          <input type="text" id="license-gate-input" class="form-control" placeholder="e.g. LIC-BUYER1-2026" required
+            style="font-family: monospace; font-size: 1rem; font-weight: 700; text-transform: uppercase; text-align: center; letter-spacing: 1px; padding: 0.75rem 1rem;">
         </div>
 
         <div style="display: flex; gap: 0.65rem; margin-top: 0.5rem;">
-          <button type="button" class="btn btn-secondary" id="btn-cancel-license-gate" onclick="cancelLicenseGateModal()" style="display: none; padding: 0.85rem; font-weight: 600; width: 35%; justify-content: center;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-license-gate"
+            onclick="cancelLicenseGateModal()"
+            style="display: none; padding: 0.85rem; font-weight: 600; width: 35%; justify-content: center;">
             Cancel
           </button>
-          <button type="submit" id="btn-validate-license" class="btn btn-primary" style="flex-grow: 1; padding: 0.85rem; font-weight: 700; font-size: 0.95rem; justify-content: center;">
+          <button type="submit" id="btn-validate-license" class="btn btn-primary"
+            style="flex-grow: 1; padding: 0.85rem; font-weight: 700; font-size: 0.95rem; justify-content: center;">
             <i class="fas fa-shield-check"></i> Connect Database
           </button>
         </div>
       </form>
 
-      <div id="license-gate-feedback" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;"></div>
+      <div id="license-gate-feedback"
+        style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;">
+      </div>
     </div>
   </div>
 
   <!-- ==================== FULL-SCREEN LICENSE LOCKOUT MODAL (EXPIRED / SUSPENDED) ==================== -->
   <div class="license-gate-overlay" id="license-lockout-modal" style="display: none;">
     <div class="license-gate-card" style="max-width: 500px; border-top: 5px solid #ef4444;">
-      <div class="license-gate-logo" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);">
+      <div class="license-gate-logo"
+        style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);">
         <i class="fas fa-shield-alt"></i>
       </div>
-      <div id="lockout-badge" style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: #fee2e2; color: #b91c1c; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem;">
+      <div id="lockout-badge"
+        style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: #fee2e2; color: #b91c1c; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem;">
         Subscription Expired / Suspended
       </div>
-      <h2 id="lockout-client-title" style="font-size: 1.35rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Access Restricted</h2>
+      <h2 id="lockout-client-title"
+        style="font-size: 1.35rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Access Restricted</h2>
       <p id="lockout-reason-text" style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; line-height: 1.6;">
-        Your organization's license access is currently inactive, expired, or pending renewal. All database operations have been secured and locked.
+        Your organization's license access is currently inactive, expired, or pending renewal. All database operations
+        have been secured and locked.
       </p>
 
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: left; font-size: 0.8rem;">
+      <div
+        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: left; font-size: 0.8rem;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
           <span style="color: #64748b; font-weight: 600;">Organization:</span>
           <strong id="lockout-client-name" style="color: #0f172a;">-</strong>
@@ -3707,15 +3781,19 @@ textarea.form-control {
         </div>
         <div style="display: flex; justify-content: space-between;">
           <span style="color: #64748b; font-weight: 600;">Contact Administrator:</span>
-          <a href="mailto:mehul.gandhi@nexsolve.in" style="color: #0284c7; text-decoration: none; font-weight: 700;">mehul.gandhi@nexsolve.in</a>
+          <a href="mailto:mehul.gandhi@nexsolve.in"
+            style="color: #0284c7; text-decoration: none; font-weight: 700;">mehul.gandhi@nexsolve.in</a>
         </div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <a id="lockout-contact-btn" href="mailto:mehul.gandhi@nexsolve.in?subject=NexMilestro%20License%20Reactivation" class="btn btn-primary" style="padding: 0.85rem; font-weight: 700; text-decoration: none; justify-content: center; background: #ef4444; border-color: #ef4444;">
+        <a id="lockout-contact-btn" href="mailto:mehul.gandhi@nexsolve.in?subject=NexMilestro%20License%20Reactivation"
+          class="btn btn-primary"
+          style="padding: 0.85rem; font-weight: 700; text-decoration: none; justify-content: center; background: #ef4444; border-color: #ef4444;">
           <i class="fas fa-envelope"></i> Contact NexSolve Support
         </a>
-        <button type="button" class="btn btn-secondary" onclick="openLicenseGateModalManual()" style="padding: 0.75rem; font-weight: 600; justify-content: center;">
+        <button type="button" class="btn btn-secondary" onclick="openLicenseGateModalManual()"
+          style="padding: 0.75rem; font-weight: 600; justify-content: center;">
           <i class="fas fa-key"></i> Switch / Re-enter License Key
         </button>
       </div>
@@ -3730,33 +3808,39 @@ textarea.form-control {
 
       <!-- Active Organization Badge -->
       <div style="text-align: center; margin-bottom: 1.25rem;">
-        <span id="login-org-pill" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 4px 12px; border-radius: 20px; background: rgba(15,118,110,0.1); border: 1px solid var(--primary-border); color: var(--primary); font-size: 0.8rem; font-weight: 700;">
+        <span id="login-org-pill"
+          style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 4px 12px; border-radius: 20px; background: rgba(15,118,110,0.1); border: 1px solid var(--primary-border); color: var(--primary); font-size: 0.8rem; font-weight: 700;">
           <i class="fas fa-building"></i> <span id="login-org-name">Connected Organization</span>
         </span>
       </div>
-      
+
       <form id="login-form" onsubmit="handleLoginSubmit(event)">
         <div class="login-form-group">
           <label class="login-label">Email / User ID / Mobile</label>
-          <input type="text" id="login-email" class="login-control" placeholder="e.g. mehul.gandhi@nexsolve.in" required>
+          <input type="text" id="login-email" class="login-control" placeholder="e.g. mehul.gandhi@nexsolve.in"
+            required>
         </div>
-        
+
         <div class="login-form-group" style="margin-top: 1rem;">
           <label class="login-label">Password</label>
           <input type="password" id="login-password" class="login-control" placeholder="••••••••" required>
         </div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 1rem 0; font-size: 0.8rem; color: var(--text-muted);">
-          <label style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-weight: 600; color: var(--text-main);">
+
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin: 1rem 0; font-size: 0.8rem; color: var(--text-muted);">
+          <label
+            style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-weight: 600; color: var(--text-main);">
             <input type="checkbox" id="login-remember-me" checked style="accent-color: var(--primary);"> Remember Me
           </label>
-          <a href="#" onclick="showForgotPassword(true); event.preventDefault();" style="color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+          <a href="#" onclick="showForgotPassword(true); event.preventDefault();"
+            style="color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
         </div>
-        
+
         <button type="submit" class="btn-login-submit" style="width: 100%;">Access Account</button>
 
         <div style="text-align: center; margin-top: 1.25rem;">
-          <a href="#" onclick="openLicenseGateModalManual(); event.preventDefault();" style="font-size: 0.775rem; color: var(--text-muted); text-decoration: none; font-weight: 600;">
+          <a href="#" onclick="openLicenseGateModalManual(); event.preventDefault();"
+            style="font-size: 0.775rem; color: var(--text-muted); text-decoration: none; font-weight: 600;">
             <i class="fas fa-exchange-alt"></i> Switch Organization / License Key
           </a>
         </div>
@@ -3767,7 +3851,7 @@ textarea.form-control {
         <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
           Enter your registered email address to receive an OTP to reset your password.
         </div>
-        
+
         <form id="otp-request-form" onsubmit="handleSendOTP(event)">
           <div class="login-form-group">
             <label class="login-label">Registered Email Address</label>
@@ -3779,21 +3863,26 @@ textarea.form-control {
         <form id="otp-verify-form" onsubmit="handleVerifyReset(event)" style="display: none; margin-top: 1.25rem;">
           <div class="login-form-group">
             <label class="login-label">Enter 6-Digit OTP</label>
-            <input type="text" id="forgot-otp" class="login-control" placeholder="e.g. 123456" required pattern="[0-9]{6}">
+            <input type="text" id="forgot-otp" class="login-control" placeholder="e.g. 123456" required
+              pattern="[0-9]{6}">
           </div>
           <div class="login-form-group" style="margin-top: 1rem;">
             <label class="login-label">New Password</label>
-            <input type="password" id="forgot-new-password" class="login-control" placeholder="At least 6 characters" required minlength="6">
+            <input type="password" id="forgot-new-password" class="login-control" placeholder="At least 6 characters"
+              required minlength="6">
           </div>
           <div class="login-form-group" style="margin-top: 1rem;">
             <label class="login-label">Confirm New Password</label>
-            <input type="password" id="forgot-confirm-password" class="login-control" placeholder="Confirm new password" required>
+            <input type="password" id="forgot-confirm-password" class="login-control" placeholder="Confirm new password"
+              required>
           </div>
-          <button type="submit" class="btn-login-submit" style="width: 100%; margin-top: 1.25rem; background: var(--success);">Reset Password</button>
+          <button type="submit" class="btn-login-submit"
+            style="width: 100%; margin-top: 1.25rem; background: var(--success);">Reset Password</button>
         </form>
-        
+
         <div style="text-align: center; margin-top: 1.25rem;">
-          <a href="#" onclick="showForgotPassword(false); event.preventDefault();" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Back to Login</a>
+          <a href="#" onclick="showForgotPassword(false); event.preventDefault();"
+            style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">Back to Login</a>
         </div>
       </div>
     </div>
@@ -3803,7 +3892,8 @@ textarea.form-control {
   <div class="modal-overlay" id="password-reset-modal" style="z-index: 600; display: none;">
     <div class="modal-container" style="max-width: 400px;">
       <div class="modal-header">
-        <h3 class="modal-title"><i class="fas fa-lock" style="color: var(--warning); margin-right: 0.5rem;"></i>Reset Password</h3>
+        <h3 class="modal-title"><i class="fas fa-lock" style="color: var(--warning); margin-right: 0.5rem;"></i>Reset
+          Password</h3>
       </div>
       <form id="password-reset-form" onsubmit="handlePasswordResetSubmit(event)">
         <div class="modal-body">
@@ -3816,7 +3906,8 @@ textarea.form-control {
           </div>
           <div class="form-group">
             <label class="form-label">New Password</label>
-            <input type="password" id="reset-new-password" class="form-control" placeholder="At least 6 characters" required minlength="6">
+            <input type="password" id="reset-new-password" class="form-control" placeholder="At least 6 characters"
+              required minlength="6">
           </div>
           <div class="form-group">
             <label class="form-label">Confirm New Password</label>
@@ -3841,26 +3932,34 @@ textarea.form-control {
       </div>
       <div class="modal-body">
         <label class="form-label" style="font-weight: 600;">Message Preview:</label>
-        <textarea id="wa-share-text-area" class="form-control" rows="6" style="font-family: inherit; font-size: 0.85rem; background: var(--bg-secondary); border: 1px solid var(--border-color); white-space: pre-wrap; margin-bottom: 1rem;"></textarea>
+        <textarea id="wa-share-text-area" class="form-control" rows="6"
+          style="font-family: inherit; font-size: 0.85rem; background: var(--bg-secondary); border: 1px solid var(--border-color); white-space: pre-wrap; margin-bottom: 1rem;"></textarea>
 
-        <div id="wa-recipient-info" style="font-size: 0.825rem; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
-          <span><i class="fas fa-user-circle" style="color: var(--primary); margin-right: 0.35rem;"></i><strong id="wa-recipient-name">Recipient Contact</strong></span>
-          <span style="font-family: monospace; font-weight: 600; color: var(--success);" id="wa-recipient-phone">Auto-fetched</span>
+        <div id="wa-recipient-info"
+          style="font-size: 0.825rem; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+          <span><i class="fas fa-user-circle" style="color: var(--primary); margin-right: 0.35rem;"></i><strong
+              id="wa-recipient-name">Recipient Contact</strong></span>
+          <span style="font-family: monospace; font-weight: 600; color: var(--success);"
+            id="wa-recipient-phone">Auto-fetched</span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
           <div style="display: flex; gap: 0.5rem;">
-            <input type="tel" id="wa-share-phone-input" class="form-control" placeholder="Mobile Number (Auto-fetched)" style="flex: 1;">
-            <button type="button" class="btn btn-primary" onclick="triggerWASendDirect()" style="background: #25D366; border-color: #25D366; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+            <input type="tel" id="wa-share-phone-input" class="form-control" placeholder="Mobile Number (Auto-fetched)"
+              style="flex: 1;">
+            <button type="button" class="btn btn-primary" onclick="triggerWASendDirect()"
+              style="background: #25D366; border-color: #25D366; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;">
               <i class="fab fa-whatsapp"></i> Send Personally
             </button>
           </div>
 
           <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
-            <button type="button" class="btn btn-secondary" id="wa-group-btn" onclick="triggerWAGroupSend()" style="flex: 1; background: #075e54; color: #fff; border-color: #075e54; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-weight: 600;">
+            <button type="button" class="btn btn-secondary" id="wa-group-btn" onclick="triggerWAGroupSend()"
+              style="flex: 1; background: #075e54; color: #fff; border-color: #075e54; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-weight: 600;">
               <i class="fas fa-users"></i> Send to Project Group
             </button>
-            <button type="button" class="btn btn-secondary" onclick="copyWAMessageText()" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+            <button type="button" class="btn btn-secondary" onclick="copyWAMessageText()"
+              style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
               <i class="fas fa-copy"></i> Copy Text Only
             </button>
           </div>
@@ -3871,47 +3970,66 @@ textarea.form-control {
 
   <!-- ==================== TOAST & FEEDBACK UTILITIES ==================== -->
   <div class="toast-container" id="toast-container"></div>
-  
+
   <div class="global-loader" id="global-loader">
     <div class="spinner"></div>
-    <div id="global-loader-text" style="color: #ffffff; font-weight: 600; font-size: 0.95rem; margin-top: 1rem; text-align: center; letter-spacing: 0.3px;">Loading...</div>
+    <div id="global-loader-text"
+      style="color: #ffffff; font-weight: 600; font-size: 0.95rem; margin-top: 1rem; text-align: center; letter-spacing: 0.3px;">
+      Loading...</div>
   </div>
 
   <!-- ==================== UNIVERSAL CUSTOM CONFIRMATION MODAL ==================== -->
   <div class="modal-overlay" id="custom-confirm-modal" style="z-index: 9999;">
-    <div class="modal-container" style="max-width: 440px; text-align: center; padding: 1.75rem 1.5rem; border-radius: var(--radius-lg); box-shadow: 0 20px 50px rgba(0,0,0,0.35);">
-      <div id="custom-confirm-icon-box" style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--primary); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--primary); font-size: 1.5rem;">
+    <div class="modal-container"
+      style="max-width: 440px; text-align: center; padding: 1.75rem 1.5rem; border-radius: var(--radius-lg); box-shadow: 0 20px 50px rgba(0,0,0,0.35);">
+      <div id="custom-confirm-icon-box"
+        style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--primary); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--primary); font-size: 1.5rem;">
         <i class="fas fa-question-circle" id="custom-confirm-icon"></i>
       </div>
-      <h3 class="modal-title" id="custom-confirm-title" style="margin-bottom: 0.5rem; font-size: 1.15rem; font-weight: 700; justify-content: center;">Please Confirm</h3>
-      <p id="custom-confirm-msg" style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem;">Are you sure you want to proceed?</p>
+      <h3 class="modal-title" id="custom-confirm-title"
+        style="margin-bottom: 0.5rem; font-size: 1.15rem; font-weight: 700; justify-content: center;">Please Confirm
+      </h3>
+      <p id="custom-confirm-msg"
+        style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem;">Are you sure you
+        want to proceed?</p>
       <div style="display: flex; gap: 0.75rem; justify-content: center;">
-        <button type="button" class="btn btn-secondary" onclick="closeCustomConfirm()" style="padding: 0.55rem 1.25rem; font-weight: 600;">Cancel</button>
-        <button type="button" class="btn btn-primary" id="custom-confirm-btn" onclick="handleCustomConfirmAccept()" style="padding: 0.55rem 1.25rem; font-weight: 700;"><i class="fas fa-check"></i> Confirm</button>
+        <button type="button" class="btn btn-secondary" onclick="closeCustomConfirm()"
+          style="padding: 0.55rem 1.25rem; font-weight: 600;">Cancel</button>
+        <button type="button" class="btn btn-primary" id="custom-confirm-btn" onclick="handleCustomConfirmAccept()"
+          style="padding: 0.55rem 1.25rem; font-weight: 700;"><i class="fas fa-check"></i> Confirm</button>
       </div>
     </div>
   </div>
 
   <!-- ==================== CENTERED TASK COMPLETION MODAL (YES / NO / REVIEW) ==================== -->
   <div class="modal-overlay" id="task-completion-modal" style="z-index: 10000; display: none;">
-    <div class="modal-container" style="max-width: 480px; text-align: center; padding: 2rem 1.75rem; border-radius: var(--radius-lg); box-shadow: 0 25px 60px rgba(0,0,0,0.35); background: var(--bg-primary); border: 1px solid var(--border-color);">
-      <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; color: #10b981; font-size: 1.75rem;">
+    <div class="modal-container"
+      style="max-width: 480px; text-align: center; padding: 2rem 1.75rem; border-radius: var(--radius-lg); box-shadow: 0 25px 60px rgba(0,0,0,0.35); background: var(--bg-primary); border: 1px solid var(--border-color);">
+      <div
+        style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; color: #10b981; font-size: 1.75rem;">
         <i class="fas fa-clipboard-check"></i>
       </div>
-      <h3 class="modal-title" style="margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 700; justify-content: center; color: var(--text-main);">
+      <h3 class="modal-title"
+        style="margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 700; justify-content: center; color: var(--text-main);">
         Complete Task Confirmation
       </h3>
-      <p id="task-completion-prompt-text" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.75rem;">
+      <p id="task-completion-prompt-text"
+        style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.75rem;">
         Are you sure you want to mark this task as <strong>Completed</strong>?
       </p>
       <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;">
-        <button type="button" class="btn btn-secondary" onclick="closeTaskCompletionModal()" style="padding: 0.55rem 1.25rem; font-weight: 600;">
+        <button type="button" class="btn btn-secondary" onclick="closeTaskCompletionModal()"
+          style="padding: 0.55rem 1.25rem; font-weight: 600;">
           <i class="fas fa-times"></i> Cancel
         </button>
-        <button type="button" class="btn btn-info" id="task-completion-review-btn" onclick="handleTaskCompletionReview()" style="padding: 0.55rem 1.25rem; font-weight: 600; background: #0284c7; color: #ffffff; border-color: #0284c7;">
+        <button type="button" class="btn btn-info" id="task-completion-review-btn"
+          onclick="handleTaskCompletionReview()"
+          style="padding: 0.55rem 1.25rem; font-weight: 600; background: #0284c7; color: #ffffff; border-color: #0284c7;">
           <i class="fas fa-edit"></i> Review Details
         </button>
-        <button type="button" class="btn btn-primary" id="task-completion-yes-btn" onclick="handleTaskCompletionAccept()" style="padding: 0.55rem 1.4rem; font-weight: 700; background: #059669; border-color: #059669;">
+        <button type="button" class="btn btn-primary" id="task-completion-yes-btn"
+          onclick="handleTaskCompletionAccept()"
+          style="padding: 0.55rem 1.4rem; font-weight: 700; background: #059669; border-color: #059669;">
           <i class="fas fa-check"></i> Yes, Mark Done
         </button>
       </div>
@@ -4056,32 +4174,69 @@ textarea.form-control {
     </div>
   </div>
 
-  <!-- Urgent Tasks Table (Full Width) -->
-  <div class="card" style="margin-top: 1.25rem; width: 100%;">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 class="card-title" id="dash-tasks-card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
-    </div>
-    <div class="card-body" style="padding: 0;">
-      <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto;">
-        <table class="data-table" id="dash-tasks-table" style="width: 100%;">
-          <thead>
-            <tr>
-              <th style="min-width: 220px;">Task Name</th>
-              <th style="min-width: 180px;">Project</th>
-              <th style="min-width: 120px;">Due Date</th>
-              <th style="min-width: 100px;">Priority</th>
-              <th style="text-align: right; min-width: 100px;">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- Split Tasks Row: 1 Side Urgent Tasks & 2 Side Overdue Tasks -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.25rem; margin-top: 1.25rem; width: 100%;">
+    
+    <!-- Side 1: Urgent Tasks -->
+    <div class="card" style="margin: 0; width: 100%; display: flex; flex-direction: column;">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--warning, #f59e0b);">
+        <h3 class="card-title" id="dash-urgent-card-title" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1rem;">
+          <i class="fas fa-bolt" style="color: var(--warning, #f59e0b);"></i>
+          <span>Urgent Tasks</span>
+          <span class="badge" id="dash-urgent-count" style="background: rgba(245, 158, 11, 0.15); color: #d97706; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 20px;">0</span>
+        </h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">View All</button>
+      </div>
+      <div class="card-body" style="padding: 0; flex: 1;">
+        <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto; min-height: 220px;">
+          <table class="data-table" id="dash-urgent-tasks-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="min-width: 170px;">Task</th>
+                <th style="min-width: 120px;">Project</th>
+                <th style="min-width: 95px;">Due Date</th>
+                <th style="min-width: 80px;">Priority</th>
+                <th style="text-align: right; min-width: 110px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading urgent tasks...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
+
+    <!-- Side 2: Overdue Tasks -->
+    <div class="card" style="margin: 0; width: 100%; display: flex; flex-direction: column; border-color: rgba(239, 68, 68, 0.3);">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--danger, #ef4444); background: rgba(254, 242, 242, 0.5);">
+        <h3 class="card-title" id="dash-overdue-card-title" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1rem; color: #b91c1c;">
+          <i class="fas fa-calendar-xmark" style="color: var(--danger, #ef4444);"></i>
+          <span>Overdue Tasks</span>
+          <span class="badge" id="dash-overdue-count" style="background: #fee2e2; color: #b91c1c; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 20px;">0</span>
+        </h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Resolve</button>
+      </div>
+      <div class="card-body" style="padding: 0; flex: 1;">
+        <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto; min-height: 220px;">
+          <table class="data-table" id="dash-overdue-tasks-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="min-width: 170px;">Task</th>
+                <th style="min-width: 120px;">Project</th>
+                <th style="min-width: 110px;">Overdue By</th>
+                <th style="min-width: 100px;">Assigned To</th>
+                <th style="text-align: right; min-width: 110px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading overdue tasks...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="form-grid" style="margin-top: 1rem;">
@@ -4558,50 +4713,114 @@ textarea.form-control {
       }).join("");
     }
 
-    // Urgent Tasks Table
-    var tasksTableBody = document.querySelector("#dash-tasks-table tbody");
-    var urgentTasks = tasks.filter(function(t) {
-      return t.Priority === "High" && t.Status !== "Completed" && t.Status !== "Cancelled";
-    }).sort(function(a, b) {
-      return b.TaskID.localeCompare(a.TaskID);
-    }).slice(0, 7);
+    // Split Tasks: Side 1 (Urgent Tasks) & Side 2 (Overdue Tasks)
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    var tCardTitle = document.getElementById("dash-tasks-card-title");
-    if (tCardTitle) {
-      tCardTitle.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks (' + urgentTasks.length + ')';
+    var overdueList = [];
+    var urgentList = [];
+
+    (tasks || []).forEach(function(t) {
+      if (!t) return;
+      var st = t.Status || "Pending";
+      if (st === "Completed" || st === "Cancelled") return;
+
+      var isOverdue = false;
+      var daysLate = 0;
+      if (t.DueDate) {
+        var d = new Date(t.DueDate);
+        if (!isNaN(d.getTime())) {
+          var dMid = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+          var diff = dMid.getTime() - today.getTime();
+          var diffDays = Math.round(diff / (1000 * 60 * 60 * 24));
+          if (diffDays < 0) {
+            isOverdue = true;
+            daysLate = Math.abs(diffDays);
+          }
+        }
+      }
+
+      if (isOverdue) {
+        overdueList.push(Object.assign({}, t, { daysLate: daysLate }));
+      } else if (t.Priority === "Critical" || t.Priority === "High") {
+        urgentList.push(t);
+      }
+    });
+
+    // Sort overdue by most days late descending
+    overdueList.sort(function(a, b) { return (b.daysLate || 0) - (a.daysLate || 0); });
+    // Sort urgent by TaskID descending
+    urgentList.sort(function(a, b) { return String(b.TaskID || "").localeCompare(String(a.TaskID || "")); });
+
+    var elUrgentCount = document.getElementById("dash-urgent-count");
+    if (elUrgentCount) elUrgentCount.innerText = urgentList.length;
+
+    var elOverdueCount = document.getElementById("dash-overdue-count");
+    if (elOverdueCount) elOverdueCount.innerText = overdueList.length;
+
+    // Side 1: Render Urgent Tasks Table
+    var urgentTbody = document.querySelector("#dash-urgent-tasks-table tbody");
+    if (urgentTbody) {
+      if (urgentList.length === 0) {
+        urgentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No pending urgent tasks.</td></tr>';
+      } else {
+        urgentTbody.innerHTML = urgentList.slice(0, 8).map(function(t) {
+          var proj = (rawProjects || []).find(function(p) { return p.ProjectID === t.ProjectID; });
+          var projName = proj ? proj.ProjectName : "General";
+          var dueStr = t.DueDate ? (typeof formatDate === "function" ? formatDate(t.DueDate) : t.DueDate) : "No date";
+          var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskID) : t.TaskID;
+          var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskName) : t.TaskName;
+          var projNameEsc = typeof escapeHtml === "function" ? escapeHtml(projName) : projName;
+          var prioEsc = typeof escapeHtml === "function" ? escapeHtml(t.Priority || "Medium") : (t.Priority || "Medium");
+          var prioLower = (t.Priority || "medium").toLowerCase();
+
+          return '<tr>' +
+            '<td>' +
+              '<div onclick="window.editTaskFromAnywhere(\'' + tIdEsc + '\')" style="font-weight: 600; color: var(--primary); cursor: pointer; text-decoration: underline;" title="Click to Edit Task">' + tNameEsc + '</div>' +
+              '<div style="font-size: 0.725rem; font-family: monospace; color: var(--text-muted);">' + tIdEsc + '</div>' +
+            '</td>' +
+            '<td style="font-size: 0.825rem;">' + projNameEsc + '</td>' +
+            '<td style="font-size: 0.825rem;">' + dueStr + '</td>' +
+            '<td><span class="badge priority-' + prioLower + '">' + prioEsc + '</span></td>' +
+            '<td style="text-align: right; white-space: nowrap;">' +
+              '<button type="button" class="btn btn-secondary btn-sm" onclick="window.editTaskFromAnywhere(\'' + tIdEsc + '\')" title="Edit Task" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.35rem;"><i class="fas fa-edit"></i> Edit</button>' +
+              '<button type="button" class="btn btn-secondary btn-sm" onclick="quickCompleteTaskFromDash(\'' + tIdEsc + '\', event)" title="Mark as Completed" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: var(--success);"><i class="fas fa-check"></i> Done</button>' +
+            '</td>' +
+          '</tr>';
+        }).join("");
+      }
     }
 
-    if (urgentTasks.length === 0) {
-      tasksTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No pending urgent high-priority tasks.</td></tr>';
-    } else {
-      tasksTableBody.innerHTML = urgentTasks.map(function(t) {
-        var proj = (rawProjects || []).find(function(p) {
-          return p.ProjectID === t.ProjectID;
-        });
-        var projName = proj ? proj.ProjectName : "General";
-        var dueStr = "No date";
-        if (t.DueDate) {
-          dueStr = typeof formatDate === "function" ? formatDate(t.DueDate) : t.DueDate;
-        }
+    // Side 2: Render Overdue Tasks Table
+    var overdueTbody = document.querySelector("#dash-overdue-tasks-table tbody");
+    if (overdueTbody) {
+      if (overdueList.length === 0) {
+        overdueTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--success); padding: 2rem;"><i class="fas fa-check-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>All tasks are on schedule! No overdue tasks.</td></tr>';
+      } else {
+        overdueTbody.innerHTML = overdueList.slice(0, 8).map(function(t) {
+          var proj = (rawProjects || []).find(function(p) { return p.ProjectID === t.ProjectID; });
+          var projName = proj ? proj.ProjectName : "General";
+          var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskID) : t.TaskID;
+          var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskName) : t.TaskName;
+          var projNameEsc = typeof escapeHtml === "function" ? escapeHtml(projName) : projName;
+          var assignedEsc = typeof escapeHtml === "function" ? escapeHtml(t.AssignedTo || "Unassigned") : (t.AssignedTo || "Unassigned");
+          var daysLateStr = t.daysLate + " day" + (t.daysLate > 1 ? "s" : "") + " late";
 
-        var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskID) : t.TaskID;
-        var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskName) : t.TaskName;
-        var projNameEsc = typeof escapeHtml === "function" ? escapeHtml(projName) : projName;
-        var prioEsc = typeof escapeHtml === "function" ? escapeHtml(t.Priority) : t.Priority;
-
-        return '<tr>' +
-          '<td>' +
-            '<div style="font-weight: 600; color: var(--text-main);">' + tNameEsc + '</div>' +
-            '<div style="font-size: 0.725rem; font-family: monospace; color: var(--text-muted);">' + tIdEsc + '</div>' +
-          '</td>' +
-          '<td style="font-size: 0.85rem;">' + projNameEsc + '</td>' +
-          '<td>' + dueStr + '</td>' +
-          '<td><span class="badge priority-' + t.Priority.toLowerCase() + '">' + prioEsc + '</span></td>' +
-          '<td style="text-align: right;">' +
-            '<button type="button" class="btn btn-secondary btn-sm" onclick="quickCompleteTaskFromDash(\'' + tIdEsc + '\', event)" title="Mark as Completed" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; color: var(--success); display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-check"></i> Done</button>' +
-          '</td>' +
-        '</tr>';
-      }).join("");
+          return '<tr style="background: rgba(254, 242, 242, 0.4);">' +
+            '<td>' +
+              '<div onclick="window.editTaskFromAnywhere(\'' + tIdEsc + '\')" style="font-weight: 600; color: #b91c1c; cursor: pointer; text-decoration: underline;" title="Click to Edit Task">' + tNameEsc + '</div>' +
+              '<div style="font-size: 0.725rem; font-family: monospace; color: var(--text-muted);">' + tIdEsc + '</div>' +
+            '</td>' +
+            '<td style="font-size: 0.825rem;">' + projNameEsc + '</td>' +
+            '<td><span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 0.75rem;"><i class="fas fa-clock" style="margin-right: 0.25rem;"></i>' + daysLateStr + '</span></td>' +
+            '<td style="font-size: 0.825rem;"><i class="far fa-user" style="margin-right: 0.25rem; opacity: 0.6;"></i>' + assignedEsc + '</td>' +
+            '<td style="text-align: right; white-space: nowrap;">' +
+              '<button type="button" class="btn btn-secondary btn-sm" onclick="window.editTaskFromAnywhere(\'' + tIdEsc + '\')" title="Edit Task" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.35rem;"><i class="fas fa-edit"></i> Edit</button>' +
+              '<button type="button" class="btn btn-secondary btn-sm" onclick="quickCompleteTaskFromDash(\'' + tIdEsc + '\', event)" title="Mark as Completed" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: var(--success);"><i class="fas fa-check"></i> Done</button>' +
+            '</td>' +
+          '</tr>';
+        }).join("");
+      }
     }
 
     renderConversionFunnel();
@@ -4697,7 +4916,7 @@ textarea.form-control {
 </script>
 
   </script>
-  
+
   <script type="text/html" id="customers-view-template">
     <!-- Customer1.html -->
 <div class="view-container">
@@ -5587,7 +5806,7 @@ textarea.form-control {
 </script>
 
   </script>
-  
+
   <script type="text/html" id="projects-view-template">
     <!-- Project.html -->
 <div class="view-container">
@@ -6800,7 +7019,7 @@ textarea.form-control {
 </script>
 
   </script>
-  
+
   <script type="text/html" id="sitevisits-view-template">
     <!-- SiteVisit.html -->
 <div class="view-container">
@@ -8027,7 +8246,7 @@ textarea.form-control {
 </script>
 
   </script>
-  
+
   <script type="text/html" id="tasks-view-template">
     <!-- Task1.html -->
 <div class="view-container">
@@ -8590,10 +8809,23 @@ textarea.form-control {
           quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Completed\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--success); font-weight:600;"><i class="fas fa-check-double"></i> Approve</button>';
         }
 
-        return '<div class="kanban-card" id="card-' + tIdEsc + '" data-id="' + tIdEsc + '" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: grab;">' +
+        var isOverdue = false;
+        if (task.DueDate && colKey !== "Completed" && task.Status !== "Completed" && task.Status !== "Cancelled") {
+          var dDate = new Date(task.DueDate);
+          var now = new Date();
+          var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          if (dDate < today) isOverdue = true;
+        }
+
+        var cardBorder = isOverdue ? "border-left: 4px solid var(--danger); background: #fffbfb;" : "";
+        var overdueBadge = isOverdue ? '<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:0.65rem; font-weight:700;"><i class="fas fa-clock"></i> OVERDUE</span>' : '';
+
+        return '<div class="kanban-card" id="card-' + tIdEsc + '" data-id="' + tIdEsc + '" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: pointer; ' + cardBorder + '">' +
           '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">' +
             '<span class="kanban-card-title">' + tNameEsc + '</span>' +
             '<div style="display:flex; align-items:center; gap:0.35rem;">' +
+              overdueBadge +
+              '<button type="button" data-task-id="' + tIdEsc + '" onclick="event.stopPropagation(); editTask(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: var(--primary); padding:0; width:22px; height:22px; cursor:pointer;" title="Edit Task"><i class="fas fa-edit"></i></button>' +
               '<button type="button" data-task-id="' + tIdEsc + '" onclick="event.stopPropagation(); notifyTaskWhatsApp(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: #25D366; padding:0; width:22px; height:22px; cursor:pointer;" title="Notify via WhatsApp"><i class="fab fa-whatsapp"></i></button>' +
               '<span class="badge priority-' + priorityClass + '">' + escapeHtml(task.Priority || "Medium") + '</span>' +
             '</div>' +
@@ -8693,9 +8925,9 @@ textarea.form-control {
     var perms = currentUser.permissions || {};
     var taskPerm = perms["Tasks"] || {};
     var canAdd = isSuperAdmin || taskPerm.add === true;
-    var canEdit = isSuperAdmin || taskPerm.edit === true;
+    var isEdit = !!(taskObj && taskObj.TaskID);
+    var canEdit = isSuperAdmin || taskPerm.edit === true || isEdit;
     var canDelete = isSuperAdmin || taskPerm.del === true;
-    var isEdit = !!taskObj;
     var saveBtn = document.getElementById("btn-save-task");
     if (saveBtn) {
       saveBtn.style.display = (isEdit ? canEdit : canAdd) ? "inline-block" : "none";
@@ -8764,13 +8996,38 @@ textarea.form-control {
     document.getElementById("task-modal").classList.remove("show");
   }
   function editTask(taskId) {
-    var task = allTasks.find(function(t) {
-      return t.TaskID === taskId;
-    });
+    if (!taskId) return;
+    var task = (allTasks && allTasks.length > 0) ? allTasks.find(function(t) { return t.TaskID === taskId; }) : null;
+    if (!task && window._dataCache && Array.isArray(window._dataCache.tasks)) {
+      task = window._dataCache.tasks.find(function(t) { return t.TaskID === taskId; });
+    }
+    if (!projectsCacheList || projectsCacheList.length === 0) {
+      projectsCacheList = (window._dataCache && window._dataCache.projects) || [];
+      var projSelect = document.getElementById("task-project-id");
+      if (projSelect) {
+        projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
+          return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + '</option>';
+        }).join("");
+      }
+    }
+    if (!usersCacheList || usersCacheList.length === 0) {
+      usersCacheList = (window._dataCache && window._dataCache.users) || [];
+      var userSelect = document.getElementById("task-assigned-to");
+      if (userSelect) {
+        userSelect.innerHTML = '<option value="">Select Staff</option>' + (usersCacheList || []).map(function(u) {
+          var val = u.FullName || u.UserID || "";
+          return '<option value="' + escapeHtml(val) + '">' + escapeHtml(val) + '</option>';
+        }).join("");
+      }
+    }
     if (task) {
       openTaskModal(task);
+    } else {
+      console.warn("Task not found for edit:", taskId);
     }
   }
+  window.editTask = editTask;
+
   function handleTaskSubmit(e) {
     e.preventDefault();
     var form = document.getElementById("task-form");
@@ -8782,17 +9039,27 @@ textarea.form-control {
       }
     });
 
-    // Optimistically update in local allTasks array immediately
+    // Optimistically update in local allTasks and global cache immediately
     if (!formData.TaskID) {
       formData.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
       allTasks.unshift(formData);
+      if (window._dataCache && Array.isArray(window._dataCache.tasks)) window._dataCache.tasks.unshift(formData);
     } else {
       var tIdx = allTasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
       if (tIdx !== -1) allTasks[tIdx] = Object.assign(allTasks[tIdx], formData);
       else allTasks.unshift(formData);
+
+      if (window._dataCache && Array.isArray(window._dataCache.tasks)) {
+        var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
+        if (cIdx !== -1) window._dataCache.tasks[cIdx] = Object.assign(window._dataCache.tasks[cIdx], formData);
+        else window._dataCache.tasks.unshift(formData);
+      }
     }
     closeTaskModal();
-    renderKanban(allTasks);
+    if (typeof renderKanban === "function") renderKanban(allTasks);
+    if (window.appRouter && window.appRouter.currentView === "dashboard" && typeof window.loadDashboardView === "function") {
+      window.loadDashboardView(false);
+    }
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
@@ -8881,7 +9148,7 @@ textarea.form-control {
 </script>
 
   </script>
-  
+
   <script type="text/html" id="leads-view-template">
     <!-- Lead1.html -->
 <div class="view-container">
@@ -17292,7 +17559,7 @@ document.addEventListener("click", function() {
         localStorage.removeItem("nexmilestro_chat_groups");
         localStorage.setItem("nexmilestro_data_version", APP_DATA_VERSION);
       }
-    } catch(e) {}
+    } catch (e) { }
 
     try {
       var licKey = getActiveLicenseKey();
@@ -17316,10 +17583,10 @@ document.addEventListener("click", function() {
               window._dataCache = parsed;
               populateAllCaches(window._dataCache);
             }
-          } catch(e) {}
+          } catch (e) { }
         }
       }
-    } catch(e) {}
+    } catch (e) { }
 
     function cacheSet(key, val) {
       window._dataCache[key] = val;
@@ -17340,7 +17607,7 @@ document.addEventListener("click", function() {
       window._dataCacheTimestamps = {};
     }
     window.cacheClear = cacheClear;
-    window.cacheClearAll = function() {
+    window.cacheClearAll = function () {
       // Local-first persistence: Do NOT wipe cached data during active session
       // Preserves 0ms navigation and optimistic state across tabs
       console.log("[Cache] Retaining operational data cache for 0ms transitions.");
@@ -17381,15 +17648,15 @@ document.addEventListener("click", function() {
 
       // Extract and bridge chat tasks and groups
       if (Array.isArray(data.tasks)) {
-        var chatTasks = data.tasks.filter(function(t) { return t.ProjectID === "SYSTEM_CHAT"; });
-        var groupTasks = data.tasks.filter(function(t) { return t.ProjectID === "SYSTEM_CHAT_GROUP"; });
+        var chatTasks = data.tasks.filter(function (t) { return t.ProjectID === "SYSTEM_CHAT"; });
+        var groupTasks = data.tasks.filter(function (t) { return t.ProjectID === "SYSTEM_CHAT_GROUP"; });
         if (chatTasks.length > 0 && typeof window.syncIncomingChatFromTasks === "function") {
           window.syncIncomingChatFromTasks(chatTasks);
         }
         if (groupTasks.length > 0 && typeof window.syncIncomingGroupsFromTasks === "function") {
           window.syncIncomingGroupsFromTasks(groupTasks);
         }
-        data.tasks = data.tasks.filter(function(t) {
+        data.tasks = data.tasks.filter(function (t) {
           return t.ProjectID !== "SYSTEM_CHAT" && t.ProjectID !== "SYSTEM_CHAT_GROUP";
         });
       }
@@ -17485,7 +17752,7 @@ document.addEventListener("click", function() {
       // Persist to localStorage for 0ms cold-start
       try {
         localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache));
-      } catch(e) {}
+      } catch (e) { }
     }
     window.populateAllCaches = populateAllCaches;
 
@@ -17504,7 +17771,7 @@ document.addEventListener("click", function() {
         populateAllCaches(res);
         try {
           localStorage.setItem("nexmilestro_data_license_key", licKey);
-        } catch(e) {}
+        } catch (e) { }
 
         // Synchronize active user session with latest database record (role changes, permissions)
         try {
@@ -17512,9 +17779,9 @@ document.addEventListener("click", function() {
           var myUserId = sessionUser.userId || sessionUser.UserID || "";
           var myEmail = sessionUser.email || sessionUser.Email || "";
           if (Array.isArray(res.users) && (myUserId || myEmail)) {
-            var freshUser = res.users.find(function(u) {
+            var freshUser = res.users.find(function (u) {
               return (myUserId && String(u.UserID || u.userId).toLowerCase() === String(myUserId).toLowerCase()) ||
-                     (myEmail && String(u.Email || u.email).toLowerCase() === String(myEmail).toLowerCase());
+                (myEmail && String(u.Email || u.email).toLowerCase() === String(myEmail).toLowerCase());
             });
             if (freshUser) {
               var freshRoleId = freshUser.RoleID || freshUser.roleId || freshUser.Role || sessionUser.roleId;
@@ -17524,7 +17791,7 @@ document.addEventListener("click", function() {
               var isSuperAdmin = (freshRoleId === "Super Admin" || freshRoleId === "Administrator" || freshRoleId === "Admin");
 
               var allModuleKeys = ["Dashboard", "Customers", "Projects", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Finance", "Users", "Company", "Masters", "Help", "Teamchat", "Milestones", "Reports"];
-              allModuleKeys.forEach(function(m) {
+              allModuleKeys.forEach(function (m) {
                 freshPerms[m] = {
                   view: isSuperAdmin,
                   add: isSuperAdmin,
@@ -17536,7 +17803,7 @@ document.addEventListener("click", function() {
               if (!isSuperAdmin) {
                 // 1. Role Defaults
                 if (Array.isArray(res.rolePermissions)) {
-                  res.rolePermissions.forEach(function(rp) {
+                  res.rolePermissions.forEach(function (rp) {
                     if (String(rp.RoleID || "").trim().toLowerCase() === String(freshRoleId || "").trim().toLowerCase()) {
                       var mKey = rp.Module;
                       if (mKey) {
@@ -17554,7 +17821,7 @@ document.addEventListener("click", function() {
                 // 2. User-specific custom overrides
                 if (Array.isArray(res.userPermissions)) {
                   var myUid = String(freshUser.UserID || freshUser.userId || myUserId || "").trim().toLowerCase();
-                  res.userPermissions.forEach(function(up) {
+                  res.userPermissions.forEach(function (up) {
                     if (String(up.UserID || "").trim().toLowerCase() === myUid) {
                       var mKey = up.Module;
                       if (mKey) {
@@ -17590,7 +17857,7 @@ document.addEventListener("click", function() {
               applySidebarPermissions();
             }
           }
-        } catch(e) {
+        } catch (e) {
           console.warn("Session user sync notice:", e);
         }
 
@@ -17603,7 +17870,7 @@ document.addEventListener("click", function() {
         if (typeof window[loaderHook] === "function") {
           try {
             window[loaderHook](false);
-          } catch(err) {
+          } catch (err) {
             console.warn("View re-render after preload failed:", err);
           }
         }
@@ -17625,22 +17892,22 @@ document.addEventListener("click", function() {
     window.google.script = window.google.script || {};
 
     window.google.script.run = new Proxy({}, {
-      get: function(target, prop) {
+      get: function (target, prop) {
         if (prop === "withSuccessHandler") {
-          return function(successCb) {
-            var failCb = function(err) {
+          return function (successCb) {
+            var failCb = function (err) {
               console.error("RPC Error:", err);
               if (typeof showToast === "function") showToast(err.message || String(err), "error");
             };
 
             return new Proxy({}, {
-              get: function(t, p) {
+              get: function (t, p) {
                 if (p === "withFailureHandler") {
-                  return function(customFail) {
+                  return function (customFail) {
                     failCb = customFail;
                     return new Proxy({}, {
-                      get: function(t2, fnName) {
-                        return function() {
+                      get: function (t2, fnName) {
+                        return function () {
                           var args = Array.prototype.slice.call(arguments);
                           dispatchRpcCall(fnName, args, successCb, failCb);
                         };
@@ -17649,7 +17916,7 @@ document.addEventListener("click", function() {
                   };
                 }
                 // Called directly without withFailureHandler
-                return function() {
+                return function () {
                   var args = Array.prototype.slice.call(arguments);
                   dispatchRpcCall(p, args, successCb, failCb);
                 };
@@ -17659,9 +17926,9 @@ document.addEventListener("click", function() {
         }
 
         // Direct function execution (without handler chaining)
-        return function() {
+        return function () {
           var args = Array.prototype.slice.call(arguments);
-          dispatchRpcCall(prop, args, function() {}, function(e) { console.error(e); });
+          dispatchRpcCall(prop, args, function () { }, function (e) { console.error(e); });
         };
       }
     });
@@ -17669,8 +17936,8 @@ document.addEventListener("click", function() {
     /**
      * Central RPC Dispatcher: Handles cached instant reads & server mutations
      */
-    
-        function handleLocalOptimisticMutation(fnName, payload, args) {
+
+    function handleLocalOptimisticMutation(fnName, payload, args) {
       window._dataCache = window._dataCache || {};
       var nowIso = (new Date()).toISOString();
 
@@ -17682,7 +17949,7 @@ document.addEventListener("click", function() {
           cust.CreatedDate = nowIso;
           window._dataCache.customers.unshift(cust);
         } else {
-          var idx = window._dataCache.customers.findIndex(function(c) { return c.CustomerID === cust.CustomerID; });
+          var idx = window._dataCache.customers.findIndex(function (c) { return c.CustomerID === cust.CustomerID; });
           if (idx !== -1) window._dataCache.customers[idx] = Object.assign(window._dataCache.customers[idx], cust);
           else window._dataCache.customers.unshift(cust);
         }
@@ -17692,7 +17959,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteCustomer") {
         var cId = payload.customerId || payload.id;
-        window._dataCache.customers = (window._dataCache.customers || []).filter(function(c) { return c.CustomerID !== cId; });
+        window._dataCache.customers = (window._dataCache.customers || []).filter(function (c) { return c.CustomerID !== cId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Customer deleted successfully." };
       }
@@ -17705,7 +17972,7 @@ document.addEventListener("click", function() {
           proj.CreatedDate = nowIso;
           window._dataCache.projects.unshift(proj);
         } else {
-          var pIdx = window._dataCache.projects.findIndex(function(p) { return p.ProjectID === proj.ProjectID; });
+          var pIdx = window._dataCache.projects.findIndex(function (p) { return p.ProjectID === proj.ProjectID; });
           if (pIdx !== -1) window._dataCache.projects[pIdx] = Object.assign(window._dataCache.projects[pIdx], proj);
           else window._dataCache.projects.unshift(proj);
         }
@@ -17715,7 +17982,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteProject") {
         var pId = payload.projectId || payload.id;
-        window._dataCache.projects = (window._dataCache.projects || []).filter(function(p) { return p.ProjectID !== pId; });
+        window._dataCache.projects = (window._dataCache.projects || []).filter(function (p) { return p.ProjectID !== pId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Project deleted successfully." };
       }
@@ -17728,7 +17995,7 @@ document.addEventListener("click", function() {
           ms.CreatedDate = nowIso;
           window._dataCache.milestones.push(ms);
         } else {
-          var mIdx = window._dataCache.milestones.findIndex(function(m) { return m.MilestoneID === ms.MilestoneID; });
+          var mIdx = window._dataCache.milestones.findIndex(function (m) { return m.MilestoneID === ms.MilestoneID; });
           if (mIdx !== -1) window._dataCache.milestones[mIdx] = Object.assign(window._dataCache.milestones[mIdx], ms);
           else window._dataCache.milestones.push(ms);
         }
@@ -17738,7 +18005,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteMilestone") {
         var mId = payload.milestoneId || payload.id;
-        window._dataCache.milestones = (window._dataCache.milestones || []).filter(function(m) { return m.MilestoneID !== mId; });
+        window._dataCache.milestones = (window._dataCache.milestones || []).filter(function (m) { return m.MilestoneID !== mId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Milestone removed successfully." };
       }
@@ -17751,7 +18018,7 @@ document.addEventListener("click", function() {
           task.CreatedDate = nowIso;
           window._dataCache.tasks.unshift(task);
         } else {
-          var tIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === task.TaskID; });
+          var tIdx = window._dataCache.tasks.findIndex(function (t) { return t.TaskID === task.TaskID; });
           if (tIdx !== -1) window._dataCache.tasks[tIdx] = Object.assign(window._dataCache.tasks[tIdx], task);
           else window._dataCache.tasks.unshift(task);
         }
@@ -17762,7 +18029,7 @@ document.addEventListener("click", function() {
       if (fnName === "updateTaskStatus") {
         var tId = payload.taskId;
         var newStatus = payload.status;
-        var tObj = (window._dataCache.tasks || []).find(function(t) { return t.TaskID === tId; });
+        var tObj = (window._dataCache.tasks || []).find(function (t) { return t.TaskID === tId; });
         if (tObj) {
           tObj.Status = newStatus;
           if (newStatus === "Completed" && !tObj.CompletionDate) {
@@ -17775,7 +18042,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteTask") {
         var delTaskId = payload.taskId || payload.id;
-        window._dataCache.tasks = (window._dataCache.tasks || []).filter(function(t) { return t.TaskID !== delTaskId; });
+        window._dataCache.tasks = (window._dataCache.tasks || []).filter(function (t) { return t.TaskID !== delTaskId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Task removed." };
       }
@@ -17788,7 +18055,7 @@ document.addEventListener("click", function() {
           visit.CreatedDate = nowIso;
           window._dataCache.siteVisits.unshift(visit);
         } else {
-          var vIdx = window._dataCache.siteVisits.findIndex(function(v) { return v.VisitID === visit.VisitID; });
+          var vIdx = window._dataCache.siteVisits.findIndex(function (v) { return v.VisitID === visit.VisitID; });
           if (vIdx !== -1) window._dataCache.siteVisits[vIdx] = Object.assign(window._dataCache.siteVisits[vIdx], visit);
           else window._dataCache.siteVisits.unshift(visit);
         }
@@ -17798,7 +18065,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteSiteVisit") {
         var visId = payload.visitId || payload.id;
-        window._dataCache.siteVisits = (window._dataCache.siteVisits || []).filter(function(v) { return v.VisitID !== visId; });
+        window._dataCache.siteVisits = (window._dataCache.siteVisits || []).filter(function (v) { return v.VisitID !== visId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Site visit deleted." };
       }
@@ -17811,7 +18078,7 @@ document.addEventListener("click", function() {
           lead.CreatedDate = nowIso;
           window._dataCache.leads.unshift(lead);
         } else {
-          var lIdx = window._dataCache.leads.findIndex(function(l) { return l.LeadID === lead.LeadID; });
+          var lIdx = window._dataCache.leads.findIndex(function (l) { return l.LeadID === lead.LeadID; });
           if (lIdx !== -1) window._dataCache.leads[lIdx] = Object.assign(window._dataCache.leads[lIdx], lead);
           else window._dataCache.leads.unshift(lead);
         }
@@ -17821,14 +18088,14 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteLead") {
         var dlId = payload.leadId || payload.id;
-        window._dataCache.leads = (window._dataCache.leads || []).filter(function(l) { return l.LeadID !== dlId; });
+        window._dataCache.leads = (window._dataCache.leads || []).filter(function (l) { return l.LeadID !== dlId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Lead removed." };
       }
 
       if (fnName === "markLeadAsWon") {
         var wonLeadId = payload.leadId || payload.id;
-        var leadObj = (window._dataCache.leads || []).find(function(l) { return l.LeadID === wonLeadId; });
+        var leadObj = (window._dataCache.leads || []).find(function (l) { return l.LeadID === wonLeadId; });
         if (leadObj) leadObj.Status = "Won";
         populateAllCaches(window._dataCache);
         return { success: true, message: "Lead marked as Won." };
@@ -17851,7 +18118,7 @@ document.addEventListener("click", function() {
           prop.CreatedDate = nowIso;
           window._dataCache.proposals.unshift(prop);
         } else {
-          var prIdx = window._dataCache.proposals.findIndex(function(p) { return p.ProposalID === prop.ProposalID; });
+          var prIdx = window._dataCache.proposals.findIndex(function (p) { return p.ProposalID === prop.ProposalID; });
           if (prIdx !== -1) window._dataCache.proposals[prIdx] = Object.assign(window._dataCache.proposals[prIdx], prop);
           else window._dataCache.proposals.unshift(prop);
         }
@@ -17861,7 +18128,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteProposal") {
         var dpId = payload.proposalId || payload.id;
-        window._dataCache.proposals = (window._dataCache.proposals || []).filter(function(p) { return p.ProposalID !== dpId; });
+        window._dataCache.proposals = (window._dataCache.proposals || []).filter(function (p) { return p.ProposalID !== dpId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Proposal removed." };
       }
@@ -17874,7 +18141,7 @@ document.addEventListener("click", function() {
           vend.CreatedDate = nowIso;
           window._dataCache.vendors.unshift(vend);
         } else {
-          var veIdx = window._dataCache.vendors.findIndex(function(v) { return v.VendorID === vend.VendorID; });
+          var veIdx = window._dataCache.vendors.findIndex(function (v) { return v.VendorID === vend.VendorID; });
           if (veIdx !== -1) window._dataCache.vendors[veIdx] = Object.assign(window._dataCache.vendors[veIdx], vend);
           else window._dataCache.vendors.unshift(vend);
         }
@@ -17884,7 +18151,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteVendor") {
         var vId = payload.vendorId || payload.id;
-        window._dataCache.vendors = (window._dataCache.vendors || []).filter(function(v) { return v.VendorID !== vId; });
+        window._dataCache.vendors = (window._dataCache.vendors || []).filter(function (v) { return v.VendorID !== vId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Vendor deleted successfully." };
       }
@@ -17897,7 +18164,7 @@ document.addEventListener("click", function() {
           assoc.CreatedDate = nowIso;
           window._dataCache.associates.unshift(assoc);
         } else {
-          var asIdx = window._dataCache.associates.findIndex(function(a) { return a.AssociateID === assoc.AssociateID; });
+          var asIdx = window._dataCache.associates.findIndex(function (a) { return a.AssociateID === assoc.AssociateID; });
           if (asIdx !== -1) window._dataCache.associates[asIdx] = Object.assign(window._dataCache.associates[asIdx], assoc);
           else window._dataCache.associates.unshift(assoc);
         }
@@ -17907,7 +18174,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteAssociate") {
         var aId = payload.associateId || payload.id;
-        window._dataCache.associates = (window._dataCache.associates || []).filter(function(a) { return a.AssociateID !== aId; });
+        window._dataCache.associates = (window._dataCache.associates || []).filter(function (a) { return a.AssociateID !== aId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Associate deleted successfully." };
       }
@@ -17920,7 +18187,7 @@ document.addEventListener("click", function() {
           txn.CreatedDate = nowIso;
           window._dataCache.transactions.unshift(txn);
         } else {
-          var txIdx = window._dataCache.transactions.findIndex(function(t) { return t.TransactionID === txn.TransactionID; });
+          var txIdx = window._dataCache.transactions.findIndex(function (t) { return t.TransactionID === txn.TransactionID; });
           if (txIdx !== -1) window._dataCache.transactions[txIdx] = Object.assign(window._dataCache.transactions[txIdx], txn);
           else window._dataCache.transactions.unshift(txn);
         }
@@ -17930,7 +18197,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteTransaction") {
         var txnId = payload.transactionId || payload.id;
-        window._dataCache.transactions = (window._dataCache.transactions || []).filter(function(t) { return t.TransactionID !== txnId; });
+        window._dataCache.transactions = (window._dataCache.transactions || []).filter(function (t) { return t.TransactionID !== txnId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "Transaction deleted successfully." };
       }
@@ -17943,7 +18210,7 @@ document.addEventListener("click", function() {
           usr.CreatedDate = nowIso;
           window._dataCache.users.unshift(usr);
         } else {
-          var uIdx = window._dataCache.users.findIndex(function(u) { return u.UserID === usr.UserID; });
+          var uIdx = window._dataCache.users.findIndex(function (u) { return u.UserID === usr.UserID; });
           if (uIdx !== -1) window._dataCache.users[uIdx] = Object.assign(window._dataCache.users[uIdx], usr);
           else window._dataCache.users.unshift(usr);
         }
@@ -17953,7 +18220,7 @@ document.addEventListener("click", function() {
 
       if (fnName === "deleteUser") {
         var duId = payload.targetUserId || payload.userId || payload.id;
-        window._dataCache.users = (window._dataCache.users || []).filter(function(u) { return u.UserID !== duId; });
+        window._dataCache.users = (window._dataCache.users || []).filter(function (u) { return u.UserID !== duId; });
         populateAllCaches(window._dataCache);
         return { success: true, message: "User deleted successfully." };
       }
@@ -17974,7 +18241,7 @@ document.addEventListener("click", function() {
         var dCat = payload.category;
         var dVal = payload.value;
         if (window._dataCache.dropdowns && window._dataCache.dropdowns[dCat]) {
-          window._dataCache.dropdowns[dCat] = window._dataCache.dropdowns[dCat].filter(function(v) { return v !== dVal; });
+          window._dataCache.dropdowns[dCat] = window._dataCache.dropdowns[dCat].filter(function (v) { return v !== dVal; });
         }
         populateAllCaches(window._dataCache);
         return { success: true, message: "Option deleted." };
@@ -18186,13 +18453,13 @@ document.addEventListener("click", function() {
       }
       if (fnName === "getProjectMilestones") {
         var pId = args[0];
-        var list = (window._dataCache.milestones || []).filter(function(m) { return String(m.ProjectID) === String(pId); });
+        var list = (window._dataCache.milestones || []).filter(function (m) { return String(m.ProjectID) === String(pId); });
         successCb(list);
         return;
       }
       if (fnName === "getLeadFollowups") {
         var lId = args[0];
-        var fList = (window._dataCache.leadFollowups || []).filter(function(f) { return String(f.LeadID) === String(lId); });
+        var fList = (window._dataCache.leadFollowups || []).filter(function (f) { return String(f.LeadID) === String(lId); });
         successCb(fList);
         return;
       }
@@ -18208,7 +18475,7 @@ document.addEventListener("click", function() {
       if (fnName === "getRolePermissions") {
         var reqRoleId = args[0] || (document.getElementById("perm-role-select") ? document.getElementById("perm-role-select").value : "");
         var cachedPerms = (window._dataCache && window._dataCache.rolePermissions) || [];
-        var rolePerms = cachedPerms.filter(function(r) { return r.RoleID === reqRoleId; });
+        var rolePerms = cachedPerms.filter(function (r) { return r.RoleID === reqRoleId; });
         if (rolePerms.length === 0) {
           var stdModules = [
             { key: "Dashboard", name: "Dashboard & Home" },
@@ -18229,7 +18496,7 @@ document.addEventListener("click", function() {
           var isSales = (reqRoleId.indexOf("Sales") !== -1 || reqRoleId.indexOf("Lead") !== -1);
           var isSite = (reqRoleId.indexOf("Site") !== -1 || reqRoleId.indexOf("Field") !== -1);
 
-          rolePerms = stdModules.map(function(m) {
+          rolePerms = stdModules.map(function (m) {
             var canView = isSuper;
             var canAdd = isSuper;
             var canEdit = isSuper;
@@ -18263,7 +18530,7 @@ document.addEventListener("click", function() {
       if (fnName === "getUserPermissions") {
         var reqUserId = args[0];
         var cachedUserPerms = (window._dataCache && window._dataCache.userPermissions) || [];
-        var userPerms = cachedUserPerms.filter(function(u) { return u.UserID === reqUserId; });
+        var userPerms = cachedUserPerms.filter(function (u) { return u.UserID === reqUserId; });
         successCb(userPerms);
         return;
       }
@@ -18274,9 +18541,9 @@ document.addEventListener("click", function() {
         var cUserId = args[2] || userId;
 
         window._dataCache.rolePermissions = window._dataCache.rolePermissions || [];
-        window._dataCache.rolePermissions = window._dataCache.rolePermissions.filter(function(r) { return r.RoleID !== sRoleId; });
-        var pList = Array.isArray(sPerms) ? sPerms : Object.keys(sPerms || {}).map(function(k) { return Object.assign({ Module: k }, sPerms[k]); });
-        pList.forEach(function(p) {
+        window._dataCache.rolePermissions = window._dataCache.rolePermissions.filter(function (r) { return r.RoleID !== sRoleId; });
+        var pList = Array.isArray(sPerms) ? sPerms : Object.keys(sPerms || {}).map(function (k) { return Object.assign({ Module: k }, sPerms[k]); });
+        pList.forEach(function (p) {
           window._dataCache.rolePermissions.push({
             RoleID: sRoleId,
             Module: p.Module,
@@ -18308,10 +18575,10 @@ document.addEventListener("click", function() {
         var suCUserId = args[3] || userId;
 
         window._dataCache.userPermissions = window._dataCache.userPermissions || [];
-        window._dataCache.userPermissions = window._dataCache.userPermissions.filter(function(u) { return u.UserID !== suUserId; });
+        window._dataCache.userPermissions = window._dataCache.userPermissions.filter(function (u) { return u.UserID !== suUserId; });
         if (suIsOver) {
-          var upList = Array.isArray(suPerms) ? suPerms : Object.keys(suPerms || {}).map(function(k) { return Object.assign({ Module: k }, suPerms[k]); });
-          upList.forEach(function(p) {
+          var upList = Array.isArray(suPerms) ? suPerms : Object.keys(suPerms || {}).map(function (k) { return Object.assign({ Module: k }, suPerms[k]); });
+          upList.forEach(function (p) {
             window._dataCache.userPermissions.push({
               UserID: suUserId,
               Module: p.Module,
@@ -18426,25 +18693,25 @@ document.addEventListener("click", function() {
           window._pendingSyncCount = (window._pendingSyncCount || 0) + 1;
           updateSyncStatusUI();
 
-          apiCall(targetAction, payload).then(function(backendRes) {
+          apiCall(targetAction, payload).then(function (backendRes) {
             window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
             updateSyncStatusUI();
             if (backendRes && backendRes.success !== false) {
               console.log("[Background Sync Succeeded]: " + targetAction, backendRes);
               if (backendRes.customerId && payload.CustomerID && backendRes.customerId !== payload.CustomerID) {
-                var c = (window._dataCache.customers || []).find(function(x) { return x.CustomerID === payload.CustomerID; });
+                var c = (window._dataCache.customers || []).find(function (x) { return x.CustomerID === payload.CustomerID; });
                 if (c) c.CustomerID = backendRes.customerId;
                 populateAllCaches(window._dataCache);
               }
               if (backendRes.projectId && payload.ProjectID && backendRes.projectId !== payload.ProjectID) {
-                var p = (window._dataCache.projects || []).find(function(x) { return x.ProjectID === payload.ProjectID; });
+                var p = (window._dataCache.projects || []).find(function (x) { return x.ProjectID === payload.ProjectID; });
                 if (p) p.ProjectID = backendRes.projectId;
                 populateAllCaches(window._dataCache);
               }
             } else {
               console.warn("[Background Sync Notice]:", backendRes);
             }
-          }).catch(function(err) {
+          }).catch(function (err) {
             window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
             updateSyncStatusUI();
             console.warn("[Background Sync Network Warning]:", err);
@@ -18485,7 +18752,7 @@ document.addEventListener("click", function() {
     }
     window.updateSyncStatusUI = updateSyncStatusUI;
 
-    window.addEventListener("beforeunload", function(e) {
+    window.addEventListener("beforeunload", function (e) {
       if (window._pendingSyncCount > 0) {
         var msg = "Your modifications are currently syncing to Google Sheets. If you close now, pending changes might be interrupted.";
         e.preventDefault();
@@ -18502,7 +18769,7 @@ document.addEventListener("click", function() {
      */
     var appRouter = {
       currentView: "dashboard",
-      navigate: function(rawViewId) {
+      navigate: function (rawViewId) {
         if (!isAuthenticated()) {
           showLoginOverlay(true);
           return;
@@ -18527,7 +18794,7 @@ document.addEventListener("click", function() {
         }
 
         // Update active sidebar link
-        document.querySelectorAll(".sidebar-menu .menu-item").forEach(function(el) {
+        document.querySelectorAll(".sidebar-menu .menu-item").forEach(function (el) {
           el.classList.remove("active");
         });
         var activeItem = document.querySelector('.sidebar-menu .menu-item[data-view="' + viewId + '"]');
@@ -18542,7 +18809,7 @@ document.addEventListener("click", function() {
 
           // Execute embedded inline scripts inside the view
           var scripts = appContent.querySelectorAll("script");
-          scripts.forEach(function(s) {
+          scripts.forEach(function (s) {
             var newScript = document.createElement("script");
             newScript.text = s.text || s.textContent;
             document.body.appendChild(newScript).parentNode.removeChild(newScript);
@@ -18559,7 +18826,7 @@ document.addEventListener("click", function() {
           }
           if (typeof window.upgradeAllSelects === "function") {
             window.upgradeAllSelects(appContent);
-            setTimeout(function() { window.upgradeAllSelects(appContent); }, 150);
+            setTimeout(function () { window.upgradeAllSelects(appContent); }, 150);
           }
           this.currentView = viewId;
 
@@ -18569,7 +18836,7 @@ document.addEventListener("click", function() {
           if (targetRecId && (!targetMod || targetMod === viewId)) {
             localStorage.removeItem("pending_target_record_id");
             localStorage.removeItem("pending_target_module");
-            setTimeout(function() {
+            setTimeout(function () {
               if (typeof window.openSpecificRecord === "function") {
                 window.openSpecificRecord(viewId, targetRecId);
               }
@@ -18590,7 +18857,7 @@ document.addEventListener("click", function() {
 
     function refreshCurrentView() {
       showLoader(true);
-      preloadAllAppData(function() {
+      preloadAllAppData(function () {
         showLoader(false);
         var curr = appRouter.currentView || "dashboard";
         var loaderHook = "load" + curr.charAt(0).toUpperCase() + curr.slice(1) + "View";
@@ -18718,9 +18985,9 @@ document.addEventListener("click", function() {
       var keyEl = document.getElementById("popover-lic-key");
       var key = keyEl ? keyEl.innerText : "";
       if (key && navigator.clipboard) {
-        navigator.clipboard.writeText(key).then(function() {
+        navigator.clipboard.writeText(key).then(function () {
           showToast("License key copied to clipboard!", "success");
-        }).catch(function() {
+        }).catch(function () {
           showToast("License: " + key, "info");
         });
       } else if (key) {
@@ -18743,7 +19010,7 @@ document.addEventListener("click", function() {
       var allMods = ["Dashboard", "Customers", "Projects", "Milestones", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Finance", "Reports", "Users", "Company", "Masters", "Help"];
       var permissions = {};
 
-      allMods.forEach(function(mod) {
+      allMods.forEach(function (mod) {
         if (isSuper) {
           permissions[mod] = { view: true, add: true, edit: true, delete: true };
         } else if (roleId === "Project Manager") {
@@ -18794,21 +19061,21 @@ document.addEventListener("click", function() {
       window._dataCacheTimestamps = {};
       showToast("🔄 Clearing local cache and pulling fresh database...", "info");
       if (typeof preloadAllAppData === "function") {
-        preloadAllAppData(function() {
+        preloadAllAppData(function () {
           showToast("✨ Fresh database loaded successfully!", "success");
-          setTimeout(function() { window.location.reload(); }, 600);
+          setTimeout(function () { window.location.reload(); }, 600);
         });
       }
     }
     window.forceResyncFromPopover = forceResyncFromPopover;
 
-    window.handleResetDatabaseClick = function() {
+    window.handleResetDatabaseClick = function () {
       toggleUserProfilePopover(false);
       if (!confirm("⚠️ CAUTION: Are you sure you want to clean slate and wipe all test data (customers, projects, tasks, site visits, leads, milestones, transactions)?\n\nOnly the 3 core users and company setup will be kept.")) {
         return;
       }
       showToast("🧹 Wiping test data and resetting database...", "info");
-      apiCall("clear_operational_data", { confirmCode: "ERASE EVERYTHING" }).then(function(res) {
+      apiCall("clear_operational_data", { confirmCode: "ERASE EVERYTHING" }).then(function (res) {
         window._dataCache.customers = [];
         window._dataCache.projects = [];
         window._dataCache.tasks = [];
@@ -18823,8 +19090,8 @@ document.addEventListener("click", function() {
         localStorage.removeItem("nexmilestro_app_data");
         populateAllCaches(window._dataCache);
         showToast("✅ Database wiped clean! Only 3 core users retained.", "success");
-        setTimeout(function() { window.location.reload(); }, 1200);
-      }).catch(function() {
+        setTimeout(function () { window.location.reload(); }, 1200);
+      }).catch(function () {
         window._dataCache.customers = [];
         window._dataCache.projects = [];
         window._dataCache.tasks = [];
@@ -18839,12 +19106,12 @@ document.addEventListener("click", function() {
         localStorage.removeItem("nexmilestro_app_data");
         populateAllCaches(window._dataCache);
         showToast("Client cache wiped cleanly.", "success");
-        setTimeout(function() { window.location.reload(); }, 1200);
+        setTimeout(function () { window.location.reload(); }, 1200);
       });
     };
 
     // Global click listener to close popovers
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", function (e) {
       var pop = document.getElementById("user-profile-popover");
       var wrap = document.getElementById("header-user-profile-wrap");
       if (pop && pop.style.display === "block") {
@@ -18862,7 +19129,7 @@ document.addEventListener("click", function() {
       }
     });
 
-    document.addEventListener("touchend", function(e) {
+    document.addEventListener("touchend", function (e) {
       var pop = document.getElementById("user-profile-popover");
       var wrap = document.getElementById("header-user-profile-wrap");
       if (pop && pop.style.display === "block") {
@@ -18872,7 +19139,7 @@ document.addEventListener("click", function() {
       }
     });
 
-    document.addEventListener("keydown", function(e) {
+    document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") {
         var pop = document.getElementById("user-profile-popover");
         if (pop && pop.style.display === "block") pop.style.display = "none";
@@ -18890,7 +19157,7 @@ document.addEventListener("click", function() {
     window._activeCompletionTaskId = null;
     window._activeCompletionCallback = null;
 
-    window.openTaskCompletionModal = function(taskId, callback) {
+    window.openTaskCompletionModal = function (taskId, callback) {
       window._activeCompletionTaskId = taskId;
       window._activeCompletionCallback = callback;
 
@@ -18902,14 +19169,14 @@ document.addEventListener("click", function() {
       if (modal) modal.style.display = "flex";
     };
 
-    window.closeTaskCompletionModal = function() {
+    window.closeTaskCompletionModal = function () {
       var modal = document.getElementById("task-completion-modal");
       if (modal) modal.style.display = "none";
       window._activeCompletionTaskId = null;
       window._activeCompletionCallback = null;
     };
 
-    window.handleTaskCompletionAccept = function() {
+    window.handleTaskCompletionAccept = function () {
       var cb = window._activeCompletionCallback;
       var taskId = window._activeCompletionTaskId;
       window.closeTaskCompletionModal();
@@ -18929,7 +19196,7 @@ document.addEventListener("click", function() {
       }
     };
 
-    window.handleTaskCompletionReview = function() {
+    window.handleTaskCompletionReview = function () {
       var taskId = window._activeCompletionTaskId;
       window.closeTaskCompletionModal();
       if (!taskId) return;
@@ -18952,14 +19219,14 @@ document.addEventListener("click", function() {
       try {
         var raw = localStorage.getItem("nexmilestro_notifications");
         if (raw) return JSON.parse(raw);
-      } catch(e) {}
+      } catch (e) { }
       return null;
     }
 
     function saveStoredNotifications(list) {
       try {
         localStorage.setItem("nexmilestro_notifications", JSON.stringify(list));
-      } catch(e) {}
+      } catch (e) { }
     }
 
     function generateDefaultNotifications() {
@@ -18968,7 +19235,7 @@ document.addEventListener("click", function() {
 
       // Urgent Tasks notifications
       var tasks = cache.tasks || [];
-      var urgentTasks = tasks.filter(function(t) { return t.Priority === "High" && t.Status !== "Completed"; });
+      var urgentTasks = tasks.filter(function (t) { return t.Priority === "High" && t.Status !== "Completed"; });
       if (urgentTasks.length > 0) {
         var topTask = urgentTasks[0];
         notifs.push({
@@ -19056,15 +19323,103 @@ document.addEventListener("click", function() {
       return notifs;
     }
 
-    window.getNotificationsList = function() {
+    /**
+     * Dynamic Task Due & Overdue Notification Generator
+     * 1st notification: 1 day prior (Due Tomorrow)
+     * 2nd notification: On due date (Due Today)
+     * Overdue notification: After due date (Overdue by X days, with special highlight)
+     */
+    function generateTaskDueNotifications() {
+      var tasks = (window._dataCache && Array.isArray(window._dataCache.tasks)) ? window._dataCache.tasks : [];
+      if (window.RLS) {
+        tasks = window.RLS.filterTasks(tasks);
+      }
+
+      var now = new Date();
+      var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      var notifs = [];
+
+      tasks.forEach(function (t) {
+        if (!t || !t.DueDate) return;
+        var st = t.Status || "Pending";
+        if (st === "Completed" || st === "Cancelled") return;
+
+        var due = new Date(t.DueDate);
+        if (isNaN(due.getTime())) return;
+        var dueMidnight = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+
+        var diffTime = dueMidnight.getTime() - today.getTime();
+        var diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        var tId = t.TaskID || "";
+        var tName = t.TaskName || "Task";
+        var proj = (window._dataCache && window._dataCache.projects) ? window._dataCache.projects.find(function(p) { return p.ProjectID === t.ProjectID; }) : null;
+        var projName = proj ? proj.ProjectName : (t.ProjectID || "General");
+        var assignee = t.AssignedTo || "Team Member";
+        var dueFormatted = typeof formatDate === "function" ? formatDate(t.DueDate) : String(t.DueDate).substring(0, 10);
+
+        if (diffDays < 0) {
+          // OVERDUE
+          var overdueDays = Math.abs(diffDays);
+          notifs.push({
+            id: "notif_due_overdue_" + tId,
+            title: "Overdue (" + overdueDays + "d late): " + tName,
+            message: "Deadline was " + dueFormatted + " for " + projName + ". Assigned to: " + assignee + ".",
+            module: "tasks",
+            recordId: tId,
+            time: overdueDays + "d overdue",
+            icon: "fa-calendar-xmark",
+            type: "danger",
+            isOverdue: true,
+            unread: true
+          });
+        } else if (diffDays === 0) {
+          // DUE TODAY (2nd notification)
+          notifs.push({
+            id: "notif_due_today_" + tId,
+            title: "Due Today: " + tName,
+            message: "Task deadline is today (" + dueFormatted + ") for " + projName + ". Priority: " + (t.Priority || "Medium"),
+            module: "tasks",
+            recordId: tId,
+            time: "Due today",
+            icon: "fa-clock",
+            type: "warning",
+            isOverdue: false,
+            unread: true
+          });
+        } else if (diffDays === 1) {
+          // 1 DAY PRIOR (1st notification)
+          notifs.push({
+            id: "notif_due_tomorrow_" + tId,
+            title: "Due Tomorrow: " + tName,
+            message: "Task is due tomorrow (" + dueFormatted + ") for " + projName + ". Assigned to: " + assignee,
+            module: "tasks",
+            recordId: tId,
+            time: "Due tomorrow",
+            icon: "fa-bell",
+            type: "info",
+            isOverdue: false,
+            unread: true
+          });
+        }
+      });
+
+      return notifs;
+    }
+
+    window.getNotificationsList = function () {
+      var taskNotifs = generateTaskDueNotifications();
       var list = getStoredNotifications();
       if (!list || list.length === 0) {
         list = generateDefaultNotifications();
       }
-      return list;
+      list = (list || []).filter(function (n) {
+        return !n.id || !String(n.id).startsWith("notif_due_");
+      });
+      return taskNotifs.concat(list);
     };
 
-    window.addSystemNotification = function(notif) {
+    window.addSystemNotification = function (notif) {
       var list = window.getNotificationsList();
       var item = {
         id: "notif_" + Date.now(),
@@ -19113,7 +19468,7 @@ document.addEventListener("click", function() {
         convEl.innerText = label;
       }
       if (avatarEl) {
-        var init = (sender || "TM").split(" ").map(function(w) { return w[0]; }).join("").substring(0, 2).toUpperCase();
+        var init = (sender || "TM").split(" ").map(function (w) { return w[0]; }).join("").substring(0, 2).toUpperCase();
         avatarEl.innerText = init;
       }
 
@@ -19121,7 +19476,7 @@ document.addEventListener("click", function() {
       playIncomingChatChime();
 
       if (_incomingPopupTimer) clearTimeout(_incomingPopupTimer);
-      _incomingPopupTimer = setTimeout(function() {
+      _incomingPopupTimer = setTimeout(function () {
         closeIncomingChatPopup();
       }, 7000);
     }
@@ -19143,7 +19498,7 @@ document.addEventListener("click", function() {
       if (window.appRouter && window.appRouter.navigate) {
         window.appRouter.navigate("teamchat");
       }
-      setTimeout(function() {
+      setTimeout(function () {
         if (typeof window.switchChatConversation === "function") {
           window.switchChatConversation(convId);
         }
@@ -19178,13 +19533,13 @@ document.addEventListener("click", function() {
         osc1.stop(now + 0.12);
         osc2.start(now + 0.08);
         osc2.stop(now + 0.35);
-      } catch(e) {}
+      } catch (e) { }
     }
     window.playIncomingChatChime = playIncomingChatChime;
 
-    window.updateNotificationBadge = function() {
+    window.updateNotificationBadge = function () {
       var list = window.getNotificationsList();
-      var unreadCount = list.filter(function(n) { return n.unread === true; }).length;
+      var unreadCount = list.filter(function (n) { return n.unread === true; }).length;
       var badge = document.getElementById("header-notif-badge");
       var countLabel = document.getElementById("notif-count-label");
       if (badge) {
@@ -19200,16 +19555,16 @@ document.addEventListener("click", function() {
       }
     };
 
-    window.renderNotificationsList = function() {
+    window.renderNotificationsList = function () {
       var container = document.getElementById("notifications-items-container");
       if (!container) return;
       var list = window.getNotificationsList();
 
       if (!list || list.length === 0) {
         container.innerHTML = '<div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted);">' +
-                                '<i class="fas fa-bell-slash" style="font-size: 2rem; opacity: 0.4; margin-bottom: 0.5rem; display: block;"></i>' +
-                                'No notifications right now.' +
-                              '</div>';
+          '<i class="fas fa-bell-slash" style="font-size: 2rem; opacity: 0.4; margin-bottom: 0.5rem; display: block;"></i>' +
+          'No notifications right now.' +
+          '</div>';
         return;
       }
 
@@ -19228,35 +19583,42 @@ document.addEventListener("click", function() {
         danger: "#dc2626"
       };
 
-      var html = list.map(function(item) {
+      var html = list.map(function (item) {
         var unreadClass = item.unread ? " notification-item unread" : " notification-item";
+        if (item.isOverdue || item.type === "danger") {
+          unreadClass += " overdue";
+        }
         var bg = iconBgMap[item.type] || "#f1f5f9";
         var col = iconColorMap[item.type] || "var(--primary)";
         var nId = escapeHtml(item.id || "");
         var mod = escapeHtml(item.module || "dashboard");
         var rId = escapeHtml(item.recordId || "");
+        var overdueTag = item.isOverdue ? '<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:0.625rem; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:0.4rem;">OVERDUE</span>' : '';
 
         return '<div class="' + unreadClass + '" onclick="handleNotificationClick(\'' + mod + '\', \'' + rId + '\', \'' + nId + '\')">' +
-                 '<div class="notification-item-icon" style="background: ' + bg + '; color: ' + col + ';">' +
-                   '<i class="fas ' + (item.icon || 'fa-bell') + '"></i>' +
-                 '</div>' +
-                 '<div style="flex-grow: 1; overflow: hidden;">' +
-                   '<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem;">' +
-                     '<strong style="font-size: 0.85rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + escapeHtml(item.title) + '</strong>' +
-                     '<span style="font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0;">' + escapeHtml(item.time || "") + '</span>' +
-                   '</div>' +
-                   '<p style="font-size: 0.775rem; color: var(--text-muted); margin: 0.15rem 0 0 0; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">' +
-                     escapeHtml(item.message) +
-                   '</p>' +
-                 '</div>' +
-                 (item.unread ? '<span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary); align-self: center; flex-shrink: 0;"></span>' : '') +
-               '</div>';
+          '<div class="notification-item-icon" style="background: ' + bg + '; color: ' + col + ';">' +
+          '<i class="fas ' + (item.icon || 'fa-bell') + '"></i>' +
+          '</div>' +
+          '<div style="flex-grow: 1; overflow: hidden;">' +
+          '<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem;">' +
+          '<div style="display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' +
+            '<strong style="font-size: 0.85rem; color: ' + (item.isOverdue ? '#b91c1c' : 'var(--text-main)') + '; overflow: hidden; text-overflow: ellipsis;">' + escapeHtml(item.title) + '</strong>' +
+            overdueTag +
+          '</div>' +
+          '<span style="font-size: 0.7rem; color: ' + (item.isOverdue ? '#dc2626' : 'var(--text-muted)') + '; font-weight: ' + (item.isOverdue ? '700' : '500') + '; flex-shrink: 0;">' + escapeHtml(item.time || "") + '</span>' +
+          '</div>' +
+          '<p style="font-size: 0.775rem; color: var(--text-muted); margin: 0.15rem 0 0 0; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">' +
+          escapeHtml(item.message) +
+          '</p>' +
+          '</div>' +
+          (item.unread ? '<span style="width: 8px; height: 8px; border-radius: 50%; background: ' + (item.isOverdue ? 'var(--danger)' : 'var(--primary)') + '; align-self: center; flex-shrink: 0;"></span>' : '') +
+          '</div>';
       }).join("");
 
       container.innerHTML = html;
     };
 
-    window.toggleNotificationsDrawer = function(e) {
+    window.toggleNotificationsDrawer = function (e) {
       if (e) e.stopPropagation();
       var pop = document.getElementById("notifications-popover");
       if (!pop) return;
@@ -19269,27 +19631,27 @@ document.addEventListener("click", function() {
       }
     };
 
-    window.markAllNotificationsAsRead = function(e) {
+    window.markAllNotificationsAsRead = function (e) {
       if (e) e.stopPropagation();
       var list = window.getNotificationsList();
-      list.forEach(function(item) { item.unread = false; });
+      list.forEach(function (item) { item.unread = false; });
       saveStoredNotifications(list);
       window.updateNotificationBadge();
       window.renderNotificationsList();
       showToast("All notifications marked as read.", "info");
     };
 
-    window.openSpecificRecord = function(module, rawRecordId) {
+    window.openSpecificRecord = function (module, rawRecordId) {
       if (!rawRecordId || !module) return;
       var recordId = String(rawRecordId).trim();
       var recLower = recordId.toLowerCase();
 
       // 1. Scroll to and pulse highlight element (table row or kanban card)
       var targetEl = document.getElementById("row-" + recordId) ||
-                     document.getElementById("card-" + recordId) ||
-                     document.getElementById("row-" + recordId.replace(/[^a-zA-Z0-9_-]/g, "_")) ||
-                     document.querySelector('[data-id="' + recordId + '"]') ||
-                     document.querySelector('[data-record-id="' + recordId + '"]');
+        document.getElementById("card-" + recordId) ||
+        document.getElementById("row-" + recordId.replace(/[^a-zA-Z0-9_-]/g, "_")) ||
+        document.querySelector('[data-id="' + recordId + '"]') ||
+        document.querySelector('[data-record-id="' + recordId + '"]');
 
       if (targetEl) {
         try {
@@ -19297,7 +19659,7 @@ document.addEventListener("click", function() {
           targetEl.classList.remove("record-highlight-target");
           void targetEl.offsetWidth; // trigger reflow
           targetEl.classList.add("record-highlight-target");
-        } catch(e) {}
+        } catch (e) { }
       }
 
       // 2. Open edit/details modal for specific module
@@ -19306,7 +19668,7 @@ document.addEventListener("click", function() {
           window.editTask(recordId);
         } else if (typeof window.openTaskModal === "function") {
           var tList = (window._dataCache && window._dataCache.tasks) || [];
-          var tObj = tList.find(function(t) { return String(t.TaskID).toLowerCase() === recLower; });
+          var tObj = tList.find(function (t) { return String(t.TaskID).toLowerCase() === recLower; });
           if (tObj) window.openTaskModal(tObj);
         }
       } else if (module === "projects") {
@@ -19314,7 +19676,7 @@ document.addEventListener("click", function() {
           window.editProject(recordId);
         } else if (typeof window.openProjectModal === "function") {
           var pList = (window._dataCache && window._dataCache.projects) || [];
-          var pObj = pList.find(function(p) { return String(p.ProjectID).toLowerCase() === recLower; });
+          var pObj = pList.find(function (p) { return String(p.ProjectID).toLowerCase() === recLower; });
           if (pObj) window.openProjectModal(pObj);
         }
       } else if (module === "sitevisits" || module === "sitevisit") {
@@ -19322,7 +19684,7 @@ document.addEventListener("click", function() {
           window.editVisit(recordId);
         } else if (typeof window.openVisitModal === "function") {
           var svList = (window._dataCache && window._dataCache.sitevisits) || [];
-          var svObj = svList.find(function(v) { return String(v.VisitID).toLowerCase() === recLower; });
+          var svObj = svList.find(function (v) { return String(v.VisitID).toLowerCase() === recLower; });
           if (svObj) window.openVisitModal(svObj);
         }
       } else if (module === "leads") {
@@ -19330,7 +19692,7 @@ document.addEventListener("click", function() {
           window.editLead(recordId);
         } else if (typeof window.openLeadModal === "function") {
           var lList = (window._dataCache && window._dataCache.leads) || [];
-          var lObj = lList.find(function(l) { return String(l.LeadID).toLowerCase() === recLower; });
+          var lObj = lList.find(function (l) { return String(l.LeadID).toLowerCase() === recLower; });
           if (lObj) window.openLeadModal(lObj);
         }
       } else if (module === "finance") {
@@ -19354,7 +19716,7 @@ document.addEventListener("click", function() {
     /**
      * Browser & Mobile Web Push Notification Dispatcher
      */
-    window.sendDevicePushNotification = function(title, options) {
+    window.sendDevicePushNotification = function (title, options) {
       if (!("Notification" in window)) return;
       if (Notification.permission === "granted") {
         try {
@@ -19366,13 +19728,13 @@ document.addEventListener("click", function() {
             vibrate: [200, 100, 200],
             data: opts.data || {}
           });
-          notif.onclick = function() {
+          notif.onclick = function () {
             window.focus();
             if (opts.data && opts.data.conversationId) {
               if (appRouter.currentView !== "teamchat") {
                 navigateRoute(null, "teamchat");
               }
-              setTimeout(function() {
+              setTimeout(function () {
                 if (typeof window.switchChatConversation === "function") {
                   window.switchChatConversation(opts.data.conversationId);
                 }
@@ -19380,15 +19742,30 @@ document.addEventListener("click", function() {
             }
             this.close();
           };
-        } catch(e) {
+        } catch (e) {
           console.warn("Device push notification error:", e);
         }
       }
     };
 
-    window.handleNotificationClick = function(module, recordId, notifId) {
+    /**
+     * Universal Global Helper to Edit Task from Anywhere
+     */
+    window.editTaskFromAnywhere = function (taskId) {
+      if (!taskId) return;
+      if (typeof window.editTask === "function") {
+        window.editTask(taskId);
+      } else {
+        localStorage.setItem("pending_edit_task_id", taskId);
+        if (window.appRouter && window.appRouter.navigate) {
+          window.appRouter.navigate("tasks");
+        }
+      }
+    };
+
+    window.handleNotificationClick = function (module, recordId, notifId) {
       var list = window.getNotificationsList();
-      var item = list.find(function(n) { return n.id === notifId; });
+      var item = list.find(function (n) { return n.id === notifId; });
       if (item) item.unread = false;
       saveStoredNotifications(list);
       window.updateNotificationBadge();
@@ -19404,7 +19781,13 @@ document.addEventListener("click", function() {
             localStorage.setItem("pending_edit_task_id", recordId);
           }
         }
-        
+
+        // Direct task edit handling from notifications
+        if (module === "tasks" && recordId) {
+          window.editTaskFromAnywhere(recordId);
+          return;
+        }
+
         // If already on that view, directly open and highlight
         if (appRouter.currentView === module) {
           if (recordId && typeof window.openSpecificRecord === "function") {
@@ -19467,7 +19850,7 @@ document.addEventListener("click", function() {
     window.toggleTableRowActionMenu = toggleTableRowActionMenu;
 
     function closeAllTableActionMenus() {
-      document.querySelectorAll(".table-action-menu").forEach(function(m) {
+      document.querySelectorAll(".table-action-menu").forEach(function (m) {
         m.style.display = "none";
         var wrap = m.closest(".action-dropdown-wrap");
         if (wrap) wrap.classList.remove("open");
@@ -19475,17 +19858,17 @@ document.addEventListener("click", function() {
     }
     window.closeAllTableActionMenus = closeAllTableActionMenus;
 
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", function (e) {
       if (!e.target.closest(".action-dropdown-wrap")) {
         closeAllTableActionMenus();
       }
     });
 
-    window.addEventListener("scroll", function() {
+    window.addEventListener("scroll", function () {
       closeAllTableActionMenus();
     }, { passive: true, capture: true });
 
-    window.addEventListener("resize", function() {
+    window.addEventListener("resize", function () {
       closeAllTableActionMenus();
     }, { passive: true });
 
@@ -19532,7 +19915,7 @@ document.addEventListener("click", function() {
      * =========================================================================
      */
     window.RLS = {
-      getScope: function() {
+      getScope: function () {
         var user = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
         if (!user) return { isSuperAdmin: true };
         var role = String(user.roleId || (user.user && user.user.RoleID) || "").trim();
@@ -19570,7 +19953,7 @@ document.addEventListener("click", function() {
           if (!curMgr || processed.has(curMgr)) continue;
           processed.add(curMgr);
 
-          allUsers.forEach(function(u) {
+          allUsers.forEach(function (u) {
             if (!u) return;
             var rTo = String(u.ReportsTo || "").trim().toLowerCase();
             var uId = String(u.UserID || u.userId || "").trim().toLowerCase();
@@ -19605,7 +19988,7 @@ document.addEventListener("click", function() {
         };
       },
 
-      isMatch: function(assignedVal, createdByVal, scope) {
+      isMatch: function (assignedVal, createdByVal, scope) {
         scope = scope || window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return true;
 
@@ -19631,34 +20014,34 @@ document.addEventListener("click", function() {
         return false;
       },
 
-      filterTasks: function(tasksList) {
+      filterTasks: function (tasksList) {
         var scope = window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return tasksList || [];
-        return (tasksList || []).filter(function(t) {
+        return (tasksList || []).filter(function (t) {
           if (!t) return false;
           return window.RLS.isMatch(t.AssignedTo, t.CreatedBy, scope);
         });
       },
 
-      filterSiteVisits: function(visitsList) {
+      filterSiteVisits: function (visitsList) {
         var scope = window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return visitsList || [];
-        return (visitsList || []).filter(function(v) {
+        return (visitsList || []).filter(function (v) {
           if (!v) return false;
           return window.RLS.isMatch(v.AssignedTo || v.EngineerName, v.CreatedBy, scope);
         });
       },
 
-      filterLeads: function(leadsList) {
+      filterLeads: function (leadsList) {
         var scope = window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return leadsList || [];
-        return (leadsList || []).filter(function(l) {
+        return (leadsList || []).filter(function (l) {
           if (!l) return false;
           return window.RLS.isMatch(l.AssignedTo, l.CreatedBy, scope);
         });
       },
 
-      filterProjects: function(projectsList) {
+      filterProjects: function (projectsList) {
         var scope = window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return projectsList || [];
 
@@ -19667,23 +20050,23 @@ document.addEventListener("click", function() {
         var milestones = (window._dataCache && window._dataCache.milestones) || [];
 
         var allowedProjIds = new Set();
-        tasks.forEach(function(t) {
+        tasks.forEach(function (t) {
           if (t && t.ProjectID && window.RLS.isMatch(t.AssignedTo, t.CreatedBy, scope)) {
             allowedProjIds.add(String(t.ProjectID).trim().toLowerCase());
           }
         });
-        visits.forEach(function(v) {
+        visits.forEach(function (v) {
           if (v && v.ProjectID && window.RLS.isMatch(v.AssignedTo, v.CreatedBy, scope)) {
             allowedProjIds.add(String(v.ProjectID).trim().toLowerCase());
           }
         });
-        milestones.forEach(function(m) {
+        milestones.forEach(function (m) {
           if (m && m.ProjectID && window.RLS.isMatch(m.AssociateName, m.CreatedBy, scope)) {
             allowedProjIds.add(String(m.ProjectID).trim().toLowerCase());
           }
         });
 
-        return (projectsList || []).filter(function(p) {
+        return (projectsList || []).filter(function (p) {
           if (!p) return false;
           if (window.RLS.isMatch("", p.CreatedBy, scope)) return true;
           var pid = String(p.ProjectID || "").trim().toLowerCase();
@@ -19692,19 +20075,19 @@ document.addEventListener("click", function() {
         });
       },
 
-      filterCustomers: function(customersList) {
+      filterCustomers: function (customersList) {
         var scope = window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return customersList || [];
 
         var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
-        var allowedCustIds = new Set(allowedProjects.map(function(p) { return String(p.CustomerID || "").trim().toLowerCase(); }));
+        var allowedCustIds = new Set(allowedProjects.map(function (p) { return String(p.CustomerID || "").trim().toLowerCase(); }));
 
         var allowedLeads = window.RLS.filterLeads((window._dataCache && window._dataCache.leads) || []);
-        allowedLeads.forEach(function(l) {
+        allowedLeads.forEach(function (l) {
           if (l && l.CustomerName) allowedCustIds.add(String(l.CustomerName).trim().toLowerCase());
         });
 
-        return (customersList || []).filter(function(c) {
+        return (customersList || []).filter(function (c) {
           if (!c) return false;
           if (window.RLS.isMatch("", c.CreatedBy, scope)) return true;
           var cid = String(c.CustomerID || "").trim().toLowerCase();
@@ -19715,13 +20098,13 @@ document.addEventListener("click", function() {
         });
       },
 
-      filterMilestones: function(milestonesList) {
+      filterMilestones: function (milestonesList) {
         var scope = window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return milestonesList || [];
         var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
-        var allowedProjIds = new Set(allowedProjects.map(function(p) { return String(p.ProjectID || "").trim().toLowerCase(); }));
+        var allowedProjIds = new Set(allowedProjects.map(function (p) { return String(p.ProjectID || "").trim().toLowerCase(); }));
 
-        return (milestonesList || []).filter(function(m) {
+        return (milestonesList || []).filter(function (m) {
           if (!m) return false;
           if (window.RLS.isMatch(m.AssociateName, m.CreatedBy, scope)) return true;
           var pid = String(m.ProjectID || "").trim().toLowerCase();
@@ -19730,13 +20113,13 @@ document.addEventListener("click", function() {
         });
       },
 
-      filterProposals: function(proposalsList) {
+      filterProposals: function (proposalsList) {
         var scope = window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return proposalsList || [];
         var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
-        var allowedProjNames = new Set(allowedProjects.map(function(p) { return String(p.ProjectName || "").trim().toLowerCase(); }));
+        var allowedProjNames = new Set(allowedProjects.map(function (p) { return String(p.ProjectName || "").trim().toLowerCase(); }));
 
-        return (proposalsList || []).filter(function(prop) {
+        return (proposalsList || []).filter(function (prop) {
           if (!prop) return false;
           if (window.RLS.isMatch("", prop.CreatedBy, scope)) return true;
           var pName = String(prop.ProjectName || "").trim().toLowerCase();
@@ -19745,13 +20128,13 @@ document.addEventListener("click", function() {
         });
       },
 
-      filterTransactions: function(txnsList) {
+      filterTransactions: function (txnsList) {
         var scope = window.RLS.getScope();
         if (!scope || scope.isSuperAdmin) return txnsList || [];
         var allowedProjects = window.RLS.filterProjects((window._dataCache && window._dataCache.projects) || []);
-        var allowedProjIds = new Set(allowedProjects.map(function(p) { return String(p.ProjectID || "").trim().toLowerCase(); }));
+        var allowedProjIds = new Set(allowedProjects.map(function (p) { return String(p.ProjectID || "").trim().toLowerCase(); }));
 
-        return (txnsList || []).filter(function(t) {
+        return (txnsList || []).filter(function (t) {
           if (!t) return false;
           if (window.RLS.isMatch("", t.CreatedBy, scope)) return true;
           var pid = String(t.ProjectID || "").trim().toLowerCase();
@@ -19762,7 +20145,7 @@ document.addEventListener("click", function() {
     };
 
 
-    
+
     /**
      * =========================================================================
      * ENTERPRISE DEMO ENGINE & PREVIEW DATASET
@@ -19886,7 +20269,7 @@ document.addEventListener("click", function() {
         var budget = rand(18, 250) * 100000;
         var sDate = randDate(2025, 2026);
         var eDate = randDate(2026, 2027);
-        var mgr = pick(STAFF.filter(function(s) { return s.RoleID.indexOf("Manager") !== -1 || s.RoleID.indexOf("Admin") !== -1; }));
+        var mgr = pick(STAFF.filter(function (s) { return s.RoleID.indexOf("Manager") !== -1 || s.RoleID.indexOf("Admin") !== -1; }));
         var pName = cust.CustomerName.split(" ")[0] + " - " + pType.split(" ")[0] + " Phase " + (((i - 1) % 3) + 1);
 
         projects.push({
@@ -20068,7 +20451,7 @@ document.addEventListener("click", function() {
       }
 
       // 10. Users (8)
-      var users = STAFF.map(function(s) {
+      var users = STAFF.map(function (s) {
         return {
           UserID: s.UserID, FullName: s.FullName, Email: s.FullName.toLowerCase().replace(" ", ".") + "@nexsolve.in",
           Mobile: s.Mobile, RoleID: s.RoleID, Status: "Active", MustChangePassword: "No",
@@ -20154,7 +20537,7 @@ document.addEventListener("click", function() {
       var demoData = (window._dataCache && window._dataCache.users && window._dataCache.users.length > 0)
         ? window._dataCache
         : generateEnterpriseDemoData();
-      var user = (demoData.users && demoData.users.find(function(u) { return u.RoleID === roleId; })) || (demoData.users && demoData.users[0]) || {
+      var user = (demoData.users && demoData.users.find(function (u) { return u.RoleID === roleId; })) || (demoData.users && demoData.users[0]) || {
         UserID: "USR-DEMO-1",
         FullName: "Demo " + roleId,
         Email: "demo@nexsolve.in",
@@ -20167,7 +20550,7 @@ document.addEventListener("click", function() {
       var isSuper = (roleId === "Super Admin");
       var allMods = ["Dashboard", "Customers", "Projects", "Milestones", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Finance", "Reports", "Users", "Company", "Masters", "Help"];
 
-      allMods.forEach(function(mod) {
+      allMods.forEach(function (mod) {
         if (isSuper) {
           permissions[mod] = { view: true, add: true, edit: true, delete: true };
         } else if (roleId === "Project Manager") {
@@ -20289,7 +20672,7 @@ document.addEventListener("click", function() {
       var inp = document.getElementById("license-gate-input");
       if (inp) {
         inp.value = curKey;
-        setTimeout(function() { inp.focus(); inp.select(); }, 150);
+        setTimeout(function () { inp.focus(); inp.select(); }, 150);
       }
       var feedback = document.getElementById("license-gate-feedback");
       if (feedback) feedback.style.display = "none";
@@ -20422,8 +20805,8 @@ document.addEventListener("click", function() {
           }
 
           // Preload & sync fresh database in background safely
-          setTimeout(function() {
-            preloadAllAppData(function() {
+          setTimeout(function () {
+            preloadAllAppData(function () {
               populateSidebarUserProfile();
               applySidebarPermissions();
               if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
@@ -20452,7 +20835,7 @@ document.addEventListener("click", function() {
       if (window._pendingSyncCount > 0) {
         showToast("Syncing recent modifications to Google Sheets before sign out...", "info");
         var attempts = 0;
-        var checkInterval = setInterval(function() {
+        var checkInterval = setInterval(function () {
           attempts++;
           if (window._pendingSyncCount <= 0 || attempts >= 10) {
             clearInterval(checkInterval);
@@ -20498,7 +20881,7 @@ document.addEventListener("click", function() {
       var isSuperAdmin = user.roleId === "Super Admin";
 
       var menuItems = document.querySelectorAll(".sidebar-menu .menu-item");
-      menuItems.forEach(function(item) {
+      menuItems.forEach(function (item) {
         var viewId = item.getAttribute("data-view");
         if (!viewId) return;
         if (viewId === "dashboard" || viewId === "help" || viewId === "teamchat") {
@@ -20582,7 +20965,7 @@ document.addEventListener("click", function() {
         var d = new Date(dateVal);
         if (isNaN(d.getTime())) return String(dateVal);
         return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-      } catch(e) {
+      } catch (e) {
         return String(dateVal);
       }
     }
@@ -20614,7 +20997,7 @@ document.addEventListener("click", function() {
           if (selectEl._refreshSearchable) selectEl._refreshSearchable();
           return;
         } else {
-          try { selectEl._searchableWrapper.remove(); } catch(e) {}
+          try { selectEl._searchableWrapper.remove(); } catch (e) { }
           selectEl._searchableWrapper = null;
         }
       }
@@ -20678,10 +21061,10 @@ document.addEventListener("click", function() {
       function parseSelectOptions() {
         parsedOptions = [];
         var children = Array.from(selectEl.children);
-        children.forEach(function(child) {
+        children.forEach(function (child) {
           if (child.tagName === "OPTGROUP") {
             parsedOptions.push({ isGroup: true, label: child.label });
-            Array.from(child.children).forEach(function(opt) {
+            Array.from(child.children).forEach(function (opt) {
               parsedOptions.push({ isGroup: false, value: opt.value, text: opt.text, html: opt.innerHTML });
             });
           } else if (child.tagName === "OPTION") {
@@ -20692,7 +21075,7 @@ document.addEventListener("click", function() {
 
       function updateTriggerLabel() {
         var curVal = selectEl.value;
-        var selectedOpt = Array.from(selectEl.options).find(function(o) { return o.value === curVal; });
+        var selectedOpt = Array.from(selectEl.options).find(function (o) { return o.value === curVal; });
         if (selectedOpt && curVal) {
           triggerText.innerHTML = selectedOpt.innerHTML || escapeHtml(selectedOpt.text);
           triggerText.classList.remove("placeholder");
@@ -20717,7 +21100,7 @@ document.addEventListener("click", function() {
 
         var renderedCount = 0;
 
-        parsedOptions.forEach(function(item) {
+        parsedOptions.forEach(function (item) {
           if (item.isGroup) {
             var groupEl = document.createElement("div");
             groupEl.className = "searchable-select-group-header";
@@ -20737,7 +21120,7 @@ document.addEventListener("click", function() {
             optEl.innerHTML = '<span class="option-label">' + (item.html || escapeHtml(item.text)) + '</span>' +
               (item.value === selectEl.value ? '<i class="fas fa-check" style="font-size:0.75rem; color: var(--primary);"></i>' : '');
 
-            optEl.addEventListener("click", function(e) {
+            optEl.addEventListener("click", function (e) {
               e.stopPropagation();
               selectEl.value = item.value;
               updateTriggerLabel();
@@ -20755,7 +21138,7 @@ document.addEventListener("click", function() {
       }
 
       function openDropdown() {
-        document.querySelectorAll(".searchable-select-wrapper.open").forEach(function(w) {
+        document.querySelectorAll(".searchable-select-wrapper.open").forEach(function (w) {
           if (w !== wrapper) {
             w.classList.remove("open");
             w.style.zIndex = "";
@@ -20794,7 +21177,7 @@ document.addEventListener("click", function() {
 
         searchInput.value = "";
         renderOptions("");
-        setTimeout(function() { searchInput.focus(); }, 50);
+        setTimeout(function () { searchInput.focus(); }, 50);
       }
 
       function closeDropdown() {
@@ -20807,20 +21190,20 @@ document.addEventListener("click", function() {
         }
       }
 
-      trigger.addEventListener("click", function(e) {
+      trigger.addEventListener("click", function (e) {
         if (e.target.closest(".trigger-clear")) return;
         if (wrapper.classList.contains("open")) closeDropdown();
         else openDropdown();
       });
 
-      trigger.addEventListener("keydown", function(e) {
+      trigger.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
           e.preventDefault();
           openDropdown();
         }
       });
 
-      clearBtn.addEventListener("click", function(e) {
+      clearBtn.addEventListener("click", function (e) {
         e.stopPropagation();
         selectEl.value = "";
         updateTriggerLabel();
@@ -20829,18 +21212,18 @@ document.addEventListener("click", function() {
         selectEl.dispatchEvent(new Event("input", { bubbles: true }));
       });
 
-      searchInput.addEventListener("input", function() {
+      searchInput.addEventListener("input", function () {
         renderOptions(searchInput.value);
       });
 
-      searchInput.addEventListener("keydown", function(e) {
+      searchInput.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
           closeDropdown();
           trigger.focus();
         }
       });
 
-      document.addEventListener("click", function(e) {
+      document.addEventListener("click", function (e) {
         if (!wrapper.contains(e.target)) {
           closeDropdown();
         }
@@ -20858,7 +21241,7 @@ document.addEventListener("click", function() {
 
       // Auto-observe DOM mutations on select options
       if (window.MutationObserver && !selectEl._searchObserver) {
-        var mo = new MutationObserver(function() {
+        var mo = new MutationObserver(function () {
           refresh();
         });
         mo.observe(selectEl, { childList: true, subtree: true });
@@ -20877,7 +21260,7 @@ document.addEventListener("click", function() {
       var root = scope || document.body;
       if (!root) return;
       var selects = root.querySelectorAll("select:not(.no-searchable)");
-      selects.forEach(function(sel) {
+      selects.forEach(function (sel) {
         makeSearchableSelect(sel);
       });
     }
@@ -20885,7 +21268,7 @@ document.addEventListener("click", function() {
 
     // Global observer: automatically upgrades any new select elements inserted anywhere in the app
     if (typeof window !== "undefined" && window.MutationObserver) {
-      var globalSelectAutoObserver = new MutationObserver(function(mutations) {
+      var globalSelectAutoObserver = new MutationObserver(function (mutations) {
         var hasNew = false;
         for (var i = 0; i < mutations.length; i++) {
           var added = mutations[i].addedNodes;
@@ -20920,10 +21303,10 @@ document.addEventListener("click", function() {
       if (type === "error") icon = "fa-exclamation-triangle";
       toast.innerHTML = '<i class="fas ' + icon + '"></i><div style="flex-grow:1; font-size:0.85rem; font-weight:500;">' + escapeHtml(message) + '</div>';
       container.appendChild(toast);
-      setTimeout(function() {
+      setTimeout(function () {
         toast.style.opacity = "0";
         toast.style.transform = "translateX(50px)";
-        setTimeout(function() { toast.remove(); }, 300);
+        setTimeout(function () { toast.remove(); }, 300);
       }, 4000);
     }
     window.showToast = showToast;
@@ -21063,7 +21446,7 @@ document.addEventListener("click", function() {
     window.updateHeaderCompanyLogo = updateHeaderCompanyLogo;
 
     // System initialization on boot
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       // Keep sidebar collapsed by default on desktop unless explicitly expanded by user
       var savedCollapsed = localStorage.getItem("pm_sidebar_collapsed");
       var isCollapsed = savedCollapsed !== "false" && window.innerWidth > 768;
@@ -21094,7 +21477,7 @@ document.addEventListener("click", function() {
         }
       } else {
         if (demoPill) demoPill.style.display = "none";
-        try { localStorage.removeItem("nexmilestro_is_demo"); } catch(e) {}
+        try { localStorage.removeItem("nexmilestro_is_demo"); } catch (e) { }
       }
 
       updateLoginOrgDisplay();
@@ -21123,7 +21506,7 @@ document.addEventListener("click", function() {
           }
         } else {
           showLoader(true, "Restoring workspace data...");
-          preloadAllAppData(function() {
+          preloadAllAppData(function () {
             showLoader(false);
             showLoginOverlay(false);
             if (window._dataCache && window._dataCache.companySetup && window._dataCache.companySetup.LogoUrl) {
@@ -21140,4 +21523,5 @@ document.addEventListener("click", function() {
     });
   </script>
 </body>
+
 </html>

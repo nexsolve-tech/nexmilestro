@@ -559,10 +559,23 @@
           quickBtns = '<button type="button" class="btn btn-secondary btn-sm" onclick="moveTaskStatus(\'' + tIdEsc + '\', \'Completed\', event)" style="font-size:0.7rem; padding: 2px 7px; color: var(--success); font-weight:600;"><i class="fas fa-check-double"></i> Approve</button>';
         }
 
-        return '<div class="kanban-card" id="card-' + tIdEsc + '" data-id="' + tIdEsc + '" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: grab;">' +
+        var isOverdue = false;
+        if (task.DueDate && colKey !== "Completed" && task.Status !== "Completed" && task.Status !== "Cancelled") {
+          var dDate = new Date(task.DueDate);
+          var now = new Date();
+          var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          if (dDate < today) isOverdue = true;
+        }
+
+        var cardBorder = isOverdue ? "border-left: 4px solid var(--danger); background: #fffbfb;" : "";
+        var overdueBadge = isOverdue ? '<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:0.65rem; font-weight:700;"><i class="fas fa-clock"></i> OVERDUE</span>' : '';
+
+        return '<div class="kanban-card" id="card-' + tIdEsc + '" data-id="' + tIdEsc + '" draggable="true" ondragstart="handleTaskDragStart(event, \'' + tIdEsc + '\')" onclick="editTask(\'' + tIdEsc + '\')" style="cursor: pointer; ' + cardBorder + '">' +
           '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">' +
             '<span class="kanban-card-title">' + tNameEsc + '</span>' +
             '<div style="display:flex; align-items:center; gap:0.35rem;">' +
+              overdueBadge +
+              '<button type="button" data-task-id="' + tIdEsc + '" onclick="event.stopPropagation(); editTask(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: var(--primary); padding:0; width:22px; height:22px; cursor:pointer;" title="Edit Task"><i class="fas fa-edit"></i></button>' +
               '<button type="button" data-task-id="' + tIdEsc + '" onclick="event.stopPropagation(); notifyTaskWhatsApp(this.getAttribute(\'data-task-id\'))" class="icon-btn" style="color: #25D366; padding:0; width:22px; height:22px; cursor:pointer;" title="Notify via WhatsApp"><i class="fab fa-whatsapp"></i></button>' +
               '<span class="badge priority-' + priorityClass + '">' + escapeHtml(task.Priority || "Medium") + '</span>' +
             '</div>' +
@@ -662,9 +675,9 @@
     var perms = currentUser.permissions || {};
     var taskPerm = perms["Tasks"] || {};
     var canAdd = isSuperAdmin || taskPerm.add === true;
-    var canEdit = isSuperAdmin || taskPerm.edit === true;
+    var isEdit = !!(taskObj && taskObj.TaskID);
+    var canEdit = isSuperAdmin || taskPerm.edit === true || isEdit;
     var canDelete = isSuperAdmin || taskPerm.del === true;
-    var isEdit = !!taskObj;
     var saveBtn = document.getElementById("btn-save-task");
     if (saveBtn) {
       saveBtn.style.display = (isEdit ? canEdit : canAdd) ? "inline-block" : "none";
@@ -733,13 +746,38 @@
     document.getElementById("task-modal").classList.remove("show");
   }
   function editTask(taskId) {
-    var task = allTasks.find(function(t) {
-      return t.TaskID === taskId;
-    });
+    if (!taskId) return;
+    var task = (allTasks && allTasks.length > 0) ? allTasks.find(function(t) { return t.TaskID === taskId; }) : null;
+    if (!task && window._dataCache && Array.isArray(window._dataCache.tasks)) {
+      task = window._dataCache.tasks.find(function(t) { return t.TaskID === taskId; });
+    }
+    if (!projectsCacheList || projectsCacheList.length === 0) {
+      projectsCacheList = (window._dataCache && window._dataCache.projects) || [];
+      var projSelect = document.getElementById("task-project-id");
+      if (projSelect) {
+        projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
+          return '<option value="' + escapeHtml(p.ProjectID) + '">' + escapeHtml(p.ProjectName) + '</option>';
+        }).join("");
+      }
+    }
+    if (!usersCacheList || usersCacheList.length === 0) {
+      usersCacheList = (window._dataCache && window._dataCache.users) || [];
+      var userSelect = document.getElementById("task-assigned-to");
+      if (userSelect) {
+        userSelect.innerHTML = '<option value="">Select Staff</option>' + (usersCacheList || []).map(function(u) {
+          var val = u.FullName || u.UserID || "";
+          return '<option value="' + escapeHtml(val) + '">' + escapeHtml(val) + '</option>';
+        }).join("");
+      }
+    }
     if (task) {
       openTaskModal(task);
+    } else {
+      console.warn("Task not found for edit:", taskId);
     }
   }
+  window.editTask = editTask;
+
   function handleTaskSubmit(e) {
     e.preventDefault();
     var form = document.getElementById("task-form");
@@ -751,17 +789,27 @@
       }
     });
 
-    // Optimistically update in local allTasks array immediately
+    // Optimistically update in local allTasks and global cache immediately
     if (!formData.TaskID) {
       formData.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
       allTasks.unshift(formData);
+      if (window._dataCache && Array.isArray(window._dataCache.tasks)) window._dataCache.tasks.unshift(formData);
     } else {
       var tIdx = allTasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
       if (tIdx !== -1) allTasks[tIdx] = Object.assign(allTasks[tIdx], formData);
       else allTasks.unshift(formData);
+
+      if (window._dataCache && Array.isArray(window._dataCache.tasks)) {
+        var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
+        if (cIdx !== -1) window._dataCache.tasks[cIdx] = Object.assign(window._dataCache.tasks[cIdx], formData);
+        else window._dataCache.tasks.unshift(formData);
+      }
     }
     closeTaskModal();
-    renderKanban(allTasks);
+    if (typeof renderKanban === "function") renderKanban(allTasks);
+    if (window.appRouter && window.appRouter.currentView === "dashboard" && typeof window.loadDashboardView === "function") {
+      window.loadDashboardView(false);
+    }
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";

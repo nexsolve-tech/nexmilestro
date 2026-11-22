@@ -1157,6 +1157,10 @@ h1, h2, h3, h4, h5, h6 {
   color: #075985;
 }
 
+.priority-critical {
+  background-color: #7f1d1d;
+  color: #ffffff;
+}
 .priority-high {
   background-color: #fee2e2;
   color: #b91c1c;
@@ -2336,6 +2340,15 @@ textarea.form-control {
 
 .notification-item.unread {
   background: rgba(15, 118, 110, 0.04);
+}
+
+.notification-item.overdue {
+  background: #fff5f5 !important;
+  border-left: 4px solid var(--danger, #ef4444) !important;
+}
+
+.notification-item.overdue:hover {
+  background: #fee2e2 !important;
 }
 
 .notification-item-icon {

@@ -134,32 +134,69 @@
     </div>
   </div>
 
-  <!-- Urgent Tasks Table (Full Width) -->
-  <div class="card" style="margin-top: 1.25rem; width: 100%;">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 class="card-title" id="dash-tasks-card-title"><i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks</h3>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Manage Tasks</button>
-    </div>
-    <div class="card-body" style="padding: 0;">
-      <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto;">
-        <table class="data-table" id="dash-tasks-table" style="width: 100%;">
-          <thead>
-            <tr>
-              <th style="min-width: 220px;">Task Name</th>
-              <th style="min-width: 180px;">Project</th>
-              <th style="min-width: 120px;">Due Date</th>
-              <th style="min-width: 100px;">Priority</th>
-              <th style="text-align: right; min-width: 100px;">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading tasks...</td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- Split Tasks Row: 1 Side Urgent Tasks & 2 Side Overdue Tasks -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.25rem; margin-top: 1.25rem; width: 100%;">
+    
+    <!-- Side 1: Urgent Tasks -->
+    <div class="card" style="margin: 0; width: 100%; display: flex; flex-direction: column;">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--warning, #f59e0b);">
+        <h3 class="card-title" id="dash-urgent-card-title" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1rem;">
+          <i class="fas fa-bolt" style="color: var(--warning, #f59e0b);"></i>
+          <span>Urgent Tasks</span>
+          <span class="badge" id="dash-urgent-count" style="background: rgba(245, 158, 11, 0.15); color: #d97706; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 20px;">0</span>
+        </h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">View All</button>
+      </div>
+      <div class="card-body" style="padding: 0; flex: 1;">
+        <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto; min-height: 220px;">
+          <table class="data-table" id="dash-urgent-tasks-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="min-width: 170px;">Task</th>
+                <th style="min-width: 120px;">Project</th>
+                <th style="min-width: 95px;">Due Date</th>
+                <th style="min-width: 80px;">Priority</th>
+                <th style="text-align: right; min-width: 110px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading urgent tasks...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
+
+    <!-- Side 2: Overdue Tasks -->
+    <div class="card" style="margin: 0; width: 100%; display: flex; flex-direction: column; border-color: rgba(239, 68, 68, 0.3);">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--danger, #ef4444); background: rgba(254, 242, 242, 0.5);">
+        <h3 class="card-title" id="dash-overdue-card-title" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1rem; color: #b91c1c;">
+          <i class="fas fa-calendar-xmark" style="color: var(--danger, #ef4444);"></i>
+          <span>Overdue Tasks</span>
+          <span class="badge" id="dash-overdue-count" style="background: #fee2e2; color: #b91c1c; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 20px;">0</span>
+        </h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="appRouter.navigate('tasks')">Resolve</button>
+      </div>
+      <div class="card-body" style="padding: 0; flex: 1;">
+        <div class="table-wrapper" style="border: none; box-shadow: none; overflow-x: auto; min-height: 220px;">
+          <table class="data-table" id="dash-overdue-tasks-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="min-width: 170px;">Task</th>
+                <th style="min-width: 120px;">Project</th>
+                <th style="min-width: 110px;">Overdue By</th>
+                <th style="min-width: 100px;">Assigned To</th>
+                <th style="text-align: right; min-width: 110px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading overdue tasks...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="form-grid" style="margin-top: 1rem;">
@@ -636,50 +673,114 @@
       }).join("");
     }
 
-    // Urgent Tasks Table
-    var tasksTableBody = document.querySelector("#dash-tasks-table tbody");
-    var urgentTasks = tasks.filter(function(t) {
-      return t.Priority === "High" && t.Status !== "Completed" && t.Status !== "Cancelled";
-    }).sort(function(a, b) {
-      return b.TaskID.localeCompare(a.TaskID);
-    }).slice(0, 7);
+    // Split Tasks: Side 1 (Urgent Tasks) & Side 2 (Overdue Tasks)
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    var tCardTitle = document.getElementById("dash-tasks-card-title");
-    if (tCardTitle) {
-      tCardTitle.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger); margin-right: 0.5rem;"></i>Urgent Tasks (' + urgentTasks.length + ')';
+    var overdueList = [];
+    var urgentList = [];
+
+    (tasks || []).forEach(function(t) {
+      if (!t) return;
+      var st = t.Status || "Pending";
+      if (st === "Completed" || st === "Cancelled") return;
+
+      var isOverdue = false;
+      var daysLate = 0;
+      if (t.DueDate) {
+        var d = new Date(t.DueDate);
+        if (!isNaN(d.getTime())) {
+          var dMid = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+          var diff = dMid.getTime() - today.getTime();
+          var diffDays = Math.round(diff / (1000 * 60 * 60 * 24));
+          if (diffDays < 0) {
+            isOverdue = true;
+            daysLate = Math.abs(diffDays);
+          }
+        }
+      }
+
+      if (isOverdue) {
+        overdueList.push(Object.assign({}, t, { daysLate: daysLate }));
+      } else if (t.Priority === "Critical" || t.Priority === "High") {
+        urgentList.push(t);
+      }
+    });
+
+    // Sort overdue by most days late descending
+    overdueList.sort(function(a, b) { return (b.daysLate || 0) - (a.daysLate || 0); });
+    // Sort urgent by TaskID descending
+    urgentList.sort(function(a, b) { return String(b.TaskID || "").localeCompare(String(a.TaskID || "")); });
+
+    var elUrgentCount = document.getElementById("dash-urgent-count");
+    if (elUrgentCount) elUrgentCount.innerText = urgentList.length;
+
+    var elOverdueCount = document.getElementById("dash-overdue-count");
+    if (elOverdueCount) elOverdueCount.innerText = overdueList.length;
+
+    // Side 1: Render Urgent Tasks Table
+    var urgentTbody = document.querySelector("#dash-urgent-tasks-table tbody");
+    if (urgentTbody) {
+      if (urgentList.length === 0) {
+        urgentTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No pending urgent tasks.</td></tr>';
+      } else {
+        urgentTbody.innerHTML = urgentList.slice(0, 8).map(function(t) {
+          var proj = (rawProjects || []).find(function(p) { return p.ProjectID === t.ProjectID; });
+          var projName = proj ? proj.ProjectName : "General";
+          var dueStr = t.DueDate ? (typeof formatDate === "function" ? formatDate(t.DueDate) : t.DueDate) : "No date";
+          var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskID) : t.TaskID;
+          var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskName) : t.TaskName;
+          var projNameEsc = typeof escapeHtml === "function" ? escapeHtml(projName) : projName;
+          var prioEsc = typeof escapeHtml === "function" ? escapeHtml(t.Priority || "Medium") : (t.Priority || "Medium");
+          var prioLower = (t.Priority || "medium").toLowerCase();
+
+          return '<tr>' +
+            '<td>' +
+              '<div onclick="window.editTaskFromAnywhere(\'' + tIdEsc + '\')" style="font-weight: 600; color: var(--primary); cursor: pointer; text-decoration: underline;" title="Click to Edit Task">' + tNameEsc + '</div>' +
+              '<div style="font-size: 0.725rem; font-family: monospace; color: var(--text-muted);">' + tIdEsc + '</div>' +
+            '</td>' +
+            '<td style="font-size: 0.825rem;">' + projNameEsc + '</td>' +
+            '<td style="font-size: 0.825rem;">' + dueStr + '</td>' +
+            '<td><span class="badge priority-' + prioLower + '">' + prioEsc + '</span></td>' +
+            '<td style="text-align: right; white-space: nowrap;">' +
+              '<button type="button" class="btn btn-secondary btn-sm" onclick="window.editTaskFromAnywhere(\'' + tIdEsc + '\')" title="Edit Task" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.35rem;"><i class="fas fa-edit"></i> Edit</button>' +
+              '<button type="button" class="btn btn-secondary btn-sm" onclick="quickCompleteTaskFromDash(\'' + tIdEsc + '\', event)" title="Mark as Completed" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: var(--success);"><i class="fas fa-check"></i> Done</button>' +
+            '</td>' +
+          '</tr>';
+        }).join("");
+      }
     }
 
-    if (urgentTasks.length === 0) {
-      tasksTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No pending urgent high-priority tasks.</td></tr>';
-    } else {
-      tasksTableBody.innerHTML = urgentTasks.map(function(t) {
-        var proj = (rawProjects || []).find(function(p) {
-          return p.ProjectID === t.ProjectID;
-        });
-        var projName = proj ? proj.ProjectName : "General";
-        var dueStr = "No date";
-        if (t.DueDate) {
-          dueStr = typeof formatDate === "function" ? formatDate(t.DueDate) : t.DueDate;
-        }
+    // Side 2: Render Overdue Tasks Table
+    var overdueTbody = document.querySelector("#dash-overdue-tasks-table tbody");
+    if (overdueTbody) {
+      if (overdueList.length === 0) {
+        overdueTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--success); padding: 2rem;"><i class="fas fa-check-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>All tasks are on schedule! No overdue tasks.</td></tr>';
+      } else {
+        overdueTbody.innerHTML = overdueList.slice(0, 8).map(function(t) {
+          var proj = (rawProjects || []).find(function(p) { return p.ProjectID === t.ProjectID; });
+          var projName = proj ? proj.ProjectName : "General";
+          var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskID) : t.TaskID;
+          var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskName) : t.TaskName;
+          var projNameEsc = typeof escapeHtml === "function" ? escapeHtml(projName) : projName;
+          var assignedEsc = typeof escapeHtml === "function" ? escapeHtml(t.AssignedTo || "Unassigned") : (t.AssignedTo || "Unassigned");
+          var daysLateStr = t.daysLate + " day" + (t.daysLate > 1 ? "s" : "") + " late";
 
-        var tIdEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskID) : t.TaskID;
-        var tNameEsc = typeof escapeHtml === "function" ? escapeHtml(t.TaskName) : t.TaskName;
-        var projNameEsc = typeof escapeHtml === "function" ? escapeHtml(projName) : projName;
-        var prioEsc = typeof escapeHtml === "function" ? escapeHtml(t.Priority) : t.Priority;
-
-        return '<tr>' +
-          '<td>' +
-            '<div style="font-weight: 600; color: var(--text-main);">' + tNameEsc + '</div>' +
-            '<div style="font-size: 0.725rem; font-family: monospace; color: var(--text-muted);">' + tIdEsc + '</div>' +
-          '</td>' +
-          '<td style="font-size: 0.85rem;">' + projNameEsc + '</td>' +
-          '<td>' + dueStr + '</td>' +
-          '<td><span class="badge priority-' + t.Priority.toLowerCase() + '">' + prioEsc + '</span></td>' +
-          '<td style="text-align: right;">' +
-            '<button type="button" class="btn btn-secondary btn-sm" onclick="quickCompleteTaskFromDash(\'' + tIdEsc + '\', event)" title="Mark as Completed" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; color: var(--success); display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-check"></i> Done</button>' +
-          '</td>' +
-        '</tr>';
-      }).join("");
+          return '<tr style="background: rgba(254, 242, 242, 0.4);">' +
+            '<td>' +
+              '<div onclick="window.editTaskFromAnywhere(\'' + tIdEsc + '\')" style="font-weight: 600; color: #b91c1c; cursor: pointer; text-decoration: underline;" title="Click to Edit Task">' + tNameEsc + '</div>' +
+              '<div style="font-size: 0.725rem; font-family: monospace; color: var(--text-muted);">' + tIdEsc + '</div>' +
+            '</td>' +
+            '<td style="font-size: 0.825rem;">' + projNameEsc + '</td>' +
+            '<td><span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 0.75rem;"><i class="fas fa-clock" style="margin-right: 0.25rem;"></i>' + daysLateStr + '</span></td>' +
+            '<td style="font-size: 0.825rem;"><i class="far fa-user" style="margin-right: 0.25rem; opacity: 0.6;"></i>' + assignedEsc + '</td>' +
+            '<td style="text-align: right; white-space: nowrap;">' +
+              '<button type="button" class="btn btn-secondary btn-sm" onclick="window.editTaskFromAnywhere(\'' + tIdEsc + '\')" title="Edit Task" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.35rem;"><i class="fas fa-edit"></i> Edit</button>' +
+              '<button type="button" class="btn btn-secondary btn-sm" onclick="quickCompleteTaskFromDash(\'' + tIdEsc + '\', event)" title="Mark as Completed" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: var(--success);"><i class="fas fa-check"></i> Done</button>' +
+            '</td>' +
+          '</tr>';
+        }).join("");
+      }
     }
 
     renderConversionFunnel();
