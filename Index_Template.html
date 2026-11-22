@@ -905,6 +905,30 @@
     };
 
     /**
+     * Canonical system default dropdown values across all modules.
+     * Prevents empty dropdowns and guarantees form defaults appear in Masters.
+     */
+    window.DEFAULT_DROPDOWNS = {
+      CustomerType: ["Boutique Retail", "Enterprise / Commercial", "Government / Institutional", "HNI Residential"],
+      ProjectType: ["Commercial Kitchen / Food", "Corporate Office Fitout", "High-End Villa Execution", "Hospitality / Boutique Hotel", "Interior Design", "Luxury Residential", "Turnkey Luxury Residential", "Turnkey Villa Execution"],
+      ProjectStatus: ["Planning & Design", "In Progress", "Under Review", "Completed", "On Hold", "Cancelled"],
+      TaskPriority: ["Critical", "High", "Medium", "Low"],
+      TaskStatus: ["Pending", "In Progress", "Under Review", "Completed", "Cancelled"],
+      LeadSource: ["Architect Associate", "Client Referral", "Direct Walk-in", "Exhibition / Event", "Instagram / Social", "Website Inquiry", "Other"],
+      LeadStatus: ["New Inquiry", "Contacted", "Site Visited", "Proposal Sent", "Negotiation", "Won", "Lost"],
+      LeadType: ["High Priority", "Medium Priority", "Low Priority", "VIP Client"],
+      ProposalStatus: ["Draft", "Sent", "Accepted", "Rejected", "Under Revision"],
+      VendorType: ["Civil Construction & Masonry", "Electrical & Automation", "Glass & Aluminium Facade", "HVAC Systems", "Lighting & Fixtures", "Marble & Natural Stone", "Modular Woodwork & Veneers", "Paints & Wall Finishes", "Plumbing & Sanitaryware"],
+      IncomeCategoryProject: ["Client Milestone Payment", "Mobilization Advance", "Design Consultation Fee", "Variation / Extra Works", "Project Handover Settlement"],
+      IncomeCategoryNonProject: ["Consulting Advisory", "Scrap Material Sale", "Interest / Rebate", "Other Income"],
+      ExpenseCategoryProject: ["Material Purchase", "Contractor / Labor Wages", "Site Tools & Consumables", "Sub-contractor Settlement", "Equipment Rental", "Architect / 3D Associate Fee"],
+      ExpenseCategoryNonProject: ["Office Rent", "Staff Salaries", "Travel & Fuel", "Software Subscriptions", "Utilities & Electricity", "Marketing & Promotion", "Legal & Accounting", "Office Supplies", "Miscellaneous Expense"],
+      PaymentMode: ["Bank Transfer", "UPI", "Cheque", "Cash", "Credit Card"],
+      UserRole: ["Super Admin", "Project Manager", "Site Engineer", "Sales Executive", "Finance Officer", "Designer", "Sales Head"],
+      TransactionType: ["Income", "Expense"]
+    };
+
+    /**
      * Direct Fetch API wrapper to Google Apps Script endpoint
      */
     async function apiCall(action, payload) {
@@ -963,7 +987,22 @@
       window._dataCache.associates = data.associates || [];
       window._dataCache.transactions = data.transactions || [];
       window._dataCache.users = data.users || [];
-      window._dataCache.dropdowns = data.dropdowns || {};
+
+      // Merge backend dropdowns with system default dropdowns so defaults are always visible in Masters
+      var mergedDropdowns = {};
+      for (var defK in window.DEFAULT_DROPDOWNS) {
+        mergedDropdowns[defK] = (window.DEFAULT_DROPDOWNS[defK] || []).slice();
+      }
+      if (data.dropdowns && typeof data.dropdowns === "object") {
+        for (var dKey in data.dropdowns) {
+          if (Array.isArray(data.dropdowns[dKey])) {
+            mergedDropdowns[dKey] = Array.from(new Set((mergedDropdowns[dKey] || []).concat(data.dropdowns[dKey])));
+          }
+        }
+      }
+      window._dataCache.dropdowns = mergedDropdowns;
+      data.dropdowns = mergedDropdowns;
+
       window._dataCache.companySetup = data.companySetup || {};
       if (!window._dataCache.companySetup.CompanyName && data.company) {
         window._dataCache.companySetup = {
@@ -981,6 +1020,19 @@
           Branch: data.company.branch || data.company.Branch,
           BankAccounts: data.company.bankAccounts || data.company.BankAccounts || "[]"
         };
+      }
+
+      // Preserve local bank accounts cache so bank cards never wipe out on refresh
+      var curBanks = window._dataCache.companySetup.BankAccounts;
+      if (!curBanks || curBanks === "[]" || curBanks === '""') {
+        var localBanks = localStorage.getItem("nexmilestro_company_bank_accounts");
+        if (localBanks && localBanks !== "[]") {
+          window._dataCache.companySetup.BankAccounts = localBanks;
+        }
+      } else {
+        try {
+          localStorage.setItem("nexmilestro_company_bank_accounts", typeof curBanks === "string" ? curBanks : JSON.stringify(curBanks));
+        } catch(e) {}
       }
       window._dataCache.rolePermissions = data.rolePermissions || [];
       window._dataCache.milestones = data.milestones || [];

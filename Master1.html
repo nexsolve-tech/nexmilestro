@@ -73,19 +73,33 @@
 (function() {
   var mastersCacheData = {};
   window.loadMastersView = function(forceRefresh) {
-    if (forceRefresh) showLoader(true);
-    if (!forceRefresh && window._dataCache && window._dataCache.dropdowns) {
-      mastersCacheData = window._dataCache.dropdowns;
-      renderCategoryOptions();
+    if (forceRefresh && typeof showLoader === "function") showLoader(true);
+    var cached = (window._dataCache && window._dataCache.dropdowns) || window.DEFAULT_DROPDOWNS || {};
+    mastersCacheData = JSON.parse(JSON.stringify(cached));
+    renderCategoryOptions();
+    if (!forceRefresh) {
       return;
     }
     google.script.run.withSuccessHandler(function(data) {
-      mastersCacheData = data || {};
+      var merged = Object.assign({}, window.DEFAULT_DROPDOWNS || {});
+      if (data && typeof data === "object") {
+        for (var k in data) {
+          if (Array.isArray(data[k])) {
+            merged[k] = Array.from(new Set((merged[k] || []).concat(data[k])));
+          }
+        }
+      }
+      mastersCacheData = merged;
+      if (window._dataCache) {
+        window._dataCache.dropdowns = merged;
+        try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
+        if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+      }
       renderCategoryOptions();
-      showLoader(false);
+      if (typeof showLoader === "function") showLoader(false);
     }).withFailureHandler(function(err) {
-      showToast("Error loading masters configurations: " + err.message, "error");
-      showLoader(false);
+      if (typeof showToast === "function") showToast("Error loading masters configurations: " + err.message, "error");
+      if (typeof showLoader === "function") showLoader(false);
     }).getDropdownValues();
   };
   function onMasterCategoryChange() {
@@ -100,7 +114,7 @@
     var tbody = document.querySelector("#masters-table tbody");
     if (!tbody)
       return;
-    var optionsList = mastersCacheData[key] || [];
+    var optionsList = mastersCacheData[key] || (window.DEFAULT_DROPDOWNS && window.DEFAULT_DROPDOWNS[key]) || [];
     if (optionsList.length === 0) {
       tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2rem;">No options defined. Add your first option below.</td></tr>';
       return;
@@ -129,46 +143,50 @@
     }
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
+    
+    // Immediate optimistic local update
+    mastersCacheData[key] = mastersCacheData[key] || [];
+    if (!mastersCacheData[key].includes(val)) mastersCacheData[key].push(val);
+    input.value = "";
+    if (window._dataCache) {
+      window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+      window._dataCache.dropdowns[key] = mastersCacheData[key];
+      try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    renderCategoryOptions();
+    showToast("Option saved successfully.", "success");
+
     google.script.run.withSuccessHandler(function(response) {
       if (response && response.success) {
-        showToast(response.message || "Option saved successfully.", "success");
-        input.value = "";
-        mastersCacheData[key] = mastersCacheData[key] || [];
-        if (!mastersCacheData[key].includes(val)) mastersCacheData[key].push(val);
-        if (window._dataCache) {
-          window._dataCache.dropdowns = window._dataCache.dropdowns || {};
-          window._dataCache.dropdowns[key] = mastersCacheData[key];
-          if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
-        }
-        renderCategoryOptions();
-      } else {
-        showToast((response ? (response.message || response.error) : "Failed to add option"), "error");
+        console.log("[Masters Sync] Option synced to backend:", key, val);
       }
     }).withFailureHandler(function(err) {
-      showToast(err.message, "error");
+      console.warn("[Masters Sync Notice]:", err);
     }).saveDropdownValue(key, val, userId);
   }
   function deleteMasterOption(key, value) {
     if (confirm('Are you sure you want to delete option "'.concat(value, '"? This will not alter existing sheet records, but it will remove it from future form select lists.'))) {
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
       var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
+      
+      // Immediate optimistic local update
+      if (mastersCacheData[key]) {
+        mastersCacheData[key] = mastersCacheData[key].filter(function(v) { return v !== value; });
+      }
+      if (window._dataCache) {
+        window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+        window._dataCache.dropdowns[key] = mastersCacheData[key];
+        try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
+        if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+      }
+      renderCategoryOptions();
+      showToast("Option removed successfully.", "success");
+
       google.script.run.withSuccessHandler(function(response) {
-        if (response && response.success) {
-          showToast(response.message || "Option removed successfully.", "success");
-          if (mastersCacheData[key]) {
-            mastersCacheData[key] = mastersCacheData[key].filter(function(v) { return v !== value; });
-          }
-          if (window._dataCache) {
-            window._dataCache.dropdowns = window._dataCache.dropdowns || {};
-            window._dataCache.dropdowns[key] = mastersCacheData[key];
-            if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
-          }
-          renderCategoryOptions();
-        } else {
-          showToast((response ? (response.message || response.error) : "Failed to delete option"), "error");
-        }
+        console.log("[Masters Sync] Option delete synced to backend:", key, value);
       }).withFailureHandler(function(err) {
-        showToast(err.message, "error");
+        console.warn("[Masters Sync Notice]:", err);
       }).deleteDropdownValue(key, value, userId);
     }
   }

@@ -272,6 +272,19 @@
       }];
     }
 
+    // Check localStorage fallback if bankList is still empty
+    if (!bankList || bankList.length === 0) {
+      try {
+        var savedBanks = localStorage.getItem("nexmilestro_company_bank_accounts");
+        if (savedBanks) {
+          var parsedSaved = JSON.parse(savedBanks);
+          if (Array.isArray(parsedSaved) && parsedSaved.length > 0) {
+            bankList = parsedSaved;
+          }
+        }
+      } catch (e) {}
+    }
+
     window.companyBankAccountsList = bankList || [];
     renderCompanyBankAccountsList();
 
@@ -379,7 +392,17 @@
 
     renderCompanyBankAccountsList();
     closeBankModal();
-    showToast("Bank account updated.", "success");
+
+    // Immediate localStorage and in-memory cache persistence
+    try {
+      localStorage.setItem("nexmilestro_company_bank_accounts", JSON.stringify(window.companyBankAccountsList));
+    } catch(e) {}
+    if (window._dataCache && window._dataCache.companySetup) {
+      window._dataCache.companySetup.BankAccounts = JSON.stringify(window.companyBankAccountsList);
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    autoSyncCompanyBankAccounts();
+    showToast("Bank account saved.", "success");
   }
 
   function removeBankModalItem(idx) {
@@ -389,7 +412,42 @@
         if (window.companyBankAccountsList[0]) window.companyBankAccountsList[0].IsDefault = true;
       }
       renderCompanyBankAccountsList();
+
+      try {
+        localStorage.setItem("nexmilestro_company_bank_accounts", JSON.stringify(window.companyBankAccountsList));
+      } catch(e) {}
+      if (window._dataCache && window._dataCache.companySetup) {
+        window._dataCache.companySetup.BankAccounts = JSON.stringify(window.companyBankAccountsList);
+        if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+      }
+      autoSyncCompanyBankAccounts();
       showToast("Bank account removed.", "info");
+    }
+  }
+
+  function autoSyncCompanyBankAccounts() {
+    try {
+      var form = document.getElementById("company-setup-form");
+      if (!form) return;
+      var formData = {};
+      new FormData(form).forEach(function(val, key) {
+        if (typeof val === "string") formData[key] = val.trim();
+      });
+      formData.BankAccounts = JSON.stringify(window.companyBankAccountsList || []);
+      var primaryBank = window.companyBankAccountsList.find(function(b) { return b.IsDefault; }) || window.companyBankAccountsList[0];
+      if (primaryBank) {
+        formData.BankName = primaryBank.BankName;
+        formData.AccountNumber = primaryBank.AccountNumber;
+        formData.IFSCCode = primaryBank.IFSCCode;
+        formData.Branch = primaryBank.Branch;
+      }
+      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      var userId = currentUser.userId || currentUser.UserID || "Admin";
+      if (google && google.script && google.script.run && typeof google.script.run.saveCompanySetup === "function") {
+        google.script.run.saveCompanySetup(formData, null, userId);
+      }
+    } catch(err) {
+      console.warn("Auto sync company bank accounts notice:", err);
     }
   }
 

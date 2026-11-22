@@ -158,9 +158,9 @@ function validateClientLicense(licenseOrEmail) {
       status: "Active"
     };
 
-    // Cache the result for 6 hours
+    // Cache the result for 5 minutes (300s) to eliminate repetitive Master sheet open overhead
     try {
-      CacheService.getScriptCache().put("lic_v2_" + query, JSON.stringify(licenseInfo), 30);
+      CacheService.getScriptCache().put("lic_v2_" + query, JSON.stringify(licenseInfo), 300);
     } catch (e) {}
 
     return licenseInfo;
@@ -305,6 +305,26 @@ const ID_PREFIXES = {
   "ChatGroups": "GRP-"
 };
 
+const SYSTEM_DEFAULT_DROPDOWNS = {
+  CustomerType: ["Boutique Retail", "Enterprise / Commercial", "Government / Institutional", "HNI Residential"],
+  ProjectType: ["Commercial Kitchen / Food", "Corporate Office Fitout", "High-End Villa Execution", "Hospitality / Boutique Hotel", "Interior Design", "Luxury Residential", "Turnkey Luxury Residential", "Turnkey Villa Execution"],
+  ProjectStatus: ["Planning & Design", "In Progress", "Under Review", "Completed", "On Hold", "Cancelled"],
+  TaskPriority: ["Critical", "High", "Medium", "Low"],
+  TaskStatus: ["Pending", "In Progress", "Under Review", "Completed", "Cancelled"],
+  LeadSource: ["Architect Associate", "Client Referral", "Direct Walk-in", "Exhibition / Event", "Instagram / Social", "Website Inquiry", "Other"],
+  LeadStatus: ["New Inquiry", "Contacted", "Site Visited", "Proposal Sent", "Negotiation", "Won", "Lost"],
+  LeadType: ["High Priority", "Medium Priority", "Low Priority", "VIP Client"],
+  ProposalStatus: ["Draft", "Sent", "Accepted", "Rejected", "Under Revision"],
+  VendorType: ["Civil Construction & Masonry", "Electrical & Automation", "Glass & Aluminium Facade", "HVAC Systems", "Lighting & Fixtures", "Marble & Natural Stone", "Modular Woodwork & Veneers", "Paints & Wall Finishes", "Plumbing & Sanitaryware"],
+  IncomeCategoryProject: ["Client Milestone Payment", "Mobilization Advance", "Design Consultation Fee", "Variation / Extra Works", "Project Handover Settlement"],
+  IncomeCategoryNonProject: ["Consulting Advisory", "Scrap Material Sale", "Interest / Rebate", "Other Income"],
+  ExpenseCategoryProject: ["Material Purchase", "Contractor / Labor Wages", "Site Tools & Consumables", "Sub-contractor Settlement", "Equipment Rental", "Architect / 3D Associate Fee"],
+  ExpenseCategoryNonProject: ["Office Rent", "Staff Salaries", "Travel & Fuel", "Software Subscriptions", "Utilities & Electricity", "Marketing & Promotion", "Legal & Accounting", "Office Supplies", "Miscellaneous Expense"],
+  PaymentMode: ["Bank Transfer", "UPI", "Cheque", "Cash", "Credit Card"],
+  UserRole: ["Super Admin", "Project Manager", "Site Engineer", "Sales Executive", "Finance Officer", "Designer", "Sales Head"],
+  TransactionType: ["Income", "Expense"]
+};
+
 /**
  * High-performance batch conversion from sheet rows to clean JS objects.
  * Matches Field Force Management implementation.
@@ -363,9 +383,25 @@ function ensureSheetWithHeaders(ss, sheetName) {
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       sheet.setFrozenRows(1);
     }
-  } else if (sheet.getLastRow() < 1 && headers.length > 0) {
+    return sheet;
+  }
+  if (sheet.getLastRow() < 1 && headers.length > 0) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.setFrozenRows(1);
+    return sheet;
+  }
+  // Automatically append any missing declared headers to row 1 (e.g. BankAccounts on CompanySetup)
+  if (headers.length > 0 && sheet.getLastColumn() > 0) {
+    try {
+      const existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h || "").trim());
+      headers.forEach(h => {
+        if (existingHeaders.indexOf(h) === -1) {
+          const nextCol = sheet.getLastColumn() + 1;
+          sheet.getRange(1, nextCol).setValue(h);
+          existingHeaders.push(h);
+        }
+      });
+    } catch (e) {}
   }
   return sheet;
 }
@@ -621,18 +657,22 @@ function getInitialAppData(licenseKey, userId, role) {
     const associates = sheetToObjects(ensureSheetWithHeaders(ss, "Associates"));
     const milestones = sheetToObjects(ensureSheetWithHeaders(ss, "Milestones"));
     const transactions = sheetToObjects(ensureSheetWithHeaders(ss, "Transactions"));
-    const mastersRaw = sheetToObjects(ensureSheetWithHeaders(ss, "Masters"));
+    let mastersRaw = sheetToObjects(ensureSheetWithHeaders(ss, "Masters"));
+    if (mastersRaw.length === 0) {
+      const altSheet = ss.getSheetByName("DropdownMasters");
+      if (altSheet) mastersRaw = sheetToObjects(altSheet);
+    }
     const rolePermissions = sheetToObjects(ensureSheetWithHeaders(ss, "RolePermissions"));
     const userPermissions = sheetToObjects(ensureSheetWithHeaders(ss, "UserPermissions"));
     const companyRows = sheetToObjects(ensureSheetWithHeaders(ss, "CompanySetup"));
     const chatMessages = sheetToObjects(ensureSheetWithHeaders(ss, "ChatMessages"));
     const chatGroups = sheetToObjects(ensureSheetWithHeaders(ss, "ChatGroups"));
 
-    // Map Masters sheet to clean Dropdowns object: { ProjectType: [...], Status: [...] }
-    const dropdowns = {};
+    // Map Masters sheet to clean Dropdowns object and merge with system defaults
+    const dropdowns = JSON.parse(JSON.stringify(SYSTEM_DEFAULT_DROPDOWNS));
     mastersRaw.forEach(m => {
-      const k = String(m.DropdownKey || "").trim();
-      const v = String(m.DropdownValue || "").trim();
+      const k = String(m.DropdownKey || m.Category || m.Key || "").trim();
+      const v = String(m.DropdownValue || m.Value || "").trim();
       if (k && v) {
         if (!dropdowns[k]) dropdowns[k] = [];
         if (!dropdowns[k].includes(v)) dropdowns[k].push(v);
@@ -1320,12 +1360,15 @@ function saveUserPermissions(licenseKey, targetUserId, permissions, isOverridden
 function saveDropdownValue(licenseKey, category, value, userId) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
-    const mastersSheet = ensureSheetWithHeaders(ss, "Masters");
+    let mastersSheet = ss.getSheetByName("Masters") || ss.getSheetByName("DropdownMasters");
+    if (!mastersSheet) {
+      mastersSheet = ensureSheetWithHeaders(ss, "Masters");
+    }
     const data = mastersSheet.getDataRange().getValues();
     let found = false;
     for (let i = 1; i < data.length; i++) {
-      if (String(data[i][0]).trim().toLowerCase() === String(category).trim().toLowerCase() && 
-          String(data[i][1]).trim().toLowerCase() === String(value).trim().toLowerCase()) {
+      if (String(data[i][0] || "").trim().toLowerCase() === String(category).trim().toLowerCase() && 
+          String(data[i][1] || "").trim().toLowerCase() === String(value).trim().toLowerCase()) {
         found = true;
         break;
       }
@@ -1342,11 +1385,12 @@ function saveDropdownValue(licenseKey, category, value, userId) {
 function deleteDropdownValue(licenseKey, category, value) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
-    const mastersSheet = ensureSheetWithHeaders(ss, "Masters");
+    let mastersSheet = ss.getSheetByName("Masters") || ss.getSheetByName("DropdownMasters");
+    if (!mastersSheet) return { success: true, message: "Option removed successfully." };
     const data = mastersSheet.getDataRange().getValues();
     for (let i = data.length - 1; i >= 1; i--) {
-      if (String(data[i][0]).trim().toLowerCase() === String(category).trim().toLowerCase() && 
-          String(data[i][1]).trim().toLowerCase() === String(value).trim().toLowerCase()) {
+      if (String(data[i][0] || "").trim().toLowerCase() === String(category).trim().toLowerCase() && 
+          String(data[i][1] || "").trim().toLowerCase() === String(value).trim().toLowerCase()) {
         mastersSheet.deleteRow(i + 1);
         break;
       }
@@ -1484,20 +1528,21 @@ function deleteTransactionRecord(licenseKey, txnId) {
 function saveChatMessageRecord(licenseKey, data, userId) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
+    const sheet = ensureSheetWithHeaders(ss, "ChatMessages");
     const msgId = data.id || data.MessageID || ("MSG-" + Date.now());
-    const payload = {
-      MessageID: msgId,
-      ConversationID: data.conversationId || data.ConversationID || "general",
-      Sender: data.sender || data.Sender || userId || "User",
-      Role: data.role || data.Role || "Staff",
-      Text: data.text || data.Text || "",
-      Time: data.time || data.Time || "",
-      Timestamp: data.timestamp || Date.now(),
-      Initials: data.initials || data.Initials || "",
-      CreatedDate: (new Date()).toISOString(),
-      CreatedBy: userId || "User"
-    };
-    writeTableRow(ss, "ChatMessages", "MessageID", "", payload, userId);
+    const payload = [
+      msgId,
+      data.conversationId || data.ConversationID || "general",
+      data.sender || data.Sender || userId || "User",
+      data.role || data.Role || "Staff",
+      data.text || data.Text || "",
+      data.time || data.Time || "",
+      data.timestamp || Date.now(),
+      data.initials || data.Initials || "",
+      (new Date()).toISOString(),
+      userId || "User"
+    ];
+    sheet.appendRow(payload);
     return { success: true, messageId: msgId, message: "Chat message saved." };
   } catch (err) {
     return { success: false, error: "Failed to save chat message: " + err.message };
@@ -1812,8 +1857,22 @@ function handleUniversalApiRequest(action, params) {
       case 'get_chat_messages':
         try {
           const { ss: chatSs } = getClientSpreadsheet(licenseKey);
-          const msgs = sheetToObjects(ensureSheetWithHeaders(chatSs, "ChatMessages"));
-          const grps = sheetToObjects(ensureSheetWithHeaders(chatSs, "ChatGroups"));
+          const msgSheet = ensureSheetWithHeaders(chatSs, "ChatMessages");
+          const grpSheet = ensureSheetWithHeaders(chatSs, "ChatGroups");
+          const lastRow = msgSheet.getLastRow();
+          let msgs = [];
+          if (lastRow > 1) {
+            const startRow = Math.max(2, lastRow - 99);
+            const numRows = lastRow - startRow + 1;
+            const headers = msgSheet.getRange(1, 1, 1, msgSheet.getLastColumn()).getValues()[0].map(h => String(h || "").trim());
+            const vals = msgSheet.getRange(startRow, 1, numRows, headers.length).getValues();
+            for (let i = 0; i < vals.length; i++) {
+              const obj = {};
+              for (let j = 0; j < headers.length; j++) obj[headers[j]] = vals[i][j];
+              msgs.push(obj);
+            }
+          }
+          const grps = sheetToObjects(grpSheet);
           response = { success: true, chatMessages: msgs, chatGroups: grps };
         } catch(chatErr) {
           response = { success: false, error: chatErr.message };

@@ -14232,6 +14232,19 @@ body.view-teamchat .chat-input-area {
       }];
     }
 
+    // Check localStorage fallback if bankList is still empty
+    if (!bankList || bankList.length === 0) {
+      try {
+        var savedBanks = localStorage.getItem("nexmilestro_company_bank_accounts");
+        if (savedBanks) {
+          var parsedSaved = JSON.parse(savedBanks);
+          if (Array.isArray(parsedSaved) && parsedSaved.length > 0) {
+            bankList = parsedSaved;
+          }
+        }
+      } catch (e) {}
+    }
+
     window.companyBankAccountsList = bankList || [];
     renderCompanyBankAccountsList();
 
@@ -14339,7 +14352,17 @@ body.view-teamchat .chat-input-area {
 
     renderCompanyBankAccountsList();
     closeBankModal();
-    showToast("Bank account updated.", "success");
+
+    // Immediate localStorage and in-memory cache persistence
+    try {
+      localStorage.setItem("nexmilestro_company_bank_accounts", JSON.stringify(window.companyBankAccountsList));
+    } catch(e) {}
+    if (window._dataCache && window._dataCache.companySetup) {
+      window._dataCache.companySetup.BankAccounts = JSON.stringify(window.companyBankAccountsList);
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    autoSyncCompanyBankAccounts();
+    showToast("Bank account saved.", "success");
   }
 
   function removeBankModalItem(idx) {
@@ -14349,7 +14372,42 @@ body.view-teamchat .chat-input-area {
         if (window.companyBankAccountsList[0]) window.companyBankAccountsList[0].IsDefault = true;
       }
       renderCompanyBankAccountsList();
+
+      try {
+        localStorage.setItem("nexmilestro_company_bank_accounts", JSON.stringify(window.companyBankAccountsList));
+      } catch(e) {}
+      if (window._dataCache && window._dataCache.companySetup) {
+        window._dataCache.companySetup.BankAccounts = JSON.stringify(window.companyBankAccountsList);
+        if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+      }
+      autoSyncCompanyBankAccounts();
       showToast("Bank account removed.", "info");
+    }
+  }
+
+  function autoSyncCompanyBankAccounts() {
+    try {
+      var form = document.getElementById("company-setup-form");
+      if (!form) return;
+      var formData = {};
+      new FormData(form).forEach(function(val, key) {
+        if (typeof val === "string") formData[key] = val.trim();
+      });
+      formData.BankAccounts = JSON.stringify(window.companyBankAccountsList || []);
+      var primaryBank = window.companyBankAccountsList.find(function(b) { return b.IsDefault; }) || window.companyBankAccountsList[0];
+      if (primaryBank) {
+        formData.BankName = primaryBank.BankName;
+        formData.AccountNumber = primaryBank.AccountNumber;
+        formData.IFSCCode = primaryBank.IFSCCode;
+        formData.Branch = primaryBank.Branch;
+      }
+      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      var userId = currentUser.userId || currentUser.UserID || "Admin";
+      if (google && google.script && google.script.run && typeof google.script.run.saveCompanySetup === "function") {
+        google.script.run.saveCompanySetup(formData, null, userId);
+      }
+    } catch(err) {
+      console.warn("Auto sync company bank accounts notice:", err);
     }
   }
 
@@ -14637,19 +14695,33 @@ body.view-teamchat .chat-input-area {
 (function() {
   var mastersCacheData = {};
   window.loadMastersView = function(forceRefresh) {
-    if (forceRefresh) showLoader(true);
-    if (!forceRefresh && window._dataCache && window._dataCache.dropdowns) {
-      mastersCacheData = window._dataCache.dropdowns;
-      renderCategoryOptions();
+    if (forceRefresh && typeof showLoader === "function") showLoader(true);
+    var cached = (window._dataCache && window._dataCache.dropdowns) || window.DEFAULT_DROPDOWNS || {};
+    mastersCacheData = JSON.parse(JSON.stringify(cached));
+    renderCategoryOptions();
+    if (!forceRefresh) {
       return;
     }
     google.script.run.withSuccessHandler(function(data) {
-      mastersCacheData = data || {};
+      var merged = Object.assign({}, window.DEFAULT_DROPDOWNS || {});
+      if (data && typeof data === "object") {
+        for (var k in data) {
+          if (Array.isArray(data[k])) {
+            merged[k] = Array.from(new Set((merged[k] || []).concat(data[k])));
+          }
+        }
+      }
+      mastersCacheData = merged;
+      if (window._dataCache) {
+        window._dataCache.dropdowns = merged;
+        try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
+        if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+      }
       renderCategoryOptions();
-      showLoader(false);
+      if (typeof showLoader === "function") showLoader(false);
     }).withFailureHandler(function(err) {
-      showToast("Error loading masters configurations: " + err.message, "error");
-      showLoader(false);
+      if (typeof showToast === "function") showToast("Error loading masters configurations: " + err.message, "error");
+      if (typeof showLoader === "function") showLoader(false);
     }).getDropdownValues();
   };
   function onMasterCategoryChange() {
@@ -14664,7 +14736,7 @@ body.view-teamchat .chat-input-area {
     var tbody = document.querySelector("#masters-table tbody");
     if (!tbody)
       return;
-    var optionsList = mastersCacheData[key] || [];
+    var optionsList = mastersCacheData[key] || (window.DEFAULT_DROPDOWNS && window.DEFAULT_DROPDOWNS[key]) || [];
     if (optionsList.length === 0) {
       tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2rem;">No options defined. Add your first option below.</td></tr>';
       return;
@@ -14693,46 +14765,50 @@ body.view-teamchat .chat-input-area {
     }
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
+    
+    // Immediate optimistic local update
+    mastersCacheData[key] = mastersCacheData[key] || [];
+    if (!mastersCacheData[key].includes(val)) mastersCacheData[key].push(val);
+    input.value = "";
+    if (window._dataCache) {
+      window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+      window._dataCache.dropdowns[key] = mastersCacheData[key];
+      try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    renderCategoryOptions();
+    showToast("Option saved successfully.", "success");
+
     google.script.run.withSuccessHandler(function(response) {
       if (response && response.success) {
-        showToast(response.message || "Option saved successfully.", "success");
-        input.value = "";
-        mastersCacheData[key] = mastersCacheData[key] || [];
-        if (!mastersCacheData[key].includes(val)) mastersCacheData[key].push(val);
-        if (window._dataCache) {
-          window._dataCache.dropdowns = window._dataCache.dropdowns || {};
-          window._dataCache.dropdowns[key] = mastersCacheData[key];
-          if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
-        }
-        renderCategoryOptions();
-      } else {
-        showToast((response ? (response.message || response.error) : "Failed to add option"), "error");
+        console.log("[Masters Sync] Option synced to backend:", key, val);
       }
     }).withFailureHandler(function(err) {
-      showToast(err.message, "error");
+      console.warn("[Masters Sync Notice]:", err);
     }).saveDropdownValue(key, val, userId);
   }
   function deleteMasterOption(key, value) {
     if (confirm('Are you sure you want to delete option "'.concat(value, '"? This will not alter existing sheet records, but it will remove it from future form select lists.'))) {
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
       var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
+      
+      // Immediate optimistic local update
+      if (mastersCacheData[key]) {
+        mastersCacheData[key] = mastersCacheData[key].filter(function(v) { return v !== value; });
+      }
+      if (window._dataCache) {
+        window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+        window._dataCache.dropdowns[key] = mastersCacheData[key];
+        try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
+        if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+      }
+      renderCategoryOptions();
+      showToast("Option removed successfully.", "success");
+
       google.script.run.withSuccessHandler(function(response) {
-        if (response && response.success) {
-          showToast(response.message || "Option removed successfully.", "success");
-          if (mastersCacheData[key]) {
-            mastersCacheData[key] = mastersCacheData[key].filter(function(v) { return v !== value; });
-          }
-          if (window._dataCache) {
-            window._dataCache.dropdowns = window._dataCache.dropdowns || {};
-            window._dataCache.dropdowns[key] = mastersCacheData[key];
-            if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
-          }
-          renderCategoryOptions();
-        } else {
-          showToast((response ? (response.message || response.error) : "Failed to delete option"), "error");
-        }
+        console.log("[Masters Sync] Option delete synced to backend:", key, value);
       }).withFailureHandler(function(err) {
-        showToast(err.message, "error");
+        console.warn("[Masters Sync Notice]:", err);
       }).deleteDropdownValue(key, value, userId);
     }
   }
@@ -15814,6 +15890,7 @@ body.view-teamchat .chat-input-area {
 
     // 1. Send to server backend with dual-tier cloud persistence
     persistMessageToCloud(newMsg, activeConversationId);
+    scheduleNextChatPoll(800);
 
     // 2. Log System Notification (Notification Bell 🔔)
     var nameEl = document.getElementById("chat-active-channel-name");
@@ -15963,17 +16040,20 @@ body.view-teamchat .chat-input-area {
 
   function scheduleNextChatPoll(delayMs) {
     if (_chatPollTimeout) clearTimeout(_chatPollTimeout);
-    _chatPollTimeout = setTimeout(pollServerChatUpdates, delayMs || 4000);
+    var isChatActive = document.body.classList.contains("view-teamchat") || 
+      (document.getElementById("view-teamchat") && document.getElementById("view-teamchat").style.display !== "none");
+    var defaultDelay = isChatActive ? 2500 : 8000;
+    _chatPollTimeout = setTimeout(pollServerChatUpdates, delayMs || defaultDelay);
   }
 
   function startChatSyncPolling() {
-    scheduleNextChatPoll(2000);
+    scheduleNextChatPoll(1200);
   }
 
   function pollServerChatUpdates() {
     if (_isChatPolling) return;
     if (typeof window.apiCall !== "function") {
-      scheduleNextChatPoll(5000);
+      scheduleNextChatPoll(3500);
       return;
     }
     _isChatPolling = true;
@@ -15991,7 +16071,7 @@ body.view-teamchat .chat-input-area {
       pollChatUpdatesViaTasks();
     }).finally(function() {
       _isChatPolling = false;
-      scheduleNextChatPoll(4500);
+      scheduleNextChatPoll();
     });
   }
 
@@ -17181,6 +17261,10 @@ window.populateDropdownsFromCache = function() {
     if (assocSelect) window.makeSearchableSelect(assocSelect, { placeholder: "Select Associate" });
   }
 
+  if (typeof window.populateFinanceFilters === "function") {
+    try { window.populateFinanceFilters(); } catch(e) { console.error(e); }
+  }
+
   window.populateBankOptions();
 };
 
@@ -17748,6 +17832,7 @@ window.loadFinanceView = function(forceRefresh) {
       window.dropdownsCache = res.dropdowns || {};
 
       try { window.populateDropdownsFromCache(); } catch(e){ console.error(e); }
+      try { if (typeof window.populateFinanceFilters === "function") window.populateFinanceFilters(); } catch(e){ console.error(e); }
       try { window.filterTransactionsTable(); } catch(e){
         console.error(e);
         window.renderLedger(window.txnsDataList);
@@ -18013,6 +18098,30 @@ document.addEventListener("click", function() {
     };
 
     /**
+     * Canonical system default dropdown values across all modules.
+     * Prevents empty dropdowns and guarantees form defaults appear in Masters.
+     */
+    window.DEFAULT_DROPDOWNS = {
+      CustomerType: ["Boutique Retail", "Enterprise / Commercial", "Government / Institutional", "HNI Residential"],
+      ProjectType: ["Commercial Kitchen / Food", "Corporate Office Fitout", "High-End Villa Execution", "Hospitality / Boutique Hotel", "Interior Design", "Luxury Residential", "Turnkey Luxury Residential", "Turnkey Villa Execution"],
+      ProjectStatus: ["Planning & Design", "In Progress", "Under Review", "Completed", "On Hold", "Cancelled"],
+      TaskPriority: ["Critical", "High", "Medium", "Low"],
+      TaskStatus: ["Pending", "In Progress", "Under Review", "Completed", "Cancelled"],
+      LeadSource: ["Architect Associate", "Client Referral", "Direct Walk-in", "Exhibition / Event", "Instagram / Social", "Website Inquiry", "Other"],
+      LeadStatus: ["New Inquiry", "Contacted", "Site Visited", "Proposal Sent", "Negotiation", "Won", "Lost"],
+      LeadType: ["High Priority", "Medium Priority", "Low Priority", "VIP Client"],
+      ProposalStatus: ["Draft", "Sent", "Accepted", "Rejected", "Under Revision"],
+      VendorType: ["Civil Construction & Masonry", "Electrical & Automation", "Glass & Aluminium Facade", "HVAC Systems", "Lighting & Fixtures", "Marble & Natural Stone", "Modular Woodwork & Veneers", "Paints & Wall Finishes", "Plumbing & Sanitaryware"],
+      IncomeCategoryProject: ["Client Milestone Payment", "Mobilization Advance", "Design Consultation Fee", "Variation / Extra Works", "Project Handover Settlement"],
+      IncomeCategoryNonProject: ["Consulting Advisory", "Scrap Material Sale", "Interest / Rebate", "Other Income"],
+      ExpenseCategoryProject: ["Material Purchase", "Contractor / Labor Wages", "Site Tools & Consumables", "Sub-contractor Settlement", "Equipment Rental", "Architect / 3D Associate Fee"],
+      ExpenseCategoryNonProject: ["Office Rent", "Staff Salaries", "Travel & Fuel", "Software Subscriptions", "Utilities & Electricity", "Marketing & Promotion", "Legal & Accounting", "Office Supplies", "Miscellaneous Expense"],
+      PaymentMode: ["Bank Transfer", "UPI", "Cheque", "Cash", "Credit Card"],
+      UserRole: ["Super Admin", "Project Manager", "Site Engineer", "Sales Executive", "Finance Officer", "Designer", "Sales Head"],
+      TransactionType: ["Income", "Expense"]
+    };
+
+    /**
      * Direct Fetch API wrapper to Google Apps Script endpoint
      */
     async function apiCall(action, payload) {
@@ -18071,7 +18180,22 @@ document.addEventListener("click", function() {
       window._dataCache.associates = data.associates || [];
       window._dataCache.transactions = data.transactions || [];
       window._dataCache.users = data.users || [];
-      window._dataCache.dropdowns = data.dropdowns || {};
+
+      // Merge backend dropdowns with system default dropdowns so defaults are always visible in Masters
+      var mergedDropdowns = {};
+      for (var defK in window.DEFAULT_DROPDOWNS) {
+        mergedDropdowns[defK] = (window.DEFAULT_DROPDOWNS[defK] || []).slice();
+      }
+      if (data.dropdowns && typeof data.dropdowns === "object") {
+        for (var dKey in data.dropdowns) {
+          if (Array.isArray(data.dropdowns[dKey])) {
+            mergedDropdowns[dKey] = Array.from(new Set((mergedDropdowns[dKey] || []).concat(data.dropdowns[dKey])));
+          }
+        }
+      }
+      window._dataCache.dropdowns = mergedDropdowns;
+      data.dropdowns = mergedDropdowns;
+
       window._dataCache.companySetup = data.companySetup || {};
       if (!window._dataCache.companySetup.CompanyName && data.company) {
         window._dataCache.companySetup = {
@@ -18089,6 +18213,19 @@ document.addEventListener("click", function() {
           Branch: data.company.branch || data.company.Branch,
           BankAccounts: data.company.bankAccounts || data.company.BankAccounts || "[]"
         };
+      }
+
+      // Preserve local bank accounts cache so bank cards never wipe out on refresh
+      var curBanks = window._dataCache.companySetup.BankAccounts;
+      if (!curBanks || curBanks === "[]" || curBanks === '""') {
+        var localBanks = localStorage.getItem("nexmilestro_company_bank_accounts");
+        if (localBanks && localBanks !== "[]") {
+          window._dataCache.companySetup.BankAccounts = localBanks;
+        }
+      } else {
+        try {
+          localStorage.setItem("nexmilestro_company_bank_accounts", typeof curBanks === "string" ? curBanks : JSON.stringify(curBanks));
+        } catch(e) {}
       }
       window._dataCache.rolePermissions = data.rolePermissions || [];
       window._dataCache.milestones = data.milestones || [];

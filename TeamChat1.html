@@ -867,6 +867,7 @@
 
     // 1. Send to server backend with dual-tier cloud persistence
     persistMessageToCloud(newMsg, activeConversationId);
+    scheduleNextChatPoll(800);
 
     // 2. Log System Notification (Notification Bell 🔔)
     var nameEl = document.getElementById("chat-active-channel-name");
@@ -1016,17 +1017,20 @@
 
   function scheduleNextChatPoll(delayMs) {
     if (_chatPollTimeout) clearTimeout(_chatPollTimeout);
-    _chatPollTimeout = setTimeout(pollServerChatUpdates, delayMs || 4000);
+    var isChatActive = document.body.classList.contains("view-teamchat") || 
+      (document.getElementById("view-teamchat") && document.getElementById("view-teamchat").style.display !== "none");
+    var defaultDelay = isChatActive ? 2500 : 8000;
+    _chatPollTimeout = setTimeout(pollServerChatUpdates, delayMs || defaultDelay);
   }
 
   function startChatSyncPolling() {
-    scheduleNextChatPoll(2000);
+    scheduleNextChatPoll(1200);
   }
 
   function pollServerChatUpdates() {
     if (_isChatPolling) return;
     if (typeof window.apiCall !== "function") {
-      scheduleNextChatPoll(5000);
+      scheduleNextChatPoll(3500);
       return;
     }
     _isChatPolling = true;
@@ -1044,7 +1048,7 @@
       pollChatUpdatesViaTasks();
     }).finally(function() {
       _isChatPolling = false;
-      scheduleNextChatPoll(4500);
+      scheduleNextChatPoll();
     });
   }
 

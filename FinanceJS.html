@@ -651,6 +651,10 @@ window.populateDropdownsFromCache = function() {
     if (assocSelect) window.makeSearchableSelect(assocSelect, { placeholder: "Select Associate" });
   }
 
+  if (typeof window.populateFinanceFilters === "function") {
+    try { window.populateFinanceFilters(); } catch(e) { console.error(e); }
+  }
+
   window.populateBankOptions();
 };
 
@@ -1218,6 +1222,7 @@ window.loadFinanceView = function(forceRefresh) {
       window.dropdownsCache = res.dropdowns || {};
 
       try { window.populateDropdownsFromCache(); } catch(e){ console.error(e); }
+      try { if (typeof window.populateFinanceFilters === "function") window.populateFinanceFilters(); } catch(e){ console.error(e); }
       try { window.filterTransactionsTable(); } catch(e){
         console.error(e);
         window.renderLedger(window.txnsDataList);
