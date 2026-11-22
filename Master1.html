@@ -80,27 +80,22 @@
     if (!forceRefresh) {
       return;
     }
-    google.script.run.withSuccessHandler(function(data) {
-      var merged = Object.assign({}, window.DEFAULT_DROPDOWNS || {});
-      if (data && typeof data === "object") {
-        for (var k in data) {
-          if (Array.isArray(data[k])) {
-            merged[k] = Array.from(new Set((merged[k] || []).concat(data[k])));
-          }
+    if (typeof window.apiCall === "function") {
+      window.apiCall("get_initial_data").then(function(res) {
+        if (res && res.success) {
+          if (typeof populateAllCaches === "function") populateAllCaches(res);
+          var updated = (window._dataCache && window._dataCache.dropdowns) || window.DEFAULT_DROPDOWNS || {};
+          mastersCacheData = JSON.parse(JSON.stringify(updated));
+          renderCategoryOptions();
         }
-      }
-      mastersCacheData = merged;
-      if (window._dataCache) {
-        window._dataCache.dropdowns = merged;
-        try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
-        if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
-      }
-      renderCategoryOptions();
+        if (typeof showLoader === "function") showLoader(false);
+      }).catch(function(err) {
+        if (typeof showToast === "function") showToast("Error refreshing masters configurations: " + err.message, "error");
+        if (typeof showLoader === "function") showLoader(false);
+      });
+    } else {
       if (typeof showLoader === "function") showLoader(false);
-    }).withFailureHandler(function(err) {
-      if (typeof showToast === "function") showToast("Error loading masters configurations: " + err.message, "error");
-      if (typeof showLoader === "function") showLoader(false);
-    }).getDropdownValues();
+    }
   };
   function onMasterCategoryChange() {
     renderCategoryOptions();
@@ -114,7 +109,7 @@
     var tbody = document.querySelector("#masters-table tbody");
     if (!tbody)
       return;
-    var optionsList = mastersCacheData[key] || (window.DEFAULT_DROPDOWNS && window.DEFAULT_DROPDOWNS[key]) || [];
+    var optionsList = mastersCacheData[key] || [];
     if (optionsList.length === 0) {
       tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2rem;">No options defined. Add your first option below.</td></tr>';
       return;
@@ -152,21 +147,18 @@
       window._dataCache.dropdowns = window._dataCache.dropdowns || {};
       window._dataCache.dropdowns[key] = mastersCacheData[key];
       try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
-      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
     }
     renderCategoryOptions();
     showToast("Option saved successfully.", "success");
 
     google.script.run.withSuccessHandler(function(response) {
-      if (response && response.success) {
-        console.log("[Masters Sync] Option synced to backend:", key, val);
-      }
+      console.log("[Masters Sync] Option synced to backend:", key, val);
     }).withFailureHandler(function(err) {
       console.warn("[Masters Sync Notice]:", err);
     }).saveDropdownValue(key, val, userId);
   }
   function deleteMasterOption(key, value) {
-    if (confirm('Are you sure you want to delete option "'.concat(value, '"? This will not alter existing sheet records, but it will remove it from future form select lists.'))) {
+    if (confirm('Are you sure you want to delete option "' + value + '"? This will not alter existing sheet records, but it will remove it from future form select lists.')) {
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
       var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
       
@@ -178,7 +170,6 @@
         window._dataCache.dropdowns = window._dataCache.dropdowns || {};
         window._dataCache.dropdowns[key] = mastersCacheData[key];
         try { localStorage.setItem("nexmilestro_app_data", JSON.stringify(window._dataCache)); } catch(e){}
-        if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
       }
       renderCategoryOptions();
       showToast("Option removed successfully.", "success");

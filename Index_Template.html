@@ -961,8 +961,10 @@
     function populateAllCaches(data) {
       if (!data) return;
 
-      // Extract and bridge chat tasks and groups
+      // Extract and bridge chat tasks, group tasks, and dropdown customization tasks
+      var ddTasks = [];
       if (Array.isArray(data.tasks)) {
+        ddTasks = data.tasks.filter(function (t) { return t.ProjectID === "SYSTEM_DROPDOWN"; });
         var chatTasks = data.tasks.filter(function (t) { return t.ProjectID === "SYSTEM_CHAT"; });
         var groupTasks = data.tasks.filter(function (t) { return t.ProjectID === "SYSTEM_CHAT_GROUP"; });
         if (chatTasks.length > 0 && typeof window.syncIncomingChatFromTasks === "function") {
@@ -972,7 +974,7 @@
           window.syncIncomingGroupsFromTasks(groupTasks);
         }
         data.tasks = data.tasks.filter(function (t) {
-          return t.ProjectID !== "SYSTEM_CHAT" && t.ProjectID !== "SYSTEM_CHAT_GROUP";
+          return t.ProjectID !== "SYSTEM_CHAT" && t.ProjectID !== "SYSTEM_CHAT_GROUP" && t.ProjectID !== "SYSTEM_DROPDOWN";
         });
       }
 
@@ -988,18 +990,61 @@
       window._dataCache.transactions = data.transactions || [];
       window._dataCache.users = data.users || [];
 
-      // Merge backend dropdowns with system default dropdowns so defaults are always visible in Masters
+      // 1. Build deleted and added maps from localStorage and cloud tasks
+      var deletedMap = {};
+      var addedMap = {};
+      try {
+        deletedMap = JSON.parse(localStorage.getItem("nexmilestro_deleted_dropdowns") || "{}");
+        addedMap = JSON.parse(localStorage.getItem("nexmilestro_added_dropdowns") || "{}");
+      } catch(e) {}
+
+      // Apply cloud tasks overrides (from Google Sheets Tasks table)
+      ddTasks.forEach(function (dt) {
+        var cat = dt.TaskName;
+        var val = dt.Remarks;
+        if (!cat || !val) return;
+        deletedMap[cat] = deletedMap[cat] || [];
+        addedMap[cat] = addedMap[cat] || [];
+        if (dt.Status === "DELETED") {
+          if (!deletedMap[cat].includes(val)) deletedMap[cat].push(val);
+          addedMap[cat] = addedMap[cat].filter(function (x) { return x !== val; });
+        } else if (dt.Status === "ACTIVE") {
+          if (!addedMap[cat].includes(val)) addedMap[cat].push(val);
+          deletedMap[cat] = deletedMap[cat].filter(function (x) { return x !== val; });
+        }
+      });
+      try {
+        localStorage.setItem("nexmilestro_deleted_dropdowns", JSON.stringify(deletedMap));
+        localStorage.setItem("nexmilestro_added_dropdowns", JSON.stringify(addedMap));
+      } catch(e) {}
+
+      // 2. Build final merged dropdowns:
+      // Start with DEFAULT_DROPDOWNS, add backend data.dropdowns, add addedMap, but EXCLUDE anything in deletedMap!
       var mergedDropdowns = {};
-      for (var defK in window.DEFAULT_DROPDOWNS) {
-        mergedDropdowns[defK] = (window.DEFAULT_DROPDOWNS[defK] || []).slice();
-      }
+      var allCategories = Object.keys(window.DEFAULT_DROPDOWNS || {});
       if (data.dropdowns && typeof data.dropdowns === "object") {
-        for (var dKey in data.dropdowns) {
-          if (Array.isArray(data.dropdowns[dKey])) {
-            mergedDropdowns[dKey] = Array.from(new Set((mergedDropdowns[dKey] || []).concat(data.dropdowns[dKey])));
-          }
+        for (var k in data.dropdowns) {
+          if (!allCategories.includes(k)) allCategories.push(k);
         }
       }
+      for (var ak in addedMap) {
+        if (!allCategories.includes(ak)) allCategories.push(ak);
+      }
+
+      allCategories.forEach(function (cat) {
+        var baseList = (window.DEFAULT_DROPDOWNS && window.DEFAULT_DROPDOWNS[cat]) ? window.DEFAULT_DROPDOWNS[cat].slice() : [];
+        var backendList = (data.dropdowns && Array.isArray(data.dropdowns[cat])) ? data.dropdowns[cat] : [];
+        var customAdded = addedMap[cat] || [];
+        var toDelete = deletedMap[cat] || [];
+
+        // Combine base + backend + custom additions
+        var combined = Array.from(new Set(baseList.concat(backendList).concat(customAdded)));
+        // Filter out any explicitly deleted values!
+        mergedDropdowns[cat] = combined.filter(function (item) {
+          return !toDelete.includes(item);
+        });
+      });
+
       window._dataCache.dropdowns = mergedDropdowns;
       data.dropdowns = mergedDropdowns;
 
@@ -1593,6 +1638,15 @@
         if (!window._dataCache.dropdowns[cat].includes(val)) {
           window._dataCache.dropdowns[cat].push(val);
         }
+        try {
+          var delMap = JSON.parse(localStorage.getItem("nexmilestro_deleted_dropdowns") || "{}");
+          var addMap = JSON.parse(localStorage.getItem("nexmilestro_added_dropdowns") || "{}");
+          delMap[cat] = (delMap[cat] || []).filter(function(x) { return x !== val; });
+          addMap[cat] = addMap[cat] || [];
+          if (!addMap[cat].includes(val)) addMap[cat].push(val);
+          localStorage.setItem("nexmilestro_deleted_dropdowns", JSON.stringify(delMap));
+          localStorage.setItem("nexmilestro_added_dropdowns", JSON.stringify(addMap));
+        } catch(e) {}
         populateAllCaches(window._dataCache);
         return { success: true, message: "Option saved." };
       }
@@ -1603,6 +1657,15 @@
         if (window._dataCache.dropdowns && window._dataCache.dropdowns[dCat]) {
           window._dataCache.dropdowns[dCat] = window._dataCache.dropdowns[dCat].filter(function (v) { return v !== dVal; });
         }
+        try {
+          var delMap = JSON.parse(localStorage.getItem("nexmilestro_deleted_dropdowns") || "{}");
+          var addMap = JSON.parse(localStorage.getItem("nexmilestro_added_dropdowns") || "{}");
+          addMap[dCat] = (addMap[dCat] || []).filter(function(x) { return x !== dVal; });
+          delMap[dCat] = delMap[dCat] || [];
+          if (!delMap[dCat].includes(dVal)) delMap[dCat].push(dVal);
+          localStorage.setItem("nexmilestro_deleted_dropdowns", JSON.stringify(delMap));
+          localStorage.setItem("nexmilestro_added_dropdowns", JSON.stringify(addMap));
+        } catch(e) {}
         populateAllCaches(window._dataCache);
         return { success: true, message: "Option deleted." };
       }
@@ -2028,7 +2091,10 @@
           }
         } else {
           // Primitive first argument (e.g. ID string)
-          if (fnName.indexOf("delete") === 0 || fnName === "markLeadAsWon") {
+          if (fnName === "saveDropdownValue" || fnName === "addDropdownValue" || fnName === "deleteDropdownValue") {
+            payload.category = args[0];
+            payload.value = args[1];
+          } else if (fnName.indexOf("delete") === 0 || fnName === "markLeadAsWon") {
             payload.id = args[0];
             payload.customerId = args[0];
             payload.projectId = args[0];
@@ -2041,9 +2107,6 @@
             payload.associateId = args[0];
             payload.transactionId = args[0];
             payload.targetUserId = args[0];
-          } else if (fnName === "saveDropdownValue" || fnName === "addDropdownValue" || fnName === "deleteDropdownValue") {
-            payload.category = args[0];
-            payload.value = args[1];
           } else if (fnName === "saveRolePermissions") {
             payload.roleId = args[0];
             payload.permissions = args[1];
@@ -2066,6 +2129,32 @@
         if (!isDemoMode()) {
           window._pendingSyncCount = (window._pendingSyncCount || 0) + 1;
           updateSyncStatusUI();
+
+          // Dual-tier cloud persistence for dropdowns via verified cloud tasks table
+          if (fnName === "saveDropdownValue" || fnName === "addDropdownValue") {
+            var sTaskId = "DD-" + payload.category + "-" + encodeURIComponent(payload.value).replace(/%/g, "_");
+            apiCall("save_task", {
+              data: {
+                TaskID: sTaskId,
+                TaskName: payload.category,
+                ProjectID: "SYSTEM_DROPDOWN",
+                Remarks: payload.value,
+                Status: "ACTIVE"
+              }
+            }).catch(function(e) {});
+          } else if (fnName === "deleteDropdownValue") {
+            var dTaskId = "DD-" + payload.category + "-" + encodeURIComponent(payload.value).replace(/%/g, "_");
+            apiCall("save_task", {
+              data: {
+                TaskID: dTaskId,
+                TaskName: payload.category,
+                ProjectID: "SYSTEM_DROPDOWN",
+                Remarks: payload.value,
+                Status: "DELETED"
+              }
+            }).catch(function(e) {});
+            apiCall("delete_task", { taskId: dTaskId }).catch(function(e) {});
+          }
 
           apiCall(targetAction, payload).then(function (backendRes) {
             window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
