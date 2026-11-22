@@ -162,12 +162,60 @@
   </div>
 </div>
 
+<!-- Proposal Email Composer Modal -->
+<div class="modal-overlay" id="proposal-email-modal" style="z-index: 220;">
+  <div class="modal-container" style="max-width: 620px;">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-envelope-open-text" style="color:var(--primary); margin-right:0.4rem;"></i>Send Proposal via Email</h3>
+      <button class="icon-btn" onclick="closeProposalEmailModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="proposal-email-form" onsubmit="handleSendProposalEmail(event)">
+      <input type="hidden" id="prop-email-id">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">To * <small style="color:var(--text-muted); font-weight:normal;">(Editable, comma-separated)</small></label>
+          <input type="text" id="prop-email-to" class="form-control" required placeholder="client@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CC <small style="color:var(--text-muted); font-weight:normal;">(Optional, comma-separated)</small></label>
+          <input type="text" id="prop-email-cc" class="form-control" placeholder="partner@example.com, manager@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject *</label>
+          <input type="text" id="prop-email-subject" class="form-control" required placeholder="Proposal Subject">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Message *</label>
+          <textarea id="prop-email-body" class="form-control" required placeholder="Write proposal email message..." style="height: 180px; font-size:0.85rem; line-height:1.45;"></textarea>
+        </div>
+        <div id="prop-email-attachment-notice" style="font-size:0.75rem; color:var(--text-muted); padding:0.5rem; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+          <i class="fas fa-info-circle"></i> Linked proposal documents and attachments will be referenced in the email message.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeProposalEmailModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Proposal Email</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 (function() {
   var proposalsDataList = [];
   var clientsCacheList = [];
   var leadsCacheList = [];
   var dropdownsCache = {};
+
+  function parseRawDateString(isoString) {
+    if (typeof window.parseRawDateString === "function") return window.parseRawDateString(isoString);
+    if (!isoString) return "";
+    try {
+      var d = new Date(isoString);
+      if (!isNaN(d.getTime())) return d.toISOString().substring(0, 10);
+    } catch(e) {}
+    return String(isoString).substring(0, 10);
+  }
 
   window.handleProposalLinkTypeChange = function() {
     var isLead = document.getElementById("prop-link-lead") ? document.getElementById("prop-link-lead").checked : false;
@@ -419,6 +467,9 @@
         '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
           '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); sendProposalWhatsApp(\'' + prIdEsc + '\');">' +
             '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share on WhatsApp</span>' +
+          '</button>' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); openProposalEmailModal(\'' + prIdEsc + '\');">' +
+            '<i class="fas fa-envelope" style="color: #6366f1;"></i> <span>Send via Email</span>' +
           '</button>';
 
       if (canEdit) {
@@ -588,6 +639,100 @@
     openWAShareModal(msg, clientPhone, "", clientName);
   }
   window.sendProposalWhatsApp = sendProposalWhatsApp;
+
+  function openProposalEmailModal(proposalId) {
+    var prop = proposalsDataList.find(function(p) { return p.ProposalID === proposalId; });
+    if (!prop) return;
+
+    var clientName = "Customer";
+    var clientEmail = "";
+    if (prop.CustomerID) {
+      var client = clientsCacheList.find(function(c) { return c.CustomerID === prop.CustomerID; });
+      if (client) {
+        clientName = client.CustomerName || "Customer";
+        clientEmail = client.Email || "";
+      }
+    } else if (prop.LeadID) {
+      var lead = leadsCacheList.find(function(l) { return l.LeadID === prop.LeadID; });
+      if (lead) {
+        clientName = lead.CustomerName || lead.LeadName || "Prospect";
+        clientEmail = lead.Email || "";
+      }
+    }
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var senderName = currentUser.fullName || currentUser.FullName || "NexMilestro Team";
+    var amountFormatted = formatCurrency(prop.Amount || 0);
+    var validityStr = prop.ValidityDate ? formatDate(prop.ValidityDate) : "30 days";
+
+    document.getElementById("prop-email-id").value = prop.ProposalID || "";
+    document.getElementById("prop-email-to").value = clientEmail;
+    document.getElementById("prop-email-cc").value = "";
+    document.getElementById("prop-email-subject").value = "Commercial Proposal: " + (prop.ProjectName || prop.ProposalID);
+    
+    var bodyMsg = "Dear " + clientName + ",\n\n" +
+      "We are pleased to present our proposal for " + (prop.ProjectName || "your project requirements") + ".\n\n" +
+      "• Proposal Reference: " + prop.ProposalID + "\n" +
+      "• Estimated Value: " + amountFormatted + "\n" +
+      "• Validity Period: Until " + validityStr + "\n\n" +
+      "Scope Summary:\n" + (prop.ScopeOfWork || "As detailed in preliminary project discussion.") + "\n\n" +
+      "Kindly review the proposal and let us know if you require any adjustments or clarification.\n\n" +
+      "Warm regards,\n" +
+      senderName + "\n" +
+      "NexMilestro Solutions";
+
+    document.getElementById("prop-email-body").value = bodyMsg;
+
+    var modal = document.getElementById("proposal-email-modal");
+    if (modal) modal.classList.add("show");
+  }
+  window.openProposalEmailModal = openProposalEmailModal;
+
+  function closeProposalEmailModal() {
+    var modal = document.getElementById("proposal-email-modal");
+    if (modal) modal.classList.remove("show");
+  }
+  window.closeProposalEmailModal = closeProposalEmailModal;
+
+  function handleSendProposalEmail(e) {
+    e.preventDefault();
+    var propId = document.getElementById("prop-email-id").value;
+    var to = document.getElementById("prop-email-to").value.trim();
+    var cc = document.getElementById("prop-email-cc").value.trim();
+    var subject = document.getElementById("prop-email-subject").value.trim();
+    var body = document.getElementById("prop-email-body").value.trim();
+
+    if (!to) {
+      showToast("Please enter at least one recipient email address.", "error");
+      return;
+    }
+
+    var payload = {
+      ProposalID: propId,
+      To: to,
+      CC: cc,
+      Subject: subject,
+      Body: body
+    };
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var userId = currentUser.userId || currentUser.UserID || "USR-ADMIN";
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.success) {
+          showToast("Proposal email sent successfully!", "success");
+          closeProposalEmailModal();
+        } else {
+          showToast(res ? (res.message || res.error) : "Failed to send proposal email", "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        showToast("Error sending email: " + err.message, "error");
+      })
+      .sendProposalEmail(payload, userId);
+  }
+  window.handleSendProposalEmail = handleSendProposalEmail;
 
   function openProposalModal(propObj) {
     if (propObj === void 0) {

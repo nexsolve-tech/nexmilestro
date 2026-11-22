@@ -130,15 +130,19 @@
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
     google.script.run.withSuccessHandler(function(response) {
-      if (response.success) {
-        showToast(response.message, "success");
+      if (response && response.success) {
+        showToast(response.message || "Option saved successfully.", "success");
         input.value = "";
         mastersCacheData[key] = mastersCacheData[key] || [];
         if (!mastersCacheData[key].includes(val)) mastersCacheData[key].push(val);
+        if (window._dataCache) {
+          window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+          window._dataCache.dropdowns[key] = mastersCacheData[key];
+          if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+        }
         renderCategoryOptions();
-        loadMastersView(false);
       } else {
-        showToast(response.message, "error");
+        showToast((response ? (response.message || response.error) : "Failed to add option"), "error");
       }
     }).withFailureHandler(function(err) {
       showToast(err.message, "error");
@@ -149,15 +153,19 @@
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
       var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
       google.script.run.withSuccessHandler(function(response) {
-        if (response.success) {
-          showToast(response.message, "success");
+        if (response && response.success) {
+          showToast(response.message || "Option removed successfully.", "success");
           if (mastersCacheData[key]) {
             mastersCacheData[key] = mastersCacheData[key].filter(function(v) { return v !== value; });
           }
+          if (window._dataCache) {
+            window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+            window._dataCache.dropdowns[key] = mastersCacheData[key];
+            if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+          }
           renderCategoryOptions();
-          loadMastersView(false);
         } else {
-          showToast(response.message, "error");
+          showToast((response ? (response.message || response.error) : "Failed to delete option"), "error");
         }
       }).withFailureHandler(function(err) {
         showToast(err.message, "error");

@@ -179,6 +179,16 @@
   var vendorsCacheList = [];
   var associatesCacheList = [];
   var dropdownsCache = {};
+
+  function parseRawDateString(isoString) {
+    if (typeof window.parseRawDateString === "function") return window.parseRawDateString(isoString);
+    if (!isoString) return "";
+    try {
+      var d = new Date(isoString);
+      if (!isNaN(d.getTime())) return d.toISOString().substring(0, 10);
+    } catch(e) {}
+    return String(isoString).substring(0, 10);
+  }
   window.loadTasksView = function(forceRefresh) {
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";

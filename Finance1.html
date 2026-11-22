@@ -45,54 +45,82 @@
     </div>
   </div>
 
-  <!-- Action Filter Bar -->
-  <div class="filter-bar">
-    <div class="search-input-wrapper">
-      <i class="fas fa-search"></i>
-      <input type="text" id="txn-search-input" class="search-input" placeholder="Search references, remarks..."
-        oninput="filterTransactionsTable()">
+  <!-- Action Filter Bar with 3-Column Responsive Grid -->
+  <div class="card" style="margin-bottom: 1.25rem; padding: 1.15rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+    <!-- Row 1: Search & Action Buttons -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+      <div class="search-input-wrapper" style="flex: 1; min-width: 250px; max-width: 480px;">
+        <i class="fas fa-search"></i>
+        <input type="text" id="txn-search-input" class="search-input" placeholder="Search references, remarks, IDs..."
+          oninput="filterTransactionsTable()">
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+        <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+        <button class="btn btn-secondary" onclick="exportTransactionsCSV()" title="Export Filtered Transactions to CSV"><i class="fas fa-download"></i> Download CSV</button>
+        <button class="btn btn-primary" id="btn-add-txn" onclick="openTxnModal()"><i class="fas fa-plus"></i> Book Transaction</button>
+      </div>
     </div>
 
-    <div class="filter-group" style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center;">
-      <select id="filter-txn-type" class="select-filter" onchange="filterTransactionsTable()">
-        <option value="" selected>All Transactions</option>
-        <option value="Income">Income (Payments In)</option>
-        <option value="Expense">Expense (Spends Out)</option>
-      </select>
+    <!-- Row 2: 3-Column Grid for Dropdowns & Date Range -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; align-items: end;">
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Type</label>
+        <select id="filter-txn-type" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="" selected>All Transactions</option>
+          <option value="Income">Income (Payments In)</option>
+          <option value="Expense">Expense (Spends Out)</option>
+        </select>
+      </div>
 
-      <select id="filter-txn-project" class="select-filter" style="max-width: 170px;"
-        onchange="filterTransactionsTable()">
-        <option value="">All Projects</option>
-      </select>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Project</label>
+        <select id="filter-txn-project" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="">All Projects</option>
+        </select>
+      </div>
 
-      <select id="filter-txn-category" class="select-filter" onchange="filterTransactionsTable()">
-        <option value="">All Categories</option>
-        <option value="Client Payment">Client Payment</option>
-        <option value="Material Purchase">Material Purchase</option>
-        <option value="Labor Wages">Labor Wages</option>
-        <option value="Tools">Tools & Equipment</option>
-        <option value="Rent">Office Rent</option>
-        <option value="Travel">Travel & Fuel</option>
-        <option value="Other">Other Category</option>
-      </select>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Category</label>
+        <select id="filter-txn-category" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="">All Categories</option>
+          <option value="Client Payment">Client Payment</option>
+          <option value="Material Purchase">Material Purchase</option>
+          <option value="Labor Wages">Labor Wages</option>
+          <option value="Tools">Tools & Equipment</option>
+          <option value="Rent">Office Rent</option>
+          <option value="Travel">Travel & Fuel</option>
+          <option value="Other">Other Category</option>
+        </select>
+      </div>
 
-      <select id="filter-txn-mode" class="select-filter" style="max-width: 170px;" onchange="filterTransactionsTable()">
-        <option value="">All Payment Modes</option>
-        <option value="Bank Transfer">Bank Transfer</option>
-        <option value="UPI">UPI</option>
-        <option value="Cheque">Cheque</option>
-        <option value="Cash">Cash</option>
-        <option value="Credit Card">Credit Card</option>
-      </select>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Payment Mode</label>
+        <select id="filter-txn-mode" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="">All Payment Modes</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="UPI">UPI</option>
+          <option value="Cheque">Cheque</option>
+          <option value="Cash">Cash</option>
+          <option value="Credit Card">Credit Card</option>
+        </select>
+      </div>
 
-      <select id="filter-txn-bank" class="select-filter" style="max-width: 170px;" onchange="filterTransactionsTable()">
-        <option value="">All Bank Accounts</option>
-      </select>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Bank Account</label>
+        <select id="filter-txn-bank" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="">All Bank Accounts</option>
+        </select>
+      </div>
 
-      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
-      <button class="btn btn-secondary" onclick="exportTransactionsCSV()" title="Export Filtered Transactions to CSV"><i class="fas fa-download"></i> Download CSV</button>
-      <button class="btn btn-primary" id="btn-add-txn" onclick="openTxnModal()"><i class="fas fa-plus"></i> Book
-        Transaction</button>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">From Date</label>
+        <input type="date" id="filter-txn-from" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+      </div>
+
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">To Date</label>
+        <input type="date" id="filter-txn-to" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+      </div>
     </div>
   </div>
 

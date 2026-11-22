@@ -3275,4 +3275,85 @@ textarea.form-control {
   animation: recordPulseHighlight 3.5s ease-out !important;
   transition: all 0.3s ease;
 }
+
+/* ==================== VIEW TEAMCHAT FULL-VIEWPORT FIT ==================== */
+body.view-teamchat .page-viewport {
+  padding: 0 !important;
+  overflow: hidden !important;
+  height: calc(100vh - 58px) !important;
+  height: calc(100dvh - 58px) !important;
+  max-height: calc(100vh - 58px) !important;
+  max-height: calc(100dvh - 58px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body.view-teamchat .brand-footer-strip {
+  display: none !important;
+}
+
+body.view-teamchat .view-header {
+  display: none !important;
+}
+
+body.view-teamchat .team-chat-wrapper {
+  padding: 0.5rem 0.75rem !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+body.view-teamchat .team-chat-container {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-columns: 320px 1fr !important;
+}
+
+body.view-teamchat .chat-main {
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+body.view-teamchat .chat-messages {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+body.view-teamchat .chat-quick-actions-bar {
+  flex-shrink: 0 !important;
+}
+
+body.view-teamchat .chat-input-area {
+  flex-shrink: 0 !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  background: var(--bg-primary) !important;
+  z-index: 20 !important;
+}
+
+@media (max-width: 768px) {
+  body.view-teamchat .page-viewport {
+    height: calc(100vh - 52px) !important;
+    height: calc(100dvh - 52px) !important;
+    max-height: calc(100vh - 52px) !important;
+    max-height: calc(100dvh - 52px) !important;
+  }
+  body.view-teamchat .team-chat-wrapper {
+    padding: 0 !important;
+  }
+  body.view-teamchat .team-chat-container {
+    grid-template-columns: 1fr !important;
+  }
+}
 </style>

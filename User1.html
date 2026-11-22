@@ -20,14 +20,13 @@
         </div>
         <div style="background: var(--bg-main); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); min-width: 140px;">
           <label style="display: block; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; letter-spacing: 0.5px;">Max Users Limit</label>
-          <input type="number" id="license-limit-input" class="form-control" style="max-width: 110px; font-weight: 700;" min="1" placeholder="10">
+          <div id="license-limit-display" style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);"><i class="fas fa-users" style="margin-right: 0.35rem; color: var(--text-muted);"></i>10 Seats</div>
+          <input type="hidden" id="license-limit-input" value="10">
         </div>
         <div style="background: var(--bg-main); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); flex: 1; min-width: 220px;">
           <label style="display: block; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; letter-spacing: 0.5px;">License Verification Key</label>
-          <input type="text" id="license-key-input" class="form-control" style="font-family: monospace; font-weight: 700;" placeholder="LIC-BUYER1-2026">
-        </div>
-        <div style="align-self: center;">
-          <button class="btn btn-primary" onclick="updateLicenseSettings()" style="padding: 0.75rem 1.25rem; font-weight: 700;"><i class="fas fa-save"></i> Save License</button>
+          <div id="license-key-display" style="font-size: 1.05rem; font-family: monospace; font-weight: 800; color: var(--primary); letter-spacing: 0.5px;"><i class="fas fa-shield-alt" style="margin-right: 0.35rem;"></i>LIC-BUYER1-2026</div>
+          <input type="hidden" id="license-key-input" value="LIC-BUYER1-2026">
         </div>
       </div>
     </div>
@@ -288,16 +287,39 @@
 (function() {
   var allUsersList = [];
   var dropdownsCache = {};
+
+  function refreshLicenseUsageDisplay() {
+    var usageEl = document.getElementById("license-usage");
+    var limitInput = document.getElementById("license-limit-input");
+    var maxLimit = (limitInput && parseInt(limitInput.value, 10)) || 10;
+    
+    var users = (allUsersList && allUsersList.length > 0) ? allUsersList : ((window._dataCache && window._dataCache.users) || []);
+    var activeCount = users.filter(function(u) {
+      return !u.Status || u.Status === "Active";
+    }).length;
+
+    if (usageEl) {
+      usageEl.innerText = activeCount + " / " + maxLimit + " Active Users";
+    }
+  }
+
   function updateLicenseDOM(licenseData) {
     if (!licenseData) return;
     var usageEl = document.getElementById("license-usage");
     var limitInput = document.getElementById("license-limit-input");
+    var limitDisplay = document.getElementById("license-limit-display");
     var keyInput = document.getElementById("license-key-input");
+    var keyDisplay = document.getElementById("license-key-display");
     var expiryEl = document.getElementById("license-expiry-display");
 
-    if (usageEl) {
-      usageEl.innerText = (licenseData.currentUsers || 0) + " / " + (licenseData.maxUsers || 10) + " Active Users";
-    }
+    var maxLimit = licenseData.maxUsers || 10;
+    if (limitInput) limitInput.value = maxLimit;
+    if (limitDisplay) limitDisplay.innerHTML = '<i class="fas fa-users" style="margin-right: 0.35rem; color: var(--text-muted);"></i>' + maxLimit + " Seats";
+
+    var licKey = licenseData.licenseKey || (typeof getActiveLicenseKey === "function" ? getActiveLicenseKey() : "LIC-BUYER1-2026");
+    if (keyInput) keyInput.value = licKey;
+    if (keyDisplay) keyDisplay.innerHTML = '<i class="fas fa-shield-alt" style="margin-right: 0.35rem;"></i>' + escapeHtml(licKey);
+
     if (expiryEl) {
       var expValStr = licenseData.expiryDate || "";
       if (!expValStr || expValStr.toLowerCase() === "lifetime" || expValStr.toLowerCase() === "unlimited") {
@@ -312,8 +334,8 @@
       }
       expiryEl.innerHTML = '<i class="far fa-calendar-alt" style="margin-right:0.35rem;"></i>' + expTxt;
     }
-    if (limitInput) limitInput.value = licenseData.maxUsers || 10;
-    if (keyInput) keyInput.value = licenseData.licenseKey || "";
+
+    refreshLicenseUsageDisplay();
   }
 
   window.loadUsersView = function(forceRefresh) {
@@ -397,6 +419,7 @@
     }).getDropdownValues();
   };
   function renderUsersList(users) {
+    refreshLicenseUsageDisplay();
     var tbody = document.querySelector("#users-table tbody");
     if (users.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users found.</td></tr>';

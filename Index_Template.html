@@ -965,6 +965,23 @@
       window._dataCache.users = data.users || [];
       window._dataCache.dropdowns = data.dropdowns || {};
       window._dataCache.companySetup = data.companySetup || {};
+      if (!window._dataCache.companySetup.CompanyName && data.company) {
+        window._dataCache.companySetup = {
+          CompanyName: data.company.name || data.company.CompanyName,
+          OfficialEmail: data.company.email || data.company.OfficialEmail,
+          ContactNumber: data.company.contact || data.company.ContactNumber,
+          Address: data.company.address || data.company.Address,
+          GSTNumber: data.company.gst || data.company.GSTNumber,
+          PANNumber: data.company.pan || data.company.PANNumber,
+          Website: data.company.website || data.company.Website,
+          LogoUrl: data.company.logoUrl || data.company.LogoUrl,
+          BankName: data.company.bankName || data.company.BankName,
+          AccountNumber: data.company.accountNumber || data.company.AccountNumber,
+          IFSCCode: data.company.ifsc || data.company.IFSCCode,
+          Branch: data.company.branch || data.company.Branch,
+          BankAccounts: data.company.bankAccounts || data.company.BankAccounts || "[]"
+        };
+      }
       window._dataCache.rolePermissions = data.rolePermissions || [];
       window._dataCache.milestones = data.milestones || [];
       window._dataCache.userPermissions = data.userPermissions || [];
@@ -1742,6 +1759,16 @@
         });
         return;
       }
+      if (fnName === "getCompanySetup") {
+        var compData = (window._dataCache && window._dataCache.companySetup) || {};
+        successCb(compData);
+        return;
+      }
+      if (fnName === "getMilestones") {
+        var allMs = (window._dataCache && window._dataCache.milestones) || [];
+        successCb(allMs);
+        return;
+      }
       if (fnName === "getProjectMilestones") {
         var pId = args[0];
         var list = (window._dataCache.milestones || []).filter(function (m) { return String(m.ProjectID) === String(pId); });
@@ -1930,7 +1957,11 @@
         saveCompanySetup: "save_company_setup",
         uploadFileToDrive: "uploadFile",
         changePassword: "change_password",
-        sendLeadEmail: "send_lead_email"
+        sendLeadEmail: "send_lead_email",
+        sendProposalEmail: "send_proposal_email",
+        getMilestones: "get_milestones",
+        saveMilestone: "save_milestone",
+        deleteMilestone: "delete_milestone"
       };
 
       var targetAction = actionMap[fnName];
@@ -2092,6 +2123,12 @@
         if (activeItem) activeItem.classList.add("active");
 
         updateHeader(viewId);
+
+        if (viewId === "teamchat") {
+          document.body.classList.add("view-teamchat");
+        } else {
+          document.body.classList.remove("view-teamchat");
+        }
 
         var template = document.getElementById(viewId + "-view-template");
         if (template) {
@@ -3198,6 +3235,33 @@
       return JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     }
     window.getSessionUser = getSessionUser;
+
+    window.parseRawDateString = function (isoString) {
+      if (!isoString) return "";
+      if (isoString instanceof Date) {
+        if (isNaN(isoString.getTime())) return "";
+        var year = isoString.getFullYear();
+        var month = String(isoString.getMonth() + 1).padStart(2, "0");
+        var day = String(isoString.getDate()).padStart(2, "0");
+        return year + "-" + month + "-" + day;
+      }
+      var str = String(isoString).trim();
+      if (!str) return "";
+      if (/^\d{1,2}[/-]\d{1,2}[/-]\d{4}/.test(str)) {
+        var parts = str.split(/[/-]/);
+        var d = parts[0].padStart(2, "0");
+        var m = parts[1].padStart(2, "0");
+        var y = parts[2].substring(0, 4);
+        return y + "-" + m + "-" + d;
+      }
+      try {
+        var parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().substring(0, 10);
+        }
+      } catch (e) {}
+      return str.substring(0, 10);
+    };
 
     /**
      * =========================================================================

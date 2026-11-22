@@ -3296,6 +3296,87 @@ textarea.form-control {
   animation: recordPulseHighlight 3.5s ease-out !important;
   transition: all 0.3s ease;
 }
+
+/* ==================== VIEW TEAMCHAT FULL-VIEWPORT FIT ==================== */
+body.view-teamchat .page-viewport {
+  padding: 0 !important;
+  overflow: hidden !important;
+  height: calc(100vh - 58px) !important;
+  height: calc(100dvh - 58px) !important;
+  max-height: calc(100vh - 58px) !important;
+  max-height: calc(100dvh - 58px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body.view-teamchat .brand-footer-strip {
+  display: none !important;
+}
+
+body.view-teamchat .view-header {
+  display: none !important;
+}
+
+body.view-teamchat .team-chat-wrapper {
+  padding: 0.5rem 0.75rem !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+body.view-teamchat .team-chat-container {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-columns: 320px 1fr !important;
+}
+
+body.view-teamchat .chat-main {
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+body.view-teamchat .chat-messages {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+body.view-teamchat .chat-quick-actions-bar {
+  flex-shrink: 0 !important;
+}
+
+body.view-teamchat .chat-input-area {
+  flex-shrink: 0 !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  background: var(--bg-primary) !important;
+  z-index: 20 !important;
+}
+
+@media (max-width: 768px) {
+  body.view-teamchat .page-viewport {
+    height: calc(100vh - 52px) !important;
+    height: calc(100dvh - 52px) !important;
+    max-height: calc(100vh - 52px) !important;
+    max-height: calc(100dvh - 52px) !important;
+  }
+  body.view-teamchat .team-chat-wrapper {
+    padding: 0 !important;
+  }
+  body.view-teamchat .team-chat-container {
+    grid-template-columns: 1fr !important;
+  }
+}
 </style>
 
 
@@ -5991,7 +6072,7 @@ textarea.form-control {
 
 <!-- Milestones Modal -->
 <div id="milestones-modal" class="modal-overlay">
-  <div class="modal-container" style="max-width: 950px;">
+  <div class="modal-container" style="max-width: 1200px; width: 95vw; max-height: 92vh; display: flex; flex-direction: column;">
     <div class="modal-header">
       <h3 class="modal-title" id="milestones-modal-title">Manage Project Milestones</h3>
       <button class="icon-btn" onclick="closeMilestonesModal()"><i class="fas fa-times"></i></button>
@@ -6075,19 +6156,19 @@ textarea.form-control {
 
       <!-- Milestones List Table -->
       <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-list-ul" style="margin-right:0.35rem; color:var(--text-muted);"></i>Milestones Ledger</h4>
-      <div class="table-wrapper" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color);">
-        <table class="data-table" id="milestones-table" style="font-size: 0.825rem;">
+      <div class="table-wrapper" style="max-height: 380px; overflow: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+        <table class="data-table" id="milestones-table" style="font-size: 0.825rem; min-width: 1040px;">
           <thead>
             <tr>
-              <th>Milestone Name</th>
-              <th>Due Date</th>
-              <th>Comp. Date</th>
-              <th>Status</th>
-              <th>Assignee Type</th>
-              <th>Assignee / Vendor</th>
-              <th>Cost (₹)</th>
-              <th>Remarks</th>
-              <th style="text-align: right; width: 100px;">Actions</th>
+              <th style="min-width: 220px;">Milestone Name</th>
+              <th style="min-width: 110px; white-space: nowrap;">Due Date</th>
+              <th style="min-width: 110px; white-space: nowrap;">Comp. Date</th>
+              <th style="min-width: 130px; white-space: nowrap;">Status</th>
+              <th style="min-width: 110px; white-space: nowrap;">Assignee Type</th>
+              <th style="min-width: 150px;">Assignee / Vendor</th>
+              <th style="min-width: 110px; white-space: nowrap;">Cost (₹)</th>
+              <th style="min-width: 180px;">Remarks</th>
+              <th style="text-align: right; min-width: 90px; white-space: nowrap;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -6705,7 +6786,20 @@ textarea.form-control {
         '<option value="Completed"' + (m.Status === "Completed" ? " selected" : "") + '>Completed</option>' +
       '</select>';
 
-      return '\n        <tr>\n          <td style="font-weight:600;">'.concat(escapeHtml(m.MilestoneName || ""), "</td>\n          <td>").concat(formattedDate, '</td>\n          <td style="font-size:0.8rem; font-weight:600; color:var(--success);">').concat(compDate, '</td>\n          <td>').concat(statusSelectHtml, "</td>\n          <td>").concat(assocType, "</td>\n          <td>").concat(assocName, "</td>\n          <td>").concat(assocCost, '</td>\n          <td style="color:var(--text-muted); font-size:0.75rem;">').concat(escapeHtml(m.Remarks || "-"), '</td>\n          <td style="text-align: right;">\n            <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'').concat(mIdEscaped, '\')"><i class="fas fa-pen"></i></button>\n            <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'').concat(mIdEscaped, '\')"><i class="fas fa-trash"></i></button>\n          </td>\n        </tr>\n      ');
+      return '\n        <tr>\n' +
+        '  <td style="font-weight:600; line-height: 1.35; min-width: 220px;">' + escapeHtml(m.MilestoneName || "") + '</td>\n' +
+        '  <td style="white-space: nowrap; min-width: 110px;">' + formattedDate + '</td>\n' +
+        '  <td style="font-size:0.8rem; font-weight:600; color:var(--success); white-space: nowrap; min-width: 110px;">' + compDate + '</td>\n' +
+        '  <td style="white-space: nowrap; min-width: 130px;">' + statusSelectHtml + '</td>\n' +
+        '  <td style="white-space: nowrap; min-width: 110px;">' + assocType + '</td>\n' +
+        '  <td style="min-width: 150px; line-height: 1.3;">' + assocName + '</td>\n' +
+        '  <td style="white-space: nowrap; font-weight:600; min-width: 110px;">' + assocCost + '</td>\n' +
+        '  <td style="color:var(--text-muted); font-size:0.775rem; min-width: 180px; max-width: 280px; line-height: 1.35; word-break: break-word;">' + escapeHtml(m.Remarks || "-") + '</td>\n' +
+        '  <td style="text-align: right; white-space: nowrap; min-width: 90px;">\n' +
+        '    <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'' + mIdEscaped + '\')"><i class="fas fa-pen"></i></button>\n' +
+        '    <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'' + mIdEscaped + '\')"><i class="fas fa-trash"></i></button>\n' +
+        '  </td>\n' +
+        '</tr>';
     }).join("");
   }
 
@@ -8429,6 +8523,16 @@ textarea.form-control {
   var vendorsCacheList = [];
   var associatesCacheList = [];
   var dropdownsCache = {};
+
+  function parseRawDateString(isoString) {
+    if (typeof window.parseRawDateString === "function") return window.parseRawDateString(isoString);
+    if (!isoString) return "";
+    try {
+      var d = new Date(isoString);
+      if (!isNaN(d.getTime())) return d.toISOString().substring(0, 10);
+    } catch(e) {}
+    return String(isoString).substring(0, 10);
+  }
   window.loadTasksView = function(forceRefresh) {
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
@@ -9357,8 +9461,12 @@ textarea.form-control {
     <form id="lead-email-form" onsubmit="handleSendEmailSubmit(event)">
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">To *</label>
-          <input type="email" id="email-to" class="form-control" readonly required>
+          <label class="form-label">To * <small style="color:var(--text-muted); font-weight:normal;">(Editable, multiple separated by comma)</small></label>
+          <input type="text" id="email-to" class="form-control" required placeholder="client@example.com, other@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CC <small style="color:var(--text-muted); font-weight:normal;">(Optional, separated by comma)</small></label>
+          <input type="text" id="email-cc" class="form-control" placeholder="cc1@example.com, cc2@example.com">
         </div>
         <div class="form-group">
           <label class="form-label">Subject *</label>
@@ -9999,6 +10107,7 @@ textarea.form-control {
   function openEmailComposerModal() {
     if (!activeLeadObj) return;
     document.getElementById("email-to").value = activeLeadObj.Email || "";
+    if (document.getElementById("email-cc")) document.getElementById("email-cc").value = "";
     document.getElementById("email-subject").value = "Follow-up regarding your project inquiry - " + (activeLeadObj.ProjectType || "StudioSpace");
     document.getElementById("email-body").value = "Hi " + (activeLeadObj.CustomerName || "Customer") + ",\n\nFollowing up on our recent discussion regarding your project requirements. Please let us know a suitable time to discuss next steps.\n\nBest regards,\n" + (activeLeadObj.AssignedTo || "Team");
     document.getElementById("email-next-date").value = parseRawDateString(activeLeadObj.FollowUpDate);
@@ -10019,6 +10128,7 @@ textarea.form-control {
     var emailData = {
       LeadID: activeLeadObj.LeadID,
       To: document.getElementById("email-to").value,
+      CC: document.getElementById("email-cc") ? document.getElementById("email-cc").value : "",
       Subject: document.getElementById("email-subject").value,
       Body: document.getElementById("email-body").value,
       NextFollowupDate: document.getElementById("email-next-date").value
@@ -10289,12 +10399,60 @@ textarea.form-control {
   </div>
 </div>
 
+<!-- Proposal Email Composer Modal -->
+<div class="modal-overlay" id="proposal-email-modal" style="z-index: 220;">
+  <div class="modal-container" style="max-width: 620px;">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-envelope-open-text" style="color:var(--primary); margin-right:0.4rem;"></i>Send Proposal via Email</h3>
+      <button class="icon-btn" onclick="closeProposalEmailModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="proposal-email-form" onsubmit="handleSendProposalEmail(event)">
+      <input type="hidden" id="prop-email-id">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">To * <small style="color:var(--text-muted); font-weight:normal;">(Editable, comma-separated)</small></label>
+          <input type="text" id="prop-email-to" class="form-control" required placeholder="client@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CC <small style="color:var(--text-muted); font-weight:normal;">(Optional, comma-separated)</small></label>
+          <input type="text" id="prop-email-cc" class="form-control" placeholder="partner@example.com, manager@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject *</label>
+          <input type="text" id="prop-email-subject" class="form-control" required placeholder="Proposal Subject">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Message *</label>
+          <textarea id="prop-email-body" class="form-control" required placeholder="Write proposal email message..." style="height: 180px; font-size:0.85rem; line-height:1.45;"></textarea>
+        </div>
+        <div id="prop-email-attachment-notice" style="font-size:0.75rem; color:var(--text-muted); padding:0.5rem; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+          <i class="fas fa-info-circle"></i> Linked proposal documents and attachments will be referenced in the email message.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeProposalEmailModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Proposal Email</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 (function() {
   var proposalsDataList = [];
   var clientsCacheList = [];
   var leadsCacheList = [];
   var dropdownsCache = {};
+
+  function parseRawDateString(isoString) {
+    if (typeof window.parseRawDateString === "function") return window.parseRawDateString(isoString);
+    if (!isoString) return "";
+    try {
+      var d = new Date(isoString);
+      if (!isNaN(d.getTime())) return d.toISOString().substring(0, 10);
+    } catch(e) {}
+    return String(isoString).substring(0, 10);
+  }
 
   window.handleProposalLinkTypeChange = function() {
     var isLead = document.getElementById("prop-link-lead") ? document.getElementById("prop-link-lead").checked : false;
@@ -10546,6 +10704,9 @@ textarea.form-control {
         '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
           '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); sendProposalWhatsApp(\'' + prIdEsc + '\');">' +
             '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share on WhatsApp</span>' +
+          '</button>' +
+          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); openProposalEmailModal(\'' + prIdEsc + '\');">' +
+            '<i class="fas fa-envelope" style="color: #6366f1;"></i> <span>Send via Email</span>' +
           '</button>';
 
       if (canEdit) {
@@ -10715,6 +10876,100 @@ textarea.form-control {
     openWAShareModal(msg, clientPhone, "", clientName);
   }
   window.sendProposalWhatsApp = sendProposalWhatsApp;
+
+  function openProposalEmailModal(proposalId) {
+    var prop = proposalsDataList.find(function(p) { return p.ProposalID === proposalId; });
+    if (!prop) return;
+
+    var clientName = "Customer";
+    var clientEmail = "";
+    if (prop.CustomerID) {
+      var client = clientsCacheList.find(function(c) { return c.CustomerID === prop.CustomerID; });
+      if (client) {
+        clientName = client.CustomerName || "Customer";
+        clientEmail = client.Email || "";
+      }
+    } else if (prop.LeadID) {
+      var lead = leadsCacheList.find(function(l) { return l.LeadID === prop.LeadID; });
+      if (lead) {
+        clientName = lead.CustomerName || lead.LeadName || "Prospect";
+        clientEmail = lead.Email || "";
+      }
+    }
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var senderName = currentUser.fullName || currentUser.FullName || "NexMilestro Team";
+    var amountFormatted = formatCurrency(prop.Amount || 0);
+    var validityStr = prop.ValidityDate ? formatDate(prop.ValidityDate) : "30 days";
+
+    document.getElementById("prop-email-id").value = prop.ProposalID || "";
+    document.getElementById("prop-email-to").value = clientEmail;
+    document.getElementById("prop-email-cc").value = "";
+    document.getElementById("prop-email-subject").value = "Commercial Proposal: " + (prop.ProjectName || prop.ProposalID);
+    
+    var bodyMsg = "Dear " + clientName + ",\n\n" +
+      "We are pleased to present our proposal for " + (prop.ProjectName || "your project requirements") + ".\n\n" +
+      "• Proposal Reference: " + prop.ProposalID + "\n" +
+      "• Estimated Value: " + amountFormatted + "\n" +
+      "• Validity Period: Until " + validityStr + "\n\n" +
+      "Scope Summary:\n" + (prop.ScopeOfWork || "As detailed in preliminary project discussion.") + "\n\n" +
+      "Kindly review the proposal and let us know if you require any adjustments or clarification.\n\n" +
+      "Warm regards,\n" +
+      senderName + "\n" +
+      "NexMilestro Solutions";
+
+    document.getElementById("prop-email-body").value = bodyMsg;
+
+    var modal = document.getElementById("proposal-email-modal");
+    if (modal) modal.classList.add("show");
+  }
+  window.openProposalEmailModal = openProposalEmailModal;
+
+  function closeProposalEmailModal() {
+    var modal = document.getElementById("proposal-email-modal");
+    if (modal) modal.classList.remove("show");
+  }
+  window.closeProposalEmailModal = closeProposalEmailModal;
+
+  function handleSendProposalEmail(e) {
+    e.preventDefault();
+    var propId = document.getElementById("prop-email-id").value;
+    var to = document.getElementById("prop-email-to").value.trim();
+    var cc = document.getElementById("prop-email-cc").value.trim();
+    var subject = document.getElementById("prop-email-subject").value.trim();
+    var body = document.getElementById("prop-email-body").value.trim();
+
+    if (!to) {
+      showToast("Please enter at least one recipient email address.", "error");
+      return;
+    }
+
+    var payload = {
+      ProposalID: propId,
+      To: to,
+      CC: cc,
+      Subject: subject,
+      Body: body
+    };
+
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var userId = currentUser.userId || currentUser.UserID || "USR-ADMIN";
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.success) {
+          showToast("Proposal email sent successfully!", "success");
+          closeProposalEmailModal();
+        } else {
+          showToast(res ? (res.message || res.error) : "Failed to send proposal email", "error");
+        }
+      })
+      .withFailureHandler(function(err) {
+        showToast("Error sending email: " + err.message, "error");
+      })
+      .sendProposalEmail(payload, userId);
+  }
+  window.handleSendProposalEmail = handleSendProposalEmail;
 
   function openProposalModal(propObj) {
     if (propObj === void 0) {
@@ -11943,54 +12198,82 @@ textarea.form-control {
     </div>
   </div>
 
-  <!-- Action Filter Bar -->
-  <div class="filter-bar">
-    <div class="search-input-wrapper">
-      <i class="fas fa-search"></i>
-      <input type="text" id="txn-search-input" class="search-input" placeholder="Search references, remarks..."
-        oninput="filterTransactionsTable()">
+  <!-- Action Filter Bar with 3-Column Responsive Grid -->
+  <div class="card" style="margin-bottom: 1.25rem; padding: 1.15rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+    <!-- Row 1: Search & Action Buttons -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+      <div class="search-input-wrapper" style="flex: 1; min-width: 250px; max-width: 480px;">
+        <i class="fas fa-search"></i>
+        <input type="text" id="txn-search-input" class="search-input" placeholder="Search references, remarks, IDs..."
+          oninput="filterTransactionsTable()">
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+        <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
+        <button class="btn btn-secondary" onclick="exportTransactionsCSV()" title="Export Filtered Transactions to CSV"><i class="fas fa-download"></i> Download CSV</button>
+        <button class="btn btn-primary" id="btn-add-txn" onclick="openTxnModal()"><i class="fas fa-plus"></i> Book Transaction</button>
+      </div>
     </div>
 
-    <div class="filter-group" style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center;">
-      <select id="filter-txn-type" class="select-filter" onchange="filterTransactionsTable()">
-        <option value="" selected>All Transactions</option>
-        <option value="Income">Income (Payments In)</option>
-        <option value="Expense">Expense (Spends Out)</option>
-      </select>
+    <!-- Row 2: 3-Column Grid for Dropdowns & Date Range -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; align-items: end;">
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Type</label>
+        <select id="filter-txn-type" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="" selected>All Transactions</option>
+          <option value="Income">Income (Payments In)</option>
+          <option value="Expense">Expense (Spends Out)</option>
+        </select>
+      </div>
 
-      <select id="filter-txn-project" class="select-filter" style="max-width: 170px;"
-        onchange="filterTransactionsTable()">
-        <option value="">All Projects</option>
-      </select>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Project</label>
+        <select id="filter-txn-project" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="">All Projects</option>
+        </select>
+      </div>
 
-      <select id="filter-txn-category" class="select-filter" onchange="filterTransactionsTable()">
-        <option value="">All Categories</option>
-        <option value="Client Payment">Client Payment</option>
-        <option value="Material Purchase">Material Purchase</option>
-        <option value="Labor Wages">Labor Wages</option>
-        <option value="Tools">Tools & Equipment</option>
-        <option value="Rent">Office Rent</option>
-        <option value="Travel">Travel & Fuel</option>
-        <option value="Other">Other Category</option>
-      </select>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Category</label>
+        <select id="filter-txn-category" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="">All Categories</option>
+          <option value="Client Payment">Client Payment</option>
+          <option value="Material Purchase">Material Purchase</option>
+          <option value="Labor Wages">Labor Wages</option>
+          <option value="Tools">Tools & Equipment</option>
+          <option value="Rent">Office Rent</option>
+          <option value="Travel">Travel & Fuel</option>
+          <option value="Other">Other Category</option>
+        </select>
+      </div>
 
-      <select id="filter-txn-mode" class="select-filter" style="max-width: 170px;" onchange="filterTransactionsTable()">
-        <option value="">All Payment Modes</option>
-        <option value="Bank Transfer">Bank Transfer</option>
-        <option value="UPI">UPI</option>
-        <option value="Cheque">Cheque</option>
-        <option value="Cash">Cash</option>
-        <option value="Credit Card">Credit Card</option>
-      </select>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Payment Mode</label>
+        <select id="filter-txn-mode" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="">All Payment Modes</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="UPI">UPI</option>
+          <option value="Cheque">Cheque</option>
+          <option value="Cash">Cash</option>
+          <option value="Credit Card">Credit Card</option>
+        </select>
+      </div>
 
-      <select id="filter-txn-bank" class="select-filter" style="max-width: 170px;" onchange="filterTransactionsTable()">
-        <option value="">All Bank Accounts</option>
-      </select>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">Bank Account</label>
+        <select id="filter-txn-bank" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+          <option value="">All Bank Accounts</option>
+        </select>
+      </div>
 
-      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
-      <button class="btn btn-secondary" onclick="exportTransactionsCSV()" title="Export Filtered Transactions to CSV"><i class="fas fa-download"></i> Download CSV</button>
-      <button class="btn btn-primary" id="btn-add-txn" onclick="openTxnModal()"><i class="fas fa-plus"></i> Book
-        Transaction</button>
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">From Date</label>
+        <input type="date" id="filter-txn-from" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+      </div>
+
+      <div>
+        <label style="font-size: 0.725rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 0.35rem; letter-spacing: 0.5px;">To Date</label>
+        <input type="date" id="filter-txn-to" class="form-control" style="height: 38px;" onchange="filterTransactionsTable()">
+      </div>
     </div>
   </div>
 
@@ -12580,14 +12863,13 @@ textarea.form-control {
         </div>
         <div style="background: var(--bg-main); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); min-width: 140px;">
           <label style="display: block; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; letter-spacing: 0.5px;">Max Users Limit</label>
-          <input type="number" id="license-limit-input" class="form-control" style="max-width: 110px; font-weight: 700;" min="1" placeholder="10">
+          <div id="license-limit-display" style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);"><i class="fas fa-users" style="margin-right: 0.35rem; color: var(--text-muted);"></i>10 Seats</div>
+          <input type="hidden" id="license-limit-input" value="10">
         </div>
         <div style="background: var(--bg-main); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); flex: 1; min-width: 220px;">
           <label style="display: block; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; letter-spacing: 0.5px;">License Verification Key</label>
-          <input type="text" id="license-key-input" class="form-control" style="font-family: monospace; font-weight: 700;" placeholder="LIC-BUYER1-2026">
-        </div>
-        <div style="align-self: center;">
-          <button class="btn btn-primary" onclick="updateLicenseSettings()" style="padding: 0.75rem 1.25rem; font-weight: 700;"><i class="fas fa-save"></i> Save License</button>
+          <div id="license-key-display" style="font-size: 1.05rem; font-family: monospace; font-weight: 800; color: var(--primary); letter-spacing: 0.5px;"><i class="fas fa-shield-alt" style="margin-right: 0.35rem;"></i>LIC-BUYER1-2026</div>
+          <input type="hidden" id="license-key-input" value="LIC-BUYER1-2026">
         </div>
       </div>
     </div>
@@ -12848,16 +13130,39 @@ textarea.form-control {
 (function() {
   var allUsersList = [];
   var dropdownsCache = {};
+
+  function refreshLicenseUsageDisplay() {
+    var usageEl = document.getElementById("license-usage");
+    var limitInput = document.getElementById("license-limit-input");
+    var maxLimit = (limitInput && parseInt(limitInput.value, 10)) || 10;
+    
+    var users = (allUsersList && allUsersList.length > 0) ? allUsersList : ((window._dataCache && window._dataCache.users) || []);
+    var activeCount = users.filter(function(u) {
+      return !u.Status || u.Status === "Active";
+    }).length;
+
+    if (usageEl) {
+      usageEl.innerText = activeCount + " / " + maxLimit + " Active Users";
+    }
+  }
+
   function updateLicenseDOM(licenseData) {
     if (!licenseData) return;
     var usageEl = document.getElementById("license-usage");
     var limitInput = document.getElementById("license-limit-input");
+    var limitDisplay = document.getElementById("license-limit-display");
     var keyInput = document.getElementById("license-key-input");
+    var keyDisplay = document.getElementById("license-key-display");
     var expiryEl = document.getElementById("license-expiry-display");
 
-    if (usageEl) {
-      usageEl.innerText = (licenseData.currentUsers || 0) + " / " + (licenseData.maxUsers || 10) + " Active Users";
-    }
+    var maxLimit = licenseData.maxUsers || 10;
+    if (limitInput) limitInput.value = maxLimit;
+    if (limitDisplay) limitDisplay.innerHTML = '<i class="fas fa-users" style="margin-right: 0.35rem; color: var(--text-muted);"></i>' + maxLimit + " Seats";
+
+    var licKey = licenseData.licenseKey || (typeof getActiveLicenseKey === "function" ? getActiveLicenseKey() : "LIC-BUYER1-2026");
+    if (keyInput) keyInput.value = licKey;
+    if (keyDisplay) keyDisplay.innerHTML = '<i class="fas fa-shield-alt" style="margin-right: 0.35rem;"></i>' + escapeHtml(licKey);
+
     if (expiryEl) {
       var expValStr = licenseData.expiryDate || "";
       if (!expValStr || expValStr.toLowerCase() === "lifetime" || expValStr.toLowerCase() === "unlimited") {
@@ -12872,8 +13177,8 @@ textarea.form-control {
       }
       expiryEl.innerHTML = '<i class="far fa-calendar-alt" style="margin-right:0.35rem;"></i>' + expTxt;
     }
-    if (limitInput) limitInput.value = licenseData.maxUsers || 10;
-    if (keyInput) keyInput.value = licenseData.licenseKey || "";
+
+    refreshLicenseUsageDisplay();
   }
 
   window.loadUsersView = function(forceRefresh) {
@@ -12957,6 +13262,7 @@ textarea.form-control {
     }).getDropdownValues();
   };
   function renderUsersList(users) {
+    refreshLicenseUsageDisplay();
     var tbody = document.querySelector("#users-table tbody");
     if (users.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users found.</td></tr>';
@@ -13861,10 +14167,23 @@ textarea.form-control {
       populateCompanySetupFields(window.currentCompanySetupData);
       return;
     }
+    try {
+      var localSaved = localStorage.getItem("nexmilestro_company_setup");
+      if (localSaved) {
+        window.currentCompanySetupData = JSON.parse(localSaved);
+        if (window.currentCompanySetupData && window.currentCompanySetupData.CompanyName) {
+          populateCompanySetupFields(window.currentCompanySetupData);
+          return;
+        }
+      }
+    } catch(e) {}
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(data) {
-        window.currentCompanySetupData = data || {};
-        populateCompanySetupFields(data || {});
+        var comp = (data && data.companySetup) ? data.companySetup : (data || {});
+        window.currentCompanySetupData = comp;
+        if (window._dataCache) window._dataCache.companySetup = comp;
+        try { localStorage.setItem("nexmilestro_company_setup", JSON.stringify(comp)); } catch(e){}
+        populateCompanySetupFields(comp);
       }).withFailureHandler(function(err) {
         showToast("Failed to load company setup: " + err.message, "error");
       }).getCompanySetup();
@@ -14103,15 +14422,29 @@ textarea.form-control {
     }
     formData.CompanyID = formData.CompanyID || "CMP-001";
 
+    // Immediate local persistence
+    if (window._dataCache) {
+      window._dataCache.companySetup = Object.assign({}, window._dataCache.companySetup || {}, formData);
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    try {
+      localStorage.setItem("nexmilestro_company_setup", JSON.stringify(formData));
+    } catch(e) {}
+    window.companySetupCache = formData;
+
     if (google.script && google.script.run) {
       google.script.run
         .withSuccessHandler(function(res) {
           showToast("Company setup saved successfully!", "success");
-          if (res && res.company) {
-            populateCompanySetupFields(res.company);
-          } else {
-            populateCompanySetupFields(formData);
+          var saved = (res && res.company) ? res.company : formData;
+          if (window._dataCache) {
+            window._dataCache.companySetup = Object.assign({}, window._dataCache.companySetup || {}, saved);
+            if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
           }
+          try {
+            localStorage.setItem("nexmilestro_company_setup", JSON.stringify(saved));
+          } catch(e) {}
+          populateCompanySetupFields(saved);
         })
         .withFailureHandler(function(err) {
           showToast("Error saving company setup: " + err.message, "error");
@@ -14361,15 +14694,19 @@ textarea.form-control {
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
     google.script.run.withSuccessHandler(function(response) {
-      if (response.success) {
-        showToast(response.message, "success");
+      if (response && response.success) {
+        showToast(response.message || "Option saved successfully.", "success");
         input.value = "";
         mastersCacheData[key] = mastersCacheData[key] || [];
         if (!mastersCacheData[key].includes(val)) mastersCacheData[key].push(val);
+        if (window._dataCache) {
+          window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+          window._dataCache.dropdowns[key] = mastersCacheData[key];
+          if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+        }
         renderCategoryOptions();
-        loadMastersView(false);
       } else {
-        showToast(response.message, "error");
+        showToast((response ? (response.message || response.error) : "Failed to add option"), "error");
       }
     }).withFailureHandler(function(err) {
       showToast(err.message, "error");
@@ -14380,15 +14717,19 @@ textarea.form-control {
       var currentUser = JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
       var userId = currentUser.userId || currentUser.UserID || currentUser.id || "USR-1001";
       google.script.run.withSuccessHandler(function(response) {
-        if (response.success) {
-          showToast(response.message, "success");
+        if (response && response.success) {
+          showToast(response.message || "Option removed successfully.", "success");
           if (mastersCacheData[key]) {
             mastersCacheData[key] = mastersCacheData[key].filter(function(v) { return v !== value; });
           }
+          if (window._dataCache) {
+            window._dataCache.dropdowns = window._dataCache.dropdowns || {};
+            window._dataCache.dropdowns[key] = mastersCacheData[key];
+            if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+          }
           renderCategoryOptions();
-          loadMastersView(false);
         } else {
-          showToast(response.message, "error");
+          showToast((response ? (response.message || response.error) : "Failed to delete option"), "error");
         }
       }).withFailureHandler(function(err) {
         showToast(err.message, "error");
@@ -16849,15 +17190,32 @@ window.populateBankOptions = function(selectedBank) {
   if (!bankSelect && !bankFilter) return;
 
   var fetchCompany = function(callback) {
+    if (window._dataCache && window._dataCache.companySetup && (window._dataCache.companySetup.BankAccounts || window._dataCache.companySetup.BankName)) {
+      window.companySetupCache = window._dataCache.companySetup;
+      callback(window.companySetupCache);
+      return;
+    }
     if (window.companySetupCache) {
       callback(window.companySetupCache);
-    } else if (google.script && google.script.run) {
-      google.script.run.withSuccessHandler(function(rows) {
-        window.companySetupCache = (rows && Array.isArray(rows) && rows.length > 0) ? rows[0] : (rows || {});
+      return;
+    }
+    try {
+      var savedComp = localStorage.getItem("nexmilestro_company_setup");
+      if (savedComp) {
+        window.companySetupCache = JSON.parse(savedComp);
+        callback(window.companySetupCache);
+        return;
+      }
+    } catch(e) {}
+    if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(comp) {
+        window.companySetupCache = (comp && comp.companySetup) ? comp.companySetup : (comp || {});
         callback(window.companySetupCache);
       }).withFailureHandler(function() {
         callback({});
-      }).readTable("CompanySetup");
+      }).getCompanySetup();
+    } else {
+      callback({});
     }
   };
 
@@ -16879,20 +17237,31 @@ window.populateBankOptions = function(selectedBank) {
       for (var i = 0; i < list.length; i++) {
         var b = list[i];
         var label = (b.AccountLabel || b.BankName) + " - " + b.AccountNumber;
-        html += '<option value="' + label + '">' + label + '</option>';
+        html += '<option value="' + escapeHtml(label) + '">' + escapeHtml(label) + '</option>';
       }
       bankSelect.innerHTML = html;
       if (selectedBank) bankSelect.value = selectedBank;
     }
 
-    if (bankFilter && bankFilter.options.length <= 1) {
+    if (bankFilter) {
+      var curBankVal = bankFilter.value;
       var filterHtml = '<option value="">All Bank Accounts</option>';
+      var seenBanks = {};
       for (var j = 0; j < list.length; j++) {
         var bItem = list[j];
         var fLabel = (bItem.AccountLabel || bItem.BankName) + " - " + bItem.AccountNumber;
-        filterHtml += '<option value="' + fLabel + '">' + fLabel + '</option>';
+        seenBanks[fLabel] = true;
+        filterHtml += '<option value="' + escapeHtml(fLabel) + '">' + escapeHtml(fLabel) + '</option>';
       }
+      // Also collect any bank accounts from recorded transactions
+      (window.txnsDataList || []).forEach(function(t) {
+        if (t && t.BankAccount && !seenBanks[t.BankAccount]) {
+          seenBanks[t.BankAccount] = true;
+          filterHtml += '<option value="' + escapeHtml(t.BankAccount) + '">' + escapeHtml(t.BankAccount) + '</option>';
+        }
+      });
       bankFilter.innerHTML = filterHtml;
+      if (curBankVal) bankFilter.value = curBankVal;
     }
   });
 };
@@ -16943,20 +17312,29 @@ window.populateFinanceFilters = function() {
   }
 
   var projFilter = document.getElementById("filter-txn-project");
-  if (projFilter && projFilter.options.length <= 1) {
+  if (projFilter) {
+    var curVal = projFilter.value;
+    var rawProjs = (window.projsCacheList && window.projsCacheList.length > 0) ? window.projsCacheList : ((window._dataCache && window._dataCache.projects) || []);
+    var projs = window.RLS ? window.RLS.filterProjects(rawProjs) : rawProjs;
+    window.projsCacheList = projs;
     var html = '<option value="">All Projects</option>';
-    var sortedProjs = (window.projsCacheList || []).slice().sort(function(a, b) {
-      return (b.ProjectID || "").localeCompare(a.ProjectID || "");
+    var sortedProjs = projs.slice().sort(function(a, b) {
+      return (a.ProjectName || "").localeCompare(b.ProjectName || "");
     });
     for (var i = 0; i < sortedProjs.length; i++) {
       var p = sortedProjs[i];
       if (p && p.ProjectID) {
         var pName = typeof escapeHtml === "function" ? escapeHtml(p.ProjectName) : p.ProjectName;
-        html += '<option value="' + p.ProjectID + '">' + pName + ' (' + p.ProjectID + ')</option>';
+        html += '<option value="' + escapeHtml(p.ProjectID) + '">' + pName + '</option>';
       }
     }
     projFilter.innerHTML = html;
-    if (window.makeSearchableSelect) window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
+    if (curVal) projFilter.value = curVal;
+    if (projFilter._refreshSearchable) {
+      projFilter._refreshSearchable();
+    } else if (window.makeSearchableSelect) {
+      window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
+    }
   }
 };
 
@@ -17143,6 +17521,10 @@ window.filterTransactionsTable = function() {
   var modeVal = modeFilter ? modeFilter.value : "";
   var bankFilter = document.getElementById("filter-txn-bank");
   var bankVal = bankFilter ? bankFilter.value : "";
+  var fromDateInput = document.getElementById("filter-txn-from");
+  var fromDateVal = fromDateInput ? fromDateInput.value : "";
+  var toDateInput = document.getElementById("filter-txn-to");
+  var toDateVal = toDateInput ? toDateInput.value : "";
 
   var filtered = (window.txnsDataList || []).filter(function(t) {
     if (!t) return false;
@@ -17182,7 +17564,14 @@ window.filterTransactionsTable = function() {
       matchBank = String(t.BankAccount || "").toLowerCase() === bankVal.toLowerCase();
     }
 
-    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank;
+    var matchDate = true;
+    if (fromDateVal || toDateVal) {
+      var tDateStr = t.TransactionDate ? String(t.TransactionDate).substring(0, 10) : "";
+      if (fromDateVal && tDateStr && tDateStr < fromDateVal) matchDate = false;
+      if (toDateVal && tDateStr && tDateStr > toDateVal) matchDate = false;
+    }
+
+    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank && matchDate;
   });
 
   window.renderLedger(filtered);
@@ -17202,6 +17591,10 @@ window.exportTransactionsCSV = function() {
   var modeVal = modeFilter ? modeFilter.value : "";
   var bankFilter = document.getElementById("filter-txn-bank");
   var bankVal = bankFilter ? bankFilter.value : "";
+  var fromDateInput = document.getElementById("filter-txn-from");
+  var fromDateVal = fromDateInput ? fromDateInput.value : "";
+  var toDateInput = document.getElementById("filter-txn-to");
+  var toDateVal = toDateInput ? toDateInput.value : "";
 
   var filtered = (window.txnsDataList || []).filter(function(t) {
     if (!t) return false;
@@ -17225,8 +17618,14 @@ window.exportTransactionsCSV = function() {
     if (modeVal) { matchMode = String(t.PaymentMode || "").toLowerCase() === modeVal.toLowerCase(); }
     var matchBank = true;
     if (bankVal) { matchBank = String(t.BankAccount || "").toLowerCase() === bankVal.toLowerCase(); }
+    var matchDate = true;
+    if (fromDateVal || toDateVal) {
+      var tDateStr = t.TransactionDate ? String(t.TransactionDate).substring(0, 10) : "";
+      if (fromDateVal && tDateStr && tDateStr < fromDateVal) matchDate = false;
+      if (toDateVal && tDateStr && tDateStr > toDateVal) matchDate = false;
+    }
 
-    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank;
+    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank && matchDate;
   });
 
   if (!filtered || filtered.length === 0) {
@@ -17674,6 +18073,23 @@ document.addEventListener("click", function() {
       window._dataCache.users = data.users || [];
       window._dataCache.dropdowns = data.dropdowns || {};
       window._dataCache.companySetup = data.companySetup || {};
+      if (!window._dataCache.companySetup.CompanyName && data.company) {
+        window._dataCache.companySetup = {
+          CompanyName: data.company.name || data.company.CompanyName,
+          OfficialEmail: data.company.email || data.company.OfficialEmail,
+          ContactNumber: data.company.contact || data.company.ContactNumber,
+          Address: data.company.address || data.company.Address,
+          GSTNumber: data.company.gst || data.company.GSTNumber,
+          PANNumber: data.company.pan || data.company.PANNumber,
+          Website: data.company.website || data.company.Website,
+          LogoUrl: data.company.logoUrl || data.company.LogoUrl,
+          BankName: data.company.bankName || data.company.BankName,
+          AccountNumber: data.company.accountNumber || data.company.AccountNumber,
+          IFSCCode: data.company.ifsc || data.company.IFSCCode,
+          Branch: data.company.branch || data.company.Branch,
+          BankAccounts: data.company.bankAccounts || data.company.BankAccounts || "[]"
+        };
+      }
       window._dataCache.rolePermissions = data.rolePermissions || [];
       window._dataCache.milestones = data.milestones || [];
       window._dataCache.userPermissions = data.userPermissions || [];
@@ -18451,6 +18867,16 @@ document.addEventListener("click", function() {
         });
         return;
       }
+      if (fnName === "getCompanySetup") {
+        var compData = (window._dataCache && window._dataCache.companySetup) || {};
+        successCb(compData);
+        return;
+      }
+      if (fnName === "getMilestones") {
+        var allMs = (window._dataCache && window._dataCache.milestones) || [];
+        successCb(allMs);
+        return;
+      }
       if (fnName === "getProjectMilestones") {
         var pId = args[0];
         var list = (window._dataCache.milestones || []).filter(function (m) { return String(m.ProjectID) === String(pId); });
@@ -18639,7 +19065,11 @@ document.addEventListener("click", function() {
         saveCompanySetup: "save_company_setup",
         uploadFileToDrive: "uploadFile",
         changePassword: "change_password",
-        sendLeadEmail: "send_lead_email"
+        sendLeadEmail: "send_lead_email",
+        sendProposalEmail: "send_proposal_email",
+        getMilestones: "get_milestones",
+        saveMilestone: "save_milestone",
+        deleteMilestone: "delete_milestone"
       };
 
       var targetAction = actionMap[fnName];
@@ -18801,6 +19231,12 @@ document.addEventListener("click", function() {
         if (activeItem) activeItem.classList.add("active");
 
         updateHeader(viewId);
+
+        if (viewId === "teamchat") {
+          document.body.classList.add("view-teamchat");
+        } else {
+          document.body.classList.remove("view-teamchat");
+        }
 
         var template = document.getElementById(viewId + "-view-template");
         if (template) {
@@ -19907,6 +20343,33 @@ document.addEventListener("click", function() {
       return JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     }
     window.getSessionUser = getSessionUser;
+
+    window.parseRawDateString = function (isoString) {
+      if (!isoString) return "";
+      if (isoString instanceof Date) {
+        if (isNaN(isoString.getTime())) return "";
+        var year = isoString.getFullYear();
+        var month = String(isoString.getMonth() + 1).padStart(2, "0");
+        var day = String(isoString.getDate()).padStart(2, "0");
+        return year + "-" + month + "-" + day;
+      }
+      var str = String(isoString).trim();
+      if (!str) return "";
+      if (/^\d{1,2}[/-]\d{1,2}[/-]\d{4}/.test(str)) {
+        var parts = str.split(/[/-]/);
+        var d = parts[0].padStart(2, "0");
+        var m = parts[1].padStart(2, "0");
+        var y = parts[2].substring(0, 4);
+        return y + "-" + m + "-" + d;
+      }
+      try {
+        var parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().substring(0, 10);
+        }
+      } catch (e) {}
+      return str.substring(0, 10);
+    };
 
     /**
      * =========================================================================

@@ -659,11 +659,13 @@ function getInitialAppData(licenseKey, userId, role) {
         accountNumber: companySetup.AccountNumber || "",
         ifsc: companySetup.IFSCCode || "",
         branch: companySetup.Branch || "",
+        bankAccounts: companySetup.BankAccounts || "[]",
         licenseKey: license.licenseKey,
         plan: license.plan,
         expiryDate: license.expiryDate,
         maxUsers: license.maxUsers
       },
+      companySetup: companySetup,
       users: users.map(u => ({
         UserID: u.UserID,
         FullName: u.FullName,
@@ -1319,10 +1321,17 @@ function saveDropdownValue(licenseKey, category, value, userId) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
     const mastersSheet = ensureSheetWithHeaders(ss, "Masters");
-    const existing = sheetToObjects(mastersSheet);
-    const match = existing.find(m => m.DropdownKey === category && m.DropdownValue === value);
-    if (!match) {
-      writeTableRow(ss, "Masters", "MasterID", "", { DropdownKey: category, DropdownValue: value, Status: "Active" }, userId);
+    const data = mastersSheet.getDataRange().getValues();
+    let found = false;
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim().toLowerCase() === String(category).trim().toLowerCase() && 
+          String(data[i][1]).trim().toLowerCase() === String(value).trim().toLowerCase()) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      mastersSheet.appendRow([category, value]);
     }
     return { success: true, message: "Option saved successfully." };
   } catch (err) {
@@ -1334,14 +1343,77 @@ function deleteDropdownValue(licenseKey, category, value) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
     const mastersSheet = ensureSheetWithHeaders(ss, "Masters");
-    const existing = sheetToObjects(mastersSheet);
-    const match = existing.find(m => m.DropdownKey === category && m.DropdownValue === value);
-    if (match) {
-      deleteTableRow(ss, "Masters", "MasterID", match.MasterID);
+    const data = mastersSheet.getDataRange().getValues();
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][0]).trim().toLowerCase() === String(category).trim().toLowerCase() && 
+          String(data[i][1]).trim().toLowerCase() === String(value).trim().toLowerCase()) {
+        mastersSheet.deleteRow(i + 1);
+        break;
+      }
     }
     return { success: true, message: "Option removed successfully." };
   } catch (err) {
     return { success: false, error: err.message };
+  }
+}
+
+function handleSendLeadEmail(licenseKey, data, userId) {
+  try {
+    const to = data.To || data.to;
+    const cc = data.CC || data.cc || "";
+    const subject = data.Subject || data.subject || "Project Follow-up";
+    const body = data.Body || data.body || "";
+    if (!to || !body) {
+      return { success: false, message: "Recipient email and message body are required." };
+    }
+    const mailOpts = {
+      to: to,
+      subject: subject,
+      htmlBody: body.replace(/\n/g, "<br>")
+    };
+    if (cc) mailOpts.cc = cc;
+    try {
+      MailApp.sendEmail(mailOpts);
+    } catch(mailErr) {
+      console.warn("MailApp.sendEmail warning:", mailErr);
+    }
+    if (data.LeadID) {
+      saveLeadFollowupRecord(licenseKey, {
+        LeadID: data.LeadID,
+        FollowupDate: new Date(),
+        NextFollowupDate: data.NextFollowupDate || new Date(Date.now() + 3*86400000),
+        DiscussionNotes: "[Email Sent to " + to + (cc ? " (CC: " + cc + ")" : "") + "] " + subject + "\n\n" + body
+      }, userId);
+    }
+    return { success: true, message: "Email sent and follow-up logged successfully." };
+  } catch(e) {
+    return { success: false, message: "Failed to send email: " + e.message };
+  }
+}
+
+function handleSendProposalEmail(licenseKey, data, userId) {
+  try {
+    const to = data.To || data.to;
+    const cc = data.CC || data.cc || "";
+    const subject = data.Subject || data.subject || "Commercial Proposal";
+    const body = data.Body || data.body || "";
+    if (!to || !body) {
+      return { success: false, message: "Recipient email and message body are required." };
+    }
+    const mailOpts = {
+      to: to,
+      subject: subject,
+      htmlBody: body.replace(/\n/g, "<br>")
+    };
+    if (cc) mailOpts.cc = cc;
+    try {
+      MailApp.sendEmail(mailOpts);
+    } catch(mailErr) {
+      console.warn("MailApp.sendEmail warning:", mailErr);
+    }
+    return { success: true, message: "Proposal email sent successfully." };
+  } catch(e) {
+    return { success: false, message: "Failed to send email: " + e.message };
   }
 }
 
@@ -1596,6 +1668,10 @@ function handleUniversalApiRequest(action, params) {
       case 'delete_milestone':
         response = deleteMilestoneRecord(licenseKey, dataObj.milestoneId || params.milestoneId);
         break;
+      case 'get_milestones':
+      case 'getMilestones':
+        response = { success: true, data: sheetToObjects(ensureSheetWithHeaders(getClientSpreadsheet(licenseKey).ss, "Milestones")) };
+        break;
 
       case 'save_site_visit':
         response = saveSiteVisitRecord(licenseKey, dataObj, userId);
@@ -1621,12 +1697,20 @@ function handleUniversalApiRequest(action, params) {
       case 'save_lead_followup':
         response = saveLeadFollowupRecord(licenseKey, dataObj, userId);
         break;
+      case 'send_lead_email':
+      case 'sendLeadEmail':
+        response = handleSendLeadEmail(licenseKey, dataObj, userId);
+        break;
 
       case 'save_proposal':
         response = saveProposalRecord(licenseKey, dataObj, userId);
         break;
       case 'delete_proposal':
         response = deleteProposalRecord(licenseKey, dataObj.proposalId || params.proposalId);
+        break;
+      case 'send_proposal_email':
+      case 'sendProposalEmail':
+        response = handleSendProposalEmail(licenseKey, dataObj, userId);
         break;
 
       // ── OPERATIONS & USERS ───────────────────────────────────────────────

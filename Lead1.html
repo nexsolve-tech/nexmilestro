@@ -205,8 +205,12 @@
     <form id="lead-email-form" onsubmit="handleSendEmailSubmit(event)">
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">To *</label>
-          <input type="email" id="email-to" class="form-control" readonly required>
+          <label class="form-label">To * <small style="color:var(--text-muted); font-weight:normal;">(Editable, multiple separated by comma)</small></label>
+          <input type="text" id="email-to" class="form-control" required placeholder="client@example.com, other@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CC <small style="color:var(--text-muted); font-weight:normal;">(Optional, separated by comma)</small></label>
+          <input type="text" id="email-cc" class="form-control" placeholder="cc1@example.com, cc2@example.com">
         </div>
         <div class="form-group">
           <label class="form-label">Subject *</label>
@@ -847,6 +851,7 @@
   function openEmailComposerModal() {
     if (!activeLeadObj) return;
     document.getElementById("email-to").value = activeLeadObj.Email || "";
+    if (document.getElementById("email-cc")) document.getElementById("email-cc").value = "";
     document.getElementById("email-subject").value = "Follow-up regarding your project inquiry - " + (activeLeadObj.ProjectType || "StudioSpace");
     document.getElementById("email-body").value = "Hi " + (activeLeadObj.CustomerName || "Customer") + ",\n\nFollowing up on our recent discussion regarding your project requirements. Please let us know a suitable time to discuss next steps.\n\nBest regards,\n" + (activeLeadObj.AssignedTo || "Team");
     document.getElementById("email-next-date").value = parseRawDateString(activeLeadObj.FollowUpDate);
@@ -867,6 +872,7 @@
     var emailData = {
       LeadID: activeLeadObj.LeadID,
       To: document.getElementById("email-to").value,
+      CC: document.getElementById("email-cc") ? document.getElementById("email-cc").value : "",
       Subject: document.getElementById("email-subject").value,
       Body: document.getElementById("email-body").value,
       NextFollowupDate: document.getElementById("email-next-date").value

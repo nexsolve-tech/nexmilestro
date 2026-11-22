@@ -181,7 +181,7 @@
 
 <!-- Milestones Modal -->
 <div id="milestones-modal" class="modal-overlay">
-  <div class="modal-container" style="max-width: 950px;">
+  <div class="modal-container" style="max-width: 1200px; width: 95vw; max-height: 92vh; display: flex; flex-direction: column;">
     <div class="modal-header">
       <h3 class="modal-title" id="milestones-modal-title">Manage Project Milestones</h3>
       <button class="icon-btn" onclick="closeMilestonesModal()"><i class="fas fa-times"></i></button>
@@ -265,19 +265,19 @@
 
       <!-- Milestones List Table -->
       <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-list-ul" style="margin-right:0.35rem; color:var(--text-muted);"></i>Milestones Ledger</h4>
-      <div class="table-wrapper" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color);">
-        <table class="data-table" id="milestones-table" style="font-size: 0.825rem;">
+      <div class="table-wrapper" style="max-height: 380px; overflow: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+        <table class="data-table" id="milestones-table" style="font-size: 0.825rem; min-width: 1040px;">
           <thead>
             <tr>
-              <th>Milestone Name</th>
-              <th>Due Date</th>
-              <th>Comp. Date</th>
-              <th>Status</th>
-              <th>Assignee Type</th>
-              <th>Assignee / Vendor</th>
-              <th>Cost (₹)</th>
-              <th>Remarks</th>
-              <th style="text-align: right; width: 100px;">Actions</th>
+              <th style="min-width: 220px;">Milestone Name</th>
+              <th style="min-width: 110px; white-space: nowrap;">Due Date</th>
+              <th style="min-width: 110px; white-space: nowrap;">Comp. Date</th>
+              <th style="min-width: 130px; white-space: nowrap;">Status</th>
+              <th style="min-width: 110px; white-space: nowrap;">Assignee Type</th>
+              <th style="min-width: 150px;">Assignee / Vendor</th>
+              <th style="min-width: 110px; white-space: nowrap;">Cost (₹)</th>
+              <th style="min-width: 180px;">Remarks</th>
+              <th style="text-align: right; min-width: 90px; white-space: nowrap;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -895,7 +895,20 @@
         '<option value="Completed"' + (m.Status === "Completed" ? " selected" : "") + '>Completed</option>' +
       '</select>';
 
-      return '\n        <tr>\n          <td style="font-weight:600;">'.concat(escapeHtml(m.MilestoneName || ""), "</td>\n          <td>").concat(formattedDate, '</td>\n          <td style="font-size:0.8rem; font-weight:600; color:var(--success);">').concat(compDate, '</td>\n          <td>').concat(statusSelectHtml, "</td>\n          <td>").concat(assocType, "</td>\n          <td>").concat(assocName, "</td>\n          <td>").concat(assocCost, '</td>\n          <td style="color:var(--text-muted); font-size:0.75rem;">').concat(escapeHtml(m.Remarks || "-"), '</td>\n          <td style="text-align: right;">\n            <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'').concat(mIdEscaped, '\')"><i class="fas fa-pen"></i></button>\n            <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'').concat(mIdEscaped, '\')"><i class="fas fa-trash"></i></button>\n          </td>\n        </tr>\n      ');
+      return '\n        <tr>\n' +
+        '  <td style="font-weight:600; line-height: 1.35; min-width: 220px;">' + escapeHtml(m.MilestoneName || "") + '</td>\n' +
+        '  <td style="white-space: nowrap; min-width: 110px;">' + formattedDate + '</td>\n' +
+        '  <td style="font-size:0.8rem; font-weight:600; color:var(--success); white-space: nowrap; min-width: 110px;">' + compDate + '</td>\n' +
+        '  <td style="white-space: nowrap; min-width: 130px;">' + statusSelectHtml + '</td>\n' +
+        '  <td style="white-space: nowrap; min-width: 110px;">' + assocType + '</td>\n' +
+        '  <td style="min-width: 150px; line-height: 1.3;">' + assocName + '</td>\n' +
+        '  <td style="white-space: nowrap; font-weight:600; min-width: 110px;">' + assocCost + '</td>\n' +
+        '  <td style="color:var(--text-muted); font-size:0.775rem; min-width: 180px; max-width: 280px; line-height: 1.35; word-break: break-word;">' + escapeHtml(m.Remarks || "-") + '</td>\n' +
+        '  <td style="text-align: right; white-space: nowrap; min-width: 90px;">\n' +
+        '    <button type="button" class="icon-btn" style="color:var(--primary); margin-right:0.25rem;" title="Edit Milestone" onclick="editMilestoneById(\'' + mIdEscaped + '\')"><i class="fas fa-pen"></i></button>\n' +
+        '    <button type="button" class="icon-btn" style="color:var(--danger);" title="Delete Milestone" onclick="deleteMilestone(\'' + mIdEscaped + '\')"><i class="fas fa-trash"></i></button>\n' +
+        '  </td>\n' +
+        '</tr>';
     }).join("");
   }
 

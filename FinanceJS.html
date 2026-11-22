@@ -660,15 +660,32 @@ window.populateBankOptions = function(selectedBank) {
   if (!bankSelect && !bankFilter) return;
 
   var fetchCompany = function(callback) {
+    if (window._dataCache && window._dataCache.companySetup && (window._dataCache.companySetup.BankAccounts || window._dataCache.companySetup.BankName)) {
+      window.companySetupCache = window._dataCache.companySetup;
+      callback(window.companySetupCache);
+      return;
+    }
     if (window.companySetupCache) {
       callback(window.companySetupCache);
-    } else if (google.script && google.script.run) {
-      google.script.run.withSuccessHandler(function(rows) {
-        window.companySetupCache = (rows && Array.isArray(rows) && rows.length > 0) ? rows[0] : (rows || {});
+      return;
+    }
+    try {
+      var savedComp = localStorage.getItem("nexmilestro_company_setup");
+      if (savedComp) {
+        window.companySetupCache = JSON.parse(savedComp);
+        callback(window.companySetupCache);
+        return;
+      }
+    } catch(e) {}
+    if (google.script && google.script.run) {
+      google.script.run.withSuccessHandler(function(comp) {
+        window.companySetupCache = (comp && comp.companySetup) ? comp.companySetup : (comp || {});
         callback(window.companySetupCache);
       }).withFailureHandler(function() {
         callback({});
-      }).readTable("CompanySetup");
+      }).getCompanySetup();
+    } else {
+      callback({});
     }
   };
 
@@ -690,20 +707,31 @@ window.populateBankOptions = function(selectedBank) {
       for (var i = 0; i < list.length; i++) {
         var b = list[i];
         var label = (b.AccountLabel || b.BankName) + " - " + b.AccountNumber;
-        html += '<option value="' + label + '">' + label + '</option>';
+        html += '<option value="' + escapeHtml(label) + '">' + escapeHtml(label) + '</option>';
       }
       bankSelect.innerHTML = html;
       if (selectedBank) bankSelect.value = selectedBank;
     }
 
-    if (bankFilter && bankFilter.options.length <= 1) {
+    if (bankFilter) {
+      var curBankVal = bankFilter.value;
       var filterHtml = '<option value="">All Bank Accounts</option>';
+      var seenBanks = {};
       for (var j = 0; j < list.length; j++) {
         var bItem = list[j];
         var fLabel = (bItem.AccountLabel || bItem.BankName) + " - " + bItem.AccountNumber;
-        filterHtml += '<option value="' + fLabel + '">' + fLabel + '</option>';
+        seenBanks[fLabel] = true;
+        filterHtml += '<option value="' + escapeHtml(fLabel) + '">' + escapeHtml(fLabel) + '</option>';
       }
+      // Also collect any bank accounts from recorded transactions
+      (window.txnsDataList || []).forEach(function(t) {
+        if (t && t.BankAccount && !seenBanks[t.BankAccount]) {
+          seenBanks[t.BankAccount] = true;
+          filterHtml += '<option value="' + escapeHtml(t.BankAccount) + '">' + escapeHtml(t.BankAccount) + '</option>';
+        }
+      });
       bankFilter.innerHTML = filterHtml;
+      if (curBankVal) bankFilter.value = curBankVal;
     }
   });
 };
@@ -754,20 +782,29 @@ window.populateFinanceFilters = function() {
   }
 
   var projFilter = document.getElementById("filter-txn-project");
-  if (projFilter && projFilter.options.length <= 1) {
+  if (projFilter) {
+    var curVal = projFilter.value;
+    var rawProjs = (window.projsCacheList && window.projsCacheList.length > 0) ? window.projsCacheList : ((window._dataCache && window._dataCache.projects) || []);
+    var projs = window.RLS ? window.RLS.filterProjects(rawProjs) : rawProjs;
+    window.projsCacheList = projs;
     var html = '<option value="">All Projects</option>';
-    var sortedProjs = (window.projsCacheList || []).slice().sort(function(a, b) {
-      return (b.ProjectID || "").localeCompare(a.ProjectID || "");
+    var sortedProjs = projs.slice().sort(function(a, b) {
+      return (a.ProjectName || "").localeCompare(b.ProjectName || "");
     });
     for (var i = 0; i < sortedProjs.length; i++) {
       var p = sortedProjs[i];
       if (p && p.ProjectID) {
         var pName = typeof escapeHtml === "function" ? escapeHtml(p.ProjectName) : p.ProjectName;
-        html += '<option value="' + p.ProjectID + '">' + pName + ' (' + p.ProjectID + ')</option>';
+        html += '<option value="' + escapeHtml(p.ProjectID) + '">' + pName + '</option>';
       }
     }
     projFilter.innerHTML = html;
-    if (window.makeSearchableSelect) window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
+    if (curVal) projFilter.value = curVal;
+    if (projFilter._refreshSearchable) {
+      projFilter._refreshSearchable();
+    } else if (window.makeSearchableSelect) {
+      window.makeSearchableSelect(projFilter, { placeholder: "All Projects" });
+    }
   }
 };
 
@@ -954,6 +991,10 @@ window.filterTransactionsTable = function() {
   var modeVal = modeFilter ? modeFilter.value : "";
   var bankFilter = document.getElementById("filter-txn-bank");
   var bankVal = bankFilter ? bankFilter.value : "";
+  var fromDateInput = document.getElementById("filter-txn-from");
+  var fromDateVal = fromDateInput ? fromDateInput.value : "";
+  var toDateInput = document.getElementById("filter-txn-to");
+  var toDateVal = toDateInput ? toDateInput.value : "";
 
   var filtered = (window.txnsDataList || []).filter(function(t) {
     if (!t) return false;
@@ -993,7 +1034,14 @@ window.filterTransactionsTable = function() {
       matchBank = String(t.BankAccount || "").toLowerCase() === bankVal.toLowerCase();
     }
 
-    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank;
+    var matchDate = true;
+    if (fromDateVal || toDateVal) {
+      var tDateStr = t.TransactionDate ? String(t.TransactionDate).substring(0, 10) : "";
+      if (fromDateVal && tDateStr && tDateStr < fromDateVal) matchDate = false;
+      if (toDateVal && tDateStr && tDateStr > toDateVal) matchDate = false;
+    }
+
+    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank && matchDate;
   });
 
   window.renderLedger(filtered);
@@ -1013,6 +1061,10 @@ window.exportTransactionsCSV = function() {
   var modeVal = modeFilter ? modeFilter.value : "";
   var bankFilter = document.getElementById("filter-txn-bank");
   var bankVal = bankFilter ? bankFilter.value : "";
+  var fromDateInput = document.getElementById("filter-txn-from");
+  var fromDateVal = fromDateInput ? fromDateInput.value : "";
+  var toDateInput = document.getElementById("filter-txn-to");
+  var toDateVal = toDateInput ? toDateInput.value : "";
 
   var filtered = (window.txnsDataList || []).filter(function(t) {
     if (!t) return false;
@@ -1036,8 +1088,14 @@ window.exportTransactionsCSV = function() {
     if (modeVal) { matchMode = String(t.PaymentMode || "").toLowerCase() === modeVal.toLowerCase(); }
     var matchBank = true;
     if (bankVal) { matchBank = String(t.BankAccount || "").toLowerCase() === bankVal.toLowerCase(); }
+    var matchDate = true;
+    if (fromDateVal || toDateVal) {
+      var tDateStr = t.TransactionDate ? String(t.TransactionDate).substring(0, 10) : "";
+      if (fromDateVal && tDateStr && tDateStr < fromDateVal) matchDate = false;
+      if (toDateVal && tDateStr && tDateStr > toDateVal) matchDate = false;
+    }
 
-    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank;
+    return matchSearch && matchType && matchProj && matchCat && matchMode && matchBank && matchDate;
   });
 
   if (!filtered || filtered.length === 0) {

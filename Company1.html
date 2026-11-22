@@ -207,10 +207,23 @@
       populateCompanySetupFields(window.currentCompanySetupData);
       return;
     }
+    try {
+      var localSaved = localStorage.getItem("nexmilestro_company_setup");
+      if (localSaved) {
+        window.currentCompanySetupData = JSON.parse(localSaved);
+        if (window.currentCompanySetupData && window.currentCompanySetupData.CompanyName) {
+          populateCompanySetupFields(window.currentCompanySetupData);
+          return;
+        }
+      }
+    } catch(e) {}
     if (google.script && google.script.run) {
       google.script.run.withSuccessHandler(function(data) {
-        window.currentCompanySetupData = data || {};
-        populateCompanySetupFields(data || {});
+        var comp = (data && data.companySetup) ? data.companySetup : (data || {});
+        window.currentCompanySetupData = comp;
+        if (window._dataCache) window._dataCache.companySetup = comp;
+        try { localStorage.setItem("nexmilestro_company_setup", JSON.stringify(comp)); } catch(e){}
+        populateCompanySetupFields(comp);
       }).withFailureHandler(function(err) {
         showToast("Failed to load company setup: " + err.message, "error");
       }).getCompanySetup();
@@ -449,15 +462,29 @@
     }
     formData.CompanyID = formData.CompanyID || "CMP-001";
 
+    // Immediate local persistence
+    if (window._dataCache) {
+      window._dataCache.companySetup = Object.assign({}, window._dataCache.companySetup || {}, formData);
+      if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
+    }
+    try {
+      localStorage.setItem("nexmilestro_company_setup", JSON.stringify(formData));
+    } catch(e) {}
+    window.companySetupCache = formData;
+
     if (google.script && google.script.run) {
       google.script.run
         .withSuccessHandler(function(res) {
           showToast("Company setup saved successfully!", "success");
-          if (res && res.company) {
-            populateCompanySetupFields(res.company);
-          } else {
-            populateCompanySetupFields(formData);
+          var saved = (res && res.company) ? res.company : formData;
+          if (window._dataCache) {
+            window._dataCache.companySetup = Object.assign({}, window._dataCache.companySetup || {}, saved);
+            if (typeof populateAllCaches === "function") populateAllCaches(window._dataCache);
           }
+          try {
+            localStorage.setItem("nexmilestro_company_setup", JSON.stringify(saved));
+          } catch(e) {}
+          populateCompanySetupFields(saved);
         })
         .withFailureHandler(function(err) {
           showToast("Error saving company setup: " + err.message, "error");
