@@ -1687,6 +1687,116 @@
     window.handleLocalOptimisticMutation = handleLocalOptimisticMutation;
     window.handleDemoLocalMutation = handleLocalOptimisticMutation;
 
+    function createTempBlobUrls(fileData) {
+      if (!fileData) return [];
+      var list = Array.isArray(fileData) ? fileData : [fileData];
+      var urls = [];
+      for (var i = 0; i < list.length; i++) {
+        var f = list[i];
+        if (!f) continue;
+        var rawBase64 = f.base64 || f.base64Data;
+        if (!rawBase64) continue;
+        try {
+          var clean = rawBase64.indexOf(",") > -1 ? rawBase64.split(",")[1] : rawBase64;
+          var byteChars = atob(clean);
+          var byteNumbers = new Array(byteChars.length);
+          for (var j = 0; j < byteChars.length; j++) {
+            byteNumbers[j] = byteChars.charCodeAt(j);
+          }
+          var byteArray = new Uint8Array(byteNumbers);
+          var blob = new Blob([byteArray], { type: f.mimeType || "application/octet-stream" });
+          urls.push(URL.createObjectURL(blob));
+        } catch(e) {
+          console.warn("Could not create local blob URL for attachment:", e);
+        }
+      }
+      return urls;
+    }
+
+    function updateRecordAttachmentsInCache(fnName, payload, finalUrlsString) {
+      if (!window._dataCache) return;
+      var targetId = "";
+      if (fnName === "saveCustomer") {
+        targetId = payload.CustomerID;
+        var cust = (window._dataCache.customers || []).find(function(c) { return c.CustomerID === targetId; });
+        if (cust) { cust.Attachments = finalUrlsString; }
+        if (typeof window.renderCustomers === "function" && Array.isArray(window.allCustomers)) {
+          var ac = window.allCustomers.find(function(c) { return c.CustomerID === targetId; });
+          if (ac) ac.Attachments = finalUrlsString;
+          window.renderCustomers(window.allCustomers);
+        }
+      } else if (fnName === "saveProject") {
+        targetId = payload.ProjectID;
+        var proj = (window._dataCache.projects || []).find(function(p) { return p.ProjectID === targetId; });
+        if (proj) { proj.Attachments = finalUrlsString; }
+        if (typeof window.renderProjects === "function" && Array.isArray(window.allProjects)) {
+          var ap = window.allProjects.find(function(p) { return p.ProjectID === targetId; });
+          if (ap) ap.Attachments = finalUrlsString;
+          window.renderProjects(window.allProjects);
+        }
+      } else if (fnName === "saveSiteVisit") {
+        targetId = payload.VisitID;
+        var vis = (window._dataCache.siteVisits || []).find(function(v) { return v.VisitID === targetId; });
+        if (vis) { vis.Photos = finalUrlsString; vis.Attachments = finalUrlsString; }
+        if (typeof window.renderVisits === "function" && Array.isArray(window.allVisits)) {
+          var av = window.allVisits.find(function(v) { return v.VisitID === targetId; });
+          if (av) { av.Photos = finalUrlsString; av.Attachments = finalUrlsString; }
+          window.renderVisits(window.allVisits);
+        }
+      } else if (fnName === "saveProposal") {
+        targetId = payload.ProposalID;
+        var prop = (window._dataCache.proposals || []).find(function(p) { return p.ProposalID === targetId; });
+        if (prop) { prop.Attachments = finalUrlsString; }
+        if (typeof window.renderProposals === "function" && Array.isArray(window.proposalsDataList)) {
+          var apr = window.proposalsDataList.find(function(p) { return p.ProposalID === targetId; });
+          if (apr) apr.Attachments = finalUrlsString;
+          window.renderProposals(window.proposalsDataList);
+        }
+      } else if (fnName === "saveVendor") {
+        targetId = payload.VendorID;
+        var ven = (window._dataCache.vendors || []).find(function(v) { return v.VendorID === targetId; });
+        if (ven) { ven.Attachments = finalUrlsString; }
+        if (typeof window.renderVendors === "function" && Array.isArray(window.vendorsDataList)) {
+          var avn = window.vendorsDataList.find(function(v) { return v.VendorID === targetId; });
+          if (avn) avn.Attachments = finalUrlsString;
+          window.renderVendors(window.vendorsDataList);
+        }
+      } else if (fnName === "saveTransaction") {
+        targetId = payload.TransactionID;
+        var txn = (window._dataCache.transactions || []).find(function(t) { return t.TransactionID === targetId; });
+        if (txn) { txn.Attachments = finalUrlsString; }
+        if (typeof window.renderLedger === "function" && Array.isArray(window.transactionsCacheList)) {
+          var atx = window.transactionsCacheList.find(function(t) { return t.TransactionID === targetId; });
+          if (atx) atx.Attachments = finalUrlsString;
+          window.renderLedger(window.transactionsCacheList);
+        }
+      } else if (fnName === "saveTask") {
+        targetId = payload.TaskID;
+        var tsk = (window._dataCache.tasks || []).find(function(t) { return t.TaskID === targetId; });
+        if (tsk) { tsk.Attachments = finalUrlsString; }
+        if (typeof window.renderKanban === "function" && Array.isArray(window.allTasks)) {
+          var atk = window.allTasks.find(function(t) { return t.TaskID === targetId; });
+          if (atk) atk.Attachments = finalUrlsString;
+          window.renderKanban(window.allTasks);
+        }
+      } else if (fnName === "saveLead") {
+        targetId = payload.LeadID;
+        var ld = (window._dataCache.leads || []).find(function(l) { return l.LeadID === targetId; });
+        if (ld) { ld.Attachments = finalUrlsString; }
+        if (typeof window.renderLeads === "function" && Array.isArray(window.leadsDataList)) {
+          var ald = window.leadsDataList.find(function(l) { return l.LeadID === targetId; });
+          if (ald) ald.Attachments = finalUrlsString;
+          window.renderLeads(window.leadsDataList);
+        }
+      } else if (fnName === "saveCompanySetup") {
+        if (window._dataCache.companySetup) {
+          window._dataCache.companySetup.CompanyLogo = finalUrlsString;
+          window._dataCache.companySetup.LogoUrl = finalUrlsString;
+        }
+      }
+      populateAllCaches(window._dataCache);
+    }
+
     async function dispatchRpcCall(fnName, args, successCb, failCb) {
       args = args || [];
       var currentUser = getSessionUser();
@@ -2038,6 +2148,21 @@
         return;
       }
 
+      if (fnName === "uploadFileToDrive" || fnName === "uploadAttachment") {
+        var base64 = (args[0] && typeof args[0] === "object") ? (args[0].base64Data || args[0].base64) : args[1];
+        var filename = (args[0] && typeof args[0] === "object") ? (args[0].filename || args[0].fileName) : args[2];
+        var mimeType = (args[0] && typeof args[0] === "object") ? args[0].mimeType : args[3];
+        var subfolder = (args[0] && typeof args[0] === "object") ? (args[0].subfolderName || args[0].folderName) : args[4];
+        var upRes = await apiCall("upload_attachment", {
+          base64Data: base64,
+          filename: filename,
+          mimeType: mimeType,
+          subfolderName: subfolder
+        });
+        successCb(upRes);
+        return;
+      }
+
       // 3. MUTATION OPERATIONS (Dispatched to Google Apps Script Backend)
       var actionMap = {
         saveCustomer: "save_customer",
@@ -2070,7 +2195,7 @@
         addDropdownValue: "save_master_option",
         deleteDropdownValue: "delete_master_option",
         saveCompanySetup: "save_company_setup",
-        uploadFileToDrive: "uploadFile",
+        uploadFileToDrive: "upload_attachment",
         changePassword: "change_password",
         sendLeadEmail: "send_lead_email",
         sendProposalEmail: "send_proposal_email",
@@ -2119,6 +2244,26 @@
         }
         payload.userId = userId;
 
+        // If files are attached, create instant preview blob URLs for 0ms optimistic UI rendering
+        var rawFiles = [];
+        if (payload.fileData) {
+          rawFiles = Array.isArray(payload.fileData) ? payload.fileData : [payload.fileData];
+        } else if (payload.files && Array.isArray(payload.files)) {
+          rawFiles = payload.files;
+        }
+
+        if (rawFiles.length > 0) {
+          var tempBlobUrls = createTempBlobUrls(rawFiles);
+          if (tempBlobUrls.length > 0) {
+            var existingAtt = (payload.Attachments || payload.Photos || "").trim();
+            var mergedAtt = existingAtt ? (existingAtt + ", " + tempBlobUrls.join(", ")) : tempBlobUrls.join(", ");
+            payload.Attachments = mergedAtt;
+            if (fnName === "saveSiteVisit") {
+              payload.Photos = mergedAtt;
+            }
+          }
+        }
+
         // 1. OPTIMISTIC LOCAL MUTATION: Update state in memory & localStorage in 0ms (Nexallot pattern)
         var localMutRes = handleLocalOptimisticMutation(fnName, payload, args);
 
@@ -2156,7 +2301,71 @@
             apiCall("delete_task", { taskId: dTaskId }).catch(function(e) {});
           }
 
-          apiCall(targetAction, payload).then(function (backendRes) {
+          var commitPromise;
+          if (rawFiles.length > 0) {
+            var subfolder = "Attachments";
+            if (fnName === "saveCustomer") subfolder = "Customer Documents";
+            else if (fnName === "saveProject") subfolder = "Project Documents";
+            else if (fnName === "saveTask") subfolder = "Task Attachments";
+            else if (fnName === "saveSiteVisit") subfolder = "Site Visit Photos";
+            else if (fnName === "saveProposal") subfolder = "Proposal Documents";
+            else if (fnName === "saveVendor") subfolder = "Vendor Documents";
+            else if (fnName === "saveTransaction") subfolder = "Finance Receipts";
+            else if (fnName === "saveLead") subfolder = "Lead Attachments";
+            else if (fnName === "saveCompanySetup") subfolder = "Company Logos";
+
+            commitPromise = (async function() {
+              var uploadedUrls = [];
+              for (var fi = 0; fi < rawFiles.length; fi++) {
+                var fItem = rawFiles[fi];
+                if (!fItem) continue;
+                var base64 = fItem.base64 || fItem.base64Data;
+                if (!base64) continue;
+                try {
+                  var upRes = await apiCall("upload_attachment", {
+                    filename: fItem.filename || fItem.fileName || ("attachment_" + (fi + 1)),
+                    mimeType: fItem.mimeType || "application/octet-stream",
+                    base64Data: base64,
+                    subfolderName: subfolder
+                  });
+                  if (upRes && upRes.success && (upRes.fileUrl || upRes.downloadUrl)) {
+                    uploadedUrls.push(upRes.fileUrl || upRes.downloadUrl);
+                  }
+                } catch(upErr) {
+                  console.warn("Upload attachment failed:", upErr);
+                }
+              }
+
+              // Strip temporary blob: URLs and merge with permanent Drive URLs
+              var currentUrls = (payload.Attachments || payload.Photos || "").split(",")
+                .map(function(s) { return s.trim(); })
+                .filter(function(s) { return s !== "" && !s.startsWith("blob:"); });
+
+              var finalUrlsList = currentUrls.concat(uploadedUrls);
+              var finalUrlsString = finalUrlsList.join(", ");
+
+              payload.Attachments = finalUrlsString;
+              if (fnName === "saveSiteVisit") {
+                payload.Photos = finalUrlsString;
+              }
+              if (fnName === "saveCompanySetup" && uploadedUrls.length > 0) {
+                payload.CompanyLogo = uploadedUrls[0];
+                payload.LogoUrl = uploadedUrls[0];
+              }
+
+              delete payload.fileData;
+
+              // Update in cache & active table
+              updateRecordAttachmentsInCache(fnName, payload, finalUrlsString);
+
+              return await apiCall(targetAction, payload);
+            })();
+          } else {
+            delete payload.fileData;
+            commitPromise = apiCall(targetAction, payload);
+          }
+
+          commitPromise.then(function (backendRes) {
             window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
             updateSyncStatusUI();
             if (backendRes && backendRes.success !== false) {

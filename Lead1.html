@@ -38,6 +38,7 @@
               <th>Lead Source</th>
               <th>Lead Status</th>
               <th>Next Follow-up Date</th>
+              <th>Attachments</th>
               <th style="text-align: right; width: 120px;">Actions</th>
             </tr>
           </thead>
@@ -129,6 +130,17 @@
           <div class="form-group form-grid-full">
             <label class="form-label">Remarks / Follow-up Notes</label>
             <textarea id="lead-remarks-field" name="Remarks" class="form-control" placeholder="General discussion pointers..."></textarea>
+          </div>
+
+          <input type="hidden" id="lead-attachments-hidden" name="Attachments">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Add Attachments / Documents</label>
+            <input type="file" id="lead-attachment" class="form-control" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Choose one or more files to upload directly to Google Drive. Leave empty to keep existing attachments if editing.</small>
+            <div id="lead-current-attachments-container" style="margin-top: 0.5rem; display: none;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">Current Attachments:</span>
+              <div id="lead-current-attachments-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem;"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -464,6 +476,16 @@
         '<option value="Lost"' + (statusStr === "Lost" ? " selected" : "") + '>Lost</option>' +
       '</select>';
 
+      var attHtml = "-";
+      if (lead.Attachments && String(lead.Attachments).trim()) {
+        var lLinks = String(lead.Attachments).split(",").map(function(l){ return l.trim(); }).filter(function(l){ return l !== ""; });
+        if (lLinks.length === 1) {
+          attHtml = '<a href="' + escapeHtml(lLinks[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View</a>';
+        } else if (lLinks.length > 1) {
+          attHtml = '<a href="' + escapeHtml(lLinks[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;" title="' + lLinks.length + ' attachments"><i class="fas fa-paperclip"></i> View (' + lLinks.length + ')</a>';
+        }
+      }
+
       return '<tr id="row-' + leadIdEsc + '">' +
         '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + leadIdEsc + '</td>' +
         '<td>' + formattedInquiryDate + '</td>' +
@@ -474,6 +496,7 @@
         '<td>' + sourceEsc + '</td>' +
         '<td>' + statusSelectHtml + '</td>' +
         '<td style="font-size: 0.85rem; font-weight: 600; color: var(--secondary);">' + nextFollowupDate + '</td>' +
+        '<td>' + attHtml + '</td>' +
         '<td style="text-align: right;">' + actionsHtml + '</td>' +
       '</tr>';
     }).join("");
@@ -610,6 +633,31 @@
     openWAShareModal(msg, lead.Mobile || "", "", lead.CustomerName || "Customer");
   }
 
+  function removeLeadAttachment(index) {
+    var hiddenInput = document.getElementById("lead-attachments-hidden");
+    if (!hiddenInput || !hiddenInput.value) return;
+    var links = hiddenInput.value.split(",").map(function(l) { return l.trim(); }).filter(function(l) { return l !== ""; });
+    links.splice(index, 1);
+    var updated = links.join(", ");
+    hiddenInput.value = updated;
+    var container = document.getElementById("lead-current-attachments-container");
+    var list = document.getElementById("lead-current-attachments-list");
+    if (updated === "") {
+      if (container) container.style.display = "none";
+      if (list) list.innerHTML = "";
+    } else {
+      if (list) {
+        list.innerHTML = links.map(function(link, idx) {
+          return '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+            '<a href="' + escapeHtml(link) + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (idx + 1) + '</a>' +
+            '<button type="button" onclick="removeLeadAttachment(' + idx + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>' +
+          '</div>';
+        }).join("");
+      }
+    }
+  }
+  window.removeLeadAttachment = removeLeadAttachment;
+
   function openLeadModal(leadObj) {
     leadObj = leadObj || null;
     var form = document.getElementById("lead-form");
@@ -617,6 +665,29 @@
 
     document.getElementById("lead-id-field").value = "";
     document.getElementById("lead-loss-reason-field").value = "";
+
+    var fileInput = document.getElementById("lead-attachment");
+    if (fileInput) fileInput.value = "";
+    var currentAttachmentsContainer = document.getElementById("lead-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("lead-current-attachments-list");
+    var hiddenAttInput = document.getElementById("lead-attachments-hidden");
+    if (hiddenAttInput) hiddenAttInput.value = (leadObj && leadObj.Attachments) || "";
+
+    if (leadObj && leadObj.Attachments && String(leadObj.Attachments).trim() !== "") {
+      if (currentAttachmentsContainer) currentAttachmentsContainer.style.display = "block";
+      var lLinks = String(leadObj.Attachments).split(",").map(function(l) { return l.trim(); }).filter(function(l) { return l !== ""; });
+      if (currentAttachmentsList) {
+        currentAttachmentsList.innerHTML = lLinks.map(function(link, idx) {
+          return '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+            '<a href="' + escapeHtml(link) + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (idx + 1) + '</a>' +
+            '<button type="button" onclick="removeLeadAttachment(' + idx + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>' +
+          '</div>';
+        }).join("");
+      }
+    } else {
+      if (currentAttachmentsContainer) currentAttachmentsContainer.style.display = "none";
+      if (currentAttachmentsList) currentAttachmentsList.innerHTML = "";
+    }
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isAdmin = currentUser.roleId === "Super Admin" || currentUser.roleId === "Admin";
@@ -719,22 +790,55 @@
       }
     });
 
+    var fileInput = document.getElementById("lead-attachment");
+    var files = fileInput ? fileInput.files : [];
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
-    google.script.run
-      .withSuccessHandler(function(response) {
-        if (response && response.success) {
-          showToast(response.message || "Lead saved successfully", "success");
-          closeLeadModal();
-          loadLeadsView(false);
-        } else {
-          showToast((response ? response.message : "Failed to save lead"), "error");
-        }
-      })
-      .withFailureHandler(function(err) {
-        showToast("Error saving lead: " + err.message, "error");
-      })
-      .saveLead(formData, currentUser.userId);
+    function executeSaveLead(fileDataArray) {
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response && response.success) {
+            showToast(response.message || "Lead saved successfully", "success");
+            closeLeadModal();
+            loadLeadsView(false);
+          } else {
+            showToast((response ? response.message : "Failed to save lead"), "error");
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast("Error saving lead: " + err.message, "error");
+        })
+        .saveLead(formData, fileDataArray, currentUser.userId);
+    }
+
+    if (files.length > 0) {
+      var fileDataArray = [];
+      var loadedFiles = 0;
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var reader = new FileReader();
+        reader.onload = (function(f) {
+          return function(evt) {
+            var base64Data = evt.target.result.split(",")[1];
+            fileDataArray.push({
+              filename: f.name,
+              mimeType: f.type,
+              base64: base64Data
+            });
+            loadedFiles++;
+            if (loadedFiles === files.length) {
+              executeSaveLead(fileDataArray);
+            }
+          };
+        })(file);
+        reader.onerror = function() {
+          showToast("Failed to read one of the selected lead files.", "error");
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      executeSaveLead(null);
+    }
   }
 
   function openLeadFollowupModal(leadId) {

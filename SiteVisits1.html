@@ -548,8 +548,9 @@
       var isBillable = visit.IsBillable === "Yes" || visit.IsBillable === true;
       var billableStr = isBillable ? (typeof formatCurrency === "function" ? formatCurrency(visit.BillingAmount || 0) : ("₹" + (visit.BillingAmount || 0))) : "-";
       var photosHtml = "-";
-      if (visit.Photos && typeof visit.Photos === "string" && visit.Photos.trim() !== "") {
-        var links = visit.Photos.split(",").map(function(l) {
+      var rawPhotos = visit.Photos || visit.Attachments || "";
+      if (rawPhotos && typeof rawPhotos === "string" && rawPhotos.trim() !== "") {
+        var links = rawPhotos.split(",").map(function(l) {
           return l.trim();
         }).filter(function(l) {
           return l !== "";
@@ -895,11 +896,12 @@
       document.getElementById("visit-status").value = visitObj.Status || "Completed";
       document.getElementById("visit-purpose").value = visitObj.Purpose || "";
       document.getElementById("visit-remarks").value = visitObj.Remarks || "";
-      document.getElementById("visit-photos-hidden").value = visitObj.Photos || "";
-      if (visitObj.Photos && typeof visitObj.Photos === "string" && visitObj.Photos.trim() !== "") {
+      var vPhotos = visitObj.Photos || visitObj.Attachments || "";
+      document.getElementById("visit-photos-hidden").value = vPhotos;
+      if (vPhotos && typeof vPhotos === "string" && vPhotos.trim() !== "") {
         if (currentAttachmentsContainer)
           currentAttachmentsContainer.style.display = "block";
-        var links = visitObj.Photos.split(",").map(function(l) {
+        var links = vPhotos.split(",").map(function(l) {
           return l.trim();
         }).filter(function(l) {
           return l !== "";

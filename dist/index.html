@@ -7665,8 +7665,9 @@ body.view-teamchat .chat-input-area {
       var isBillable = visit.IsBillable === "Yes" || visit.IsBillable === true;
       var billableStr = isBillable ? (typeof formatCurrency === "function" ? formatCurrency(visit.BillingAmount || 0) : ("₹" + (visit.BillingAmount || 0))) : "-";
       var photosHtml = "-";
-      if (visit.Photos && typeof visit.Photos === "string" && visit.Photos.trim() !== "") {
-        var links = visit.Photos.split(",").map(function(l) {
+      var rawPhotos = visit.Photos || visit.Attachments || "";
+      if (rawPhotos && typeof rawPhotos === "string" && rawPhotos.trim() !== "") {
+        var links = rawPhotos.split(",").map(function(l) {
           return l.trim();
         }).filter(function(l) {
           return l !== "";
@@ -8012,11 +8013,12 @@ body.view-teamchat .chat-input-area {
       document.getElementById("visit-status").value = visitObj.Status || "Completed";
       document.getElementById("visit-purpose").value = visitObj.Purpose || "";
       document.getElementById("visit-remarks").value = visitObj.Remarks || "";
-      document.getElementById("visit-photos-hidden").value = visitObj.Photos || "";
-      if (visitObj.Photos && typeof visitObj.Photos === "string" && visitObj.Photos.trim() !== "") {
+      var vPhotos = visitObj.Photos || visitObj.Attachments || "";
+      document.getElementById("visit-photos-hidden").value = vPhotos;
+      if (vPhotos && typeof vPhotos === "string" && vPhotos.trim() !== "") {
         if (currentAttachmentsContainer)
           currentAttachmentsContainer.style.display = "block";
-        var links = visitObj.Photos.split(",").map(function(l) {
+        var links = vPhotos.split(",").map(function(l) {
           return l.trim();
         }).filter(function(l) {
           return l !== "";
@@ -8500,6 +8502,17 @@ body.view-teamchat .chat-input-area {
             <label class="form-label">Remarks / Closure Details</label>
             <input type="text" id="task-remarks" name="Remarks" class="form-control" placeholder="Feedback or closing comments">
           </div>
+
+          <input type="hidden" id="task-attachments-hidden" name="Attachments">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Add Attachments / Documents</label>
+            <input type="file" id="task-attachment" class="form-control" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Choose one or more files to upload directly to Google Drive. Leave empty to keep existing attachments if editing.</small>
+            <div id="task-current-attachments-container" style="margin-top: 0.5rem; display: none;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">Current Attachments:</span>
+              <div id="task-current-attachments-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem;"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -8937,7 +8950,13 @@ body.view-teamchat .chat-input-area {
           '<div class="kanban-card-desc">' + escapeHtml(task.Description || "No description.") + '</div>' +
           '<div class="kanban-card-footer">' +
             '<span class="kanban-card-assigned"><i class="far fa-user"></i> ' + escapeHtml(task.AssignedTo || "Unassigned") + '</span>' +
-            '<span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;"><i class="far fa-calendar"></i> ' + dateStr + '</span>' +
+            '<div style="display:flex; align-items:center; gap:0.35rem;">' +
+              (task.Attachments && String(task.Attachments).trim() ? (function() {
+                var tLinks = String(task.Attachments).split(",").map(function(l){ return l.trim(); }).filter(function(l){ return l !== ""; });
+                return tLinks.length > 0 ? '<a href="' + escapeHtml(tLinks[0]) + '" target="_blank" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.68rem; color:var(--primary); text-decoration:none; background:var(--bg-secondary); padding:2px 6px; border-radius:4px; border:1px solid var(--border-color); font-weight:600;" title="' + tLinks.length + ' attachment(s)"><i class="fas fa-paperclip"></i> ' + tLinks.length + '</a>' : '';
+              })() : '') +
+              '<span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;"><i class="far fa-calendar"></i> ' + dateStr + '</span>' +
+            '</div>' +
           '</div>' +
           '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem; padding-top:0.35rem; border-top:1px dashed var(--border-color);">' +
             '<span style="font-size: 0.65rem; color: var(--primary); font-weight: 700;">' + escapeHtml(projName) + '</span>' +
@@ -9037,6 +9056,29 @@ body.view-teamchat .chat-input-area {
       saveBtn.style.display = (isEdit ? canEdit : canAdd) ? "inline-block" : "none";
     }
     var delBtn = document.getElementById("btn-delete-task");
+    var fileInput = document.getElementById("task-attachment");
+    if (fileInput) fileInput.value = "";
+    var currentAttachmentsContainer = document.getElementById("task-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("task-current-attachments-list");
+    var hiddenAttInput = document.getElementById("task-attachments-hidden");
+    if (hiddenAttInput) hiddenAttInput.value = (taskObj && taskObj.Attachments) || "";
+
+    if (taskObj && taskObj.Attachments && String(taskObj.Attachments).trim() !== "") {
+      if (currentAttachmentsContainer) currentAttachmentsContainer.style.display = "block";
+      var tLinks = String(taskObj.Attachments).split(",").map(function(l) { return l.trim(); }).filter(function(l) { return l !== ""; });
+      if (currentAttachmentsList) {
+        currentAttachmentsList.innerHTML = tLinks.map(function(link, idx) {
+          return '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+            '<a href="' + escapeHtml(link) + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (idx + 1) + '</a>' +
+            '<button type="button" onclick="removeTaskAttachment(' + idx + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>' +
+          '</div>';
+        }).join("");
+      }
+    } else {
+      if (currentAttachmentsContainer) currentAttachmentsContainer.style.display = "none";
+      if (currentAttachmentsList) currentAttachmentsList.innerHTML = "";
+    }
+
     if (taskObj && taskObj.TaskID) {
       document.getElementById("task-modal-title").innerText = "Edit Task " + taskObj.TaskID;
       document.getElementById("task-id").value = taskObj.TaskID;
@@ -9132,6 +9174,31 @@ body.view-teamchat .chat-input-area {
   }
   window.editTask = editTask;
 
+  function removeTaskAttachment(index) {
+    var hiddenInput = document.getElementById("task-attachments-hidden");
+    if (!hiddenInput || !hiddenInput.value) return;
+    var links = hiddenInput.value.split(",").map(function(l) { return l.trim(); }).filter(function(l) { return l !== ""; });
+    links.splice(index, 1);
+    var updated = links.join(", ");
+    hiddenInput.value = updated;
+    var container = document.getElementById("task-current-attachments-container");
+    var list = document.getElementById("task-current-attachments-list");
+    if (updated === "") {
+      if (container) container.style.display = "none";
+      if (list) list.innerHTML = "";
+    } else {
+      if (list) {
+        list.innerHTML = links.map(function(link, idx) {
+          return '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+            '<a href="' + escapeHtml(link) + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (idx + 1) + '</a>' +
+            '<button type="button" onclick="removeTaskAttachment(' + idx + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>' +
+          '</div>';
+        }).join("");
+      }
+    }
+  }
+  window.removeTaskAttachment = removeTaskAttachment;
+
   function handleTaskSubmit(e) {
     e.preventDefault();
     var form = document.getElementById("task-form");
@@ -9143,40 +9210,74 @@ body.view-teamchat .chat-input-area {
       }
     });
 
-    // Optimistically update in local allTasks and global cache immediately
-    if (!formData.TaskID) {
-      formData.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
-      allTasks.unshift(formData);
-      if (window._dataCache && Array.isArray(window._dataCache.tasks)) window._dataCache.tasks.unshift(formData);
-    } else {
-      var tIdx = allTasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
-      if (tIdx !== -1) allTasks[tIdx] = Object.assign(allTasks[tIdx], formData);
-      else allTasks.unshift(formData);
-
-      if (window._dataCache && Array.isArray(window._dataCache.tasks)) {
-        var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
-        if (cIdx !== -1) window._dataCache.tasks[cIdx] = Object.assign(window._dataCache.tasks[cIdx], formData);
-        else window._dataCache.tasks.unshift(formData);
-      }
-    }
-    closeTaskModal();
-    if (typeof renderKanban === "function") renderKanban(allTasks);
-    if (window.appRouter && window.appRouter.currentView === "dashboard" && typeof window.loadDashboardView === "function") {
-      window.loadDashboardView(false);
-    }
-
+    var fileInput = document.getElementById("task-attachment");
+    var files = fileInput ? fileInput.files : [];
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
-    google.script.run.withSuccessHandler(function(response) {
-      if (response.success) {
-        showToast(response.message || "Task saved.", "success");
-        loadTasksView(false);
+
+    function executeSaveTask(fileDataArray) {
+      // Optimistically update in local allTasks and global cache immediately
+      if (!formData.TaskID) {
+        formData.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
+        allTasks.unshift(formData);
+        if (window._dataCache && Array.isArray(window._dataCache.tasks)) window._dataCache.tasks.unshift(formData);
       } else {
-        showToast(response.message, "error");
+        var tIdx = allTasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
+        if (tIdx !== -1) allTasks[tIdx] = Object.assign(allTasks[tIdx], formData);
+        else allTasks.unshift(formData);
+
+        if (window._dataCache && Array.isArray(window._dataCache.tasks)) {
+          var cIdx = window._dataCache.tasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
+          if (cIdx !== -1) window._dataCache.tasks[cIdx] = Object.assign(window._dataCache.tasks[cIdx], formData);
+          else window._dataCache.tasks.unshift(formData);
+        }
       }
-    }).withFailureHandler(function(err) {
-      showToast(err.message, "error");
-    }).saveTask(formData, currentUserId);
+      closeTaskModal();
+      if (typeof renderKanban === "function") renderKanban(allTasks);
+      if (window.appRouter && window.appRouter.currentView === "dashboard" && typeof window.loadDashboardView === "function") {
+        window.loadDashboardView(false);
+      }
+
+      google.script.run.withSuccessHandler(function(response) {
+        if (response.success) {
+          showToast(response.message || "Task saved.", "success");
+          loadTasksView(false);
+        } else {
+          showToast(response.message, "error");
+        }
+      }).withFailureHandler(function(err) {
+        showToast(err.message, "error");
+      }).saveTask(formData, fileDataArray, currentUserId);
+    }
+
+    if (files.length > 0) {
+      var fileDataArray = [];
+      var loadedFiles = 0;
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var reader = new FileReader();
+        reader.onload = (function(f) {
+          return function(evt) {
+            var base64Data = evt.target.result.split(",")[1];
+            fileDataArray.push({
+              filename: f.name,
+              mimeType: f.type,
+              base64: base64Data
+            });
+            loadedFiles++;
+            if (loadedFiles === files.length) {
+              executeSaveTask(fileDataArray);
+            }
+          };
+        })(file);
+        reader.onerror = function() {
+          showToast("Failed to read one of the selected task files.", "error");
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      executeSaveTask(null);
+    }
   }
   function deleteTask(taskId) {
     if (confirm("Are you sure you want to delete Task " + taskId + "?")) {
@@ -9294,6 +9395,7 @@ body.view-teamchat .chat-input-area {
               <th>Lead Source</th>
               <th>Lead Status</th>
               <th>Next Follow-up Date</th>
+              <th>Attachments</th>
               <th style="text-align: right; width: 120px;">Actions</th>
             </tr>
           </thead>
@@ -9385,6 +9487,17 @@ body.view-teamchat .chat-input-area {
           <div class="form-group form-grid-full">
             <label class="form-label">Remarks / Follow-up Notes</label>
             <textarea id="lead-remarks-field" name="Remarks" class="form-control" placeholder="General discussion pointers..."></textarea>
+          </div>
+
+          <input type="hidden" id="lead-attachments-hidden" name="Attachments">
+          <div class="form-group form-grid-full">
+            <label class="form-label">Add Attachments / Documents</label>
+            <input type="file" id="lead-attachment" class="form-control" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Choose one or more files to upload directly to Google Drive. Leave empty to keep existing attachments if editing.</small>
+            <div id="lead-current-attachments-container" style="margin-top: 0.5rem; display: none;">
+              <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">Current Attachments:</span>
+              <div id="lead-current-attachments-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem;"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -9720,6 +9833,16 @@ body.view-teamchat .chat-input-area {
         '<option value="Lost"' + (statusStr === "Lost" ? " selected" : "") + '>Lost</option>' +
       '</select>';
 
+      var attHtml = "-";
+      if (lead.Attachments && String(lead.Attachments).trim()) {
+        var lLinks = String(lead.Attachments).split(",").map(function(l){ return l.trim(); }).filter(function(l){ return l !== ""; });
+        if (lLinks.length === 1) {
+          attHtml = '<a href="' + escapeHtml(lLinks[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="fas fa-paperclip"></i> View</a>';
+        } else if (lLinks.length > 1) {
+          attHtml = '<a href="' + escapeHtml(lLinks[0]) + '" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;" title="' + lLinks.length + ' attachments"><i class="fas fa-paperclip"></i> View (' + lLinks.length + ')</a>';
+        }
+      }
+
       return '<tr id="row-' + leadIdEsc + '">' +
         '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + leadIdEsc + '</td>' +
         '<td>' + formattedInquiryDate + '</td>' +
@@ -9730,6 +9853,7 @@ body.view-teamchat .chat-input-area {
         '<td>' + sourceEsc + '</td>' +
         '<td>' + statusSelectHtml + '</td>' +
         '<td style="font-size: 0.85rem; font-weight: 600; color: var(--secondary);">' + nextFollowupDate + '</td>' +
+        '<td>' + attHtml + '</td>' +
         '<td style="text-align: right;">' + actionsHtml + '</td>' +
       '</tr>';
     }).join("");
@@ -9866,6 +9990,31 @@ body.view-teamchat .chat-input-area {
     openWAShareModal(msg, lead.Mobile || "", "", lead.CustomerName || "Customer");
   }
 
+  function removeLeadAttachment(index) {
+    var hiddenInput = document.getElementById("lead-attachments-hidden");
+    if (!hiddenInput || !hiddenInput.value) return;
+    var links = hiddenInput.value.split(",").map(function(l) { return l.trim(); }).filter(function(l) { return l !== ""; });
+    links.splice(index, 1);
+    var updated = links.join(", ");
+    hiddenInput.value = updated;
+    var container = document.getElementById("lead-current-attachments-container");
+    var list = document.getElementById("lead-current-attachments-list");
+    if (updated === "") {
+      if (container) container.style.display = "none";
+      if (list) list.innerHTML = "";
+    } else {
+      if (list) {
+        list.innerHTML = links.map(function(link, idx) {
+          return '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+            '<a href="' + escapeHtml(link) + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (idx + 1) + '</a>' +
+            '<button type="button" onclick="removeLeadAttachment(' + idx + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>' +
+          '</div>';
+        }).join("");
+      }
+    }
+  }
+  window.removeLeadAttachment = removeLeadAttachment;
+
   function openLeadModal(leadObj) {
     leadObj = leadObj || null;
     var form = document.getElementById("lead-form");
@@ -9873,6 +10022,29 @@ body.view-teamchat .chat-input-area {
 
     document.getElementById("lead-id-field").value = "";
     document.getElementById("lead-loss-reason-field").value = "";
+
+    var fileInput = document.getElementById("lead-attachment");
+    if (fileInput) fileInput.value = "";
+    var currentAttachmentsContainer = document.getElementById("lead-current-attachments-container");
+    var currentAttachmentsList = document.getElementById("lead-current-attachments-list");
+    var hiddenAttInput = document.getElementById("lead-attachments-hidden");
+    if (hiddenAttInput) hiddenAttInput.value = (leadObj && leadObj.Attachments) || "";
+
+    if (leadObj && leadObj.Attachments && String(leadObj.Attachments).trim() !== "") {
+      if (currentAttachmentsContainer) currentAttachmentsContainer.style.display = "block";
+      var lLinks = String(leadObj.Attachments).split(",").map(function(l) { return l.trim(); }).filter(function(l) { return l !== ""; });
+      if (currentAttachmentsList) {
+        currentAttachmentsList.innerHTML = lLinks.map(function(link, idx) {
+          return '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+            '<a href="' + escapeHtml(link) + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (idx + 1) + '</a>' +
+            '<button type="button" onclick="removeLeadAttachment(' + idx + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>' +
+          '</div>';
+        }).join("");
+      }
+    } else {
+      if (currentAttachmentsContainer) currentAttachmentsContainer.style.display = "none";
+      if (currentAttachmentsList) currentAttachmentsList.innerHTML = "";
+    }
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isAdmin = currentUser.roleId === "Super Admin" || currentUser.roleId === "Admin";
@@ -9975,22 +10147,55 @@ body.view-teamchat .chat-input-area {
       }
     });
 
+    var fileInput = document.getElementById("lead-attachment");
+    var files = fileInput ? fileInput.files : [];
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
-    google.script.run
-      .withSuccessHandler(function(response) {
-        if (response && response.success) {
-          showToast(response.message || "Lead saved successfully", "success");
-          closeLeadModal();
-          loadLeadsView(false);
-        } else {
-          showToast((response ? response.message : "Failed to save lead"), "error");
-        }
-      })
-      .withFailureHandler(function(err) {
-        showToast("Error saving lead: " + err.message, "error");
-      })
-      .saveLead(formData, currentUser.userId);
+    function executeSaveLead(fileDataArray) {
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response && response.success) {
+            showToast(response.message || "Lead saved successfully", "success");
+            closeLeadModal();
+            loadLeadsView(false);
+          } else {
+            showToast((response ? response.message : "Failed to save lead"), "error");
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast("Error saving lead: " + err.message, "error");
+        })
+        .saveLead(formData, fileDataArray, currentUser.userId);
+    }
+
+    if (files.length > 0) {
+      var fileDataArray = [];
+      var loadedFiles = 0;
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var reader = new FileReader();
+        reader.onload = (function(f) {
+          return function(evt) {
+            var base64Data = evt.target.result.split(",")[1];
+            fileDataArray.push({
+              filename: f.name,
+              mimeType: f.type,
+              base64: base64Data
+            });
+            loadedFiles++;
+            if (loadedFiles === files.length) {
+              executeSaveLead(fileDataArray);
+            }
+          };
+        })(file);
+        reader.onerror = function() {
+          showToast("Failed to read one of the selected lead files.", "error");
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      executeSaveLead(null);
+    }
   }
 
   function openLeadFollowupModal(leadId) {
@@ -18871,6 +19076,116 @@ document.addEventListener("click", function() {
     window.handleLocalOptimisticMutation = handleLocalOptimisticMutation;
     window.handleDemoLocalMutation = handleLocalOptimisticMutation;
 
+    function createTempBlobUrls(fileData) {
+      if (!fileData) return [];
+      var list = Array.isArray(fileData) ? fileData : [fileData];
+      var urls = [];
+      for (var i = 0; i < list.length; i++) {
+        var f = list[i];
+        if (!f) continue;
+        var rawBase64 = f.base64 || f.base64Data;
+        if (!rawBase64) continue;
+        try {
+          var clean = rawBase64.indexOf(",") > -1 ? rawBase64.split(",")[1] : rawBase64;
+          var byteChars = atob(clean);
+          var byteNumbers = new Array(byteChars.length);
+          for (var j = 0; j < byteChars.length; j++) {
+            byteNumbers[j] = byteChars.charCodeAt(j);
+          }
+          var byteArray = new Uint8Array(byteNumbers);
+          var blob = new Blob([byteArray], { type: f.mimeType || "application/octet-stream" });
+          urls.push(URL.createObjectURL(blob));
+        } catch(e) {
+          console.warn("Could not create local blob URL for attachment:", e);
+        }
+      }
+      return urls;
+    }
+
+    function updateRecordAttachmentsInCache(fnName, payload, finalUrlsString) {
+      if (!window._dataCache) return;
+      var targetId = "";
+      if (fnName === "saveCustomer") {
+        targetId = payload.CustomerID;
+        var cust = (window._dataCache.customers || []).find(function(c) { return c.CustomerID === targetId; });
+        if (cust) { cust.Attachments = finalUrlsString; }
+        if (typeof window.renderCustomers === "function" && Array.isArray(window.allCustomers)) {
+          var ac = window.allCustomers.find(function(c) { return c.CustomerID === targetId; });
+          if (ac) ac.Attachments = finalUrlsString;
+          window.renderCustomers(window.allCustomers);
+        }
+      } else if (fnName === "saveProject") {
+        targetId = payload.ProjectID;
+        var proj = (window._dataCache.projects || []).find(function(p) { return p.ProjectID === targetId; });
+        if (proj) { proj.Attachments = finalUrlsString; }
+        if (typeof window.renderProjects === "function" && Array.isArray(window.allProjects)) {
+          var ap = window.allProjects.find(function(p) { return p.ProjectID === targetId; });
+          if (ap) ap.Attachments = finalUrlsString;
+          window.renderProjects(window.allProjects);
+        }
+      } else if (fnName === "saveSiteVisit") {
+        targetId = payload.VisitID;
+        var vis = (window._dataCache.siteVisits || []).find(function(v) { return v.VisitID === targetId; });
+        if (vis) { vis.Photos = finalUrlsString; vis.Attachments = finalUrlsString; }
+        if (typeof window.renderVisits === "function" && Array.isArray(window.allVisits)) {
+          var av = window.allVisits.find(function(v) { return v.VisitID === targetId; });
+          if (av) { av.Photos = finalUrlsString; av.Attachments = finalUrlsString; }
+          window.renderVisits(window.allVisits);
+        }
+      } else if (fnName === "saveProposal") {
+        targetId = payload.ProposalID;
+        var prop = (window._dataCache.proposals || []).find(function(p) { return p.ProposalID === targetId; });
+        if (prop) { prop.Attachments = finalUrlsString; }
+        if (typeof window.renderProposals === "function" && Array.isArray(window.proposalsDataList)) {
+          var apr = window.proposalsDataList.find(function(p) { return p.ProposalID === targetId; });
+          if (apr) apr.Attachments = finalUrlsString;
+          window.renderProposals(window.proposalsDataList);
+        }
+      } else if (fnName === "saveVendor") {
+        targetId = payload.VendorID;
+        var ven = (window._dataCache.vendors || []).find(function(v) { return v.VendorID === targetId; });
+        if (ven) { ven.Attachments = finalUrlsString; }
+        if (typeof window.renderVendors === "function" && Array.isArray(window.vendorsDataList)) {
+          var avn = window.vendorsDataList.find(function(v) { return v.VendorID === targetId; });
+          if (avn) avn.Attachments = finalUrlsString;
+          window.renderVendors(window.vendorsDataList);
+        }
+      } else if (fnName === "saveTransaction") {
+        targetId = payload.TransactionID;
+        var txn = (window._dataCache.transactions || []).find(function(t) { return t.TransactionID === targetId; });
+        if (txn) { txn.Attachments = finalUrlsString; }
+        if (typeof window.renderLedger === "function" && Array.isArray(window.transactionsCacheList)) {
+          var atx = window.transactionsCacheList.find(function(t) { return t.TransactionID === targetId; });
+          if (atx) atx.Attachments = finalUrlsString;
+          window.renderLedger(window.transactionsCacheList);
+        }
+      } else if (fnName === "saveTask") {
+        targetId = payload.TaskID;
+        var tsk = (window._dataCache.tasks || []).find(function(t) { return t.TaskID === targetId; });
+        if (tsk) { tsk.Attachments = finalUrlsString; }
+        if (typeof window.renderKanban === "function" && Array.isArray(window.allTasks)) {
+          var atk = window.allTasks.find(function(t) { return t.TaskID === targetId; });
+          if (atk) atk.Attachments = finalUrlsString;
+          window.renderKanban(window.allTasks);
+        }
+      } else if (fnName === "saveLead") {
+        targetId = payload.LeadID;
+        var ld = (window._dataCache.leads || []).find(function(l) { return l.LeadID === targetId; });
+        if (ld) { ld.Attachments = finalUrlsString; }
+        if (typeof window.renderLeads === "function" && Array.isArray(window.leadsDataList)) {
+          var ald = window.leadsDataList.find(function(l) { return l.LeadID === targetId; });
+          if (ald) ald.Attachments = finalUrlsString;
+          window.renderLeads(window.leadsDataList);
+        }
+      } else if (fnName === "saveCompanySetup") {
+        if (window._dataCache.companySetup) {
+          window._dataCache.companySetup.CompanyLogo = finalUrlsString;
+          window._dataCache.companySetup.LogoUrl = finalUrlsString;
+        }
+      }
+      populateAllCaches(window._dataCache);
+    }
+
     async function dispatchRpcCall(fnName, args, successCb, failCb) {
       args = args || [];
       var currentUser = getSessionUser();
@@ -19222,6 +19537,21 @@ document.addEventListener("click", function() {
         return;
       }
 
+      if (fnName === "uploadFileToDrive" || fnName === "uploadAttachment") {
+        var base64 = (args[0] && typeof args[0] === "object") ? (args[0].base64Data || args[0].base64) : args[1];
+        var filename = (args[0] && typeof args[0] === "object") ? (args[0].filename || args[0].fileName) : args[2];
+        var mimeType = (args[0] && typeof args[0] === "object") ? args[0].mimeType : args[3];
+        var subfolder = (args[0] && typeof args[0] === "object") ? (args[0].subfolderName || args[0].folderName) : args[4];
+        var upRes = await apiCall("upload_attachment", {
+          base64Data: base64,
+          filename: filename,
+          mimeType: mimeType,
+          subfolderName: subfolder
+        });
+        successCb(upRes);
+        return;
+      }
+
       // 3. MUTATION OPERATIONS (Dispatched to Google Apps Script Backend)
       var actionMap = {
         saveCustomer: "save_customer",
@@ -19254,7 +19584,7 @@ document.addEventListener("click", function() {
         addDropdownValue: "save_master_option",
         deleteDropdownValue: "delete_master_option",
         saveCompanySetup: "save_company_setup",
-        uploadFileToDrive: "uploadFile",
+        uploadFileToDrive: "upload_attachment",
         changePassword: "change_password",
         sendLeadEmail: "send_lead_email",
         sendProposalEmail: "send_proposal_email",
@@ -19303,6 +19633,26 @@ document.addEventListener("click", function() {
         }
         payload.userId = userId;
 
+        // If files are attached, create instant preview blob URLs for 0ms optimistic UI rendering
+        var rawFiles = [];
+        if (payload.fileData) {
+          rawFiles = Array.isArray(payload.fileData) ? payload.fileData : [payload.fileData];
+        } else if (payload.files && Array.isArray(payload.files)) {
+          rawFiles = payload.files;
+        }
+
+        if (rawFiles.length > 0) {
+          var tempBlobUrls = createTempBlobUrls(rawFiles);
+          if (tempBlobUrls.length > 0) {
+            var existingAtt = (payload.Attachments || payload.Photos || "").trim();
+            var mergedAtt = existingAtt ? (existingAtt + ", " + tempBlobUrls.join(", ")) : tempBlobUrls.join(", ");
+            payload.Attachments = mergedAtt;
+            if (fnName === "saveSiteVisit") {
+              payload.Photos = mergedAtt;
+            }
+          }
+        }
+
         // 1. OPTIMISTIC LOCAL MUTATION: Update state in memory & localStorage in 0ms (Nexallot pattern)
         var localMutRes = handleLocalOptimisticMutation(fnName, payload, args);
 
@@ -19340,7 +19690,71 @@ document.addEventListener("click", function() {
             apiCall("delete_task", { taskId: dTaskId }).catch(function(e) {});
           }
 
-          apiCall(targetAction, payload).then(function (backendRes) {
+          var commitPromise;
+          if (rawFiles.length > 0) {
+            var subfolder = "Attachments";
+            if (fnName === "saveCustomer") subfolder = "Customer Documents";
+            else if (fnName === "saveProject") subfolder = "Project Documents";
+            else if (fnName === "saveTask") subfolder = "Task Attachments";
+            else if (fnName === "saveSiteVisit") subfolder = "Site Visit Photos";
+            else if (fnName === "saveProposal") subfolder = "Proposal Documents";
+            else if (fnName === "saveVendor") subfolder = "Vendor Documents";
+            else if (fnName === "saveTransaction") subfolder = "Finance Receipts";
+            else if (fnName === "saveLead") subfolder = "Lead Attachments";
+            else if (fnName === "saveCompanySetup") subfolder = "Company Logos";
+
+            commitPromise = (async function() {
+              var uploadedUrls = [];
+              for (var fi = 0; fi < rawFiles.length; fi++) {
+                var fItem = rawFiles[fi];
+                if (!fItem) continue;
+                var base64 = fItem.base64 || fItem.base64Data;
+                if (!base64) continue;
+                try {
+                  var upRes = await apiCall("upload_attachment", {
+                    filename: fItem.filename || fItem.fileName || ("attachment_" + (fi + 1)),
+                    mimeType: fItem.mimeType || "application/octet-stream",
+                    base64Data: base64,
+                    subfolderName: subfolder
+                  });
+                  if (upRes && upRes.success && (upRes.fileUrl || upRes.downloadUrl)) {
+                    uploadedUrls.push(upRes.fileUrl || upRes.downloadUrl);
+                  }
+                } catch(upErr) {
+                  console.warn("Upload attachment failed:", upErr);
+                }
+              }
+
+              // Strip temporary blob: URLs and merge with permanent Drive URLs
+              var currentUrls = (payload.Attachments || payload.Photos || "").split(",")
+                .map(function(s) { return s.trim(); })
+                .filter(function(s) { return s !== "" && !s.startsWith("blob:"); });
+
+              var finalUrlsList = currentUrls.concat(uploadedUrls);
+              var finalUrlsString = finalUrlsList.join(", ");
+
+              payload.Attachments = finalUrlsString;
+              if (fnName === "saveSiteVisit") {
+                payload.Photos = finalUrlsString;
+              }
+              if (fnName === "saveCompanySetup" && uploadedUrls.length > 0) {
+                payload.CompanyLogo = uploadedUrls[0];
+                payload.LogoUrl = uploadedUrls[0];
+              }
+
+              delete payload.fileData;
+
+              // Update in cache & active table
+              updateRecordAttachmentsInCache(fnName, payload, finalUrlsString);
+
+              return await apiCall(targetAction, payload);
+            })();
+          } else {
+            delete payload.fileData;
+            commitPromise = apiCall(targetAction, payload);
+          }
+
+          commitPromise.then(function (backendRes) {
             window._pendingSyncCount = Math.max(0, (window._pendingSyncCount || 1) - 1);
             updateSyncStatusUI();
             if (backendRes && backendRes.success !== false) {
