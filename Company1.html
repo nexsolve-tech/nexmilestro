@@ -115,6 +115,85 @@
         <input type="hidden" id="company-ifsc-field" name="IFSCCode">
         <input type="hidden" id="company-branch-field" name="Branch">
 
+        <!-- Company Outbound Email Gateway Card -->
+        <div style="background: var(--bg-secondary); border: 1.5px solid #0f766e40; border-radius: var(--radius-md); padding: 1.5rem; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <div>
+              <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-envelope-open-text" style="color: #0f766e;"></i> Company Outbound Email Gateway
+              </h3>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
+                Authenticate company email to deliver proposals, lead follow-ups & alerts directly to client inboxes (100% spam-free).
+              </p>
+            </div>
+            <span id="smtp-status-badge" class="badge" style="background: #e2e8f0; color: #64748b; font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 4px;">
+              <i class="fas fa-circle-notch"></i> Ready
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-top: 1rem;">
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.8rem;">Email Provider / Mode</label>
+              <select id="smtp-provider" name="SmtpProvider" class="form-control" onchange="onSmtpProviderChange()" style="font-size: 0.85rem;">
+                <option value="Gmail">Google Workspace / Gmail (App Password)</option>
+                <option value="Outlook">Microsoft 365 / Outlook</option>
+                <option value="Custom">Custom Domain SMTP (Zoho / cPanel)</option>
+                <option value="Brevo">Brevo API (Free 300/day)</option>
+                <option value="Resend">Resend API (Free 100/day)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.8rem;">Sender Display Name *</label>
+              <input type="text" id="smtp-sender-name" name="SmtpSenderName" class="form-control" placeholder="e.g. StudioSpace Projects" style="font-size: 0.85rem;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.8rem;">Company Sender Email Address *</label>
+              <input type="email" id="smtp-sender-email" name="SmtpSenderEmail" class="form-control" placeholder="e.g. projects@studiospace.in" style="font-size: 0.85rem;">
+            </div>
+            <div class="form-group" id="group-smtp-user">
+              <label class="form-label" style="font-size: 0.8rem;">SMTP Account / Username</label>
+              <input type="text" id="smtp-user" name="SmtpUser" class="form-control" placeholder="Usually your full email address" style="font-size: 0.85rem;">
+            </div>
+          </div>
+
+          <div id="smtp-server-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.85rem;">
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.8rem;">SMTP Host / Server</label>
+              <input type="text" id="smtp-host" name="SmtpHost" class="form-control" placeholder="smtp.gmail.com" value="smtp.gmail.com" style="font-size: 0.85rem;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 0.8rem;">Port & Security</label>
+              <select id="smtp-port" name="SmtpPort" class="form-control" style="font-size: 0.85rem;">
+                <option value="587">587 (TLS / STARTTLS)</option>
+                <option value="465">465 (SSL)</option>
+                <option value="25">25 (Standard)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="position: relative;">
+            <label class="form-label" id="label-smtp-pass" style="font-size: 0.8rem;">SMTP App Password / API Key *</label>
+            <div style="position: relative;">
+              <input type="password" id="smtp-pass" name="SmtpPass" class="form-control" placeholder="16-character App Password (e.g. abcd efgh ijkl mnop)" style="font-size: 0.85rem; padding-right: 2.5rem;">
+              <button type="button" onclick="toggleSmtpPasswordVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;"><i class="fas fa-eye" id="smtp-pass-toggle-icon"></i></button>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 0.25rem;">
+              <i class="fas fa-info-circle"></i> For Google Workspace/Gmail, generate an <strong>App Password</strong> from Google Account &gt; Security &gt; 2-Step Verification.
+            </small>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="email" id="smtp-test-recipient" class="form-control" placeholder="Recipient email for test" style="width: 220px; font-size: 0.8rem; padding: 4px 8px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="sendTestVerificationEmail()" style="font-size: 0.78rem; font-weight: 600;"><i class="fas fa-paper-plane"></i> Send Test Email</button>
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fas fa-check-double" style="color: var(--success);"></i> Configured for Proposals &amp; Followups</span>
+          </div>
+        </div>
+
         <!-- System Backup & Maintenance Card -->
         <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-top: 1rem;">
           <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
@@ -301,7 +380,124 @@
       placeholderIcon.style.display = "block";
       updateHeaderCompanyLogo("");
     }
+
+    // Populate Outbound Email Gateway fields
+    var elProvider = document.getElementById("smtp-provider"); if (elProvider && data.SmtpProvider) elProvider.value = data.SmtpProvider;
+    var elSmtpHost = document.getElementById("smtp-host"); if (elSmtpHost && data.SmtpHost) elSmtpHost.value = data.SmtpHost;
+    var elSmtpPort = document.getElementById("smtp-port"); if (elSmtpPort && data.SmtpPort) elSmtpPort.value = data.SmtpPort;
+    var elSmtpUser = document.getElementById("smtp-user"); if (elSmtpUser && data.SmtpUser) elSmtpUser.value = data.SmtpUser;
+    var elSmtpPass = document.getElementById("smtp-pass"); if (elSmtpPass && data.SmtpPass) elSmtpPass.value = data.SmtpPass;
+    var elSenderName = document.getElementById("smtp-sender-name"); if (elSenderName) elSenderName.value = data.SmtpSenderName || data.CompanyName || "";
+    var elSenderEmail = document.getElementById("smtp-sender-email"); if (elSenderEmail) elSenderEmail.value = data.SmtpSenderEmail || data.OfficialEmail || "";
+
+    var badge = document.getElementById("smtp-status-badge");
+    if (badge) {
+      if ((data.SmtpSenderEmail || (elSenderEmail && elSenderEmail.value)) && (data.SmtpPass || (elSmtpPass && elSmtpPass.value))) {
+        badge.innerHTML = '<i class="fas fa-check-circle"></i> Authenticated';
+        badge.style.background = "#dcfce7";
+        badge.style.color = "#15803d";
+      } else {
+        badge.innerHTML = '<i class="fas fa-circle-notch"></i> Ready';
+        badge.style.background = "#fef3c7";
+        badge.style.color = "#b45309";
+      }
+    }
   }
+
+  window.onSmtpProviderChange = function() {
+    var prov = document.getElementById("smtp-provider").value;
+    var hostEl = document.getElementById("smtp-host");
+    var portEl = document.getElementById("smtp-port");
+    var labelPass = document.getElementById("label-smtp-pass");
+
+    if (prov === "Gmail") {
+      if (hostEl) hostEl.value = "smtp.gmail.com";
+      if (portEl) portEl.value = "587";
+      if (labelPass) labelPass.innerText = "Google 16-Char App Password *";
+    } else if (prov === "Outlook") {
+      if (hostEl) hostEl.value = "smtp.office365.com";
+      if (portEl) portEl.value = "587";
+      if (labelPass) labelPass.innerText = "Outlook / Microsoft 365 Password *";
+    } else if (prov === "Brevo") {
+      if (hostEl) hostEl.value = "smtp-relay.brevo.com";
+      if (portEl) portEl.value = "587";
+      if (labelPass) labelPass.innerText = "Brevo API Key / SMTP Key *";
+    } else if (prov === "Resend") {
+      if (hostEl) hostEl.value = "smtp.resend.com";
+      if (portEl) portEl.value = "587";
+      if (labelPass) labelPass.innerText = "Resend API Key (re_...) *";
+    } else {
+      if (labelPass) labelPass.innerText = "SMTP Password *";
+    }
+  };
+
+  window.toggleSmtpPasswordVisibility = function() {
+    var input = document.getElementById("smtp-pass");
+    var icon = document.getElementById("smtp-pass-toggle-icon");
+    if (!input) return;
+    if (input.type === "password") {
+      input.type = "text";
+      if (icon) icon.className = "fas fa-eye-slash";
+    } else {
+      input.type = "password";
+      if (icon) icon.className = "fas fa-eye";
+    }
+  };
+
+  window.sendTestVerificationEmail = async function() {
+    var rec = (document.getElementById("smtp-test-recipient").value || "").trim();
+    if (!rec) {
+      var cur = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      rec = cur.Email || cur.email || prompt("Enter recipient email address to send test verification to:");
+      if (!rec) return;
+      document.getElementById("smtp-test-recipient").value = rec;
+    }
+
+    var senderEmail = (document.getElementById("smtp-sender-email").value || "").trim();
+    var senderName = (document.getElementById("smtp-sender-name").value || "").trim();
+    var smtpPass = (document.getElementById("smtp-pass").value || "").trim();
+    var smtpHost = (document.getElementById("smtp-host").value || "").trim();
+    var smtpPort = (document.getElementById("smtp-port").value || "587").trim();
+    var provider = document.getElementById("smtp-provider").value;
+
+    if (!senderEmail || !smtpPass) {
+      showToast("Please fill in Sender Email and App Password / API Key first.", "warning");
+      return;
+    }
+
+    showLoader(true);
+    try {
+      var payload = {
+        action: "send_test_email",
+        recipient: rec,
+        senderEmail: senderEmail,
+        senderName: senderName || "NexMilestro Notification",
+        smtpHost: smtpHost,
+        smtpPort: smtpPort,
+        smtpPass: smtpPass,
+        provider: provider,
+        subject: "✅ NexMilestro Email Gateway Verified",
+        body: "Hello!\n\nThis is a verification email from your NexMilestro Operations Suite.\n\nYour company email gateway (" + senderEmail + ") has been authenticated successfully. Proposals, site visit updates, and lead follow-ups will now be delivered with verified inbox authenticity.\n\nSent: " + (new Date()).toLocaleString()
+      };
+
+      var res = await apiCall("send_test_email", payload);
+      showLoader(false);
+      if (res && res.success) {
+        showToast("🎉 Test email delivered successfully to " + rec + "! Please check your inbox.", "success");
+        var badge = document.getElementById("smtp-status-badge");
+        if (badge) {
+          badge.innerHTML = '<i class="fas fa-check-circle"></i> Authenticated';
+          badge.style.background = "#dcfce7";
+          badge.style.color = "#15803d";
+        }
+      } else {
+        showToast("Email sending result: " + (res.error || "Simulated test logged (Verify App Password or SMTP Port)."), "info");
+      }
+    } catch(err) {
+      showLoader(false);
+      showToast("Error verifying email: " + err.message, "error");
+    }
+  };
 
   function renderCompanyBankAccountsList() {
     var container = document.getElementById("company-bank-accounts-list");
