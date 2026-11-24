@@ -144,6 +144,21 @@
           </tbody>
         </table>
       </div>
+      <!-- Virtual High-Speed Pagination Bar -->
+      <div id="visits-pagination-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background: var(--bg-secondary); border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem; font-size: 0.8rem;">
+        <div id="visits-pagination-info">Showing 0 of 0 visits</div>
+        <div style="display: flex; gap: 0.35rem; align-items: center;" id="visits-pagination-controls"></div>
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          <span style="color: var(--text-muted); font-size: 0.75rem;">Page Size:</span>
+          <select id="visits-page-size-select" onchange="changeVisitPageSize(this.value)" style="padding: 2px 6px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main);">
+            <option value="50" selected>50 / page</option>
+            <option value="100">100 / page</option>
+            <option value="250">250 / page</option>
+            <option value="500">500 / page</option>
+            <option value="-1">All records</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -564,12 +579,28 @@
     filterVisits();
   };
 
+  var visitCurrentPage = 1;
+  var visitPageSize = 50;
+
+  window.setVisitPage = function(p) {
+    visitCurrentPage = p;
+    filterVisits();
+  };
+
+  window.changeVisitPageSize = function(s) {
+    visitPageSize = parseInt(s, 10);
+    visitCurrentPage = 1;
+    filterVisits();
+  };
+
   function renderVisits(visitsList) {
     var tbody = document.querySelector("#visits-table tbody");
     if (!tbody) return;
 
     if (!visitsList || !Array.isArray(visitsList) || visitsList.length === 0) {
       tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-eye empty-state-icon"></i>\n          <p class="empty-state-title">' + (activeVisitTab === "scheduled" ? "No scheduled visits" : "No site visits logged") + '</p>\n          <p class="empty-state-desc">' + (activeVisitTab === "scheduled" ? "Plan upcoming inspections and field audits." : "Record architectural site visits, inspection logs, and measurements.") + '</p>\n        </div>\n      </td></tr>';
+      var pBar = document.getElementById("visits-pagination-bar");
+      if (pBar) pBar.style.display = "none";
       return;
     }
 
@@ -580,20 +611,64 @@
     var canEdit = isSuperAdmin || siteVisitsPerm.edit === true;
     var canDelete = isSuperAdmin || siteVisitsPerm.del === true;
 
+    // High-Speed O(1) Hash Maps
+    var projMap = {};
+    (projectsCache || []).forEach(function(p) { if (p && p.ProjectID) projMap[p.ProjectID] = p; });
+    var leadMap = {};
+    (leadsCacheList || []).forEach(function(l) { if (l && l.LeadID) leadMap[l.LeadID] = l; });
+    var staffMap = {};
+    (staffCacheList || []).forEach(function(s) {
+      if (s) {
+        if (s.UserID) staffMap[s.UserID] = s;
+        if (s.userId) staffMap[s.userId] = s;
+        if (s.FullName) staffMap[s.FullName] = s;
+      }
+    });
+
     var sortedVisits = visitsList.filter(function(v) { return v && typeof v === "object"; }).slice().sort(function(a, b) {
       var idA = String(a.VisitID || "");
       var idB = String(b.VisitID || "");
       return idB.localeCompare(idA);
     });
 
-    tbody.innerHTML = sortedVisits.map(function(visit) {
+    var totalVisits = sortedVisits.length;
+    var totalPages = (visitPageSize === -1) ? 1 : Math.max(1, Math.ceil(totalVisits / visitPageSize));
+    if (visitCurrentPage > totalPages) visitCurrentPage = 1;
+    var startIdx = (visitPageSize === -1) ? 0 : (visitCurrentPage - 1) * visitPageSize;
+    var endIdx = (visitPageSize === -1) ? totalVisits : Math.min(startIdx + visitPageSize, totalVisits);
+    var pagedVisits = (visitPageSize === -1) ? sortedVisits : sortedVisits.slice(startIdx, endIdx);
+
+    // Render Pagination Bar
+    var pBar = document.getElementById("visits-pagination-bar");
+    if (pBar) {
+      pBar.style.display = "flex";
+      var pInfo = document.getElementById("visits-pagination-info");
+      if (pInfo) {
+        pInfo.innerHTML = 'Showing <strong>' + (startIdx + 1) + '</strong> to <strong>' + endIdx + '</strong> of <strong>' + totalVisits.toLocaleString() + '</strong> visits';
+      }
+      var pControls = document.getElementById("visits-pagination-controls");
+      if (pControls) {
+        if (totalPages <= 1) {
+          pControls.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">Page 1 of 1</span>';
+        } else {
+          pControls.innerHTML = 
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="setVisitPage(1)" ' + (visitCurrentPage <= 1 ? "disabled" : "") + ' style="padding:2px 7px;" title="First Page"><i class="fas fa-angle-double-left"></i></button>' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="setVisitPage(' + (visitCurrentPage - 1) + ')" ' + (visitCurrentPage <= 1 ? "disabled" : "") + ' style="padding:2px 7px;">Prev</button>' +
+            '<span style="padding:0 0.5rem; font-weight:700; color:var(--text-main); font-size:0.8rem;">Page ' + visitCurrentPage + ' of ' + totalPages + '</span>' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="setVisitPage(' + (visitCurrentPage + 1) + ')" ' + (visitCurrentPage >= totalPages ? "disabled" : "") + ' style="padding:2px 7px;">Next</button>' +
+            '<button type="button" class="btn btn-secondary btn-sm" onclick="setVisitPage(' + totalPages + ')" ' + (visitCurrentPage >= totalPages ? "disabled" : "") + ' style="padding:2px 7px;" title="Last Page"><i class="fas fa-angle-double-right"></i></button>';
+        }
+      }
+    }
+
+    tbody.innerHTML = pagedVisits.map(function(visit) {
       var entityHtml = "-";
       if (visit.ProjectID) {
-        var proj = (projectsCache || []).find(function(p) { return p && p.ProjectID === visit.ProjectID; });
+        var proj = projMap[visit.ProjectID];
         var projName = proj ? proj.ProjectName : "Project ID: " + visit.ProjectID;
         entityHtml = '<i class="fas fa-building" style="color: var(--primary); margin-right: 0.35rem;"></i>' + escapeHtml(projName);
       } else if (visit.LeadID) {
-        var lead = (leadsCacheList || []).find(function(l) { return l && l.LeadID === visit.LeadID; });
+        var lead = leadMap[visit.LeadID];
         var leadTitle = lead ? (lead.CustomerName || lead.LeadName || lead.LeadID) : ("Lead ID: " + visit.LeadID);
         entityHtml = '<i class="fas fa-bullseye" style="color: #0284c7; margin-right: 0.35rem;"></i>' + escapeHtml(leadTitle) + ' <span style="font-size:0.75rem; color:var(--text-muted); font-weight: 500;">(Lead)</span>';
       }
@@ -602,9 +677,7 @@
       var followupStr = (visit.NextFollowupDate && typeof formatDate === "function") ? formatDate(visit.NextFollowupDate) : "-";
       var assigneeName = visit.AssignedTo || "Unassigned";
       if ((!visit.AssignedType || visit.AssignedType === "Staff") && visit.AssignedTo) {
-        var u = (staffCacheList || []).find(function(staff) {
-          return staff && (staff.UserID === visit.AssignedTo || staff.userId === visit.AssignedTo);
-        });
+        var u = staffMap[visit.AssignedTo];
         if (u) assigneeName = u.FullName || u.fullName || u.UserID;
       }
       var isBillable = visit.IsBillable === "Yes" || visit.IsBillable === true;

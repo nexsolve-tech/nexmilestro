@@ -218,7 +218,7 @@
       if (projSelect) {
         projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
           return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), "</option>");
-        }).join("");
+        }).join("") + loadMoreBtn;
         if (window.makeSearchableSelect) window.makeSearchableSelect(projSelect, { placeholder: "Select Project" });
       }
 
@@ -545,6 +545,7 @@
       }
     });
 
+    var projMap = {}; (projectsCacheList || []).forEach(function(p) { if (p && p.ProjectID) projMap[p.ProjectID] = p; });
     for (var colKey in columns) {
       var col = columns[colKey];
       col.countEl.innerText = col.items.length;
@@ -558,10 +559,16 @@
         return idB.localeCompare(idA);
       });
 
-      col.listEl.innerHTML = col.items.map(function(task) {
-        var proj = (projectsCacheList || []).find(function(p) {
-          return p && p.ProjectID === task.ProjectID;
-        });
+      // Limit initial DOM cards per column to 40 for 60fps rendering
+      var maxCards = 40;
+      var cardsToRender = col.items.slice(0, maxCards);
+      var loadMoreBtn = "";
+      if (col.items.length > maxCards) {
+        loadMoreBtn = '<div style="padding: 0.5rem 0; text-align: center;"><button type="button" class="btn btn-secondary btn-sm" onclick="renderAllLaneCards(\'' + colKey + '\')" style="width: 100%; font-size: 0.75rem; font-weight: 600;"><i class="fas fa-plus"></i> Show all ' + col.items.length + ' tasks</button></div>';
+      }
+
+      col.listEl.innerHTML = cardsToRender.map(function(task) {
+        var proj = projMap[task.ProjectID];
         var projName = proj ? proj.ProjectName : "General Project";
         var dateStr = task.DueDate ? formatDate(task.DueDate) : "No Due Date";
         var priorityClass = (task.Priority || "Medium").toLowerCase();

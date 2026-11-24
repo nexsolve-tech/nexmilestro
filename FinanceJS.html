@@ -836,6 +836,20 @@ window.calculateDashboardTotals = function(txns) {
   if (balEl) balEl.innerHTML = typeof formatCurrency === "function" ? formatCurrency(net) : "₹" + net;
 };
 
+var finCurrentPage = 1;
+var finPageSize = 50;
+
+window.setFinPage = function(p) {
+  finCurrentPage = p;
+  if (typeof window.filterTransactions === "function") window.filterTransactions();
+};
+
+window.changeFinPageSize = function(s) {
+  finPageSize = parseInt(s, 10);
+  finCurrentPage = 1;
+  if (typeof window.filterTransactions === "function") window.filterTransactions();
+};
+
 window.renderLedger = function(txns) {
   var tbody = document.querySelector("#transactions-table tbody");
   if (!tbody) return;
@@ -854,19 +868,32 @@ window.renderLedger = function(txns) {
   var canEdit = isSuperAdmin || financePerm.edit === true;
   var canDelete = isSuperAdmin || financePerm.del === true;
 
+  // O(1) Fast Hash Maps
+  var projMap = {};
+  (window.projsCacheList || []).forEach(function(item) { if (item && item.ProjectID) projMap[item.ProjectID] = item; });
+  var vendMap = {};
+  (window.vendorsCacheList || []).forEach(function(item) { if (item && item.VendorID) vendMap[item.VendorID] = item; });
+
   var sorted = txns.slice().sort(function(a, b) {
     var dateA = new Date(a.TransactionDate || 0);
     var dateB = new Date(b.TransactionDate || 0);
     return dateB - dateA;
   });
 
+  var totalTxns = sorted.length;
+  var totalPages = (finPageSize === -1) ? 1 : Math.max(1, Math.ceil(totalTxns / finPageSize));
+  if (finCurrentPage > totalPages) finCurrentPage = 1;
+  var startIdx = (finPageSize === -1) ? 0 : (finCurrentPage - 1) * finPageSize;
+  var endIdx = (finPageSize === -1) ? totalTxns : Math.min(startIdx + finPageSize, totalTxns);
+  var pagedTxns = (finPageSize === -1) ? sorted : sorted.slice(startIdx, endIdx);
+
   var html = "";
-  for (var i = 0; i < sorted.length; i++) {
-    var t = sorted[i];
+  for (var i = 0; i < pagedTxns.length; i++) {
+    var t = pagedTxns[i];
     
     var projName = "-";
     if (t.ProjectID) {
-      var p = (window.projsCacheList || []).find(function(item) { return item.ProjectID === t.ProjectID; });
+      var p = projMap[t.ProjectID];
       if (p) projName = typeof escapeHtml === "function" ? escapeHtml(p.ProjectName) : p.ProjectName;
     }
 
