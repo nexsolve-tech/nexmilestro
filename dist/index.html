@@ -9349,6 +9349,8 @@ body.view-teamchat .chat-input-area {
 <script>
 (function() {
   var allTasks = [];
+  var laneLimits = {};
+  var lastRenderedTasks = [];
   var projectsCacheList = [];
   var usersCacheList = [];
   var vendorsCacheList = [];
@@ -9382,7 +9384,7 @@ body.view-teamchat .chat-input-area {
       if (projSelect) {
         projSelect.innerHTML = '<option value="">Select Project (Optional)</option>' + projectsCacheList.map(function(p) {
           return '<option value="'.concat(p.ProjectID, '">').concat(escapeHtml(p.ProjectName), "</option>");
-        }).join("") + loadMoreBtn;
+        }).join("");
         if (window.makeSearchableSelect) window.makeSearchableSelect(projSelect, { placeholder: "Select Project" });
       }
 
@@ -9679,6 +9681,7 @@ body.view-teamchat .chat-input-area {
   window.exportTasksCSV = exportTasksCSV;
 
   function renderKanban(tasks) {
+    lastRenderedTasks = tasks || allTasks;
     var columns = {
       "Pending": { listEl: document.getElementById("list-pending"), countEl: document.getElementById("count-pending"), items: [] },
       "In Progress": { listEl: document.getElementById("list-inprogress"), countEl: document.getElementById("count-inprogress"), items: [] },
@@ -9724,7 +9727,7 @@ body.view-teamchat .chat-input-area {
       });
 
       // Limit initial DOM cards per column to 40 for 60fps rendering
-      var maxCards = 40;
+      var maxCards = laneLimits[colKey] || 40;
       var cardsToRender = col.items.slice(0, maxCards);
       var loadMoreBtn = "";
       if (col.items.length > maxCards) {
@@ -9788,9 +9791,14 @@ body.view-teamchat .chat-input-area {
             '<div style="display:flex; gap:0.3rem;">' + quickBtns + '</div>' +
           '</div>' +
         '</div>';
-      }).join("");
+      }).join("") + loadMoreBtn;
     }
   }
+  window.renderKanban = renderKanban;
+  window.renderAllLaneCards = function(colKey) {
+    laneLimits[colKey] = 999999;
+    renderKanban(lastRenderedTasks || allTasks);
+  };
   function notifyTaskWhatsApp(taskId) {
     var task = allTasks.find(function(t) { return t.TaskID === taskId; });
     if (!task) return;
@@ -9847,7 +9855,7 @@ body.view-teamchat .chat-input-area {
     });
     renderKanban(filtered);
   }
-  window.onTaskStatusChange = function() {
+  function onTaskStatusChange() {
     var statusVal = document.getElementById("task-status").value;
     var group = document.getElementById("task-completion-date-group");
     var field = document.getElementById("task-completion-date");
@@ -9859,7 +9867,8 @@ body.view-teamchat .chat-input-area {
     } else {
       if (group) group.style.display = "none";
     }
-  };
+  }
+  window.onTaskStatusChange = onTaskStatusChange;
 
   function openTaskModal(taskObj) {
     if (taskObj === void 0) {
