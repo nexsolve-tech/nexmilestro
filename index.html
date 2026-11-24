@@ -7160,8 +7160,8 @@ body.view-teamchat .chat-input-area {
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
           <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
           <button class="btn btn-secondary" onclick="exportSiteVisitsCSV()" title="Download Filtered Site Visits to CSV"><i class="fas fa-download"></i> Download CSV</button>
-          <button class="btn btn-primary" id="btn-add-visit" onclick="openVisitModal()"><i class="fas fa-plus"></i> Log Site Visit</button>
-          <button class="btn" id="btn-gps-checkin" onclick="startGpsCheckIn()" style="background: #059669; border: 1px solid #059669; color: #ffffff; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer;"><i class="fas fa-map-marker-alt"></i> GPS Check-In</button>
+          <button class="btn" id="btn-add-visit" onclick="handlePrimaryVisitAction()" style="background: #059669; border: 1px solid #059669; color: #ffffff; font-weight: 700; display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 1.1rem; border-radius: var(--radius-sm); cursor: pointer; box-shadow: 0 2px 6px rgba(5,150,105,0.25);"><i class="fas fa-map-marker-alt"></i> GPS Check-In</button>
+          <button class="btn btn-secondary btn-sm" id="btn-admin-manual-log" onclick="openManualVisitModalAdmin()" style="display: none; font-size: 0.75rem; color: var(--text-muted); border-style: dashed;" title="Admin Override: Record past manual visit without GPS"><i class="fas fa-user-shield"></i> Manual Entry</button>
         </div>
       </div>
 
@@ -7272,7 +7272,7 @@ body.view-teamchat .chat-input-area {
       <h3 class="modal-title" id="visit-modal-title">Log New Site Visit</h3>
       <button class="icon-btn" onclick="closeVisitModal()"><i class="fas fa-times"></i></button>
     </div>
-    <form id="visit-form" onsubmit="handleVisitSubmit(event)">
+    <form id="visit-form" onsubmit="handleVisitSubmit(event)" novalidate>
       <input type="hidden" id="visit-id" name="VisitID">
       <input type="hidden" id="visit-mode" value="manual">
       <input type="hidden" id="visit-checkin-time" name="CheckInTime">
@@ -7355,6 +7355,7 @@ body.view-teamchat .chat-input-area {
             <label class="form-label">Status *</label>
             <select id="visit-status" name="Status" class="form-control" required>
               <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress (On-Site)</option>
               <option value="Scheduled">Scheduled</option>
             </select>
           </div>
@@ -7458,8 +7459,7 @@ body.view-teamchat .chat-input-area {
       scheduledBtn.style.color = "var(--text-muted)";
       scheduledBtn.style.borderBottom = "none";
       scheduledBtn.style.fontWeight = "600";
-      if (addBtn)
-        addBtn.innerHTML = '<i class="fas fa-plus"></i> Log Site Visit';
+      updatePrimaryVisitActionButton();
     } else {
       scheduledBtn.style.color = "var(--primary)";
       scheduledBtn.style.borderBottom = "3px solid var(--primary)";
@@ -7467,8 +7467,7 @@ body.view-teamchat .chat-input-area {
       logsBtn.style.color = "var(--text-muted)";
       logsBtn.style.borderBottom = "none";
       logsBtn.style.fontWeight = "600";
-      if (addBtn)
-        addBtn.innerHTML = '<i class="fas fa-plus"></i> Schedule Site Visit';
+      updatePrimaryVisitActionButton();
     }
     filterVisits();
   };
@@ -7481,7 +7480,8 @@ body.view-teamchat .chat-input-area {
     var visitPerm = perms["SiteVisits"] || {};
     var canAdd = isSuperAdmin || visitPerm.add === true;
     var addBtn = document.getElementById("btn-add-visit");
-    if (addBtn) addBtn.style.display = canAdd ? "inline-block" : "none";
+    if (addBtn) addBtn.style.display = canAdd ? "inline-flex" : "none";
+    updatePrimaryVisitActionButton();
 
     function applySiteVisitsData(result) {
       if (!result) return;
@@ -7754,12 +7754,30 @@ body.view-teamchat .chat-input-area {
       var svIdEsc = svId;
       var menuId = "act-visit-" + svIdEsc.replace(/[^a-zA-Z0-9_-]/g, "_");
 
-      var actionsHtml = '<div class="action-dropdown-wrap">' +
+      var isScheduledVisit = ((visit.Status || "") === "Scheduled");
+      var scheduledActionBtn = "";
+      if (isScheduledVisit) {
+        scheduledActionBtn = '<button type="button" class="btn btn-sm" onclick="event.stopPropagation(); startGpsCheckInForScheduledVisit(\'' + svIdEsc + '\');" style="background: #059669; color: #ffffff; border: none; font-weight: 700; padding: 0.35rem 0.65rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; box-shadow: 0 1px 3px rgba(5,150,105,0.3); margin-right: 0.4rem; cursor: pointer;" title="Arrived on site? Start GPS Check-In for this scheduled visit">' +
+          '<i class="fas fa-map-marker-alt"></i> GPS Check-In' +
+        '</button>';
+      }
+
+      var actionsHtml = '<div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.35rem;">' +
+        scheduledActionBtn +
+        '<div class="action-dropdown-wrap">' +
         '<button type="button" class="btn-table-action" onclick="toggleTableRowActionMenu(event, \'' + menuId + '\')">' +
           '<i class="fas fa-ellipsis-v"></i> <span>Actions</span> <i class="fas fa-chevron-down table-action-chevron"></i>' +
         '</button>' +
-        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">' +
-          '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); shareVisitOnWhatsApp(\'' + svIdEsc + '\');">' +
+        '<div id="' + menuId + '" class="table-action-menu" style="display: none;">';
+
+      if (isScheduledVisit) {
+        actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); startGpsCheckInForScheduledVisit(\'' + svIdEsc + '\');" style="color: #059669; font-weight: 700;">' +
+            '<i class="fas fa-map-marker-alt" style="color: #059669;"></i> <span>Start GPS Check-In (On-Site)</span>' +
+          '</button>' +
+          '<div class="table-action-divider"></div>';
+      }
+
+      actionsHtml += '<button type="button" class="table-action-item" onclick="event.stopPropagation(); closeAllTableActionMenus(); shareVisitOnWhatsApp(\'' + svIdEsc + '\');">' +
             '<i class="fab fa-whatsapp" style="color: #22c55e;"></i> <span>Share Report (WhatsApp)</span>' +
           '</button>';
 
@@ -7774,7 +7792,7 @@ body.view-teamchat .chat-input-area {
             '<i class="fas fa-trash"></i> <span>Delete Site Visit</span>' +
           '</button>';
       }
-      actionsHtml += '</div></div>';
+      actionsHtml += '</div></div></div>';
 
       var svIdEsc = typeof escapeHtml === "function" ? escapeHtml(visit.VisitID) : visit.VisitID;
       var purposeEsc = typeof escapeHtml === "function" ? escapeHtml(visit.Purpose || "") : (visit.Purpose || "");
@@ -8105,18 +8123,50 @@ body.view-teamchat .chat-input-area {
     );
   }
 
+  function updatePrimaryVisitActionButton() {
+    var btn = document.getElementById("btn-add-visit");
+    var adminBtn = document.getElementById("btn-admin-manual-log");
+    var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+    var isSuperAdmin = currentUser.roleId === "Super Admin";
+
+    if (adminBtn) {
+      adminBtn.style.display = (isSuperAdmin && activeVisitTab === "logs") ? "inline-flex" : "none";
+    }
+
+    if (!btn) return;
+
+    if (activeVisitTab === "scheduled") {
+      btn.className = "btn btn-primary";
+      btn.style.background = "";
+      btn.style.borderColor = "";
+      btn.style.color = "#ffffff";
+      btn.innerHTML = '<i class="fas fa-calendar-plus"></i> Schedule Site Visit';
+    } else {
+      var rawActive = localStorage.getItem("nexmilestro_active_site_visit");
+      if (rawActive) {
+        btn.className = "btn btn-success";
+        btn.style.background = "#047857";
+        btn.style.borderColor = "#047857";
+        btn.style.color = "#ffffff";
+        btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> On-Site Active (View)';
+      } else {
+        btn.className = "btn btn-success";
+        btn.style.background = "#059669";
+        btn.style.borderColor = "#059669";
+        btn.style.color = "#ffffff";
+        btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> GPS Check-In';
+      }
+    }
+  }
+
   function checkActiveVisitState() {
     var rawActive = localStorage.getItem("nexmilestro_active_site_visit");
     var banner = document.getElementById("active-checkin-banner");
-    var checkInBtn = document.getElementById("btn-gps-checkin");
+
+    updatePrimaryVisitActionButton();
 
     if (!rawActive) {
       if (banner) banner.style.display = "none";
-      if (checkInBtn) {
-        checkInBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> GPS Check-In';
-        checkInBtn.style.background = "#059669";
-        checkInBtn.style.borderColor = "#059669";
-      }
       if (activeTimerInterval) {
         clearInterval(activeTimerInterval);
         activeTimerInterval = null;
@@ -8132,11 +8182,6 @@ body.view-teamchat .chat-input-area {
       }
 
       if (banner) banner.style.display = "block";
-      if (checkInBtn) {
-        checkInBtn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> On-Site Active';
-        checkInBtn.style.background = "#047857";
-        checkInBtn.style.borderColor = "#047857";
-      }
 
       var targetName = activeVisit.TargetName;
       if (!targetName) {
@@ -8192,6 +8237,25 @@ body.view-teamchat .chat-input-area {
     }
   }
 
+  window.handlePrimaryVisitAction = function() {
+    if (activeVisitTab === "scheduled") {
+      openVisitModal(null, "schedule");
+    } else {
+      var rawActive = localStorage.getItem("nexmilestro_active_site_visit");
+      if (rawActive) {
+        showToast("Site visit is currently in progress! Use 'GPS Check-Out' when leaving the site.", "info");
+        var banner = document.getElementById("active-checkin-banner");
+        if (banner) banner.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        startGpsCheckIn();
+      }
+    }
+  };
+
+  window.openManualVisitModalAdmin = function() {
+    openVisitModal(null, "manual");
+  };
+
   window.startGpsCheckIn = function() {
     var existing = localStorage.getItem("nexmilestro_active_site_visit");
     if (existing) {
@@ -8203,6 +8267,26 @@ body.view-teamchat .chat-input-area {
 
     captureGpsPosition(function(pos) {
       openVisitModal(null, "checkin", pos);
+    });
+  };
+
+  window.startGpsCheckInForScheduledVisit = function(visitId) {
+    var existing = localStorage.getItem("nexmilestro_active_site_visit");
+    if (existing) {
+      showToast("You already have an active site visit in progress! Please check out from current visit first.", "error");
+      var banner = document.getElementById("active-checkin-banner");
+      if (banner) banner.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    var schedVisit = (allVisits || []).find(function(v) { return v && v.VisitID === visitId; });
+    if (!schedVisit) {
+      showToast("Scheduled visit record not found.", "error");
+      return;
+    }
+
+    captureGpsPosition(function(pos) {
+      openVisitModal(schedVisit, "checkin_scheduled", pos);
     });
   };
 
@@ -8264,20 +8348,31 @@ body.view-teamchat .chat-input-area {
     var remarksInput = document.getElementById("visit-remarks");
     var submitBtn = document.getElementById("btn-visit-submit");
 
-    // Reset remarks requirement styling
+    // Reset fields requirement styling
     remarksInput.required = false;
     remarksInput.style.border = "";
     remarksLabel.innerHTML = 'Remarks / Work Progress Status';
     remarksInput.placeholder = "Describe current site layout details, issues resolved...";
+    submitBtn.type = "submit";
+    submitBtn.disabled = false;
     submitBtn.className = "btn btn-primary";
     submitBtn.style.background = "";
     submitBtn.style.borderColor = "";
+    submitBtn.style.color = "#ffffff";
     submitBtn.innerHTML = "Save Log";
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
-    if (mode === "checkin") {
-      document.getElementById("visit-modal-title").innerText = "📍 GPS Site Visit Check-In";
+    if (mode === "checkin" || mode === "checkin_scheduled") {
+      var isSchedCheckIn = (mode === "checkin_scheduled" && visitObj);
+      document.getElementById("visit-modal-title").innerText = isSchedCheckIn 
+        ? "📍 GPS Check-In for Scheduled Visit: " + (visitObj.VisitID || "")
+        : "📍 GPS Site Visit Check-In";
+
+      if (isSchedCheckIn) {
+        document.getElementById("visit-id").value = visitObj.VisitID || "";
+      }
+
       var checkinTimeStr = formatTimeAmPm(new Date());
       document.getElementById("visit-checkin-time").value = checkinTimeStr;
       document.getElementById("visit-checkin-location").value = gpsMeta ? gpsMeta.locStr : "";
@@ -8290,9 +8385,62 @@ body.view-teamchat .chat-input-area {
           '<div><i class="fas fa-map-marker-alt" style="color: #059669; font-size: 1.1rem; margin-right: 0.35rem;"></i><strong style="color: #065f46;">Live GPS Acquired:</strong> <span style="font-weight: 600; color: #047857;">' + escapeHtml(gpsMeta ? gpsMeta.locStr : "Detected") + '</span></div>' +
           (gpsMeta && gpsMeta.mapUrl ? '<a href="' + escapeHtml(gpsMeta.mapUrl) + '" target="_blank" style="color: #059669; text-decoration: underline; font-weight: 600; font-size: 0.8rem;"><i class="fas fa-external-link-alt"></i> View on Maps</a>' : '') +
         '</div>' +
-        '<div style="font-size: 0.75rem; color: #047857; margin-top: 0.35rem;"><i class="fas fa-clock"></i> Check-In Time: <strong>' + checkinTimeStr + '</strong>. Live on-site duration will be tracked automatically until Check-Out.</div>';
+        '<div style="font-size: 0.75rem; color: #047857; margin-top: 0.35rem;"><i class="fas fa-clock"></i> Check-In Time: <strong>' + checkinTimeStr + '</strong>. Live on-site duration timer will start upon saving check-in.</div>';
       }
 
+      if (isSchedCheckIn) {
+        if (visitObj.LinkType === "Lead" || visitObj.LeadID) {
+          document.getElementById("visit-link-lead").checked = true;
+          handleVisitLinkTypeChange();
+          var leadSelect = document.getElementById("visit-lead-id");
+          if (leadSelect) {
+            leadSelect.value = String(visitObj.LeadID || "").trim();
+            if (leadSelect._refreshSearchable) leadSelect._refreshSearchable();
+          }
+        } else {
+          document.getElementById("visit-link-project").checked = true;
+          handleVisitLinkTypeChange();
+          var projSelect = document.getElementById("visit-project-id");
+          if (projSelect) {
+            projSelect.value = String(visitObj.ProjectID || "").trim();
+            if (projSelect._refreshSearchable) projSelect._refreshSearchable();
+          }
+        }
+        document.getElementById("visit-purpose").value = visitObj.Purpose || "";
+        document.getElementById("visit-assigned-type").value = visitObj.AssignedType || "Staff";
+        handleVisitAssignedTypeChange();
+        var visitAssignedSelect = document.getElementById("visit-assigned-to");
+        if (visitAssignedSelect) {
+          visitAssignedSelect.value = visitObj.AssignedTo || currentUser.userId || "";
+          if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
+        }
+      } else {
+        document.getElementById("visit-link-project").checked = true;
+        handleVisitLinkTypeChange();
+        document.getElementById("visit-assigned-type").value = "Staff";
+        handleVisitAssignedTypeChange();
+        var visitAssignedSelect = document.getElementById("visit-assigned-to");
+        if (visitAssignedSelect) {
+          visitAssignedSelect.value = currentUser.userId || "";
+          if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
+        }
+        var projSelect = document.getElementById("visit-project-id");
+        if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
+      }
+
+      document.getElementById("visit-date").value = (new Date()).toISOString().substring(0, 10);
+      document.getElementById("visit-is-billable").checked = false;
+      toggleVisitBillingField();
+      document.getElementById("visit-status").value = "In Progress";
+
+      submitBtn.className = "btn btn-success";
+      submitBtn.innerHTML = '<i class="fas fa-play-circle"></i> Start Visit & Save Check-In';
+      submitBtn.style.background = "#059669";
+      submitBtn.style.borderColor = "#059669";
+      submitBtn.style.color = "#ffffff";
+    } else if (mode === "schedule") {
+      document.getElementById("visit-modal-title").innerText = "📅 Schedule New Site Visit";
+      if (gpsCard) gpsCard.style.display = "none";
       document.getElementById("visit-link-project").checked = true;
       handleVisitLinkTypeChange();
       document.getElementById("visit-date").value = (new Date()).toISOString().substring(0, 10);
@@ -8307,11 +8455,10 @@ body.view-teamchat .chat-input-area {
       if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
       document.getElementById("visit-is-billable").checked = false;
       toggleVisitBillingField();
-      document.getElementById("visit-status").value = "In Progress";
+      document.getElementById("visit-status").value = "Scheduled";
 
-      submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Start Visit & Save Check-In';
-      submitBtn.style.background = "#059669";
-      submitBtn.style.borderColor = "#059669";
+      submitBtn.className = "btn btn-primary";
+      submitBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Schedule Site Visit';
     } else if (mode === "checkout") {
       document.getElementById("visit-modal-title").innerText = "🏁 GPS Site Visit Check-Out & Final Updates";
       document.getElementById("visit-id").value = visitObj.VisitID || "";
@@ -8340,7 +8487,6 @@ body.view-teamchat .chat-input-area {
         '</div>';
       }
 
-      // Populate entity link
       if (visitObj.LinkType === "Lead" || visitObj.LeadID) {
         var leadRadio = document.getElementById("visit-link-lead");
         if (leadRadio) leadRadio.checked = true;
@@ -8378,7 +8524,6 @@ body.view-teamchat .chat-input-area {
       document.getElementById("visit-purpose").value = visitObj.Purpose || "";
       document.getElementById("visit-remarks").value = visitObj.Remarks || "";
 
-      // Mandatory updates enforcement UI
       remarksLabel.innerHTML = 'Site Visit Updates & Observations * <span style="color: var(--danger); font-weight: 700;">(Required for Check-Out)</span>';
       remarksInput.required = true;
       remarksInput.placeholder = "Mandatory: Please enter observations, work progress, client decisions, or site issues before check-out is allowed...";
@@ -8428,7 +8573,7 @@ body.view-teamchat .chat-input-area {
 
       submitBtn.innerHTML = '<i class="fas fa-save"></i> Save In-Progress Notes';
     } else {
-      // Manual Log or Edit existing visit
+      // Manual Log (Admin only or edit existing)
       if (gpsCard) gpsCard.style.display = "none";
       if (visitObj) {
         document.getElementById("visit-modal-title").innerText = visitObj.VisitID ? "Edit Visit Log " + visitObj.VisitID : "Log Visit";
@@ -8503,8 +8648,7 @@ body.view-teamchat .chat-input-area {
           }
         }
       } else {
-        var isScheduled = activeVisitTab === "scheduled";
-        document.getElementById("visit-modal-title").innerText = isScheduled ? "Schedule New Site Visit" : "Log New Site Visit";
+        document.getElementById("visit-modal-title").innerText = "Log Site Visit (Admin Manual Override)";
         document.getElementById("visit-link-project").checked = true;
         handleVisitLinkTypeChange();
         document.getElementById("visit-date").value = (new Date()).toISOString().substring(0, 10);
@@ -8519,7 +8663,7 @@ body.view-teamchat .chat-input-area {
         if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
         document.getElementById("visit-is-billable").checked = false;
         toggleVisitBillingField();
-        document.getElementById("visit-status").value = isScheduled ? "Scheduled" : "Completed";
+        document.getElementById("visit-status").value = "Completed";
       }
     }
 
@@ -8540,7 +8684,7 @@ body.view-teamchat .chat-input-area {
   }
 
   function handleVisitSubmit(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     var form = document.getElementById("visit-form");
     var mode = document.getElementById("visit-mode").value || "manual";
     var formData = {};
@@ -8564,6 +8708,8 @@ body.view-teamchat .chat-input-area {
       formData["LeadID"] = document.getElementById("visit-lead-id") ? document.getElementById("visit-lead-id").value : "";
       if (!formData["LeadID"]) {
         showToast("Please select a Lead / Prospect for this visit.", "error");
+        var leadSelectEl = document.getElementById("visit-lead-id");
+        if (leadSelectEl) leadSelectEl.focus();
         return;
       }
       var l = (leadsCacheList || []).find(function(ld) { return ld.LeadID === formData["LeadID"]; });
@@ -8573,14 +8719,25 @@ body.view-teamchat .chat-input-area {
       formData["LeadID"] = "";
       if (!formData["ProjectID"]) {
         showToast("Please select a Project for this visit.", "error");
+        var projSelectEl = document.getElementById("visit-project-id");
+        if (projSelectEl) projSelectEl.focus();
         return;
       }
       var p = (projectsCache || []).find(function(pr) { return pr.ProjectID === formData["ProjectID"]; });
       targetName = p ? p.ProjectName : formData["ProjectID"];
     }
 
+    // Required Purpose validation
+    var purposeVal = (formData.Purpose || "").trim();
+    if (!purposeVal) {
+      showToast("Please enter the Purpose of the site visit.", "error");
+      var pInput = document.getElementById("visit-purpose");
+      if (pInput) pInput.focus();
+      return;
+    }
+
     // Branch by Mode:
-    if (mode === "checkin") {
+    if (mode === "checkin" || mode === "checkin_scheduled") {
       var checkinCoords = formData.CheckInLocation || "Live GPS Acquired";
       var checkinMapUrl = "";
       var mCheckin = checkinCoords.match(/([0-9.-]+),\s*([0-9.-]+)/);
@@ -8602,7 +8759,8 @@ body.view-teamchat .chat-input-area {
         CheckInTime: formData.CheckInTime || formatTimeAmPm(new Date()),
         CheckInTimestamp: Date.now(),
         CheckInLocation: checkinCoords,
-        CheckInMapUrl: checkinMapUrl
+        CheckInMapUrl: checkinMapUrl,
+        Status: "In Progress"
       };
       localStorage.setItem("nexmilestro_active_site_visit", JSON.stringify(activeVisitData));
       closeVisitModal();
@@ -8637,6 +8795,10 @@ body.view-teamchat .chat-input-area {
         return;
       }
       formData.Status = "Completed";
+    }
+
+    if (mode === "schedule") {
+      formData.Status = "Scheduled";
     }
 
     var fileInput = document.getElementById("visit-attachment");
@@ -8906,9 +9068,12 @@ body.view-teamchat .chat-input-area {
   window.removeAttachment = removeAttachment;
   window.toggleVisitAttachmentsDropdown = toggleVisitAttachmentsDropdown;
   window.startGpsCheckIn = startGpsCheckIn;
+  window.startGpsCheckInForScheduledVisit = startGpsCheckInForScheduledVisit;
   window.triggerGpsCheckOut = triggerGpsCheckOut;
   window.openActiveVisitDraftModal = openActiveVisitDraftModal;
   window.checkActiveVisitState = checkActiveVisitState;
+  window.handlePrimaryVisitAction = handlePrimaryVisitAction;
+  window.openManualVisitModalAdmin = openManualVisitModalAdmin;
 
   // Initialize active visit state check
   setTimeout(checkActiveVisitState, 250);
