@@ -186,12 +186,12 @@ function setupSpreadsheet() {
     const rajeshHash = hashPassword("rajesh123");
     const priyaHash = hashPassword("priya123");
     
+    const defaultPassHash = hashPassword("admin@123");
     const userRows = [
-      ["USR-1001", "Administrator", adminEmail, "9999999999", adminHash, "No", "Super Admin", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"],
-      ["USR-1002", "Sarah the Architect", "sarah@example.com", "9876543211", sarahHash, "No", "Architect", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"],
-      ["USR-1003", "Alex the Designer", "alex@example.com", "9876543212", alexHash, "No", "Designer", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"],
-      ["USR-1004", "Rajesh the Engineer", "rajesh.eng@example.com", "9876543213", rajeshHash, "No", "Engineer", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"],
-      ["USR-1005", "Priya the Sales Manager", "priya@example.com", "9876543214", priyaHash, "No", "Sales Manager", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"]
+      ["USR-101", "Mehul Gandhi", "mehul.gandhi@nexsolve.in", "9811223344", defaultPassHash, "No", "Super Admin", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"],
+      ["USR-102", "Dhwani Gandhi", "dhwani.gandhi@nexsolve.in", "9811223355", defaultPassHash, "No", "Super Admin", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"],
+      ["USR-103", "Meghal Sadhu", "meghal.sadhu@nexsolve.in", "9822334455", defaultPassHash, "No", "Super Admin", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"],
+      ["USR-104", "Hiren Kakkad", "hiren.kakkad@nexsolve.in", "9833445566", defaultPassHash, "No", "Super Admin", "Active", "", new Date(), "SYSTEM", new Date(), "SYSTEM"]
     ];
     userSheet.getRange(2, 1, userRows.length, userRows[0].length).setValues(userRows);
   }

@@ -206,9 +206,6 @@
             <button type="button" class="btn btn-secondary" onclick="triggerSystemExcelBackup()" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
               <i class="fas fa-file-excel" style="color: #107c41;"></i> Export Full Backup (.xlsx)
             </button>
-            <button type="button" class="btn btn-danger" onclick="openEraseSystemDataModal()" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
-              <i class="fas fa-trash-alt"></i> Backup & Erase All Data
-            </button>
           </div>
         </div>
 
@@ -771,84 +768,4 @@
       window.open(exportUrl, "_blank");
     }
   };
-
-  window.openEraseSystemDataModal = function() {
-    var inp = document.getElementById("erase-confirm-code-input");
-    if (inp) inp.value = "";
-    var modal = document.getElementById("erase-system-modal");
-    if (modal) modal.classList.add("show");
-  };
-
-  window.closeEraseSystemModal = function() {
-    var modal = document.getElementById("erase-system-modal");
-    if (modal) modal.classList.remove("show");
-  };
-
-  window.executeEraseAllSystemData = function() {
-    var inp = document.getElementById("erase-confirm-code-input");
-    var code = inp ? inp.value.trim() : "";
-    if (code !== "ERASE EVERYTHING") {
-      showToast("Verification code invalid. Please type 'ERASE EVERYTHING' exactly.", "error");
-      return;
-    }
-
-    showLoader(true);
-    // 1. Trigger Automatic Excel Backup
-    google.script.run.withSuccessHandler(function(res) {
-      if (res && res.success && res.url) {
-        window.open(res.url, "_blank");
-      }
-      
-      // 2. Erase Data after backup URL is triggered
-      var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
-      google.script.run.withSuccessHandler(function(eraseRes) {
-        showLoader(false);
-        if (eraseRes && eraseRes.success) {
-          showToast(eraseRes.message, "success");
-          closeEraseSystemModal();
-          setTimeout(function() {
-            window.location.reload();
-          }, 1500);
-        } else {
-          showToast("Erase failed: " + (eraseRes ? eraseRes.message : "Unknown error"), "error");
-        }
-      }).withFailureHandler(function(err) {
-        showLoader(false);
-        showToast("Error erasing data: " + err.message, "error");
-      }).eraseAllSystemData(code, currentUser.userId);
-
-    }).getSystemBackupDownloadUrl();
-  };
 </script>
-
-<!-- ==================== BACKUP & ERASE SYSTEM DATA MODAL ==================== -->
-<div class="modal-overlay" id="erase-system-modal" style="z-index: 700;">
-  <div class="modal-container" style="max-width: 550px;">
-    <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
-      <h3 class="modal-title" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Backup & Erase All System Data</h3>
-      <button class="icon-btn" onclick="closeEraseSystemModal()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-body" style="padding: 1.25rem;">
-      <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
-        <h4 style="margin: 0 0 0.35rem 0; font-size: 0.9rem; color: var(--danger); font-weight: 700;">WARNING: PERMANENT DATA WIPE</h4>
-        <p style="margin: 0; font-size: 0.8rem; color: var(--text-main); line-height: 1.4;">
-          This action will <strong>permanently erase</strong> all operational records (Customers, Projects, Tasks, Leads, Followups, Site Visits, Proposals, Transactions, Milestones, Vendors, Associates).
-        </p>
-      </div>
-
-      <div style="background: var(--bg-primary); padding: 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: 0.8rem;">
-        <i class="fas fa-shield-alt" style="color: var(--success); margin-right: 0.35rem;"></i>
-        <strong>Automatic Protection:</strong> A full Excel backup (.xlsx) will be automatically downloaded to your computer before data is cleared. User logins and system settings will remain preserved.
-      </div>
-
-      <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label" style="font-weight: 700;">To confirm, type "<span style="color: var(--danger); user-select: all;">ERASE EVERYTHING</span>" below:</label>
-        <input type="text" id="erase-confirm-code-input" class="form-control" placeholder="Type ERASE EVERYTHING" style="font-weight: 700; text-transform: uppercase;">
-      </div>
-    </div>
-    <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-      <button type="button" class="btn btn-secondary" onclick="closeEraseSystemModal()">Cancel</button>
-      <button type="button" class="btn btn-danger" onclick="executeEraseAllSystemData()"><i class="fas fa-radiation"></i> Download Backup & Wipe Data</button>
-    </div>
-  </div>
-</div>
