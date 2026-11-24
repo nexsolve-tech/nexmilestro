@@ -1,4 +1,19 @@
 <!-- SiteVisit.html -->
+<style>
+@keyframes activeGpsPulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.4); opacity: 0.3; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.active-pulse-ring {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 50%;
+  border: 2px solid #10b981;
+  animation: activeGpsPulse 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+</style>
+
 <div class="view-container">
   <!-- Tab Headers with Live Metric Badges -->
   <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); margin-bottom: 1.25rem; padding-bottom: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
@@ -25,10 +40,11 @@
           <i class="fas fa-search"></i>
           <input type="text" id="visit-search" class="search-input" placeholder="Omni-Search by Purpose, Remarks, Project, Lead, Assignee, Visit ID..." oninput="filterVisits()" style="width: 100%;">
         </div>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
           <button class="btn btn-secondary" onclick="refreshCurrentView()" title="Force Refresh View"><i class="fas fa-sync-alt"></i> Refresh</button>
           <button class="btn btn-secondary" onclick="exportSiteVisitsCSV()" title="Download Filtered Site Visits to CSV"><i class="fas fa-download"></i> Download CSV</button>
           <button class="btn btn-primary" id="btn-add-visit" onclick="openVisitModal()"><i class="fas fa-plus"></i> Log Site Visit</button>
+          <button class="btn" id="btn-gps-checkin" onclick="startGpsCheckIn()" style="background: #059669; border: 1px solid #059669; color: #ffffff; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer;"><i class="fas fa-map-marker-alt"></i> GPS Check-In</button>
         </div>
       </div>
 
@@ -67,6 +83,41 @@
     </div>
   </div>
 
+  <!-- Active GPS Site Visit Live Tracking Banner -->
+  <div id="active-checkin-banner" style="display: none; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.15);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div style="display: flex; align-items: center; gap: 0.85rem;">
+        <div style="position: relative; width: 44px; height: 44px; border-radius: 50%; background: #d1fae5; display: flex; align-items: center; justify-content: center; color: #059669; font-size: 1.3rem; flex-shrink: 0;">
+          <i class="fas fa-map-marker-alt"></i>
+          <span class="active-pulse-ring"></span>
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-weight: 700; font-size: 0.95rem; color: #065f46; letter-spacing: 0.3px;">ACTIVE SITE VISIT IN PROGRESS</span>
+            <span class="badge" style="background: #10b981; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600;">ON-SITE TRACKING</span>
+          </div>
+          <div style="display: flex; gap: 1.25rem; font-size: 0.82rem; color: #047857; margin-top: 0.25rem; flex-wrap: wrap;">
+            <span><i class="fas fa-building" style="margin-right: 0.25rem;"></i><strong id="active-visit-target-type">Target:</strong> <span id="active-visit-target-name" style="font-weight: 600;">-</span></span>
+            <span><i class="far fa-clock" style="margin-right: 0.25rem;"></i><strong>Check-In:</strong> <span id="active-visit-checkin-time">-</span></span>
+            <span><i class="fas fa-location-arrow" style="margin-right: 0.25rem;"></i><strong>Location:</strong> <a id="active-visit-map-link" href="#" target="_blank" style="color: #047857; text-decoration: underline; font-weight: 600;"><span id="active-visit-coords">View Map</span></a></span>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <div style="background: white; border: 1.5px solid #a7f3d0; border-radius: var(--radius-sm); padding: 0.35rem 0.85rem; text-align: center; min-width: 130px;">
+          <div style="font-size: 0.68rem; text-transform: uppercase; color: #059669; font-weight: 700; letter-spacing: 0.5px;">Visit Duration</div>
+          <div id="active-visit-live-timer" style="font-family: monospace; font-size: 1.15rem; font-weight: 700; color: #065f46;">00:00:00</div>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="openActiveVisitDraftModal()" style="border: 1px solid #10b981; color: #065f46; font-weight: 600; padding: 0.5rem 0.85rem;" title="View or update visit draft notes">
+          <i class="fas fa-edit"></i> Notes
+        </button>
+        <button type="button" class="btn" onclick="triggerGpsCheckOut()" style="background: #dc2626; border: 1px solid #dc2626; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);">
+          <i class="fas fa-sign-out-alt"></i> GPS Check-Out
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Site Visit Table Card -->
   <div class="card">
     <div class="card-body" style="padding: 0;">
@@ -76,11 +127,11 @@
             <tr>
               <th>Visit ID</th>
               <th>Project / Lead</th>
-              <th>Visit Date</th>
+              <th>Visit Date & Timing</th>
               <th>Purpose</th>
               <th>Assignee</th>
               <th>Billable Amount</th>
-              <th>Remarks</th>
+              <th>Remarks / Updates</th>
               <th>Photos</th>
               <th>Status</th>
               <th style="text-align: right; width: 100px;">Actions</th>
@@ -106,8 +157,18 @@
     </div>
     <form id="visit-form" onsubmit="handleVisitSubmit(event)">
       <input type="hidden" id="visit-id" name="VisitID">
+      <input type="hidden" id="visit-mode" value="manual">
+      <input type="hidden" id="visit-checkin-time" name="CheckInTime">
+      <input type="hidden" id="visit-checkout-time" name="CheckOutTime">
+      <input type="hidden" id="visit-checkin-location" name="CheckInLocation">
+      <input type="hidden" id="visit-checkout-location" name="CheckOutLocation">
+      <input type="hidden" id="visit-duration" name="Duration">
       <div class="modal-body">
         <div class="form-grid">
+          <!-- GPS Status & Geolocation Info Card -->
+          <div class="form-group form-grid-full" id="visit-gps-info-card" style="display: none; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-sm); padding: 0.75rem 1rem;">
+            <div id="visit-gps-info-content"></div>
+          </div>
           <div class="form-group form-grid-full">
             <label class="form-label">Link Visit To *</label>
             <div style="display: flex; gap: 1.5rem; margin-top: 0.25rem; align-items: center;">
@@ -187,7 +248,7 @@
           </div>
 
           <div class="form-group form-grid-full">
-            <label class="form-label">Remarks / Work Progress Status</label>
+            <label class="form-label" id="visit-remarks-label">Remarks / Work Progress Status</label>
             <textarea id="visit-remarks" name="Remarks" class="form-control" placeholder="Describe current site layout details, issues resolved..."></textarea>
           </div>
           
@@ -205,7 +266,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closeVisitModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Log</button>
+        <button type="submit" class="btn btn-primary" id="btn-visit-submit">Save Log</button>
       </div>
     </form>
   </div>
@@ -296,6 +357,7 @@
   };
 
   window.loadSiteVisitsView = function(forceRefresh) {
+    checkActiveVisitState();
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var isSuperAdmin = currentUser.roleId === "Super Admin";
     var perms = currentUser.permissions || {};
@@ -605,13 +667,29 @@
       var remarksDisplay = typeof escapeHtml === "function" ? escapeHtml(visit.Remarks || "-") : (visit.Remarks || "-");
       var statusEsc = typeof escapeHtml === "function" ? escapeHtml(visit.Status || "Completed") : (visit.Status || "Completed");
 
+            var gpsInfoHtml = "";
+      if (visit.CheckInTime || visit.CheckInLocation) {
+        var mapLinkHtml = "";
+        if (visit.CheckInLocation) {
+          var mCoords = String(visit.CheckInLocation).match(/([0-9.-]+),\s*([0-9.-]+)/);
+          if (mCoords) {
+            mapLinkHtml = ' <a href="https://www.google.com/maps?q=' + mCoords[1] + ',' + mCoords[2] + '" target="_blank" style="color: #059669; text-decoration: underline; font-weight: 600;" title="View GPS Location on Google Maps"><i class="fas fa-map-marker-alt"></i> GPS</a>';
+          }
+        }
+        gpsInfoHtml = '<div style="font-size: 0.72rem; color: #047857; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">' +
+          '<span class="badge" style="background: rgba(16,185,129,0.12); color: #047857; font-size: 0.68rem; padding: 1px 5px; border-radius: 4px;" title="Check-In Time"><i class="fas fa-sign-in-alt"></i> ' + escapeHtml(visit.CheckInTime || "-") + '</span>' +
+          (visit.CheckOutTime ? '<span class="badge" style="background: rgba(16,185,129,0.12); color: #047857; font-size: 0.68rem; padding: 1px 5px; border-radius: 4px;" title="Check-Out Time"><i class="fas fa-sign-out-alt"></i> ' + escapeHtml(visit.CheckOutTime) + '</span>' : '') +
+          (visit.Duration ? '<span class="badge" style="background: rgba(5,150,105,0.2); color: #065f46; font-size: 0.68rem; font-weight: 700; padding: 1px 5px; border-radius: 4px;" title="Duration"><i class="fas fa-stopwatch"></i> ' + escapeHtml(visit.Duration) + '</span>' : '') +
+          mapLinkHtml +
+        '</div>';
+      }
       var followupHtml = visit.NextFollowupDate ? '<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;"><i class="far fa-calendar-alt"></i> Followup: ' + followupStr + '</div>' : '';
       var billableHtml = isBillable ? '<span class="badge badge-completed">' + billableStr + '</span>' : '<span style="color:var(--text-muted);">-</span>';
 
       return '<tr id="row-' + svIdEsc + '">' +
         '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + svIdEsc + '</td>' +
         '<td style="font-weight: 600;">' + entityHtml + '</td>' +
-        '<td><div>' + dateStr + '</div>' + followupHtml + '</td>' +
+        '<td><div>' + dateStr + '</div>' + gpsInfoHtml + followupHtml + '</td>' +
         '<td>' + purposeEsc + '</td>' +
         '<td><div style="font-weight: 500;">' + assigneeEsc + '</div><div style="font-size: 0.75rem; color: var(--text-muted);">' + assignedTypeEsc + '</div></td>' +
         '<td>' + billableHtml + '</td>' +
@@ -836,31 +914,317 @@
   }
   window.exportSiteVisitsCSV = exportSiteVisitsCSV;
 
-  function openVisitModal(visitObj) {
-    if (visitObj === void 0) {
-      visitObj = null;
+  // ─── GPS CHECK-IN / CHECK-OUT ENGINE (NEXALLOT REPLICATION) ───────────────
+  var activeTimerInterval = null;
+
+  function formatTimeAmPm(date) {
+    if (!date) return "";
+    var d = (date instanceof Date) ? date : new Date(date);
+    var hours = d.getHours();
+    var minutes = d.getMinutes();
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return (hours < 10 ? '0' + hours : hours) + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
+  }
+
+  function formatDurationHuman(seconds) {
+    var totalSec = Math.max(1, Math.floor(seconds));
+    var hrs = Math.floor(totalSec / 3600);
+    var mins = Math.floor((totalSec % 3600) / 60);
+    if (hrs > 0) {
+      return hrs + " hr" + (hrs > 1 ? "s " : " ") + (mins > 0 ? mins + " min" : "");
     }
+    return Math.max(1, mins) + " min";
+  }
+
+  function formatElapsedTimer(seconds) {
+    var hrs = Math.floor(seconds / 3600);
+    var mins = Math.floor((seconds % 3600) / 60);
+    var secs = seconds % 60;
+    return (hrs < 10 ? "0" + hrs : hrs) + ":" + (mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs);
+  }
+
+  function captureGpsPosition(callback) {
+    if (!navigator.geolocation) {
+      showToast("GPS / Geolocation is not supported by your browser.", "error");
+      callback({
+        success: false,
+        error: "Not supported",
+        locStr: "GPS Unsupported",
+        mapUrl: ""
+      });
+      return;
+    }
+    showToast("Acquiring high-accuracy GPS coordinates...", "info");
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        var acc = Math.round(pos.coords.accuracy || 0);
+        var locStr = lat.toFixed(6) + ", " + lng.toFixed(6) + (acc > 0 ? " (±" + acc + "m)" : "");
+        var mapUrl = "https://www.google.com/maps?q=" + lat + "," + lng;
+        callback({
+          success: true,
+          lat: lat,
+          lng: lng,
+          accuracy: acc,
+          locStr: locStr,
+          mapUrl: mapUrl
+        });
+      },
+      function(err) {
+        console.warn("GPS error:", err);
+        var errMsg = "GPS signal unavailable (" + (err.message || "Permission denied") + ").";
+        showToast(errMsg, "error");
+        callback({
+          success: false,
+          error: err.message,
+          locStr: "Manual / Untracked",
+          mapUrl: ""
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
+
+  function checkActiveVisitState() {
+    var rawActive = localStorage.getItem("nexmilestro_active_site_visit");
+    var banner = document.getElementById("active-checkin-banner");
+    var checkInBtn = document.getElementById("btn-gps-checkin");
+
+    if (!rawActive) {
+      if (banner) banner.style.display = "none";
+      if (checkInBtn) {
+        checkInBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> GPS Check-In';
+        checkInBtn.style.background = "#059669";
+        checkInBtn.style.borderColor = "#059669";
+      }
+      if (activeTimerInterval) {
+        clearInterval(activeTimerInterval);
+        activeTimerInterval = null;
+      }
+      return null;
+    }
+
+    try {
+      var activeVisit = JSON.parse(rawActive);
+      if (!activeVisit || !activeVisit.CheckInTimestamp) {
+        localStorage.removeItem("nexmilestro_active_site_visit");
+        return checkActiveVisitState();
+      }
+
+      if (banner) banner.style.display = "block";
+      if (checkInBtn) {
+        checkInBtn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> On-Site Active';
+        checkInBtn.style.background = "#047857";
+        checkInBtn.style.borderColor = "#047857";
+      }
+
+      var targetName = activeVisit.TargetName;
+      if (!targetName) {
+        if (activeVisit.ProjectID) {
+          var p = (projectsCache || []).find(function(pr) { return pr.ProjectID === activeVisit.ProjectID; });
+          targetName = p ? p.ProjectName : activeVisit.ProjectID;
+        } else if (activeVisit.LeadID) {
+          var l = (leadsCacheList || []).find(function(ld) { return ld.LeadID === activeVisit.LeadID; });
+          targetName = l ? (l.CustomerName || l.LeadName || activeVisit.LeadID) : activeVisit.LeadID;
+        } else {
+          targetName = "Site Visit";
+        }
+      }
+
+      var targetTypeEl = document.getElementById("active-visit-target-type");
+      if (targetTypeEl) targetTypeEl.innerText = (activeVisit.LinkType === "Lead") ? "Lead:" : "Project:";
+      var targetNameEl = document.getElementById("active-visit-target-name");
+      if (targetNameEl) targetNameEl.innerText = targetName;
+      var checkinTimeEl = document.getElementById("active-visit-checkin-time");
+      if (checkinTimeEl) checkinTimeEl.innerText = activeVisit.CheckInTime || "-";
+      var coordsEl = document.getElementById("active-visit-coords");
+      if (coordsEl) coordsEl.innerText = activeVisit.CheckInLocation || "Live GPS";
+
+      var mapLinkEl = document.getElementById("active-visit-map-link");
+      if (mapLinkEl) {
+        if (activeVisit.CheckInMapUrl) {
+          mapLinkEl.href = activeVisit.CheckInMapUrl;
+          mapLinkEl.style.display = "inline";
+        } else if (activeVisit.CheckInLocation && activeVisit.CheckInLocation.match(/([0-9.-]+),\s*([0-9.-]+)/)) {
+          var cm = activeVisit.CheckInLocation.match(/([0-9.-]+),\s*([0-9.-]+)/);
+          mapLinkEl.href = "https://www.google.com/maps?q=" + cm[1] + "," + cm[2];
+          mapLinkEl.style.display = "inline";
+        } else {
+          mapLinkEl.style.display = "none";
+        }
+      }
+
+      function updateTimerDisplay() {
+        var elapsedSec = Math.max(0, Math.floor((Date.now() - activeVisit.CheckInTimestamp) / 1000));
+        var timerEl = document.getElementById("active-visit-live-timer");
+        if (timerEl) timerEl.innerText = formatElapsedTimer(elapsedSec);
+      }
+      updateTimerDisplay();
+      if (!activeTimerInterval) {
+        activeTimerInterval = setInterval(updateTimerDisplay, 1000);
+      }
+
+      return activeVisit;
+    } catch(e) {
+      console.error("Error restoring active visit state:", e);
+      localStorage.removeItem("nexmilestro_active_site_visit");
+      return null;
+    }
+  }
+
+  window.startGpsCheckIn = function() {
+    var existing = localStorage.getItem("nexmilestro_active_site_visit");
+    if (existing) {
+      showToast("You already have an active site visit in progress! Click 'GPS Check-Out' on the banner when finished.", "info");
+      var banner = document.getElementById("active-checkin-banner");
+      if (banner) banner.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    captureGpsPosition(function(pos) {
+      openVisitModal(null, "checkin", pos);
+    });
+  };
+
+  window.triggerGpsCheckOut = function() {
+    var rawActive = localStorage.getItem("nexmilestro_active_site_visit");
+    if (!rawActive) {
+      showToast("No active site visit in progress to check out from.", "error");
+      return;
+    }
+    var activeVisit = JSON.parse(rawActive);
+
+    captureGpsPosition(function(checkoutPos) {
+      var checkoutTimestamp = Date.now();
+      var elapsedSec = Math.max(1, Math.floor((checkoutTimestamp - activeVisit.CheckInTimestamp) / 1000));
+      var durationHuman = formatDurationHuman(elapsedSec);
+      var checkoutTimeStr = formatTimeAmPm(new Date(checkoutTimestamp));
+
+      openVisitModal(activeVisit, "checkout", {
+        checkoutPos: checkoutPos,
+        checkoutTimeStr: checkoutTimeStr,
+        durationHuman: durationHuman,
+        checkoutTimestamp: checkoutTimestamp
+      });
+    });
+  };
+
+  window.openActiveVisitDraftModal = function() {
+    var rawActive = localStorage.getItem("nexmilestro_active_site_visit");
+    if (!rawActive) return;
+    var activeVisit = JSON.parse(rawActive);
+    openVisitModal(activeVisit, "draft_update");
+  };
+
+  function openVisitModal(visitObj, mode, gpsMeta) {
+    if (visitObj === void 0) visitObj = null;
+    if (!mode) mode = "manual";
+
     var form = document.getElementById("visit-form");
     form.reset();
     document.getElementById("visit-id").value = "";
+    document.getElementById("visit-mode").value = mode;
+    document.getElementById("visit-checkin-time").value = "";
+    document.getElementById("visit-checkout-time").value = "";
+    document.getElementById("visit-checkin-location").value = "";
+    document.getElementById("visit-checkout-location").value = "";
+    document.getElementById("visit-duration").value = "";
     document.getElementById("visit-photos-hidden").value = "";
+
     var fileInput = document.getElementById("visit-attachment");
-    if (fileInput)
-      fileInput.value = "";
+    if (fileInput) fileInput.value = "";
     var currentAttachmentsContainer = document.getElementById("visit-current-attachments-container");
     var currentAttachmentsList = document.getElementById("visit-current-attachments-list");
-    if (currentAttachmentsContainer)
-      currentAttachmentsContainer.style.display = "none";
-    if (currentAttachmentsList)
-      currentAttachmentsList.innerHTML = "";
+    if (currentAttachmentsContainer) currentAttachmentsContainer.style.display = "none";
+    if (currentAttachmentsList) currentAttachmentsList.innerHTML = "";
+
+    var gpsCard = document.getElementById("visit-gps-info-card");
+    var gpsContent = document.getElementById("visit-gps-info-content");
+    var remarksLabel = document.getElementById("visit-remarks-label");
+    var remarksInput = document.getElementById("visit-remarks");
+    var submitBtn = document.getElementById("btn-visit-submit");
+
+    // Reset remarks requirement styling
+    remarksInput.required = false;
+    remarksInput.style.border = "";
+    remarksLabel.innerHTML = 'Remarks / Work Progress Status';
+    remarksInput.placeholder = "Describe current site layout details, issues resolved...";
+    submitBtn.className = "btn btn-primary";
+    submitBtn.style.background = "";
+    submitBtn.style.borderColor = "";
+    submitBtn.innerHTML = "Save Log";
+
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
 
-    if (visitObj) {
-      document.getElementById("visit-modal-title").innerText = visitObj.VisitID ? "Edit Visit Log " + visitObj.VisitID : "Log Visit";
-      document.getElementById("visit-id").value = visitObj.VisitID;
+    if (mode === "checkin") {
+      document.getElementById("visit-modal-title").innerText = "📍 GPS Site Visit Check-In";
+      var checkinTimeStr = formatTimeAmPm(new Date());
+      document.getElementById("visit-checkin-time").value = checkinTimeStr;
+      document.getElementById("visit-checkin-location").value = gpsMeta ? gpsMeta.locStr : "";
 
-      var hasLead = (visitObj.LeadID && String(visitObj.LeadID).trim() !== "") || (!visitObj.ProjectID && visitObj.LeadID);
-      if (hasLead) {
+      if (gpsCard && gpsContent) {
+        gpsCard.style.display = "block";
+        gpsCard.style.background = "#ecfdf5";
+        gpsCard.style.borderColor = "#a7f3d0";
+        gpsContent.innerHTML = '<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">' +
+          '<div><i class="fas fa-map-marker-alt" style="color: #059669; font-size: 1.1rem; margin-right: 0.35rem;"></i><strong style="color: #065f46;">Live GPS Acquired:</strong> <span style="font-weight: 600; color: #047857;">' + escapeHtml(gpsMeta ? gpsMeta.locStr : "Detected") + '</span></div>' +
+          (gpsMeta && gpsMeta.mapUrl ? '<a href="' + escapeHtml(gpsMeta.mapUrl) + '" target="_blank" style="color: #059669; text-decoration: underline; font-weight: 600; font-size: 0.8rem;"><i class="fas fa-external-link-alt"></i> View on Maps</a>' : '') +
+        '</div>' +
+        '<div style="font-size: 0.75rem; color: #047857; margin-top: 0.35rem;"><i class="fas fa-clock"></i> Check-In Time: <strong>' + checkinTimeStr + '</strong>. Live on-site duration will be tracked automatically until Check-Out.</div>';
+      }
+
+      document.getElementById("visit-link-project").checked = true;
+      handleVisitLinkTypeChange();
+      document.getElementById("visit-date").value = (new Date()).toISOString().substring(0, 10);
+      document.getElementById("visit-assigned-type").value = "Staff";
+      handleVisitAssignedTypeChange();
+      var visitAssignedSelect = document.getElementById("visit-assigned-to");
+      if (visitAssignedSelect) {
+        visitAssignedSelect.value = currentUser.userId || "";
+        if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
+      }
+      var projSelect = document.getElementById("visit-project-id");
+      if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
+      document.getElementById("visit-is-billable").checked = false;
+      toggleVisitBillingField();
+      document.getElementById("visit-status").value = "In Progress";
+
+      submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Start Visit & Save Check-In';
+      submitBtn.style.background = "#059669";
+      submitBtn.style.borderColor = "#059669";
+    } else if (mode === "checkout") {
+      document.getElementById("visit-modal-title").innerText = "🏁 GPS Site Visit Check-Out & Final Updates";
+      document.getElementById("visit-id").value = visitObj.VisitID || "";
+      document.getElementById("visit-checkin-time").value = visitObj.CheckInTime || "";
+      document.getElementById("visit-checkin-location").value = visitObj.CheckInLocation || "";
+      document.getElementById("visit-checkout-time").value = gpsMeta ? gpsMeta.checkoutTimeStr : "";
+      document.getElementById("visit-checkout-location").value = (gpsMeta && gpsMeta.checkoutPos) ? gpsMeta.checkoutPos.locStr : "";
+      document.getElementById("visit-duration").value = gpsMeta ? gpsMeta.durationHuman : "";
+
+      if (gpsCard && gpsContent) {
+        gpsCard.style.display = "block";
+        gpsCard.style.background = "#fef2f2";
+        gpsCard.style.borderColor = "#fecaca";
+        gpsContent.innerHTML = '<div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.82rem;">' +
+          '<div style="display: flex; justify-content: space-between; align-items: center; color: #047857;">' +
+            '<span><i class="fas fa-sign-in-alt"></i> <strong>Check-In:</strong> ' + escapeHtml(visitObj.CheckInTime || "-") + ' (' + escapeHtml(visitObj.CheckInLocation || "") + ')</span>' +
+          '</div>' +
+          '<div style="display: flex; justify-content: space-between; align-items: center; color: #dc2626;">' +
+            '<span><i class="fas fa-sign-out-alt"></i> <strong>Check-Out:</strong> ' + escapeHtml(gpsMeta ? gpsMeta.checkoutTimeStr : "-") + ' (' + escapeHtml((gpsMeta && gpsMeta.checkoutPos) ? gpsMeta.checkoutPos.locStr : "") + ')</span>' +
+            (gpsMeta && gpsMeta.checkoutPos && gpsMeta.checkoutPos.mapUrl ? '<a href="' + escapeHtml(gpsMeta.checkoutPos.mapUrl) + '" target="_blank" style="color: #dc2626; text-decoration: underline; font-weight: 600;"><i class="fas fa-external-link-alt"></i> Maps</a>' : '') +
+          '</div>' +
+          '<div style="border-top: 1px dashed #fca5a5; padding-top: 0.35rem; display: flex; justify-content: space-between; align-items: center;">' +
+            '<span><i class="fas fa-stopwatch" style="color: #059669;"></i> <strong>On-Site Duration:</strong> <span class="badge" style="background: #10b981; color: white; padding: 2px 7px; border-radius: 6px; font-weight: 700;">' + escapeHtml(gpsMeta ? gpsMeta.durationHuman : "") + '</span></span>' +
+            '<span style="color: #dc2626; font-weight: 700; font-size: 0.75rem;"><i class="fas fa-exclamation-circle"></i> Site Updates Required</span>' +
+          '</div>' +
+        '</div>';
+      }
+
+      // Populate entity link
+      if (visitObj.LinkType === "Lead" || visitObj.LeadID) {
         var leadRadio = document.getElementById("visit-link-lead");
         if (leadRadio) leadRadio.checked = true;
         handleVisitLinkTypeChange();
@@ -880,57 +1244,168 @@
         }
       }
 
-      document.getElementById("visit-date").value = parseRawDateString(visitObj.VisitDate);
+      document.getElementById("visit-date").value = parseRawDateString(visitObj.VisitDate) || (new Date()).toISOString().substring(0, 10);
       document.getElementById("visit-followup-date").value = parseRawDateString(visitObj.NextFollowupDate);
       document.getElementById("visit-assigned-type").value = visitObj.AssignedType || "Staff";
       handleVisitAssignedTypeChange();
       var visitAssignedSelect = document.getElementById("visit-assigned-to");
       if (visitAssignedSelect) {
-        visitAssignedSelect.value = visitObj.AssignedTo || "";
+        visitAssignedSelect.value = visitObj.AssignedTo || currentUser.userId || "";
         if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
       }
       var isBillable = visitObj.IsBillable === "Yes" || visitObj.IsBillable === true;
       document.getElementById("visit-is-billable").checked = isBillable;
       toggleVisitBillingField();
       document.getElementById("visit-billing-amount").value = visitObj.BillingAmount || "";
-      document.getElementById("visit-status").value = visitObj.Status || "Completed";
+      document.getElementById("visit-status").value = "Completed";
       document.getElementById("visit-purpose").value = visitObj.Purpose || "";
       document.getElementById("visit-remarks").value = visitObj.Remarks || "";
-      var vPhotos = visitObj.Photos || visitObj.Attachments || "";
-      document.getElementById("visit-photos-hidden").value = vPhotos;
-      if (vPhotos && typeof vPhotos === "string" && vPhotos.trim() !== "") {
-        if (currentAttachmentsContainer)
-          currentAttachmentsContainer.style.display = "block";
-        var links = vPhotos.split(",").map(function(l) {
-          return l.trim();
-        }).filter(function(l) {
-          return l !== "";
-        });
-        if (currentAttachmentsList) {
-          currentAttachmentsList.innerHTML = links.map(function(link, idx) {
-            return '\n            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">\n              <a href="'.concat(escapeHtml(link), '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ').concat(idx + 1, '</a>\n              <button type="button" onclick="removeAttachment(').concat(idx, ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>\n            </div>\n          ');
-          }).join("");
+
+      // Mandatory updates enforcement UI
+      remarksLabel.innerHTML = 'Site Visit Updates & Observations * <span style="color: var(--danger); font-weight: 700;">(Required for Check-Out)</span>';
+      remarksInput.required = true;
+      remarksInput.placeholder = "Mandatory: Please enter observations, work progress, client decisions, or site issues before check-out is allowed...";
+      remarksInput.style.border = "2px solid #dc2626";
+
+      submitBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Complete Check-Out & Save Visit';
+      submitBtn.className = "btn btn-danger";
+      submitBtn.style.background = "#dc2626";
+      submitBtn.style.borderColor = "#dc2626";
+
+      setTimeout(function() { remarksInput.focus(); }, 200);
+    } else if (mode === "draft_update") {
+      document.getElementById("visit-modal-title").innerText = "📝 Update Active Site Visit Notes";
+      document.getElementById("visit-id").value = visitObj.VisitID || "";
+      document.getElementById("visit-checkin-time").value = visitObj.CheckInTime || "";
+      document.getElementById("visit-checkin-location").value = visitObj.CheckInLocation || "";
+
+      if (gpsCard && gpsContent) {
+        gpsCard.style.display = "block";
+        gpsCard.style.background = "#ecfdf5";
+        gpsCard.style.borderColor = "#a7f3d0";
+        gpsContent.innerHTML = '<div><i class="fas fa-clock" style="color: #059669;"></i> Checked in at: <strong>' + escapeHtml(visitObj.CheckInTime || "") + '</strong> | Location: <strong>' + escapeHtml(visitObj.CheckInLocation || "") + '</strong></div>';
+      }
+
+      if (visitObj.LinkType === "Lead" || visitObj.LeadID) {
+        document.getElementById("visit-link-lead").checked = true;
+        handleVisitLinkTypeChange();
+        var leadSelect = document.getElementById("visit-lead-id");
+        if (leadSelect) {
+          leadSelect.value = String(visitObj.LeadID || "").trim();
+          if (leadSelect._refreshSearchable) leadSelect._refreshSearchable();
+        }
+      } else {
+        document.getElementById("visit-link-project").checked = true;
+        handleVisitLinkTypeChange();
+        var projSelect = document.getElementById("visit-project-id");
+        if (projSelect) {
+          projSelect.value = String(visitObj.ProjectID || "").trim();
+          if (projSelect._refreshSearchable) projSelect._refreshSearchable();
         }
       }
+
+      document.getElementById("visit-date").value = parseRawDateString(visitObj.VisitDate) || (new Date()).toISOString().substring(0, 10);
+      document.getElementById("visit-purpose").value = visitObj.Purpose || "";
+      document.getElementById("visit-remarks").value = visitObj.Remarks || "";
+      document.getElementById("visit-status").value = "In Progress";
+
+      submitBtn.innerHTML = '<i class="fas fa-save"></i> Save In-Progress Notes';
     } else {
-      var isScheduled = activeVisitTab === "scheduled";
-      document.getElementById("visit-modal-title").innerText = isScheduled ? "Schedule New Site Visit" : "Log New Site Visit";
-      document.getElementById("visit-link-project").checked = true;
-      handleVisitLinkTypeChange();
-      document.getElementById("visit-date").value = (new Date()).toISOString().substring(0, 10);
-      document.getElementById("visit-assigned-type").value = "Staff";
-      handleVisitAssignedTypeChange();
-      var visitAssignedSelect = document.getElementById("visit-assigned-to");
-      if (visitAssignedSelect) {
-        visitAssignedSelect.value = currentUser.userId || "";
-        if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
+      // Manual Log or Edit existing visit
+      if (gpsCard) gpsCard.style.display = "none";
+      if (visitObj) {
+        document.getElementById("visit-modal-title").innerText = visitObj.VisitID ? "Edit Visit Log " + visitObj.VisitID : "Log Visit";
+        document.getElementById("visit-id").value = visitObj.VisitID;
+        document.getElementById("visit-checkin-time").value = visitObj.CheckInTime || "";
+        document.getElementById("visit-checkout-time").value = visitObj.CheckOutTime || "";
+        document.getElementById("visit-checkin-location").value = visitObj.CheckInLocation || "";
+        document.getElementById("visit-checkout-location").value = visitObj.CheckOutLocation || "";
+        document.getElementById("visit-duration").value = visitObj.Duration || "";
+
+        if (visitObj.CheckInTime || visitObj.CheckInLocation) {
+          if (gpsCard && gpsContent) {
+            gpsCard.style.display = "block";
+            gpsCard.style.background = "#ecfdf5";
+            gpsCard.style.borderColor = "#a7f3d0";
+            gpsContent.innerHTML = '<div style="font-size: 0.8rem; color: #065f46;">' +
+              '<div><i class="fas fa-map-marker-alt"></i> <strong>GPS Check-In:</strong> ' + escapeHtml(visitObj.CheckInTime || "-") + ' (' + escapeHtml(visitObj.CheckInLocation || "") + ')</div>' +
+              (visitObj.CheckOutTime ? '<div style="margin-top: 0.2rem;"><i class="fas fa-flag-checkered"></i> <strong>GPS Check-Out:</strong> ' + escapeHtml(visitObj.CheckOutTime) + (visitObj.Duration ? ' <span class="badge" style="background:#10b981; color:white; padding:1px 5px; border-radius:4px;">⏱️ ' + escapeHtml(visitObj.Duration) + '</span>' : '') + '</div>' : '') +
+            '</div>';
+          }
+        }
+
+        var hasLead = (visitObj.LeadID && String(visitObj.LeadID).trim() !== "") || (!visitObj.ProjectID && visitObj.LeadID);
+        if (hasLead) {
+          var leadRadio = document.getElementById("visit-link-lead");
+          if (leadRadio) leadRadio.checked = true;
+          handleVisitLinkTypeChange();
+          var leadSelect = document.getElementById("visit-lead-id");
+          if (leadSelect) {
+            leadSelect.value = String(visitObj.LeadID || "").trim();
+            if (leadSelect._refreshSearchable) leadSelect._refreshSearchable();
+          }
+        } else {
+          var projRadio = document.getElementById("visit-link-project");
+          if (projRadio) projRadio.checked = true;
+          handleVisitLinkTypeChange();
+          var projSelect = document.getElementById("visit-project-id");
+          if (projSelect) {
+            projSelect.value = String(visitObj.ProjectID || "").trim();
+            if (projSelect._refreshSearchable) projSelect._refreshSearchable();
+          }
+        }
+
+        document.getElementById("visit-date").value = parseRawDateString(visitObj.VisitDate);
+        document.getElementById("visit-followup-date").value = parseRawDateString(visitObj.NextFollowupDate);
+        document.getElementById("visit-assigned-type").value = visitObj.AssignedType || "Staff";
+        handleVisitAssignedTypeChange();
+        var visitAssignedSelect = document.getElementById("visit-assigned-to");
+        if (visitAssignedSelect) {
+          visitAssignedSelect.value = visitObj.AssignedTo || "";
+          if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
+        }
+        var isBillable = visitObj.IsBillable === "Yes" || visitObj.IsBillable === true;
+        document.getElementById("visit-is-billable").checked = isBillable;
+        toggleVisitBillingField();
+        document.getElementById("visit-billing-amount").value = visitObj.BillingAmount || "";
+        document.getElementById("visit-status").value = visitObj.Status || "Completed";
+        document.getElementById("visit-purpose").value = visitObj.Purpose || "";
+        document.getElementById("visit-remarks").value = visitObj.Remarks || "";
+        var vPhotos = visitObj.Photos || visitObj.Attachments || "";
+        document.getElementById("visit-photos-hidden").value = vPhotos;
+        if (vPhotos && typeof vPhotos === "string" && vPhotos.trim() !== "") {
+          if (currentAttachmentsContainer) currentAttachmentsContainer.style.display = "block";
+          var links = vPhotos.split(",").map(function(l) { return l.trim(); }).filter(function(l) { return l !== ""; });
+          if (currentAttachmentsList) {
+            currentAttachmentsList.innerHTML = links.map(function(link, idx) {
+              return '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;">' +
+                '<a href="' + escapeHtml(link) + '" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;"><i class="fas fa-paperclip"></i> File ' + (idx + 1) + '</a>' +
+                '<button type="button" onclick="removeAttachment(' + idx + ')" style="border: none; background: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 0.75rem; line-height: 1;"><i class="fas fa-times"></i></button>' +
+              '</div>';
+            }).join("");
+          }
+        }
+      } else {
+        var isScheduled = activeVisitTab === "scheduled";
+        document.getElementById("visit-modal-title").innerText = isScheduled ? "Schedule New Site Visit" : "Log New Site Visit";
+        document.getElementById("visit-link-project").checked = true;
+        handleVisitLinkTypeChange();
+        document.getElementById("visit-date").value = (new Date()).toISOString().substring(0, 10);
+        document.getElementById("visit-assigned-type").value = "Staff";
+        handleVisitAssignedTypeChange();
+        var visitAssignedSelect = document.getElementById("visit-assigned-to");
+        if (visitAssignedSelect) {
+          visitAssignedSelect.value = currentUser.userId || "";
+          if (visitAssignedSelect._refreshSearchable) visitAssignedSelect._refreshSearchable();
+        }
+        var projSelect = document.getElementById("visit-project-id");
+        if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
+        document.getElementById("visit-is-billable").checked = false;
+        toggleVisitBillingField();
+        document.getElementById("visit-status").value = isScheduled ? "Scheduled" : "Completed";
       }
-      var projSelect = document.getElementById("visit-project-id");
-      if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
-      document.getElementById("visit-is-billable").checked = false;
-      toggleVisitBillingField();
-      document.getElementById("visit-status").value = isScheduled ? "Scheduled" : "Completed";
     }
+
     document.getElementById("visit-modal").classList.add("show");
   }
 
@@ -943,13 +1418,14 @@
       return v.VisitID === visitId;
     });
     if (visit) {
-      openVisitModal(visit);
+      openVisitModal(visit, "manual");
     }
   }
 
   function handleVisitSubmit(e) {
     e.preventDefault();
     var form = document.getElementById("visit-form");
+    var mode = document.getElementById("visit-mode").value || "manual";
     var formData = {};
     var inputs = form.querySelectorAll("input, select, textarea");
     inputs.forEach(function(input) {
@@ -965,6 +1441,7 @@
     });
 
     var isLeadRadio = document.getElementById("visit-link-lead") ? document.getElementById("visit-link-lead").checked : false;
+    var targetName = "";
     if (isLeadRadio) {
       formData["ProjectID"] = "";
       formData["LeadID"] = document.getElementById("visit-lead-id") ? document.getElementById("visit-lead-id").value : "";
@@ -972,6 +1449,8 @@
         showToast("Please select a Lead / Prospect for this visit.", "error");
         return;
       }
+      var l = (leadsCacheList || []).find(function(ld) { return ld.LeadID === formData["LeadID"]; });
+      targetName = l ? (l.CustomerName || l.LeadName || formData["LeadID"]) : formData["LeadID"];
     } else {
       formData["ProjectID"] = document.getElementById("visit-project-id") ? document.getElementById("visit-project-id").value : "";
       formData["LeadID"] = "";
@@ -979,12 +1458,83 @@
         showToast("Please select a Project for this visit.", "error");
         return;
       }
+      var p = (projectsCache || []).find(function(pr) { return pr.ProjectID === formData["ProjectID"]; });
+      targetName = p ? p.ProjectName : formData["ProjectID"];
+    }
+
+    // Branch by Mode:
+    if (mode === "checkin") {
+      var checkinCoords = formData.CheckInLocation || "Live GPS Acquired";
+      var checkinMapUrl = "";
+      var mCheckin = checkinCoords.match(/([0-9.-]+),\s*([0-9.-]+)/);
+      if (mCheckin) checkinMapUrl = "https://www.google.com/maps?q=" + mCheckin[1] + "," + mCheckin[2];
+
+      var activeVisitData = {
+        VisitID: formData.VisitID || ("VISIT-" + Math.floor(1000 + Math.random() * 9000)),
+        LinkType: isLeadRadio ? "Lead" : "Project",
+        ProjectID: formData.ProjectID || "",
+        LeadID: formData.LeadID || "",
+        TargetName: targetName,
+        VisitDate: formData.VisitDate || (new Date()).toISOString().substring(0, 10),
+        AssignedType: formData.AssignedType || "Staff",
+        AssignedTo: formData.AssignedTo || "",
+        Purpose: formData.Purpose || "",
+        Remarks: formData.Remarks || "",
+        IsBillable: formData.IsBillable || "No",
+        BillingAmount: formData.BillingAmount || "0",
+        CheckInTime: formData.CheckInTime || formatTimeAmPm(new Date()),
+        CheckInTimestamp: Date.now(),
+        CheckInLocation: checkinCoords,
+        CheckInMapUrl: checkinMapUrl
+      };
+      localStorage.setItem("nexmilestro_active_site_visit", JSON.stringify(activeVisitData));
+      closeVisitModal();
+      showToast("📍 GPS Check-In recorded! Live site visit is now active.", "success");
+      checkActiveVisitState();
+      return;
+    }
+
+    if (mode === "draft_update") {
+      var rawActive = localStorage.getItem("nexmilestro_active_site_visit");
+      if (rawActive) {
+        var activeVisit = JSON.parse(rawActive);
+        activeVisit.Remarks = formData.Remarks || "";
+        activeVisit.Purpose = formData.Purpose || activeVisit.Purpose;
+        localStorage.setItem("nexmilestro_active_site_visit", JSON.stringify(activeVisit));
+        showToast("Site visit notes updated.", "success");
+      }
+      closeVisitModal();
+      return;
+    }
+
+    if (mode === "checkout") {
+      // 100% STRICT MANDATORY REQUIREMENT: Upon check-out it must ask to fill site visit updates without it check-out should not be allowed
+      var remarksVal = (formData.Remarks || "").trim();
+      if (!remarksVal || remarksVal.length < 3) {
+        showToast("Check-out cannot be completed without site visit updates. Please enter observations/remarks.", "error");
+        var rInput = document.getElementById("visit-remarks");
+        if (rInput) {
+          rInput.focus();
+          rInput.style.border = "2px solid #dc2626";
+        }
+        return;
+      }
+      formData.Status = "Completed";
     }
 
     var fileInput = document.getElementById("visit-attachment");
     var files = fileInput ? fileInput.files : [];
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
+
+    function onComplete() {
+      if (mode === "checkout") {
+        localStorage.removeItem("nexmilestro_active_site_visit");
+        checkActiveVisitState();
+        showToast("🏁 GPS Check-Out completed! Site visit logged successfully.", "success");
+      }
+    }
+
     if (files.length > 0) {
       var fileDataArray = [];
       var loadedFiles = 0;
@@ -1002,6 +1552,7 @@
             loadedFiles++;
             if (loadedFiles === files.length) {
               executeSaveVisit(formData, fileDataArray, currentUserId);
+              onComplete();
             }
           };
         }(file);
@@ -1013,6 +1564,7 @@
       }
     } else {
       executeSaveVisit(formData, null, currentUserId);
+      onComplete();
     }
   }
 
@@ -1049,11 +1601,27 @@
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
     var loggerName = currentUser.fullName || currentUser.FullName || "StudioSpace Team";
     
+    var timingGpsInfo = "";
+    if (visit.CheckInTime || visit.CheckOutTime || visit.Duration) {
+      timingGpsInfo = "*Timing & GPS Verification:*\n" +
+                      "Check-In Time: " + (visit.CheckInTime || "-") + "\n" +
+                      "Check-Out Time: " + (visit.CheckOutTime || "-") + "\n" +
+                      "On-Site Duration: " + (visit.Duration || "-") + "\n";
+      if (visit.CheckInLocation) {
+        var cm = String(visit.CheckInLocation).match(/([0-9.-]+),\s*([0-9.-]+)/);
+        if (cm) {
+          timingGpsInfo += "GPS Map: https://www.google.com/maps?q=" + cm[1] + "," + cm[2] + "\n";
+        }
+      }
+      timingGpsInfo += "\n";
+    }
+
     var msg = "Hello, " + custName + ",\n\n" +
               "*Site Visit Update* (" + entityTitle + ") -\n\n" +
               "Visit Date: " + (visit.VisitDate ? formatDate(visit.VisitDate) : "-") + "\n" +
+              timingGpsInfo +
               "Purpose: " + (visit.Purpose || "-") + "\n" +
-              "Remarks: " + (visit.Remarks || "-") + "\n\n" +
+              "Remarks / Updates: " + (visit.Remarks || "-") + "\n\n" +
               "Regards,\n" + loggerName;
 
     openWAShareModal(msg, custMobile, groupLink, custName);
@@ -1220,6 +1788,13 @@
   window.toggleVisitBillingField = toggleVisitBillingField;
   window.removeAttachment = removeAttachment;
   window.toggleVisitAttachmentsDropdown = toggleVisitAttachmentsDropdown;
+  window.startGpsCheckIn = startGpsCheckIn;
+  window.triggerGpsCheckOut = triggerGpsCheckOut;
+  window.openActiveVisitDraftModal = openActiveVisitDraftModal;
+  window.checkActiveVisitState = checkActiveVisitState;
+
+  // Initialize active visit state check
+  setTimeout(checkActiveVisitState, 250);
 })();
 
 </script>
