@@ -449,8 +449,24 @@ function getSheet(tableName) {
     }
   } else if (headers && headers.length > 0) {
     const currentLastCol = sheet.getLastColumn();
-    if (currentLastCol < headers.length) {
+    if (currentLastCol > 0) {
+      const existingHeaders = sheet.getRange(1, 1, 1, currentLastCol).getValues()[0].map(h => String(h || "").trim());
+      headers.forEach(h => {
+        if (existingHeaders.indexOf(h) === -1) {
+          const nextCol = sheet.getLastColumn() + 1;
+          const cell = sheet.getRange(1, nextCol);
+          cell.setValue(h);
+          try {
+            cell.setFontWeight("bold");
+            cell.setBackground("#0f766e");
+            cell.setFontColor("#ffffff");
+          } catch(e) {}
+          existingHeaders.push(h);
+        }
+      });
+    } else {
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.setFrozenRows(1);
     }
   }
   return sheet;

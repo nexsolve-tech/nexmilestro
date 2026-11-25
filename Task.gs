@@ -17,8 +17,12 @@ function getTasks() {
 /**
  * Saves (inserts or updates) a task record.
  */
-function saveTask(taskData, userId) {
+function saveTask(taskData, fileData, userId) {
   try {
+    if (arguments.length === 2 && typeof fileData === "string") {
+      userId = fileData;
+      fileData = null;
+    }
     const taskId = taskData.TaskID || "";
     checkUserPermission(userId, "Tasks", taskId ? "edit" : "add");
     if (!taskData.TaskName || !taskData.TaskName.trim()) {
@@ -71,6 +75,22 @@ function saveTask(taskData, userId) {
 
     const savedId = writeTableRow("Tasks", "TaskID", taskId, taskData, userId);
     
+    // Process attachments upload if files were passed
+    if (fileData) {
+      try {
+        const rootFolder = getRootFolder();
+        let taskFolder = getOrCreateSubFolder(rootFolder, "Task Attachments");
+        const newUrls = saveUploadedFilesToFolder(fileData, taskFolder);
+        if (newUrls) {
+          let existing = taskData.Attachments ? String(taskData.Attachments).trim() : "";
+          let finalAttachments = existing ? existing + ", " + newUrls : newUrls;
+          writeTableRow("Tasks", "TaskID", savedId, { Attachments: finalAttachments }, userId);
+        }
+      } catch(err) {
+        console.warn("Failed to upload task attachments:", err);
+      }
+    }
+
     // Check if we should notify
     if (!taskId) {
       if (taskData.AssignedTo) {

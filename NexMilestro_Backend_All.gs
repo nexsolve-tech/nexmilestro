@@ -455,7 +455,28 @@ function hashPassword(password) {
  */
 function writeTableRow(ss, tableName, idColumnName, idValue, objectData, userId) {
   const sheet = ensureSheetWithHeaders(ss, tableName);
-  const headers = SHEET_HEADERS[tableName] || [];
+  const declaredHeaders = SHEET_HEADERS[tableName] || [];
+  
+  // Dynamically sync and append any missing declared headers to row 1
+  let headers = declaredHeaders.slice();
+  if (sheet.getLastColumn() > 0) {
+    const existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h || "").trim());
+    declaredHeaders.forEach(dh => {
+      if (existingHeaders.indexOf(dh) === -1) {
+        const nextCol = sheet.getLastColumn() + 1;
+        const cell = sheet.getRange(1, nextCol);
+        cell.setValue(dh);
+        try {
+          cell.setFontWeight("bold");
+          cell.setBackground("#0f766e");
+          cell.setFontColor("#ffffff");
+        } catch(e) {}
+        existingHeaders.push(dh);
+      }
+    });
+    headers = existingHeaders;
+  }
+  
   const lastRow = sheet.getLastRow();
   const prefix = ID_PREFIXES[tableName] || "ID-";
 
@@ -1922,9 +1943,60 @@ function include(filename) {
 // GOOGLE SHEETS MENU & DATABASE AUTOMATION
 // =========================================================================
 
+
+/**
+ * Automatically inspects all database sheets in the active spreadsheet
+ * and appends any missing canonical columns (e.g. CheckInTime, CheckOutTime, CheckInLocation, CheckOutLocation, Duration on SiteVisits, Attachments on Tasks)
+ * to Row 1 with bold white text on teal background.
+ */
+function autoFixDatabaseHeaders() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let updatedCount = 0;
+  let addedDetails = [];
+
+  for (const tableName in SHEET_HEADERS) {
+    const canonicalHeaders = SHEET_HEADERS[tableName];
+    const sheet = ss.getSheetByName(tableName);
+    if (!sheet) continue;
+
+    const lastCol = sheet.getLastColumn();
+    let existingHeaders = [];
+    if (lastCol > 0) {
+      existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
+    }
+
+    let addedToTable = [];
+    canonicalHeaders.forEach(col => {
+      if (existingHeaders.indexOf(col) === -1) {
+        const nextCol = sheet.getLastColumn() + 1;
+        const cell = sheet.getRange(1, nextCol);
+        cell.setValue(col);
+        try {
+          cell.setFontWeight("bold");
+          cell.setBackground("#0f766e");
+          cell.setFontColor("#ffffff");
+        } catch(e) {}
+        existingHeaders.push(col);
+        addedToTable.push(col);
+      }
+    });
+
+    if (addedToTable.length > 0) {
+      updatedCount += addedToTable.length;
+      addedDetails.push(tableName + ": " + addedToTable.join(", "));
+    }
+  }
+
+  const msg = updatedCount > 0 
+    ? "Successfully added " + updatedCount + " missing column(s):\n\n" + addedDetails.join("\n")
+    : "All tables already have all required columns up to date!";
+  SpreadsheetApp.getUi().alert(msg);
+}
+
 function onOpen(e) {
   SpreadsheetApp.getUi()
     .createMenu('🚀 NexMilestro SaaS')
+    .addItem('⚡ Auto-Add All Missing Columns to Tables (GPS, Attachments, etc.)', 'autoFixDatabaseHeaders')
     .addItem('⚡ 1-Click Setup All 15 Database Tables & Master Data', 'setupDatabaseTabs')
     .addItem('🔑 Setup Central Master License Sheet (Licenses Tab)', 'setupMasterLicenseSheet')
     .addSeparator()
