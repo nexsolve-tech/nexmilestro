@@ -696,12 +696,12 @@
       populateRolesFromCache();
     }
     var roleId = (selectEl && selectEl.value) ? selectEl.value : "Project Manager";
-    if (window._dataCache && window._dataCache.rolePermissions) {
-      var matching = window._dataCache.rolePermissions.filter(function(r) { return r.RoleID === roleId; });
+    // Always fetch latest role permissions to guarantee live database reflection
+    if (window._dataCache && window._dataCache.rolePermissions && window._dataCache.rolePermissions.length > 0) {
+      var matching = window._dataCache.rolePermissions.filter(function(r) { return String(r.RoleID || "").trim() === String(roleId).trim(); });
       if (matching.length > 0) {
         activeRolePermissionsList = matching;
         renderRolePermissionsTable(activeRolePermissionsList);
-        return;
       }
     }
     google.script.run.withSuccessHandler(function(data) {
@@ -834,6 +834,29 @@
     google.script.run.withSuccessHandler(function(response) {
       if (response.success) {
         showToast(response.message, "success");
+        // Update local cache
+        if (window._dataCache) {
+          window._dataCache.rolePermissions = window._dataCache.rolePermissions || [];
+          permissionsList.forEach(function(p) {
+            var existing = window._dataCache.rolePermissions.find(function(r) { return r.RoleID === roleId && r.Module === p.Module; });
+            if (existing) {
+              existing.CanView = p.CanView;
+              existing.CanAdd = p.CanAdd;
+              existing.CanEdit = p.CanEdit;
+              existing.CanDelete = p.CanDelete;
+            } else {
+              window._dataCache.rolePermissions.push({
+                PermissionID: "PERM-" + Math.floor(1000 + Math.random() * 9000),
+                RoleID: roleId,
+                Module: p.Module,
+                CanView: p.CanView,
+                CanAdd: p.CanAdd,
+                CanEdit: p.CanEdit,
+                CanDelete: p.CanDelete
+              });
+            }
+          });
+        }
         loadRolePermissionsGrid();
       } else {
         showToast(response.message, "error");

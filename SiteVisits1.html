@@ -1411,7 +1411,11 @@
       if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
       document.getElementById("visit-is-billable").checked = false;
       toggleVisitBillingField();
-      document.getElementById("visit-status").value = "Scheduled";
+      var vStatusEl = document.getElementById("visit-status");
+      if (vStatusEl) {
+        vStatusEl.value = "Scheduled";
+        if (vStatusEl._refreshSearchable) vStatusEl._refreshSearchable();
+      }
 
       submitBtn.className = "btn btn-primary";
       submitBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Schedule Site Visit';
@@ -1586,7 +1590,11 @@
         document.getElementById("visit-is-billable").checked = isBillable;
         toggleVisitBillingField();
         document.getElementById("visit-billing-amount").value = visitObj.BillingAmount || "";
-        document.getElementById("visit-status").value = visitObj.Status || "Completed";
+        var stEl = document.getElementById("visit-status");
+        if (stEl) {
+          stEl.value = visitObj.Status || "Completed";
+          if (stEl._refreshSearchable) stEl._refreshSearchable();
+        }
         document.getElementById("visit-purpose").value = visitObj.Purpose || "";
         document.getElementById("visit-remarks").value = visitObj.Remarks || "";
         var vPhotos = visitObj.Photos || visitObj.Attachments || "";

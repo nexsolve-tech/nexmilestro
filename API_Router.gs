@@ -236,7 +236,7 @@ const SHEET_HEADERS = {
   "Tasks": [
     "TaskID", "ProjectID", "TaskName", "Description", "AssignedType", "AssignedTo",
     "StartDate", "DueDate", "Priority", "Status", "CompletionDate", "Remarks",
-    "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy"
+    "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy", "Attachments"
   ],
   "Leads": [
     "LeadID", "Date", "CustomerName", "ProjectType", "Mobile", "Email", "ProjectDetails", "Attachments", "LeadType", "Status", "Source", "AssignedTo", "Remarks", "FollowUpDate", "LossReason", "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy"
@@ -277,7 +277,8 @@ const SHEET_HEADERS = {
   "CompanySetup": [
     "CompanyID", "CompanyName", "Address", "OfficialEmail", "ContactNumber",
     "PANNumber", "GSTNumber", "Website", "BankName", "AccountNumber",
-    "IFSCCode", "Branch", "LogoUrl", "BankAccounts", "ModifiedDate", "ModifiedBy"
+    "IFSCCode", "Branch", "LogoUrl", "BankAccounts", "ModifiedDate", "ModifiedBy",
+    "SmtpProvider", "SmtpSenderName", "SmtpSenderEmail", "SmtpUser", "SmtpHost", "SmtpPort", "SmtpPass"
   ],
   "ChatMessages": [
     "MessageID", "ConversationID", "Sender", "Role", "Text", "Time", "Timestamp", "Initials", "CreatedDate", "CreatedBy"
@@ -746,16 +747,20 @@ function resolveUserPermissions(ss, user) {
   const permissions = {};
   const allModules = [
     "Dashboard", "Customers", "Projects", "Tasks", "SiteVisits", 
-    "Leads", "Proposals", "Vendors", "Associates", "Finance", "Users", "Settings"
+    "Leads", "Proposals", "Vendors", "Associates", "Finance", "Users", "Company", "Masters", "Help", "Teamchat", "Milestones", "Reports"
   ];
 
-  // Super Admin / Admin default to full access
-  const isSuperAdmin = user.RoleID === "Super Admin" || user.RoleID === "Administrator" || user.RoleID === "Admin";
+  const userRole = String(user.RoleID || "").trim();
+  const isSuperAdmin = userRole === "Super Admin" || userRole === "Administrator" || userRole === "Admin";
+
+  // Default module access
   allModules.forEach(mod => {
+    // Non-admins get view/add/edit on primary workspace modules by default if no explicit row
+    const isStaffModule = ["Dashboard", "Customers", "Projects", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Help", "Teamchat"].indexOf(mod) !== -1;
     permissions[mod] = {
-      view: isSuperAdmin,
-      add: isSuperAdmin,
-      edit: isSuperAdmin,
+      view: isSuperAdmin || isStaffModule,
+      add: isSuperAdmin || (isStaffModule && mod !== "Dashboard"),
+      edit: isSuperAdmin || (isStaffModule && mod !== "Dashboard"),
       del: isSuperAdmin
     };
   });
@@ -767,14 +772,16 @@ function resolveUserPermissions(ss, user) {
     const roleRows = sheetToObjects(roleSheet);
 
     roleRows.forEach(p => {
-      if (String(p.RoleID).trim() === String(user.RoleID).trim()) {
-        const mod = String(p.Module).trim();
-        permissions[mod] = {
-          view: p.CanView === true || String(p.CanView).toUpperCase() === "TRUE",
-          add: p.CanAdd === true || String(p.CanAdd).toUpperCase() === "TRUE",
-          edit: p.CanEdit === true || String(p.CanEdit).toUpperCase() === "TRUE",
-          del: p.CanDelete === true || String(p.CanDelete).toUpperCase() === "TRUE"
-        };
+      if (String(p.RoleID || "").trim().toLowerCase() === userRole.toLowerCase()) {
+        const mod = String(p.Module || "").trim();
+        if (mod) {
+          permissions[mod] = {
+            view: p.CanView === true || String(p.CanView).toUpperCase() === "TRUE",
+            add: p.CanAdd === true || String(p.CanAdd).toUpperCase() === "TRUE",
+            edit: p.CanEdit === true || String(p.CanEdit).toUpperCase() === "TRUE",
+            del: p.CanDelete === true || String(p.CanDelete).toUpperCase() === "TRUE"
+          };
+        }
       }
     });
 
@@ -1181,7 +1188,19 @@ function deleteAssociateRecord(licenseKey, associateId) {
 
 function saveUserRecord(licenseKey, data, requestingUserId) {
   try {
-    const { ss } = getClientSpreadsheet(licenseKey);
+    const { ss, license } = getClientSpreadsheet(licenseKey);
+    const userId = data.UserID || "";
+    if (!userId) {
+      const maxUsers = (license && license.maxUsers) || 10;
+      const allUsers = sheetToObjects(ensureSheetWithHeaders(ss, "Users"));
+      const activeCount = allUsers.filter(u => !u.Status || String(u.Status).toLowerCase() === "active").length;
+      if (activeCount >= maxUsers) {
+        return {
+          success: false,
+          error: "Seat Limit Reached: Your current plan allows a maximum of " + maxUsers + " active users (" + activeCount + " currently active). Please upgrade your subscription license to add more users."
+        };
+      }
+    }
     const userId = data.UserID || "";
     if (!data.FullName || !String(data.FullName).trim()) {
       return { success: false, error: "Staff Full Name is required." };
@@ -1402,6 +1421,110 @@ function deleteDropdownValue(licenseKey, category, value) {
   }
 }
 
+
+function sendEmailViaGateway(licenseKey, mailOpts) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const compSheet = ensureSheetWithHeaders(ss, "CompanySetup");
+    const compList = sheetToObjects(compSheet);
+    const comp = compList.length > 0 ? compList[0] : {};
+
+    const provider = String(comp.SmtpProvider || "").trim();
+    const senderEmail = String(comp.SmtpSenderEmail || comp.OfficialEmail || "").trim();
+    const senderName = String(comp.SmtpSenderName || comp.CompanyName || "NexMilestro Notification").trim();
+    const apiKey = String(comp.SmtpPass || "").trim();
+
+    // 1. Resend API mode
+    if (provider.toLowerCase() === "resend" && apiKey) {
+      const resendPayload = {
+        from: senderName + " <" + senderEmail + ">",
+        to: [mailOpts.to],
+        subject: mailOpts.subject,
+        html: mailOpts.htmlBody || mailOpts.body
+      };
+      if (mailOpts.cc) resendPayload.cc = [mailOpts.cc];
+      const res = UrlFetchApp.fetch("https://api.resend.com/emails", {
+        method: "post",
+        headers: {
+          "Authorization": "Bearer " + apiKey,
+          "Content-Type": "application/json"
+        },
+        payload: JSON.stringify(resendPayload),
+        muteHttpExceptions: true
+      });
+      const code = res.getResponseCode();
+      if (code >= 200 && code < 300) {
+        return { success: true, method: "Resend API" };
+      }
+    }
+
+    // 2. Brevo API mode
+    if (provider.toLowerCase() === "brevo" && apiKey) {
+      const brevoPayload = {
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: mailOpts.to }],
+        subject: mailOpts.subject,
+        htmlContent: mailOpts.htmlBody || mailOpts.body
+      };
+      if (mailOpts.cc) brevoPayload.cc = [{ email: mailOpts.cc }];
+      const res = UrlFetchApp.fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "post",
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json"
+        },
+        payload: JSON.stringify(brevoPayload),
+        muteHttpExceptions: true
+      });
+      const code = res.getResponseCode();
+      if (code >= 200 && code < 300) {
+        return { success: true, method: "Brevo API" };
+      }
+    }
+
+    // 3. Google Workspace / Gmail App Password or Native MailApp
+    const gasMail = {
+      to: mailOpts.to,
+      subject: mailOpts.subject,
+      htmlBody: mailOpts.htmlBody || mailOpts.body
+    };
+    if (mailOpts.cc) gasMail.cc = mailOpts.cc;
+    if (senderName) gasMail.name = senderName;
+
+    // If an authenticated sender address is configured and matches Google account
+    if (senderEmail && (senderEmail.includes("@") || senderName)) {
+      try {
+        GmailApp.sendEmail(mailOpts.to, mailOpts.subject, mailOpts.body || "", {
+          htmlBody: mailOpts.htmlBody || mailOpts.body,
+          name: senderName,
+          cc: mailOpts.cc || undefined
+        });
+        return { success: true, method: "GmailApp" };
+      } catch(gErr) {
+        MailApp.sendEmail(gasMail);
+        return { success: true, method: "MailApp" };
+      }
+    } else {
+      MailApp.sendEmail(gasMail);
+      return { success: true, method: "MailApp" };
+    }
+  } catch (err) {
+    console.warn("sendEmailViaGateway error:", err);
+    // Ultimate fallback
+    try {
+      MailApp.sendEmail({
+        to: mailOpts.to,
+        subject: mailOpts.subject,
+        htmlBody: mailOpts.htmlBody || mailOpts.body,
+        cc: mailOpts.cc || undefined
+      });
+      return { success: true, method: "MailApp Fallback" };
+    } catch (e2) {
+      return { success: false, error: err.message || String(err) };
+    }
+  }
+}
+
 function handleSendLeadEmail(licenseKey, data, userId) {
   try {
     const to = data.To || data.to;
@@ -1417,10 +1540,9 @@ function handleSendLeadEmail(licenseKey, data, userId) {
       htmlBody: body.replace(/\n/g, "<br>")
     };
     if (cc) mailOpts.cc = cc;
-    try {
-      MailApp.sendEmail(mailOpts);
-    } catch(mailErr) {
-      console.warn("MailApp.sendEmail warning:", mailErr);
+    const sendRes = sendEmailViaGateway(licenseKey, mailOpts);
+    if (!sendRes.success) {
+      console.warn("sendEmailViaGateway notice:", sendRes.error);
     }
     if (data.LeadID) {
       saveLeadFollowupRecord(licenseKey, {
@@ -1451,12 +1573,8 @@ function handleSendProposalEmail(licenseKey, data, userId) {
       htmlBody: body.replace(/\n/g, "<br>")
     };
     if (cc) mailOpts.cc = cc;
-    try {
-      MailApp.sendEmail(mailOpts);
-    } catch(mailErr) {
-      console.warn("MailApp.sendEmail warning:", mailErr);
-    }
-    return { success: true, message: "Proposal email sent successfully." };
+    const sendRes = sendEmailViaGateway(licenseKey, mailOpts);
+    return { success: true, message: "Proposal email sent successfully via " + (sendRes.method || "authenticated gateway") + "." };
   } catch(e) {
     return { success: false, message: "Failed to send email: " + e.message };
   }
@@ -1757,6 +1875,11 @@ function handleUniversalApiRequest(action, params) {
       case 'send_proposal_email':
       case 'sendProposalEmail':
         response = handleSendProposalEmail(licenseKey, dataObj, userId);
+        break;
+
+      case 'send_test_email':
+      case 'sendTestEmail':
+        response = handleSendTestEmail(licenseKey, dataObj, userId);
         break;
 
       // ── OPERATIONS & USERS ───────────────────────────────────────────────
@@ -2183,4 +2306,21 @@ function setupMasterLicenseSheet() {
   ];
   sheet.getRange(2, 1, 1, sampleLicense.length).setValues([sampleLicense]);
   SpreadsheetApp.getUi().alert("✅ Central Master License Sheet configured!\nRegistered key 'LIC-ENTERPRISE-2026' linked to current spreadsheet ID.");
+}
+
+
+function handleSendTestEmail(licenseKey, data, userId) {
+  try {
+    const to = data.recipient || data.to || "";
+    if (!to) return { success: false, message: "Recipient email is required." };
+    const mailOpts = {
+      to: to,
+      subject: data.subject || "✅ NexMilestro Email Gateway Verified",
+      htmlBody: (data.body || "This is a verification email from your NexMilestro Operations Suite.").replace(/\n/g, "<br>")
+    };
+    const res = sendEmailViaGateway(licenseKey, mailOpts);
+    return { success: true, message: "Test email delivered successfully via " + (res.method || "Email Gateway") + "." };
+  } catch(e) {
+    return { success: false, message: "Failed to send test email: " + e.message };
+  }
 }

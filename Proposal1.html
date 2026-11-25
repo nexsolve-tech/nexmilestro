@@ -786,7 +786,11 @@
       document.getElementById("prop-date-field").value = parseRawDateString(propObj.ProposalDate);
       document.getElementById("prop-validity-field").value = parseRawDateString(propObj.ValidityDate);
       document.getElementById("prop-followup-field").value = parseRawDateString(propObj.FollowUpDate);
-      document.getElementById("prop-status-select").value = propObj.Status || "Draft";
+      var pStSel = document.getElementById("prop-status-select");
+      if (pStSel) {
+        pStSel.value = propObj.Status || "Draft";
+        if (pStSel._refreshSearchable) pStSel._refreshSearchable();
+      }
       document.getElementById("prop-scope-field").value = propObj.ScopeOfWork || "";
       document.getElementById("prop-remarks-field").value = propObj.Remarks || "";
       document.getElementById("prop-attachments-hidden").value = propObj.Attachments || "";

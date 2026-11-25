@@ -282,20 +282,26 @@
     populateSelectOptions("lead-proj-type-select", projTypeOptions);
     populateSelectOptions("lead-type-select", typeOptions);
 
+    ["lead-source-select", "lead-status-select", "lead-proj-type-select", "lead-type-select", "lead-assigned-select"].forEach(function(sId) {
+      var el = document.getElementById(sId);
+      if (el && el._refreshSearchable) el._refreshSearchable();
+    });
+
     renderLeads(leadsDataList);
     showLoader(false);
   }
 
   function applyLeadsData(result) {
-    staffCache = result.users || [];
+    staffCache = result.users || (window._dataCache && window._dataCache.users) || [];
     var staffOpts = staffCache.map(function(u) {
-      return { val: u.FullName, label: u.FullName };
+      var name = u.FullName || u.fullName || u.Email || u.email;
+      return { val: name, label: name };
     });
     populateSelectOptions("lead-assigned-select", staffOpts, "Select Staff");
 
     var rawLeads = result.leads || [];
     leadsDataList = window.RLS ? window.RLS.filterLeads(rawLeads) : rawLeads;
-    dropdownsCache = result.dropdowns || {};
+    dropdownsCache = result.dropdowns || (window._dataCache && window._dataCache.dropdowns) || {};
     checkCompletion();
   }
 
@@ -702,13 +708,18 @@
       document.getElementById("lead-id-field").value = leadObj.LeadID;
       document.getElementById("lead-date-field").value = parseRawDateString(leadObj.Date);
       document.getElementById("lead-cust-name-field").value = leadObj.CustomerName || "";
-      document.getElementById("lead-proj-type-select").value = leadObj.ProjectType || "";
+      var ptSel = document.getElementById("lead-proj-type-select");
+      if (ptSel) { ptSel.value = leadObj.ProjectType || ""; if (ptSel._refreshSearchable) ptSel._refreshSearchable(); }
       document.getElementById("lead-mobile-field").value = leadObj.Mobile || "";
       document.getElementById("lead-email-field").value = leadObj.Email || "";
-      document.getElementById("lead-type-select").value = leadObj.LeadType || "";
-      document.getElementById("lead-status-select").value = leadObj.Status || "";
-      document.getElementById("lead-source-select").value = leadObj.Source || "";
-      document.getElementById("lead-assigned-select").value = leadObj.AssignedTo || "";
+      var ltSel = document.getElementById("lead-type-select");
+      if (ltSel) { ltSel.value = leadObj.LeadType || ""; if (ltSel._refreshSearchable) ltSel._refreshSearchable(); }
+      var stSel = document.getElementById("lead-status-select");
+      if (stSel) { stSel.value = leadObj.Status || ""; if (stSel._refreshSearchable) stSel._refreshSearchable(); }
+      var srcSel = document.getElementById("lead-source-select");
+      if (srcSel) { srcSel.value = leadObj.Source || ""; if (srcSel._refreshSearchable) srcSel._refreshSearchable(); }
+      var asgSel = document.getElementById("lead-assigned-select");
+      if (asgSel) { asgSel.value = leadObj.AssignedTo || ""; if (asgSel._refreshSearchable) asgSel._refreshSearchable(); }
       document.getElementById("lead-details-field").value = leadObj.ProjectDetails || "";
       document.getElementById("lead-remarks-field").value = leadObj.Remarks || "";
       document.getElementById("lead-loss-reason-field").value = leadObj.LossReason || "";

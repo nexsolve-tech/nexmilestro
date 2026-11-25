@@ -8512,7 +8512,11 @@ body.view-teamchat .chat-input-area {
       if (projSelect && projSelect._refreshSearchable) projSelect._refreshSearchable();
       document.getElementById("visit-is-billable").checked = false;
       toggleVisitBillingField();
-      document.getElementById("visit-status").value = "Scheduled";
+      var vStatusEl = document.getElementById("visit-status");
+      if (vStatusEl) {
+        vStatusEl.value = "Scheduled";
+        if (vStatusEl._refreshSearchable) vStatusEl._refreshSearchable();
+      }
 
       submitBtn.className = "btn btn-primary";
       submitBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Schedule Site Visit';
@@ -8687,7 +8691,11 @@ body.view-teamchat .chat-input-area {
         document.getElementById("visit-is-billable").checked = isBillable;
         toggleVisitBillingField();
         document.getElementById("visit-billing-amount").value = visitObj.BillingAmount || "";
-        document.getElementById("visit-status").value = visitObj.Status || "Completed";
+        var stEl = document.getElementById("visit-status");
+        if (stEl) {
+          stEl.value = visitObj.Status || "Completed";
+          if (stEl._refreshSearchable) stEl._refreshSearchable();
+        }
         document.getElementById("visit-purpose").value = visitObj.Purpose || "";
         document.getElementById("visit-remarks").value = visitObj.Remarks || "";
         var vPhotos = visitObj.Photos || visitObj.Attachments || "";
@@ -10452,20 +10460,26 @@ body.view-teamchat .chat-input-area {
     populateSelectOptions("lead-proj-type-select", projTypeOptions);
     populateSelectOptions("lead-type-select", typeOptions);
 
+    ["lead-source-select", "lead-status-select", "lead-proj-type-select", "lead-type-select", "lead-assigned-select"].forEach(function(sId) {
+      var el = document.getElementById(sId);
+      if (el && el._refreshSearchable) el._refreshSearchable();
+    });
+
     renderLeads(leadsDataList);
     showLoader(false);
   }
 
   function applyLeadsData(result) {
-    staffCache = result.users || [];
+    staffCache = result.users || (window._dataCache && window._dataCache.users) || [];
     var staffOpts = staffCache.map(function(u) {
-      return { val: u.FullName, label: u.FullName };
+      var name = u.FullName || u.fullName || u.Email || u.email;
+      return { val: name, label: name };
     });
     populateSelectOptions("lead-assigned-select", staffOpts, "Select Staff");
 
     var rawLeads = result.leads || [];
     leadsDataList = window.RLS ? window.RLS.filterLeads(rawLeads) : rawLeads;
-    dropdownsCache = result.dropdowns || {};
+    dropdownsCache = result.dropdowns || (window._dataCache && window._dataCache.dropdowns) || {};
     checkCompletion();
   }
 
@@ -10872,13 +10886,18 @@ body.view-teamchat .chat-input-area {
       document.getElementById("lead-id-field").value = leadObj.LeadID;
       document.getElementById("lead-date-field").value = parseRawDateString(leadObj.Date);
       document.getElementById("lead-cust-name-field").value = leadObj.CustomerName || "";
-      document.getElementById("lead-proj-type-select").value = leadObj.ProjectType || "";
+      var ptSel = document.getElementById("lead-proj-type-select");
+      if (ptSel) { ptSel.value = leadObj.ProjectType || ""; if (ptSel._refreshSearchable) ptSel._refreshSearchable(); }
       document.getElementById("lead-mobile-field").value = leadObj.Mobile || "";
       document.getElementById("lead-email-field").value = leadObj.Email || "";
-      document.getElementById("lead-type-select").value = leadObj.LeadType || "";
-      document.getElementById("lead-status-select").value = leadObj.Status || "";
-      document.getElementById("lead-source-select").value = leadObj.Source || "";
-      document.getElementById("lead-assigned-select").value = leadObj.AssignedTo || "";
+      var ltSel = document.getElementById("lead-type-select");
+      if (ltSel) { ltSel.value = leadObj.LeadType || ""; if (ltSel._refreshSearchable) ltSel._refreshSearchable(); }
+      var stSel = document.getElementById("lead-status-select");
+      if (stSel) { stSel.value = leadObj.Status || ""; if (stSel._refreshSearchable) stSel._refreshSearchable(); }
+      var srcSel = document.getElementById("lead-source-select");
+      if (srcSel) { srcSel.value = leadObj.Source || ""; if (srcSel._refreshSearchable) srcSel._refreshSearchable(); }
+      var asgSel = document.getElementById("lead-assigned-select");
+      if (asgSel) { asgSel.value = leadObj.AssignedTo || ""; if (asgSel._refreshSearchable) asgSel._refreshSearchable(); }
       document.getElementById("lead-details-field").value = leadObj.ProjectDetails || "";
       document.getElementById("lead-remarks-field").value = leadObj.Remarks || "";
       document.getElementById("lead-loss-reason-field").value = leadObj.LossReason || "";
@@ -12041,7 +12060,11 @@ body.view-teamchat .chat-input-area {
       document.getElementById("prop-date-field").value = parseRawDateString(propObj.ProposalDate);
       document.getElementById("prop-validity-field").value = parseRawDateString(propObj.ValidityDate);
       document.getElementById("prop-followup-field").value = parseRawDateString(propObj.FollowUpDate);
-      document.getElementById("prop-status-select").value = propObj.Status || "Draft";
+      var pStSel = document.getElementById("prop-status-select");
+      if (pStSel) {
+        pStSel.value = propObj.Status || "Draft";
+        if (pStSel._refreshSearchable) pStSel._refreshSearchable();
+      }
       document.getElementById("prop-scope-field").value = propObj.ScopeOfWork || "";
       document.getElementById("prop-remarks-field").value = propObj.Remarks || "";
       document.getElementById("prop-attachments-hidden").value = propObj.Attachments || "";
@@ -14557,12 +14580,12 @@ body.view-teamchat .chat-input-area {
       populateRolesFromCache();
     }
     var roleId = (selectEl && selectEl.value) ? selectEl.value : "Project Manager";
-    if (window._dataCache && window._dataCache.rolePermissions) {
-      var matching = window._dataCache.rolePermissions.filter(function(r) { return r.RoleID === roleId; });
+    // Always fetch latest role permissions to guarantee live database reflection
+    if (window._dataCache && window._dataCache.rolePermissions && window._dataCache.rolePermissions.length > 0) {
+      var matching = window._dataCache.rolePermissions.filter(function(r) { return String(r.RoleID || "").trim() === String(roleId).trim(); });
       if (matching.length > 0) {
         activeRolePermissionsList = matching;
         renderRolePermissionsTable(activeRolePermissionsList);
-        return;
       }
     }
     google.script.run.withSuccessHandler(function(data) {
@@ -14695,6 +14718,29 @@ body.view-teamchat .chat-input-area {
     google.script.run.withSuccessHandler(function(response) {
       if (response.success) {
         showToast(response.message, "success");
+        // Update local cache
+        if (window._dataCache) {
+          window._dataCache.rolePermissions = window._dataCache.rolePermissions || [];
+          permissionsList.forEach(function(p) {
+            var existing = window._dataCache.rolePermissions.find(function(r) { return r.RoleID === roleId && r.Module === p.Module; });
+            if (existing) {
+              existing.CanView = p.CanView;
+              existing.CanAdd = p.CanAdd;
+              existing.CanEdit = p.CanEdit;
+              existing.CanDelete = p.CanDelete;
+            } else {
+              window._dataCache.rolePermissions.push({
+                PermissionID: "PERM-" + Math.floor(1000 + Math.random() * 9000),
+                RoleID: roleId,
+                Module: p.Module,
+                CanView: p.CanView,
+                CanAdd: p.CanAdd,
+                CanEdit: p.CanEdit,
+                CanDelete: p.CanDelete
+              });
+            }
+          });
+        }
         loadRolePermissionsGrid();
       } else {
         showToast(response.message, "error");
@@ -20115,6 +20161,23 @@ document.addEventListener("click", function() {
      * Central RPC Dispatcher: Handles cached instant reads & server mutations
      */
 
+    
+    function getNextSequentialId(list, prefix, startNum) {
+      startNum = startNum || 1001;
+      var maxNum = startNum - 1;
+      (list || []).forEach(function(item) {
+        if (!item) return;
+        var idStr = String(item.TransactionID || item.ProjectID || item.CustomerID || item.TaskID || item.MilestoneID || item.LeadID || item.ProposalID || item.VendorID || item.AssociateID || item.VisitID || item.UserID || item.id || "");
+        if (idStr.indexOf(prefix) === 0) {
+          var numPart = parseInt(idStr.substring(prefix.length), 10);
+          if (!isNaN(numPart) && numPart > maxNum && numPart < 900000) {
+            maxNum = numPart;
+          }
+        }
+      });
+      return prefix + (maxNum + 1);
+    }
+
     function handleLocalOptimisticMutation(fnName, payload, args) {
       window._dataCache = window._dataCache || {};
       var nowIso = (new Date()).toISOString();
@@ -20123,7 +20186,7 @@ document.addEventListener("click", function() {
         window._dataCache.customers = window._dataCache.customers || [];
         var cust = Object.assign({}, payload);
         if (!cust.CustomerID) {
-          cust.CustomerID = "CUST-" + Math.floor(1000 + Math.random() * 9000);
+          cust.CustomerID = getNextSequentialId(window._dataCache.customers, "CUST-", 1001);
           cust.CreatedDate = nowIso;
           window._dataCache.customers.unshift(cust);
         } else {
@@ -20146,7 +20209,7 @@ document.addEventListener("click", function() {
         window._dataCache.projects = window._dataCache.projects || [];
         var proj = Object.assign({}, payload);
         if (!proj.ProjectID) {
-          proj.ProjectID = "PROJ-" + Math.floor(1000 + Math.random() * 9000);
+          proj.ProjectID = getNextSequentialId(window._dataCache.projects, "PROJ-", 1001);
           proj.CreatedDate = nowIso;
           window._dataCache.projects.unshift(proj);
         } else {
@@ -20169,7 +20232,7 @@ document.addEventListener("click", function() {
         window._dataCache.milestones = window._dataCache.milestones || [];
         var ms = Object.assign({}, payload);
         if (!ms.MilestoneID) {
-          ms.MilestoneID = "MS-" + Math.floor(100 + Math.random() * 900);
+          ms.MilestoneID = getNextSequentialId(window._dataCache.milestones, "MS-", 101);
           ms.CreatedDate = nowIso;
           window._dataCache.milestones.push(ms);
         } else {
@@ -20192,7 +20255,7 @@ document.addEventListener("click", function() {
         window._dataCache.tasks = window._dataCache.tasks || [];
         var task = Object.assign({}, payload);
         if (!task.TaskID) {
-          task.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
+          task.TaskID = getNextSequentialId(window._dataCache.tasks, "TASK-", 1001);
           task.CreatedDate = nowIso;
           window._dataCache.tasks.unshift(task);
         } else {
@@ -20229,7 +20292,7 @@ document.addEventListener("click", function() {
         window._dataCache.siteVisits = window._dataCache.siteVisits || [];
         var visit = Object.assign({}, payload);
         if (!visit.VisitID) {
-          visit.VisitID = "VISIT-" + Math.floor(1000 + Math.random() * 9000);
+          visit.VisitID = getNextSequentialId(window._dataCache.siteVisits, "VISIT-", 1001);
           visit.CreatedDate = nowIso;
           window._dataCache.siteVisits.unshift(visit);
         } else {
@@ -20252,7 +20315,7 @@ document.addEventListener("click", function() {
         window._dataCache.leads = window._dataCache.leads || [];
         var lead = Object.assign({}, payload);
         if (!lead.LeadID) {
-          lead.LeadID = "LEAD-" + Math.floor(1000 + Math.random() * 9000);
+          lead.LeadID = getNextSequentialId(window._dataCache.leads, "LEAD-", 1001);
           lead.CreatedDate = nowIso;
           window._dataCache.leads.unshift(lead);
         } else {
@@ -20282,7 +20345,7 @@ document.addEventListener("click", function() {
       if (fnName === "saveLeadFollowup") {
         window._dataCache.leadFollowups = window._dataCache.leadFollowups || [];
         var fup = Object.assign({}, payload);
-        if (!fup.FollowupID) fup.FollowupID = "FUP-" + Math.floor(1000 + Math.random() * 9000);
+        if (!fup.FollowupID) fup.FollowupID = getNextSequentialId(window._dataCache.leadFollowups, "FLP-", 1001);
         window._dataCache.leadFollowups.unshift(fup);
         populateAllCaches(window._dataCache);
         return { success: true, message: "Follow-up logged successfully." };
@@ -20292,7 +20355,7 @@ document.addEventListener("click", function() {
         window._dataCache.proposals = window._dataCache.proposals || [];
         var prop = Object.assign({}, payload);
         if (!prop.ProposalID) {
-          prop.ProposalID = "PROP-" + Math.floor(1000 + Math.random() * 9000);
+          prop.ProposalID = getNextSequentialId(window._dataCache.proposals, "PROP-", 1001);
           prop.CreatedDate = nowIso;
           window._dataCache.proposals.unshift(prop);
         } else {
@@ -20315,7 +20378,7 @@ document.addEventListener("click", function() {
         window._dataCache.vendors = window._dataCache.vendors || [];
         var vend = Object.assign({}, payload);
         if (!vend.VendorID) {
-          vend.VendorID = "VEND-" + Math.floor(1000 + Math.random() * 9000);
+          vend.VendorID = getNextSequentialId(window._dataCache.vendors, "VNDR-", 1001);
           vend.CreatedDate = nowIso;
           window._dataCache.vendors.unshift(vend);
         } else {
@@ -20338,7 +20401,7 @@ document.addEventListener("click", function() {
         window._dataCache.associates = window._dataCache.associates || [];
         var assoc = Object.assign({}, payload);
         if (!assoc.AssociateID) {
-          assoc.AssociateID = "ASSOC-" + Math.floor(1000 + Math.random() * 9000);
+          assoc.AssociateID = getNextSequentialId(window._dataCache.associates, "ASSOC-", 1001);
           assoc.CreatedDate = nowIso;
           window._dataCache.associates.unshift(assoc);
         } else {
@@ -20361,7 +20424,7 @@ document.addEventListener("click", function() {
         window._dataCache.transactions = window._dataCache.transactions || [];
         var txn = Object.assign({}, payload);
         if (!txn.TransactionID) {
-          txn.TransactionID = "TXN-" + Math.floor(1000 + Math.random() * 9000);
+          txn.TransactionID = getNextSequentialId(window._dataCache.transactions, "TXN-", 1001);
           txn.CreatedDate = nowIso;
           window._dataCache.transactions.unshift(txn);
         } else {
@@ -20384,7 +20447,7 @@ document.addEventListener("click", function() {
         window._dataCache.users = window._dataCache.users || [];
         var usr = Object.assign({}, payload);
         if (!usr.UserID) {
-          usr.UserID = "USR-" + Math.floor(1000 + Math.random() * 9000);
+          usr.UserID = getNextSequentialId(window._dataCache.users, "USR-", 101);
           usr.CreatedDate = nowIso;
           window._dataCache.users.unshift(usr);
         } else {
@@ -20750,10 +20813,39 @@ document.addEventListener("click", function() {
       if (fnName === "getDropdownValues") { successCb(window._dataCache.dropdowns || {}); return; }
       if (fnName === "getCompanySetup") { successCb(window._dataCache.companySetup || {}); return; }
       if (fnName === "getLicenseSettings") {
-        successCb({
-          LicenseKey: getActiveLicenseKey(),
-          MaxUsers: 10,
-          ExpiryDate: "2026-12-31"
+        var activeKey = getActiveLicenseKey();
+        apiCall("validate_license", { licenseKey: activeKey }).then(function(licRes) {
+          if (licRes && licRes.valid) {
+            var licSettings = {
+              licenseKey: licRes.licenseKey || activeKey,
+              LicenseKey: licRes.licenseKey || activeKey,
+              maxUsers: licRes.maxUsers || 10,
+              MaxUsers: licRes.maxUsers || 10,
+              expiryDate: licRes.expiryDate || "Lifetime",
+              ExpiryDate: licRes.expiryDate || "Lifetime",
+              daysRemaining: licRes.daysRemaining,
+              companyName: licRes.companyName || licRes.clientName || "StudioSpace Interiors",
+              plan: licRes.plan || "Pro"
+            };
+            try { sessionStorage.setItem("pm_license_info", JSON.stringify(licSettings)); } catch(e){}
+            successCb(licSettings);
+          } else {
+            successCb({
+              licenseKey: activeKey,
+              LicenseKey: activeKey,
+              maxUsers: 10,
+              MaxUsers: 10,
+              expiryDate: "Lifetime"
+            });
+          }
+        }).catch(function() {
+          successCb({
+            licenseKey: activeKey,
+            LicenseKey: activeKey,
+            maxUsers: 10,
+            MaxUsers: 10,
+            expiryDate: "Lifetime"
+          });
         });
         return;
       }
@@ -21143,16 +21235,29 @@ document.addEventListener("click", function() {
             updateSyncStatusUI();
             if (backendRes && backendRes.success !== false) {
               console.log("[Background Sync Succeeded]: " + targetAction, backendRes);
-              if (backendRes.customerId && payload.CustomerID && backendRes.customerId !== payload.CustomerID) {
-                var c = (window._dataCache.customers || []).find(function (x) { return x.CustomerID === payload.CustomerID; });
-                if (c) c.CustomerID = backendRes.customerId;
-                populateAllCaches(window._dataCache);
-              }
-              if (backendRes.projectId && payload.ProjectID && backendRes.projectId !== payload.ProjectID) {
-                var p = (window._dataCache.projects || []).find(function (x) { return x.ProjectID === payload.ProjectID; });
-                if (p) p.ProjectID = backendRes.projectId;
-                populateAllCaches(window._dataCache);
-              }
+              // Comprehensive entity ID reconciliation
+              var idPairs = [
+                { resId: backendRes.transactionId || backendRes.TransactionID, payId: payload.TransactionID, list: window._dataCache.transactions, key: 'TransactionID' },
+                { resId: backendRes.projectId || backendRes.ProjectID, payId: payload.ProjectID, list: window._dataCache.projects, key: 'ProjectID' },
+                { resId: backendRes.customerId || backendRes.CustomerID, payId: payload.CustomerID, list: window._dataCache.customers, key: 'CustomerID' },
+                { resId: backendRes.taskId || backendRes.TaskID, payId: payload.TaskID, list: window._dataCache.tasks, key: 'TaskID' },
+                { resId: backendRes.milestoneId || backendRes.MilestoneID, payId: payload.MilestoneID, list: window._dataCache.milestones, key: 'MilestoneID' },
+                { resId: backendRes.visitId || backendRes.VisitID, payId: payload.VisitID, list: window._dataCache.siteVisits, key: 'VisitID' },
+                { resId: backendRes.leadId || backendRes.LeadID, payId: payload.LeadID, list: window._dataCache.leads, key: 'LeadID' },
+                { resId: backendRes.proposalId || backendRes.ProposalID, payId: payload.ProposalID, list: window._dataCache.proposals, key: 'ProposalID' },
+                { resId: backendRes.vendorId || backendRes.VendorID, payId: payload.VendorID, list: window._dataCache.vendors, key: 'VendorID' },
+                { resId: backendRes.associateId || backendRes.AssociateID, payId: payload.AssociateID, list: window._dataCache.associates, key: 'AssociateID' },
+                { resId: backendRes.userId || backendRes.UserID, payId: payload.UserID, list: window._dataCache.users, key: 'UserID' }
+              ];
+              idPairs.forEach(function(pair) {
+                if (pair.resId && pair.payId && pair.resId !== pair.payId && Array.isArray(pair.list)) {
+                  var item = pair.list.find(function(x) { return x && x[pair.key] === pair.payId; });
+                  if (item) {
+                    item[pair.key] = pair.resId;
+                    populateAllCaches(window._dataCache);
+                  }
+                }
+              });
             } else {
               console.warn("[Background Sync Notice]:", backendRes);
             }

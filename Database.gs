@@ -22,12 +22,13 @@ const SHEET_HEADERS = {
   "SiteVisits": [
     "VisitID", "ProjectID", "VisitDate", "Purpose", "Remarks", "NextFollowupDate",
     "Photos", "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy",
-    "AssignedTo", "Status", "AssignedType", "IsBillable", "BillingAmount", "LeadID"
+    "AssignedTo", "Status", "AssignedType", "IsBillable", "BillingAmount", "LeadID",
+    "CheckInTime", "CheckOutTime", "CheckInLocation", "CheckOutLocation", "Duration"
   ],
   "Tasks": [
     "TaskID", "ProjectID", "TaskName", "Description", "AssignedType", "AssignedTo",
     "StartDate", "DueDate", "Priority", "Status", "CompletionDate", "Remarks",
-    "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy"
+    "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy", "Attachments"
   ],
   "Leads": [
     "LeadID", "Date", "CustomerName", "ProjectType", "Mobile", "Email", "ProjectDetails", "Attachments", "LeadType", "Status", "Source", "AssignedTo", "Remarks", "FollowUpDate", "LossReason", "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy"
