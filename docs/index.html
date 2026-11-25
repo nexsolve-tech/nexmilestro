@@ -8831,6 +8831,9 @@ body.view-teamchat .chat-input-area {
       closeVisitModal();
       showToast("📍 GPS Check-In recorded! Live site visit is now active.", "success");
       checkActiveVisitState();
+
+      // Immediately persist in-progress visit with GPS check-in data to Google Sheets
+      executeSaveVisit(activeVisitData, null, currentUserId);
       return;
     }
 
@@ -8848,6 +8851,17 @@ body.view-teamchat .chat-input-area {
     }
 
     if (mode === "checkout") {
+      var rawActiveVisit = localStorage.getItem("nexmilestro_active_site_visit");
+      if (rawActiveVisit) {
+        try {
+          var actV = JSON.parse(rawActiveVisit);
+          if (!formData.CheckInTime && actV.CheckInTime) formData.CheckInTime = actV.CheckInTime;
+          if (!formData.CheckInLocation && actV.CheckInLocation) formData.CheckInLocation = actV.CheckInLocation;
+          if (!formData.VisitID && actV.VisitID) formData.VisitID = actV.VisitID;
+          if (!formData.ProjectID && actV.ProjectID) formData.ProjectID = actV.ProjectID;
+          if (!formData.LeadID && actV.LeadID) formData.LeadID = actV.LeadID;
+        } catch(e) {}
+      }
       // 100% STRICT MANDATORY REQUIREMENT: Upon check-out it must ask to fill site visit updates without it check-out should not be allowed
       var remarksVal = (formData.Remarks || "").trim();
       if (!remarksVal || remarksVal.length < 3) {
