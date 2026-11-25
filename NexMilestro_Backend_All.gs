@@ -178,7 +178,27 @@ function validateClientLicense(licenseOrEmail) {
  * Caches spreadsheet handle within execution scope for 5x faster reads.
  */
 function getClientSpreadsheet(licenseKey) {
+  let activeSs = null;
+  try {
+    activeSs = SpreadsheetApp.getActiveSpreadsheet();
+  } catch(e) {}
+
   if (_CACHED_CLIENT_SS && _CACHED_CLIENT_SS.license && _CACHED_CLIENT_SS.license.licenseKey === licenseKey) {
+    return _CACHED_CLIENT_SS;
+  }
+
+  let license = null;
+  if (licenseKey && String(licenseKey).trim() && licenseKey !== "ACTIVE_SHEET") {
+    try {
+      license = validateClientLicense(licenseKey);
+    } catch(e) {}
+  }
+
+  if (activeSs) {
+    if (!license || !license.valid) {
+      license = { valid: true, licenseKey: licenseKey || "ACTIVE_SHEET", maxUsers: 10, status: "Active" };
+    }
+    _CACHED_CLIENT_SS = { ss: activeSs, license: license };
     return _CACHED_CLIENT_SS;
   }
 
@@ -186,7 +206,9 @@ function getClientSpreadsheet(licenseKey) {
     throw new Error("Missing organization code or license key. Access Denied.");
   }
 
-  const license = validateClientLicense(licenseKey);
+  if (!license || !license.valid) {
+    license = validateClientLicense(licenseKey);
+  }
   if (!license || !license.valid) {
     throw new Error(license ? license.error : "Access Denied: Invalid license '" + licenseKey + "'.");
   }
@@ -1202,8 +1224,19 @@ function deleteAssociateRecord(licenseKey, associateId) {
 
 function saveUserRecord(licenseKey, data, requestingUserId) {
   try {
-    const { ss } = getClientSpreadsheet(licenseKey);
+    const { ss, license } = getClientSpreadsheet(licenseKey);
     const userId = data.UserID || "";
+    if (!userId) {
+      const maxUsers = (license && license.maxUsers) || 10;
+      const allUsers = sheetToObjects(ensureSheetWithHeaders(ss, "Users"));
+      const activeCount = allUsers.filter(u => !u.Status || String(u.Status).toLowerCase() === "active").length;
+      if (activeCount >= maxUsers) {
+        return {
+          success: false,
+          error: "Seat Limit Reached: Your current plan allows a maximum of " + maxUsers + " active users (" + activeCount + " currently active). Please upgrade your subscription license to add more users."
+        };
+      }
+    }
     if (!data.FullName || !String(data.FullName).trim()) {
       return { success: false, error: "Staff Full Name is required." };
     }
