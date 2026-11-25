@@ -851,11 +851,17 @@
 
     var isLeadRadio = document.getElementById("prop-link-lead") ? document.getElementById("prop-link-lead").checked : false;
     if (isLeadRadio) {
-      formData["CustomerID"] = "";
-      formData["LeadID"] = document.getElementById("prop-lead-select") ? document.getElementById("prop-lead-select").value : "";
+      var selLead = document.getElementById("prop-lead-select") ? document.getElementById("prop-lead-select").value : "";
+      formData["LeadID"] = selLead;
+      formData["CustomerID"] = selLead; // Fallback so both CustomerID and LeadID are present for multi-engine backend
     } else {
-      formData["CustomerID"] = document.getElementById("prop-customer-select") ? document.getElementById("prop-customer-select").value : "";
+      var selCust = document.getElementById("prop-customer-select") ? document.getElementById("prop-customer-select").value : "";
+      formData["CustomerID"] = selCust;
       formData["LeadID"] = "";
+    }
+    if (!formData["CustomerID"] && !formData["LeadID"]) {
+      showToast("Please select a Client or Lead to associate this proposal with.", "error");
+      return;
     }
 
     var fileInput = document.getElementById("prop-attachment");

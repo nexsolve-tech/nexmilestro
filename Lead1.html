@@ -60,7 +60,7 @@
       <h3 class="modal-title" id="lead-modal-title">Add New Lead</h3>
       <button class="icon-btn" onclick="closeLeadModal()"><i class="fas fa-times"></i></button>
     </div>
-    <form id="lead-form" onsubmit="handleLeadSubmit(event)">
+    <form id="lead-form" novalidate onsubmit="handleLeadSubmit(event)">
       <input type="hidden" id="lead-id-field" name="LeadID">
       <input type="hidden" id="lead-loss-reason-field" name="LossReason">
       <div class="modal-body">
@@ -146,7 +146,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closeLeadModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Lead</button>
+        <button type="submit" class="btn btn-primary" onclick="handleLeadSubmit(event)">Save Lead</button>
       </div>
     </form>
   </div>
@@ -790,16 +790,63 @@
   }
 
   function handleLeadSubmit(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     var form = document.getElementById("lead-form");
+    if (!form) return;
     var formData = {};
     var inputs = form.querySelectorAll("input, select, textarea");
 
     inputs.forEach(function(input) {
       if (input.name) {
-        formData[input.name] = input.value;
+        formData[input.name] = (input.value !== undefined && input.value !== null) ? String(input.value).trim() : "";
       }
     });
+
+    // Client-side instant validation with clear feedback
+    if (!formData.Date) {
+      showToast("Please select Inquiry Date.", "error");
+      var dEl = document.getElementById("lead-date-field");
+      if (dEl) dEl.focus();
+      return;
+    }
+    if (!formData.CustomerName) {
+      showToast("Please enter Customer Name.", "error");
+      var cEl = document.getElementById("lead-cust-name-field");
+      if (cEl) cEl.focus();
+      return;
+    }
+    if (!formData.ProjectType) {
+      showToast("Please select Project Type.", "error");
+      return;
+    }
+    if (!formData.Mobile || formData.Mobile.length !== 10) {
+      showToast("Please enter a valid 10-digit Customer Contact Number.", "error");
+      var mEl = document.getElementById("lead-mobile-field");
+      if (mEl) mEl.focus();
+      return;
+    }
+    if (!formData.LeadType) {
+      showToast("Please select Lead Type.", "error");
+      return;
+    }
+    if (!formData.Status) {
+      showToast("Please select Lead Status.", "error");
+      return;
+    }
+    if (!formData.Source) {
+      showToast("Please select Lead Source.", "error");
+      return;
+    }
+    if (!formData.AssignedTo) {
+      showToast("Please select Lead By (Assigned Staff).", "error");
+      return;
+    }
+    if (!formData.ProjectDetails) {
+      showToast("Please describe Project Details.", "error");
+      var detEl = document.getElementById("lead-details-field");
+      if (detEl) detEl.focus();
+      return;
+    }
 
     var fileInput = document.getElementById("lead-attachment");
     var files = fileInput ? fileInput.files : [];

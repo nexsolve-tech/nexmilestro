@@ -236,7 +236,7 @@ const SHEET_HEADERS = {
   "Tasks": [
     "TaskID", "ProjectID", "TaskName", "Description", "AssignedType", "AssignedTo",
     "StartDate", "DueDate", "Priority", "Status", "CompletionDate", "Remarks",
-    "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy"
+    "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy", "Attachments"
   ],
   "Leads": [
     "LeadID", "Date", "CustomerName", "ProjectType", "Mobile", "Email", "ProjectDetails", "Attachments", "LeadType", "Status", "Source", "AssignedTo", "Remarks", "FollowUpDate", "LossReason", "CreatedDate", "CreatedBy", "ModifiedDate", "ModifiedBy"
@@ -1068,8 +1068,8 @@ function saveProposalRecord(licenseKey, data, userId) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
     const proposalId = data.ProposalID || "";
-    if (!data.CustomerID) {
-      return { success: false, error: "Customer association is required." };
+    if (!data.CustomerID && !data.LeadID) {
+      return { success: false, error: "Customer or Lead association is required." };
     }
 
     data.Amount = parseFloat(data.Amount) || 0;

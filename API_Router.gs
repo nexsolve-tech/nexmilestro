@@ -1075,8 +1075,8 @@ function saveProposalRecord(licenseKey, data, userId) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
     const proposalId = data.ProposalID || "";
-    if (!data.CustomerID) {
-      return { success: false, error: "Customer association is required." };
+    if (!data.CustomerID && !data.LeadID) {
+      return { success: false, error: "Customer or Lead association is required." };
     }
 
     data.Amount = parseFloat(data.Amount) || 0;

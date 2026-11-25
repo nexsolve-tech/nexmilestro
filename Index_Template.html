@@ -1609,14 +1609,45 @@
               // Dynamically recompute permissions map from rolePermissions and userPermissions
               var freshPerms = {};
               var isSuperAdmin = (freshRoleId === "Super Admin" || freshRoleId === "Administrator" || freshRoleId === "Admin");
+              var isPM = (freshRoleId === "Project Manager");
+              var isSiteEng = (freshRoleId === "Site Engineer");
+              var isSales = (freshRoleId === "Sales Executive" || String(freshRoleId).indexOf("Sales") !== -1);
+              var isFinance = (freshRoleId === "Finance Officer" || String(freshRoleId).indexOf("Finance") !== -1);
 
               var allModuleKeys = ["Dashboard", "Customers", "Projects", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Finance", "Users", "Company", "Masters", "Help", "Teamchat", "Milestones", "Reports"];
               allModuleKeys.forEach(function (m) {
+                var canView = isSuperAdmin;
+                var canAdd = isSuperAdmin;
+                var canEdit = isSuperAdmin;
+                var canDel = isSuperAdmin;
+
+                if (!isSuperAdmin) {
+                  if (m === "Dashboard" || m === "Help" || m === "Teamchat") {
+                    canView = true;
+                  } else if (isPM) {
+                    canView = ["Customers", "Projects", "Tasks", "SiteVisits", "Milestones", "Vendors", "Associates", "Proposals", "Leads", "Reports"].indexOf(m) !== -1;
+                    canAdd = canView; canEdit = canView;
+                  } else if (isSiteEng) {
+                    canView = ["Tasks", "SiteVisits", "Projects", "Milestones"].indexOf(m) !== -1;
+                    canAdd = canView; canEdit = canView;
+                  } else if (isSales) {
+                    canView = ["Leads", "Proposals", "Customers"].indexOf(m) !== -1;
+                    canAdd = canView; canEdit = canView;
+                  } else if (isFinance) {
+                    canView = ["Finance", "Reports", "Projects", "Vendors", "Customers"].indexOf(m) !== -1;
+                    canAdd = canView; canEdit = canView;
+                  } else {
+                    // General staff fallback: default workspace visibility
+                    canView = ["Customers", "Projects", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates"].indexOf(m) !== -1;
+                    canAdd = canView; canEdit = canView;
+                  }
+                }
+
                 freshPerms[m] = {
-                  view: isSuperAdmin,
-                  add: isSuperAdmin,
-                  edit: isSuperAdmin,
-                  del: isSuperAdmin
+                  view: canView,
+                  add: canAdd,
+                  edit: canEdit,
+                  del: canDel
                 };
               });
 
@@ -2042,6 +2073,15 @@
       if (fnName === "saveUser") {
         window._dataCache.users = window._dataCache.users || [];
         var usr = Object.assign({}, payload);
+        var isNewUser = !usr.UserID;
+        var willBeActive = (!usr.Status || usr.Status === "Active");
+        if (isNewUser && willBeActive) {
+          var activeCount = window._dataCache.users.filter(function(u) { return !u.Status || u.Status === "Active"; }).length;
+          var maxSeats = parseInt(localStorage.getItem("pm_license_max_users"), 10) || (window._dataCache.licenseSettings && window._dataCache.licenseSettings.maxUsers) || 10;
+          if (activeCount >= maxSeats) {
+            return { success: false, message: "License Limit Exceeded: Maximum " + maxSeats + " active users allowed under your current license plan. Please upgrade license seats to add more users." };
+          }
+        }
         if (!usr.UserID) {
           usr.UserID = getNextSequentialId(window._dataCache.users, "USR-", 101);
           usr.CreatedDate = nowIso;
@@ -2408,39 +2448,51 @@
       if (fnName === "getUsers") { successCb(window._dataCache.users || []); return; }
       if (fnName === "getDropdownValues") { successCb(window._dataCache.dropdowns || {}); return; }
       if (fnName === "getCompanySetup") { successCb(window._dataCache.companySetup || {}); return; }
+      if (fnName === "saveLicenseSettings") {
+        var maxUsers = parseInt(args[0], 10);
+        var licKey = args[1] || getActiveLicenseKey();
+        var uId = args[2] || userId;
+        if (!isNaN(maxUsers) && maxUsers > 0) {
+          try {
+            localStorage.setItem("pm_license_max_users", String(maxUsers));
+          } catch(e) {}
+          window._dataCache.licenseSettings = window._dataCache.licenseSettings || {};
+          window._dataCache.licenseSettings.maxUsers = maxUsers;
+          window._dataCache.licenseSettings.MaxUsers = maxUsers;
+        }
+        apiCall("save_license_settings", { maxUsers: maxUsers, licenseKey: licKey, userId: uId }).catch(function(){});
+        successCb({ success: true, message: "Licensing parameters saved successfully (" + maxUsers + " seats enforced)." });
+        return;
+      }
+
       if (fnName === "getLicenseSettings") {
         var activeKey = getActiveLicenseKey();
+        var storedMax = parseInt(localStorage.getItem("pm_license_max_users"), 10);
+        var storedExpiry = localStorage.getItem("pm_license_expiry");
         apiCall("validate_license", { licenseKey: activeKey }).then(function(licRes) {
-          if (licRes && licRes.valid) {
-            var licSettings = {
-              licenseKey: licRes.licenseKey || activeKey,
-              LicenseKey: licRes.licenseKey || activeKey,
-              maxUsers: licRes.maxUsers || 10,
-              MaxUsers: licRes.maxUsers || 10,
-              expiryDate: licRes.expiryDate || "Lifetime",
-              ExpiryDate: licRes.expiryDate || "Lifetime",
-              daysRemaining: licRes.daysRemaining,
-              companyName: licRes.companyName || licRes.clientName || "StudioSpace Interiors",
-              plan: licRes.plan || "Pro"
-            };
-            try { sessionStorage.setItem("pm_license_info", JSON.stringify(licSettings)); } catch(e){}
-            successCb(licSettings);
-          } else {
-            successCb({
-              licenseKey: activeKey,
-              LicenseKey: activeKey,
-              maxUsers: 10,
-              MaxUsers: 10,
-              expiryDate: "Lifetime"
-            });
-          }
+          var maxUsersVal = storedMax || (licRes && licRes.maxUsers) || 10;
+          var expiryVal = storedExpiry || (licRes && licRes.expiryDate) || "Lifetime";
+          var licSettings = {
+            licenseKey: (licRes && licRes.licenseKey) || activeKey,
+            LicenseKey: (licRes && licRes.licenseKey) || activeKey,
+            maxUsers: maxUsersVal,
+            MaxUsers: maxUsersVal,
+            expiryDate: expiryVal,
+            ExpiryDate: expiryVal,
+            daysRemaining: licRes && licRes.daysRemaining,
+            companyName: (licRes && (licRes.companyName || licRes.clientName)) || "StudioSpace Interiors",
+            plan: (licRes && licRes.plan) || "Pro"
+          };
+          try { sessionStorage.setItem("pm_license_info", JSON.stringify(licSettings)); } catch(e){}
+          successCb(licSettings);
         }).catch(function() {
+          var maxUsersVal = storedMax || 10;
           successCb({
             licenseKey: activeKey,
             LicenseKey: activeKey,
-            maxUsers: 10,
-            MaxUsers: 10,
-            expiryDate: "Lifetime"
+            maxUsers: maxUsersVal,
+            MaxUsers: maxUsersVal,
+            expiryDate: storedExpiry || "Lifetime"
           });
         });
         return;
@@ -5214,7 +5266,16 @@ window.generateEnterpriseDemoData = generateEnterpriseDemoData;
       }, customConfig || {});
 
       // Hide native select while keeping it in DOM for value binding and form submissions
-      selectEl.style.display = "none";
+      // Accessible hiding keeping native element focusable & validating for form submissions
+      selectEl.style.position = "absolute";
+      selectEl.style.opacity = "0";
+      selectEl.style.width = "1px";
+      selectEl.style.height = "1px";
+      selectEl.style.padding = "0";
+      selectEl.style.margin = "0";
+      selectEl.style.border = "none";
+      selectEl.style.pointerEvents = "none";
+      selectEl.tabIndex = -1;
 
       var wrapper = document.createElement("div");
       wrapper.className = "searchable-select-wrapper";

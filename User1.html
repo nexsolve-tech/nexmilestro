@@ -291,7 +291,11 @@
   function refreshLicenseUsageDisplay() {
     var usageEl = document.getElementById("license-usage");
     var limitInput = document.getElementById("license-limit-input");
-    var maxLimit = (limitInput && parseInt(limitInput.value, 10)) || 10;
+    var storedMax = parseInt(localStorage.getItem("pm_license_max_users"), 10);
+    if (storedMax && limitInput && (!limitInput.value || parseInt(limitInput.value, 10) !== storedMax)) {
+      limitInput.value = storedMax;
+    }
+    var maxLimit = storedMax || (limitInput && parseInt(limitInput.value, 10)) || 10;
     
     var users = (allUsersList && allUsersList.length > 0) ? allUsersList : ((window._dataCache && window._dataCache.users) || []);
     var activeCount = users.filter(function(u) {
@@ -532,6 +536,16 @@
     if (userObj === void 0) {
       userObj = null;
     }
+    if (!userObj) {
+      var maxLimit = parseInt(localStorage.getItem("pm_license_max_users"), 10) || (document.getElementById("license-limit-input") ? parseInt(document.getElementById("license-limit-input").value, 10) : 0) || 10;
+      var usersList = (allUsersList && allUsersList.length > 0) ? allUsersList : ((window._dataCache && window._dataCache.users) || []);
+      var activeCount = usersList.filter(function(u) { return !u.Status || u.Status === "Active"; }).length;
+      if (activeCount >= maxLimit) {
+        showToast("License Seat Limit Reached: You have " + activeCount + " active users out of " + maxLimit + " licensed seats. Upgrade license seats to add more users.", "error");
+        if (typeof openUpgradeLicenseModal === "function") openUpgradeLicenseModal();
+        return;
+      }
+    }
     var form = document.getElementById("user-form");
     form.reset();
     document.getElementById("user-id").value = "";
@@ -597,6 +611,16 @@
         formData[input.name] = input.value;
       }
     });
+    // Strict license seat validation
+    if (!formData.UserID && (!formData.Status || formData.Status === "Active")) {
+      var maxLimit = parseInt(localStorage.getItem("pm_license_max_users"), 10) || (document.getElementById("license-limit-input") ? parseInt(document.getElementById("license-limit-input").value, 10) : 0) || 10;
+      var usersList = (allUsersList && allUsersList.length > 0) ? allUsersList : ((window._dataCache && window._dataCache.users) || []);
+      var activeCount = usersList.filter(function(u) { return !u.Status || u.Status === "Active"; }).length;
+      if (activeCount >= maxLimit) {
+        showToast("Cannot add user: License seat limit (" + maxLimit + " seats) reached. Upgrade license seats to add more users.", "error");
+        return;
+      }
+    }
     var currentUser = typeof getSessionUser === "function" ? getSessionUser() : JSON.parse(localStorage.getItem("pm_user") || sessionStorage.getItem("pm_user") || "{}");
     var currentUserId = currentUser.userId || currentUser.UserID || currentUser.id || "";
     if (formData.UserID === currentUserId && formData.Status === "Inactive") {
