@@ -1357,7 +1357,26 @@
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
-        return await res.json();
+        var rawText = await res.text();
+        try {
+          return JSON.parse(rawText);
+        } catch (jsonErr) {
+          if (rawText.indexOf("permission to access") !== -1 || rawText.indexOf("not have permission") !== -1) {
+            return {
+              success: false,
+              error: "Database Permission Denied: The Google Sheet assigned to this organization is private. In Google Drive, please open your Google Sheet, click 'Share', and choose 'Anyone with the link can edit'."
+            };
+          }
+          if (rawText.indexOf("<title>Error</title>") !== -1 || rawText.indexOf("Exception:") !== -1) {
+            var snippet = rawText.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+            var excMatch = snippet.match(/Exception:([^\.]+)/i);
+            return {
+              success: false,
+              error: excMatch ? ("Google Apps Script Error: " + excMatch[1].trim()) : "Google Server returned an error page. Please check Apps Script deployment."
+            };
+          }
+          return { success: false, error: "Invalid server response: " + rawText.substring(0, 150) };
+        }
       } catch (err) {
         console.error("API Call Failure (" + action + "):", err);
         return { success: false, error: err.message || String(err) };

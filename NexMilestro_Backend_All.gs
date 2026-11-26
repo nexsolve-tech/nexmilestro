@@ -22,21 +22,23 @@ var _CLIENT_SS_CACHE = {};
  * Validates a client license key or email against the Master License Sheet.
  * High-speed caching with CacheService (5ms lookup).
  */
-function validateClientLicense(licenseOrEmail) {
+function validateClientLicense(licenseOrEmail, bypassCache) {
   if (!licenseOrEmail || !String(licenseOrEmail).trim()) {
     return { valid: false, error: "License key or email identifier missing. Access Denied." };
   }
 
   const query = String(licenseOrEmail).trim().toLowerCase();
 
-  // 1. High-Speed Cache Check (6 hour TTL)
-  try {
-    const cache = CacheService.getScriptCache();
-    const cached = cache.get("lic_v2_" + query);
-    if (cached) {
-      return JSON.parse(cached);
-    }
-  } catch (e) {}
+  // 1. High-Speed Cache Check (60s TTL, skipped if bypassCache is true)
+  if (!bypassCache) {
+    try {
+      const cache = CacheService.getScriptCache();
+      const cached = cache.get("lic_v2_" + query);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch (e) {}
+  }
 
   // 2. Query Central Master License Sheet
   try {
@@ -158,9 +160,9 @@ function validateClientLicense(licenseOrEmail) {
       status: "Active"
     };
 
-    // Cache the result for 5 minutes (300s) to eliminate repetitive Master sheet open overhead
+    // Cache the result for 60 seconds so master updates reflect quickly
     try {
-      CacheService.getScriptCache().put("lic_v2_" + query, JSON.stringify(licenseInfo), 300);
+      CacheService.getScriptCache().put("lic_v2_" + query, JSON.stringify(licenseInfo), 60);
     } catch (e) {}
 
     return licenseInfo;
@@ -187,7 +189,8 @@ function getClientSpreadsheet(licenseKey) {
     return _CLIENT_SS_CACHE[cleanKey];
   }
 
-  const license = validateClientLicense(cleanKey);
+  // Always query fresh license info during DB resolution to pick up master sheet edits immediately
+  const license = validateClientLicense(cleanKey, true);
   if (!license || !license.valid) {
     throw new Error(license ? license.error : "Access Denied: Invalid license '" + licenseKey + "'.");
   }
@@ -207,7 +210,15 @@ function getClientSpreadsheet(licenseKey) {
 
   // Otherwise, open the client's assigned private spreadsheet by ID
   if (!ss) {
-    ss = SpreadsheetApp.openById(license.clientSheetId);
+    try {
+      ss = SpreadsheetApp.openById(license.clientSheetId);
+    } catch (openErr) {
+      const errMsg = String(openErr.message || openErr);
+      if (errMsg.indexOf("permission to access") !== -1 || errMsg.indexOf("not have permission") !== -1) {
+        throw new Error("Database Permission Denied: Unable to access Google Sheet (" + license.clientSheetId + ") for '" + cleanKey + "'. Please open this Google Sheet in Google Drive, click 'Share', and ensure edit access is granted (or set 'Anyone with the link can edit').");
+      }
+      throw new Error("Failed to open Google Sheet (" + license.clientSheetId + "): " + errMsg);
+    }
   }
 
   _CLIENT_SS_CACHE[cleanKey] = { ss: ss, license: license };
@@ -290,7 +301,8 @@ const SHEET_HEADERS = {
   "CompanySetup": [
     "CompanyID", "CompanyName", "Address", "OfficialEmail", "ContactNumber",
     "PANNumber", "GSTNumber", "Website", "BankName", "AccountNumber",
-    "IFSCCode", "Branch", "LogoUrl", "BankAccounts", "ModifiedDate", "ModifiedBy"
+    "IFSCCode", "Branch", "LogoUrl", "BankAccounts", "ModifiedDate", "ModifiedBy",
+    "SmtpProvider", "SmtpSenderName", "SmtpSenderEmail", "SmtpUser", "SmtpHost", "SmtpPort", "SmtpPass"
   ],
   "ChatMessages": [
     "MessageID", "ConversationID", "Sender", "Role", "Text", "Time", "Timestamp", "Initials", "CreatedDate", "CreatedBy"
@@ -591,6 +603,29 @@ function loginUser(licenseKey, identifier, passcode) {
     const usersSheet = ensureSheetWithHeaders(ss, "Users");
     let users = sheetToObjects(usersSheet);
 
+    // Auto-provision initial Super Admin if newly linked tenant database has no users yet
+    if (users.length === 0) {
+      try {
+        const cleanPass = String(passcode || "admin@123").trim();
+        const initUser = {
+          UserID: "USR-101",
+          FullName: license.clientName || license.companyName || "Organization Admin",
+          Email: license.adminEmail || String(identifier).trim(),
+          Mobile: "9811223344",
+          PasswordHash: hashPassword(cleanPass),
+          MustChangePassword: "No",
+          RoleID: "Super Admin",
+          Status: "Active",
+          CreatedDate: new Date(),
+          CreatedBy: "SYSTEM_INIT"
+        };
+        saveUserRecord(licenseKey, initUser, "SYSTEM_INIT");
+        users = sheetToObjects(usersSheet);
+      } catch(initErr) {
+        console.warn("Auto-provision initial user warning:", initErr);
+      }
+    }
+
     const cleanId = String(identifier).trim().toLowerCase();
     const cleanPass = String(passcode).trim();
     const hashedPass = hashPassword(cleanPass);
@@ -780,16 +815,20 @@ function resolveUserPermissions(ss, user) {
   const permissions = {};
   const allModules = [
     "Dashboard", "Customers", "Projects", "Tasks", "SiteVisits", 
-    "Leads", "Proposals", "Vendors", "Associates", "Finance", "Users", "Settings"
+    "Leads", "Proposals", "Vendors", "Associates", "Finance", "Users", "Company", "Masters", "Help", "Teamchat", "Milestones", "Reports"
   ];
 
-  // Super Admin / Admin default to full access
-  const isSuperAdmin = user.RoleID === "Super Admin" || user.RoleID === "Administrator" || user.RoleID === "Admin";
+  const userRole = String(user.RoleID || "").trim();
+  const isSuperAdmin = userRole === "Super Admin" || userRole === "Administrator" || userRole === "Admin";
+
+  // Default module access
   allModules.forEach(mod => {
+    // Non-admins get view/add/edit on primary workspace modules by default if no explicit row
+    const isStaffModule = ["Dashboard", "Customers", "Projects", "Tasks", "SiteVisits", "Leads", "Proposals", "Vendors", "Associates", "Help", "Teamchat"].indexOf(mod) !== -1;
     permissions[mod] = {
-      view: isSuperAdmin,
-      add: isSuperAdmin,
-      edit: isSuperAdmin,
+      view: isSuperAdmin || isStaffModule,
+      add: isSuperAdmin || (isStaffModule && mod !== "Dashboard"),
+      edit: isSuperAdmin || (isStaffModule && mod !== "Dashboard"),
       del: isSuperAdmin
     };
   });
@@ -801,14 +840,16 @@ function resolveUserPermissions(ss, user) {
     const roleRows = sheetToObjects(roleSheet);
 
     roleRows.forEach(p => {
-      if (String(p.RoleID).trim() === String(user.RoleID).trim()) {
-        const mod = String(p.Module).trim();
-        permissions[mod] = {
-          view: p.CanView === true || String(p.CanView).toUpperCase() === "TRUE",
-          add: p.CanAdd === true || String(p.CanAdd).toUpperCase() === "TRUE",
-          edit: p.CanEdit === true || String(p.CanEdit).toUpperCase() === "TRUE",
-          del: p.CanDelete === true || String(p.CanDelete).toUpperCase() === "TRUE"
-        };
+      if (String(p.RoleID || "").trim().toLowerCase() === userRole.toLowerCase()) {
+        const mod = String(p.Module || "").trim();
+        if (mod) {
+          permissions[mod] = {
+            view: p.CanView === true || String(p.CanView).toUpperCase() === "TRUE",
+            add: p.CanAdd === true || String(p.CanAdd).toUpperCase() === "TRUE",
+            edit: p.CanEdit === true || String(p.CanEdit).toUpperCase() === "TRUE",
+            del: p.CanDelete === true || String(p.CanDelete).toUpperCase() === "TRUE"
+          };
+        }
       }
     });
 
@@ -1447,6 +1488,7 @@ function deleteDropdownValue(licenseKey, category, value) {
   }
 }
 
+
 function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
@@ -1550,30 +1592,6 @@ function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
   } catch (err) {
     console.error("sendEmailViaGateway final failure:", err);
     return { success: false, error: "Email delivery failed: " + (err.message || String(err)) };
-  }
-}
-
-function handleSendTestEmail(licenseKey, data, userId) {
-  try {
-    const to = data.recipient || data.recipientEmail || data.to || data.To || "";
-    if (!to) return { success: false, error: "Recipient email is required for test email." };
-    const mailOpts = {
-      to: to,
-      subject: data.subject || data.Subject || "✅ NexMilestro Email Gateway Test",
-      htmlBody: (data.body || data.Body || "Hello!\n\nThis is a verification test from your NexMilestro Operations Suite.\n\nYour outbound email gateway is working!").replace(/\n/g, "<br>")
-    };
-    const res = sendEmailViaGateway(licenseKey, mailOpts, {
-      provider: data.provider || data.SmtpProvider,
-      senderEmail: data.senderEmail || data.SmtpSenderEmail,
-      senderName: data.senderName || data.SmtpSenderName,
-      smtpPass: data.smtpPass || data.SmtpPass
-    });
-    if (!res.success) {
-      return { success: false, error: res.error || "Failed to deliver email." };
-    }
-    return { success: true, message: "Test email delivered successfully via " + (res.method || "Email Gateway") + "." };
-  } catch(e) {
-    return { success: false, error: "Failed to send test email: " + e.message };
   }
 }
 
@@ -1943,7 +1961,9 @@ function handleUniversalApiRequest(action, params) {
       case 'sendProposalEmail':
         response = handleSendProposalEmail(licenseKey, dataObj, userId);
         break;
+
       case 'send_test_email':
+      case 'sendTestEmail':
         response = handleSendTestEmail(licenseKey, dataObj, userId);
         break;
 
@@ -2422,4 +2442,29 @@ function setupMasterLicenseSheet() {
   ];
   sheet.getRange(2, 1, 1, sampleLicense.length).setValues([sampleLicense]);
   SpreadsheetApp.getUi().alert("✅ Central Master License Sheet configured!\nRegistered key 'LIC-ENTERPRISE-2026' linked to current spreadsheet ID.");
+}
+
+
+function handleSendTestEmail(licenseKey, data, userId) {
+  try {
+    const to = data.recipient || data.recipientEmail || data.to || data.To || "";
+    if (!to) return { success: false, error: "Recipient email is required." };
+    const mailOpts = {
+      to: to,
+      subject: data.subject || data.Subject || "✅ NexMilestro Email Gateway Verified",
+      htmlBody: (data.body || data.Body || "This is a verification email from your NexMilestro Operations Suite.").replace(/\n/g, "<br>")
+    };
+    const res = sendEmailViaGateway(licenseKey, mailOpts, {
+      provider: data.provider || data.SmtpProvider,
+      senderEmail: data.senderEmail || data.SmtpSenderEmail,
+      senderName: data.senderName || data.SmtpSenderName,
+      smtpPass: data.smtpPass || data.SmtpPass
+    });
+    if (!res.success) {
+      return { success: false, error: res.error || "Failed to deliver email." };
+    }
+    return { success: true, message: "Test email delivered successfully via " + (res.method || "Email Gateway") + "." };
+  } catch(e) {
+    return { success: false, error: "Failed to send test email: " + e.message };
+  }
 }

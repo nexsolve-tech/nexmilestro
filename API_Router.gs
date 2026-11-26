@@ -22,21 +22,23 @@ var _CLIENT_SS_CACHE = {};
  * Validates a client license key or email against the Master License Sheet.
  * High-speed caching with CacheService (5ms lookup).
  */
-function validateClientLicense(licenseOrEmail) {
+function validateClientLicense(licenseOrEmail, bypassCache) {
   if (!licenseOrEmail || !String(licenseOrEmail).trim()) {
     return { valid: false, error: "License key or email identifier missing. Access Denied." };
   }
 
   const query = String(licenseOrEmail).trim().toLowerCase();
 
-  // 1. High-Speed Cache Check (6 hour TTL)
-  try {
-    const cache = CacheService.getScriptCache();
-    const cached = cache.get("lic_v2_" + query);
-    if (cached) {
-      return JSON.parse(cached);
-    }
-  } catch (e) {}
+  // 1. High-Speed Cache Check (60s TTL, skipped if bypassCache is true)
+  if (!bypassCache) {
+    try {
+      const cache = CacheService.getScriptCache();
+      const cached = cache.get("lic_v2_" + query);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch (e) {}
+  }
 
   // 2. Query Central Master License Sheet
   try {
@@ -158,9 +160,9 @@ function validateClientLicense(licenseOrEmail) {
       status: "Active"
     };
 
-    // Cache the result for 5 minutes (300s) to eliminate repetitive Master sheet open overhead
+    // Cache the result for 60 seconds so master updates reflect quickly
     try {
-      CacheService.getScriptCache().put("lic_v2_" + query, JSON.stringify(licenseInfo), 300);
+      CacheService.getScriptCache().put("lic_v2_" + query, JSON.stringify(licenseInfo), 60);
     } catch (e) {}
 
     return licenseInfo;
@@ -187,7 +189,8 @@ function getClientSpreadsheet(licenseKey) {
     return _CLIENT_SS_CACHE[cleanKey];
   }
 
-  const license = validateClientLicense(cleanKey);
+  // Always query fresh license info during DB resolution to pick up master sheet edits immediately
+  const license = validateClientLicense(cleanKey, true);
   if (!license || !license.valid) {
     throw new Error(license ? license.error : "Access Denied: Invalid license '" + licenseKey + "'.");
   }
@@ -207,7 +210,15 @@ function getClientSpreadsheet(licenseKey) {
 
   // Otherwise, open the client's assigned private spreadsheet by ID
   if (!ss) {
-    ss = SpreadsheetApp.openById(license.clientSheetId);
+    try {
+      ss = SpreadsheetApp.openById(license.clientSheetId);
+    } catch (openErr) {
+      const errMsg = String(openErr.message || openErr);
+      if (errMsg.indexOf("permission to access") !== -1 || errMsg.indexOf("not have permission") !== -1) {
+        throw new Error("Database Permission Denied: Unable to access Google Sheet (" + license.clientSheetId + ") for '" + cleanKey + "'. Please open this Google Sheet in Google Drive, click 'Share', and ensure edit access is granted (or set 'Anyone with the link can edit').");
+      }
+      throw new Error("Failed to open Google Sheet (" + license.clientSheetId + "): " + errMsg);
+    }
   }
 
   _CLIENT_SS_CACHE[cleanKey] = { ss: ss, license: license };
@@ -591,6 +602,29 @@ function loginUser(licenseKey, identifier, passcode) {
     const { ss, license } = getClientSpreadsheet(licenseKey);
     const usersSheet = ensureSheetWithHeaders(ss, "Users");
     let users = sheetToObjects(usersSheet);
+
+    // Auto-provision initial Super Admin if newly linked tenant database has no users yet
+    if (users.length === 0) {
+      try {
+        const cleanPass = String(passcode || "admin@123").trim();
+        const initUser = {
+          UserID: "USR-101",
+          FullName: license.clientName || license.companyName || "Organization Admin",
+          Email: license.adminEmail || String(identifier).trim(),
+          Mobile: "9811223344",
+          PasswordHash: hashPassword(cleanPass),
+          MustChangePassword: "No",
+          RoleID: "Super Admin",
+          Status: "Active",
+          CreatedDate: new Date(),
+          CreatedBy: "SYSTEM_INIT"
+        };
+        saveUserRecord(licenseKey, initUser, "SYSTEM_INIT");
+        users = sheetToObjects(usersSheet);
+      } catch(initErr) {
+        console.warn("Auto-provision initial user warning:", initErr);
+      }
+    }
 
     const cleanId = String(identifier).trim().toLowerCase();
     const cleanPass = String(passcode).trim();
