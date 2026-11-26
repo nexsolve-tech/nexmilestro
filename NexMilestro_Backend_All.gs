@@ -16,7 +16,7 @@
 const MASTER_LICENSE_SPREADSHEET_ID = "1U5Frv47SDdASeKqVR_ZCiXJrCnBGvRAILYqC0yljcnc";
 const MASTER_LICENSE_TAB_NAME = "Licenses";
 
-var _CACHED_CLIENT_SS = null;
+var _CLIENT_SS_CACHE = {};
 
 /**
  * Validates a client license key or email against the Master License Sheet.
@@ -178,37 +178,16 @@ function validateClientLicense(licenseOrEmail) {
  * Caches spreadsheet handle within execution scope for 5x faster reads.
  */
 function getClientSpreadsheet(licenseKey) {
-  let activeSs = null;
-  try {
-    activeSs = SpreadsheetApp.getActiveSpreadsheet();
-  } catch(e) {}
-
-  if (_CACHED_CLIENT_SS && _CACHED_CLIENT_SS.license && _CACHED_CLIENT_SS.license.licenseKey === licenseKey) {
-    return _CACHED_CLIENT_SS;
-  }
-
-  let license = null;
-  if (licenseKey && String(licenseKey).trim() && licenseKey !== "ACTIVE_SHEET") {
-    try {
-      license = validateClientLicense(licenseKey);
-    } catch(e) {}
-  }
-
-  if (activeSs) {
-    if (!license || !license.valid) {
-      license = { valid: true, licenseKey: licenseKey || "ACTIVE_SHEET", maxUsers: 10, status: "Active" };
-    }
-    _CACHED_CLIENT_SS = { ss: activeSs, license: license };
-    return _CACHED_CLIENT_SS;
-  }
-
   if (!licenseKey || !String(licenseKey).trim()) {
     throw new Error("Missing organization code or license key. Access Denied.");
   }
+  const cleanKey = String(licenseKey).trim().toUpperCase();
 
-  if (!license || !license.valid) {
-    license = validateClientLicense(licenseKey);
+  if (_CLIENT_SS_CACHE[cleanKey]) {
+    return _CLIENT_SS_CACHE[cleanKey];
   }
+
+  const license = validateClientLicense(cleanKey);
   if (!license || !license.valid) {
     throw new Error(license ? license.error : "Access Denied: Invalid license '" + licenseKey + "'.");
   }
@@ -217,10 +196,22 @@ function getClientSpreadsheet(licenseKey) {
     throw new Error("Database spreadsheet not configured for organization '" + licenseKey + "' in Master License Sheet.");
   }
 
-  const ss = SpreadsheetApp.openById(license.clientSheetId);
+  let ss = null;
+  // If active container spreadsheet is the EXACT assigned sheet for this license, reuse it
+  try {
+    const activeSs = SpreadsheetApp.getActiveSpreadsheet();
+    if (activeSs && activeSs.getId() === license.clientSheetId) {
+      ss = activeSs;
+    }
+  } catch(e) {}
 
-  _CACHED_CLIENT_SS = { ss: ss, license: license };
-  return _CACHED_CLIENT_SS;
+  // Otherwise, open the client's assigned private spreadsheet by ID
+  if (!ss) {
+    ss = SpreadsheetApp.openById(license.clientSheetId);
+  }
+
+  _CLIENT_SS_CACHE[cleanKey] = { ss: ss, license: license };
+  return _CLIENT_SS_CACHE[cleanKey];
 }
 
 
@@ -1521,41 +1512,44 @@ function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
       return { success: false, error: "Brevo API error: " + errText };
     }
 
-    // 3. Google Workspace / Gmail / System delivery via Apps Script MailApp / GmailApp
-    const gasMail = {
-      to: mailOpts.to,
-      subject: mailOpts.subject,
-      htmlBody: mailOpts.htmlBody || mailOpts.body
+    // 3. Google Workspace / Gmail / System delivery via Apps Script GmailApp & MailApp
+    const plainTextBody = String(mailOpts.body || (mailOpts.htmlBody ? mailOpts.htmlBody.replace(/<[^>]+>/g, " ") : "") || "Notification from NexMilestro").trim();
+    const formattedHtmlBody = String(mailOpts.htmlBody || mailOpts.body || plainTextBody).replace(/\n/g, "<br>");
+
+    const sendOptions = {
+      name: senderName,
+      htmlBody: formattedHtmlBody
     };
-    if (mailOpts.cc) gasMail.cc = mailOpts.cc;
-    if (senderName) gasMail.name = senderName;
-    if (senderEmail) gasMail.replyTo = senderEmail;
+    if (senderEmail) sendOptions.replyTo = senderEmail;
+    if (mailOpts.cc) sendOptions.cc = mailOpts.cc;
+
+    // Check if senderEmail is an authenticated alias in Gmail
+    try {
+      const aliases = GmailApp.getAliases();
+      if (senderEmail && aliases.indexOf(senderEmail) !== -1) {
+        sendOptions.from = senderEmail;
+      }
+    } catch(e) {}
 
     try {
-      GmailApp.sendEmail(mailOpts.to, mailOpts.subject, mailOpts.body || "", {
-        htmlBody: mailOpts.htmlBody || mailOpts.body,
+      GmailApp.sendEmail(mailOpts.to, mailOpts.subject, plainTextBody, sendOptions);
+      return { success: true, method: "GmailApp", sender: sendOptions.from || senderEmail };
+    } catch(gErr) {
+      console.warn("GmailApp error, falling back to MailApp:", gErr);
+      MailApp.sendEmail({
+        to: mailOpts.to,
+        subject: mailOpts.subject,
+        body: plainTextBody,
+        htmlBody: formattedHtmlBody,
         name: senderName,
         replyTo: senderEmail || undefined,
         cc: mailOpts.cc || undefined
       });
-      return { success: true, method: "GmailApp", sender: senderEmail };
-    } catch(gErr) {
-      MailApp.sendEmail(gasMail);
       return { success: true, method: "MailApp", sender: senderEmail };
     }
   } catch (err) {
-    console.warn("sendEmailViaGateway error:", err);
-    try {
-      MailApp.sendEmail({
-        to: mailOpts.to,
-        subject: mailOpts.subject,
-        htmlBody: mailOpts.htmlBody || mailOpts.body,
-        cc: mailOpts.cc || undefined
-      });
-      return { success: true, method: "MailApp Fallback" };
-    } catch (e2) {
-      return { success: false, error: err.message || String(err) };
-    }
+    console.error("sendEmailViaGateway final failure:", err);
+    return { success: false, error: "Email delivery failed: " + (err.message || String(err)) };
   }
 }
 
@@ -1585,20 +1579,29 @@ function handleSendTestEmail(licenseKey, data, userId) {
 
 function handleSendLeadEmail(licenseKey, data, userId) {
   try {
-    const to = data.To || data.to;
+    const to = data.To || data.to || data.recipient || data.recipientEmail;
     const cc = data.CC || data.cc || "";
     const subject = data.Subject || data.subject || "Project Follow-up";
     const body = data.Body || data.body || "";
     if (!to || !body) {
-      return { success: false, message: "Recipient email and message body are required." };
+      return { success: false, error: "Recipient email and message body are required." };
     }
     const mailOpts = {
       to: to,
       subject: subject,
+      body: body,
       htmlBody: body.replace(/\n/g, "<br>")
     };
     if (cc) mailOpts.cc = cc;
-    const sendRes = sendEmailViaGateway(licenseKey, mailOpts);
+    const sendRes = sendEmailViaGateway(licenseKey, mailOpts, {
+      provider: data.provider || data.SmtpProvider,
+      senderEmail: data.senderEmail || data.SmtpSenderEmail,
+      senderName: data.senderName || data.SmtpSenderName,
+      smtpPass: data.smtpPass || data.SmtpPass
+    });
+    if (!sendRes.success) {
+      return sendRes;
+    }
     if (data.LeadID) {
       saveLeadFollowupRecord(licenseKey, {
         LeadID: data.LeadID,
@@ -1609,29 +1612,38 @@ function handleSendLeadEmail(licenseKey, data, userId) {
     }
     return { success: true, message: "Email sent and follow-up logged successfully via " + (sendRes.method || "Email Gateway") + "." };
   } catch(e) {
-    return { success: false, message: "Failed to send email: " + e.message };
+    return { success: false, error: "Failed to send email: " + e.message };
   }
 }
 
 function handleSendProposalEmail(licenseKey, data, userId) {
   try {
-    const to = data.To || data.to;
+    const to = data.To || data.to || data.recipient || data.recipientEmail;
     const cc = data.CC || data.cc || "";
     const subject = data.Subject || data.subject || "Commercial Proposal";
     const body = data.Body || data.body || "";
     if (!to || !body) {
-      return { success: false, message: "Recipient email and message body are required." };
+      return { success: false, error: "Recipient email and message body are required." };
     }
     const mailOpts = {
       to: to,
       subject: subject,
+      body: body,
       htmlBody: body.replace(/\n/g, "<br>")
     };
     if (cc) mailOpts.cc = cc;
-    const sendRes = sendEmailViaGateway(licenseKey, mailOpts);
+    const sendRes = sendEmailViaGateway(licenseKey, mailOpts, {
+      provider: data.provider || data.SmtpProvider,
+      senderEmail: data.senderEmail || data.SmtpSenderEmail,
+      senderName: data.senderName || data.SmtpSenderName,
+      smtpPass: data.smtpPass || data.SmtpPass
+    });
+    if (!sendRes.success) {
+      return sendRes;
+    }
     return { success: true, message: "Proposal email sent successfully via " + (sendRes.method || "Email Gateway") + "." };
   } catch(e) {
-    return { success: false, message: "Failed to send email: " + e.message };
+    return { success: false, error: "Failed to send email: " + e.message };
   }
 }
 
