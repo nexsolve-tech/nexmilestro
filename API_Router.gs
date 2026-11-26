@@ -1464,17 +1464,18 @@ function deleteDropdownValue(licenseKey, category, value) {
 }
 
 
-function sendEmailViaGateway(licenseKey, mailOpts) {
+function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
     const compSheet = ensureSheetWithHeaders(ss, "CompanySetup");
     const compList = sheetToObjects(compSheet);
     const comp = compList.length > 0 ? compList[0] : {};
 
-    const provider = String(comp.SmtpProvider || "").trim();
-    const senderEmail = String(comp.SmtpSenderEmail || comp.OfficialEmail || "").trim();
-    const senderName = String(comp.SmtpSenderName || comp.CompanyName || "NexMilestro Notification").trim();
-    const apiKey = String(comp.SmtpPass || "").trim();
+    const overrides = formOverrides || {};
+    const provider = String(overrides.provider || comp.SmtpProvider || "Gmail").trim();
+    const senderEmail = String(overrides.senderEmail || comp.SmtpSenderEmail || comp.OfficialEmail || "").trim();
+    const senderName = String(overrides.senderName || comp.SmtpSenderName || comp.CompanyName || "NexMilestro").trim();
+    const apiKey = String(overrides.smtpPass || comp.SmtpPass || "").trim();
 
     // 1. Resend API mode
     if (provider.toLowerCase() === "resend" && apiKey) {
@@ -1498,6 +1499,8 @@ function sendEmailViaGateway(licenseKey, mailOpts) {
       if (code >= 200 && code < 300) {
         return { success: true, method: "Resend API" };
       }
+      const errText = res.getContentText();
+      return { success: false, error: "Resend API error: " + errText };
     }
 
     // 2. Brevo API mode
@@ -1522,9 +1525,11 @@ function sendEmailViaGateway(licenseKey, mailOpts) {
       if (code >= 200 && code < 300) {
         return { success: true, method: "Brevo API" };
       }
+      const errText = res.getContentText();
+      return { success: false, error: "Brevo API error: " + errText };
     }
 
-    // 3. Google Workspace / Gmail App Password or Native MailApp
+    // 3. Google Workspace / Gmail / System delivery via Apps Script MailApp / GmailApp
     const gasMail = {
       to: mailOpts.to,
       subject: mailOpts.subject,
@@ -1532,27 +1537,22 @@ function sendEmailViaGateway(licenseKey, mailOpts) {
     };
     if (mailOpts.cc) gasMail.cc = mailOpts.cc;
     if (senderName) gasMail.name = senderName;
+    if (senderEmail) gasMail.replyTo = senderEmail;
 
-    // If an authenticated sender address is configured and matches Google account
-    if (senderEmail && (senderEmail.includes("@") || senderName)) {
-      try {
-        GmailApp.sendEmail(mailOpts.to, mailOpts.subject, mailOpts.body || "", {
-          htmlBody: mailOpts.htmlBody || mailOpts.body,
-          name: senderName,
-          cc: mailOpts.cc || undefined
-        });
-        return { success: true, method: "GmailApp" };
-      } catch(gErr) {
-        MailApp.sendEmail(gasMail);
-        return { success: true, method: "MailApp" };
-      }
-    } else {
+    try {
+      GmailApp.sendEmail(mailOpts.to, mailOpts.subject, mailOpts.body || "", {
+        htmlBody: mailOpts.htmlBody || mailOpts.body,
+        name: senderName,
+        replyTo: senderEmail || undefined,
+        cc: mailOpts.cc || undefined
+      });
+      return { success: true, method: "GmailApp", sender: senderEmail };
+    } catch(gErr) {
       MailApp.sendEmail(gasMail);
-      return { success: true, method: "MailApp" };
+      return { success: true, method: "MailApp", sender: senderEmail };
     }
   } catch (err) {
     console.warn("sendEmailViaGateway error:", err);
-    // Ultimate fallback
     try {
       MailApp.sendEmail({
         to: mailOpts.to,
@@ -2404,16 +2404,24 @@ function setupMasterLicenseSheet() {
 
 function handleSendTestEmail(licenseKey, data, userId) {
   try {
-    const to = data.recipient || data.to || "";
-    if (!to) return { success: false, message: "Recipient email is required." };
+    const to = data.recipient || data.recipientEmail || data.to || data.To || "";
+    if (!to) return { success: false, error: "Recipient email is required." };
     const mailOpts = {
       to: to,
-      subject: data.subject || "✅ NexMilestro Email Gateway Verified",
-      htmlBody: (data.body || "This is a verification email from your NexMilestro Operations Suite.").replace(/\n/g, "<br>")
+      subject: data.subject || data.Subject || "✅ NexMilestro Email Gateway Verified",
+      htmlBody: (data.body || data.Body || "This is a verification email from your NexMilestro Operations Suite.").replace(/\n/g, "<br>")
     };
-    const res = sendEmailViaGateway(licenseKey, mailOpts);
+    const res = sendEmailViaGateway(licenseKey, mailOpts, {
+      provider: data.provider || data.SmtpProvider,
+      senderEmail: data.senderEmail || data.SmtpSenderEmail,
+      senderName: data.senderName || data.SmtpSenderName,
+      smtpPass: data.smtpPass || data.SmtpPass
+    });
+    if (!res.success) {
+      return { success: false, error: res.error || "Failed to deliver email." };
+    }
     return { success: true, message: "Test email delivered successfully via " + (res.method || "Email Gateway") + "." };
   } catch(e) {
-    return { success: false, message: "Failed to send test email: " + e.message };
+    return { success: false, error: "Failed to send test email: " + e.message };
   }
 }

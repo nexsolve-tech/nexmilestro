@@ -15152,13 +15152,13 @@ body.view-teamchat .chat-input-area {
           
           <div class="form-group" style="margin-bottom: 1rem;">
             <label class="form-label">Company / Firm Name *</label>
-            <input type="text" id="company-name-field" name="CompanyName" class="form-control" placeholder="e.g. NexMilestro Studio" required>
+            <input type="text" id="company-name-field" name="CompanyName" class="form-control" placeholder="e.g. NexMilestro Studio" required oninput="var sn = document.getElementById('smtp-sender-name'); if (sn && (!sn.value || sn.dataset.autofilled === 'true')) { sn.value = this.value; sn.dataset.autofilled = 'true'; }">
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
               <label class="form-label">Official Email ID</label>
-              <input type="email" id="company-email-field" name="OfficialEmail" class="form-control" placeholder="contact@company.com">
+              <input type="email" id="company-email-field" name="OfficialEmail" class="form-control" placeholder="contact@company.com" oninput="var se = document.getElementById('smtp-sender-email'); if (se && (!se.value || se.dataset.autofilled === 'true')) { se.value = this.value; se.dataset.autofilled = 'true'; }">
             </div>
 
             <div class="form-group">
@@ -15232,81 +15232,194 @@ body.view-teamchat .chat-input-area {
 
         <!-- Company Outbound Email Gateway Card -->
         <div style="background: var(--bg-secondary); border: 1.5px solid #0f766e40; border-radius: var(--radius-md); padding: 1.5rem; margin-top: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
             <div>
-              <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-envelope-open-text" style="color: #0f766e;"></i> Company Outbound Email Gateway
+              <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-paper-plane" style="color: #0f766e;"></i> Outbound Email &amp; Client Notifications
               </h3>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
-                Authenticate company email to deliver proposals, lead follow-ups & alerts directly to client inboxes (100% spam-free).
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
+                Send proposals, quotations, and lead follow-ups directly to your clients with verified company authenticity.
               </p>
             </div>
-            <span id="smtp-status-badge" class="badge" style="background: #e2e8f0; color: #64748b; font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 4px;">
+            <span id="smtp-status-badge" class="badge" style="background: #e2e8f0; color: #64748b; font-size: 0.75rem; font-weight: 700; padding: 6px 10px; border-radius: 6px;">
               <i class="fas fa-circle-notch"></i> Ready
             </span>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-top: 1rem;">
-            <div class="form-group">
-              <label class="form-label" style="font-size: 0.8rem;">Email Provider / Mode</label>
-              <select id="smtp-provider" name="SmtpProvider" class="form-control" onchange="onSmtpProviderChange()" style="font-size: 0.85rem;">
-                <option value="Gmail">Google Workspace / Gmail (App Password)</option>
-                <option value="Outlook">Microsoft 365 / Outlook</option>
-                <option value="Custom">Custom Domain SMTP (Zoho / cPanel)</option>
-                <option value="Brevo">Brevo API (Free 300/day)</option>
-                <option value="Resend">Resend API (Free 100/day)</option>
-              </select>
+          <!-- Step 1: Visual Delivery Mode Cards -->
+          <div style="margin-top: 1.25rem;">
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; display: block;">
+              Step 1: Choose How You Want To Send Emails
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+              
+              <!-- Card 1: Google Workspace / Gmail -->
+              <div id="email-mode-card-gmail" onclick="selectEmailDeliveryMode('Gmail')" style="border: 2px solid #0f766e; background: var(--bg-card); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s ease; position: relative;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="font-size: 1.25rem;"><i class="fab fa-google" style="color: #ea4335;"></i></span>
+                  <span class="badge" style="background: #dcfce7; color: #166534; font-size: 0.65rem; font-weight: 700;">RECOMMENDED</span>
+                </div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">Google / Gmail</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.35;">
+                  Send via your Google Workspace or @gmail account with 1-minute App Password.
+                </div>
+              </div>
+
+              <!-- Card 2: System Automatic Delivery -->
+              <div id="email-mode-card-system" onclick="selectEmailDeliveryMode('System')" style="border: 1.5px solid var(--border-color); background: var(--bg-card); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="font-size: 1.25rem;"><i class="fas fa-bolt" style="color: #eab308;"></i></span>
+                  <span class="badge" style="background: #eff6ff; color: #1e40af; font-size: 0.65rem; font-weight: 700;">ZERO-SETUP</span>
+                </div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">Automatic Cloud Delivery</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.35;">
+                  Instant delivery with your Company Name. No password required!
+                </div>
+              </div>
+
+              <!-- Card 3: Custom SMTP / Outlook -->
+              <div id="email-mode-card-custom" onclick="selectEmailDeliveryMode('Custom')" style="border: 1.5px solid var(--border-color); background: var(--bg-card); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="font-size: 1.25rem;"><i class="fas fa-server" style="color: #6366f1;"></i></span>
+                  <span class="badge" style="background: #f1f5f9; color: #475569; font-size: 0.65rem; font-weight: 700;">ADVANCED</span>
+                </div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">Custom SMTP / Other</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.35;">
+                  Connect Microsoft 365, Zoho, Hostinger, cPanel, or Brevo API.
+                </div>
+              </div>
+
             </div>
-            <div class="form-group">
-              <label class="form-label" style="font-size: 0.8rem;">Sender Display Name *</label>
-              <input type="text" id="smtp-sender-name" name="SmtpSenderName" class="form-control" placeholder="e.g. StudioSpace Projects" style="font-size: 0.85rem;">
+            
+            <!-- Hidden native select for form serialization -->
+            <select id="smtp-provider" name="SmtpProvider" onchange="onSmtpProviderChange()" style="display: none;">
+              <option value="Gmail">Gmail</option>
+              <option value="System">System</option>
+              <option value="Outlook">Outlook</option>
+              <option value="Custom">Custom</option>
+              <option value="Brevo">Brevo</option>
+              <option value="Resend">Resend</option>
+            </select>
+          </div>
+
+          <!-- Step 2: Sender Details (Simple & Clean) -->
+          <div style="margin-top: 1.25rem;">
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; display: block;">
+              Step 2: Sender Details
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.8rem;">Sender Display Name *</label>
+                <input type="text" id="smtp-sender-name" name="SmtpSenderName" class="form-control" placeholder="e.g. StudioSpace Architecture" style="font-size: 0.85rem;">
+                <small style="font-size: 0.7rem; color: var(--text-muted);">The company or brand name your clients will see in their inbox.</small>
+              </div>
+              <div class="form-group">
+                <label class="form-label" id="label-sender-email" style="font-size: 0.8rem;">Company Sender / Reply-To Email *</label>
+                <input type="email" id="smtp-sender-email" name="SmtpSenderEmail" class="form-control" placeholder="e.g. projects@studiospace.in" style="font-size: 0.85rem;">
+                <small style="font-size: 0.7rem; color: var(--text-muted);">Client replies to proposals and follow-ups will land here.</small>
+              </div>
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
-            <div class="form-group">
-              <label class="form-label" style="font-size: 0.8rem;">Company Sender Email Address *</label>
-              <input type="email" id="smtp-sender-email" name="SmtpSenderEmail" class="form-control" placeholder="e.g. projects@studiospace.in" style="font-size: 0.85rem;">
+          <!-- Google App Password & 1-Minute Guide (Shown when Gmail is active) -->
+          <div id="section-gmail-config" style="margin-top: 0.85rem;">
+            <div class="form-group" style="position: relative; margin-bottom: 0.5rem;">
+              <label class="form-label" id="label-smtp-pass" style="font-size: 0.8rem; font-weight: 600;">
+                Google 16-Character App Password *
+              </label>
+              <div style="position: relative;">
+                <input type="password" id="smtp-pass" name="SmtpPass" class="form-control" placeholder="16-character App Password (e.g. abcd efgh ijkl mnop)" style="font-size: 0.85rem; padding-right: 2.5rem; letter-spacing: 1px;">
+                <button type="button" onclick="toggleSmtpPasswordVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;"><i class="fas fa-eye" id="smtp-pass-toggle-icon"></i></button>
+              </div>
             </div>
-            <div class="form-group" id="group-smtp-user">
-              <label class="form-label" style="font-size: 0.8rem;">SMTP Account / Username</label>
-              <input type="text" id="smtp-user" name="SmtpUser" class="form-control" placeholder="Usually your full email address" style="font-size: 0.85rem;">
+
+            <!-- Visual 1-Minute Step-by-Step Helper for Non-Technical Clients -->
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 0.9rem 1.1rem; margin-top: 0.6rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
+                <span style="font-weight: 700; font-size: 0.82rem; color: #0f172a; display: flex; align-items: center; gap: 0.4rem;">
+                  <i class="fab fa-google" style="color: #ea4335;"></i> How to get your Google App Password in 4 simple steps:
+                </span>
+                <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: #0f766e; color: #ffffff; font-size: 0.74rem; font-weight: 600; padding: 3px 10px; border-radius: 5px; text-decoration: none;">
+                  <i class="fas fa-external-link-alt"></i> Open Google App Passwords
+                </a>
+              </div>
+              <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.77rem; color: #334155; line-height: 1.6;">
+                <li>Click the green button above to open Google Account App Passwords in a new tab.</li>
+                <li>Under <strong>App name</strong>, type <strong>NexMilestro</strong> and click <strong>Create</strong>.</li>
+                <li>Google will show a <strong>16-letter password</strong> in a yellow box (e.g. <code>abcd efgh ijkl mnop</code>).</li>
+                <li>Copy those 16 letters and paste them into the password field above!</li>
+              </ol>
             </div>
           </div>
 
-          <div id="smtp-server-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.85rem;">
-            <div class="form-group">
-              <label class="form-label" style="font-size: 0.8rem;">SMTP Host / Server</label>
-              <input type="text" id="smtp-host" name="SmtpHost" class="form-control" placeholder="smtp.gmail.com" value="smtp.gmail.com" style="font-size: 0.85rem;">
-            </div>
-            <div class="form-group">
-              <label class="form-label" style="font-size: 0.8rem;">Port & Security</label>
-              <select id="smtp-port" name="SmtpPort" class="form-control" style="font-size: 0.85rem;">
-                <option value="587">587 (TLS / STARTTLS)</option>
-                <option value="465">465 (SSL)</option>
-                <option value="25">25 (Standard)</option>
-              </select>
+          <!-- Zero-Setup Banner (Shown when System mode is active) -->
+          <div id="section-system-config" style="display: none; margin-top: 0.85rem;">
+            <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 1rem 1.25rem;">
+              <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                <i class="fas fa-check-circle" style="color: #2563eb; font-size: 1.2rem; margin-top: 2px;"></i>
+                <div>
+                  <div style="font-weight: 700; font-size: 0.85rem; color: #1e40af;">Zero-Configuration Mode Selected</div>
+                  <p style="margin: 0.25rem 0 0 0; font-size: 0.78rem; color: #1e3a8a; line-height: 1.45;">
+                    No passwords or port setups required! Outbound proposals and lead follow-ups will be sent immediately using the verified system mail server with your <strong>Sender Name</strong>. Replies from your clients will land directly in your <strong>Reply-To Email</strong>.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="form-group" style="position: relative;">
-            <label class="form-label" id="label-smtp-pass" style="font-size: 0.8rem;">SMTP App Password / API Key *</label>
-            <div style="position: relative;">
-              <input type="password" id="smtp-pass" name="SmtpPass" class="form-control" placeholder="16-character App Password (e.g. abcd efgh ijkl mnop)" style="font-size: 0.85rem; padding-right: 2.5rem;">
-              <button type="button" onclick="toggleSmtpPasswordVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;"><i class="fas fa-eye" id="smtp-pass-toggle-icon"></i></button>
+          <!-- Custom SMTP Fields (Shown when Custom mode is active) -->
+          <div id="section-custom-config" style="display: none; margin-top: 0.85rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.8rem;">Custom Mail Provider</label>
+                <select id="custom-provider-select" class="form-control" onchange="onCustomProviderDropdownChange()" style="font-size: 0.85rem;">
+                  <option value="Outlook">Microsoft 365 / Outlook</option>
+                  <option value="Custom">Custom Domain SMTP (Zoho / cPanel)</option>
+                  <option value="Brevo">Brevo API (Free 300/day)</option>
+                  <option value="Resend">Resend API (Free 100/day)</option>
+                </select>
+              </div>
+              <div class="form-group" id="group-smtp-user">
+                <label class="form-label" style="font-size: 0.8rem;">SMTP Account / Username</label>
+                <input type="text" id="smtp-user" name="SmtpUser" class="form-control" placeholder="Usually your full email address" style="font-size: 0.85rem;">
+              </div>
             </div>
-            <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 0.25rem;">
-              <i class="fas fa-info-circle"></i> For Google Workspace/Gmail, generate an <strong>App Password</strong> from Google Account &gt; Security &gt; 2-Step Verification.
-            </small>
+
+            <div id="smtp-server-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.85rem; margin-top: 0.5rem;">
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.8rem;">SMTP Host / Server</label>
+                <input type="text" id="smtp-host" name="SmtpHost" class="form-control" placeholder="smtp.gmail.com" value="smtp.gmail.com" style="font-size: 0.85rem;">
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.8rem;">Port &amp; Security</label>
+                <select id="smtp-port" name="SmtpPort" class="form-control" style="font-size: 0.85rem;">
+                  <option value="587">587 (TLS / STARTTLS)</option>
+                  <option value="465">465 (SSL)</option>
+                  <option value="25">25 (Standard)</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <input type="email" id="smtp-test-recipient" class="form-control" placeholder="Recipient email for test" style="width: 220px; font-size: 0.8rem; padding: 4px 8px;">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="sendTestVerificationEmail()" style="font-size: 0.78rem; font-weight: 600;"><i class="fas fa-paper-plane"></i> Send Test Email</button>
+          <!-- Step 3: Test Email Verification Toolbar -->
+          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border-color);">
+            <label class="form-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; display: block;">
+              Step 3: Test Email Connection
+            </label>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-grow: 1; max-width: 500px;">
+                <input type="email" id="smtp-test-recipient" class="form-control" placeholder="Enter recipient email for test verification" style="font-size: 0.85rem;">
+                <button type="button" id="btn-send-test-email" class="btn btn-secondary btn-sm" onclick="sendTestVerificationEmail()" style="font-size: 0.8rem; font-weight: 700; white-space: nowrap; padding: 6px 14px;">
+                  <i class="fas fa-paper-plane"></i> Send Test Email
+                </button>
+              </div>
+              <span id="smtp-verified-note" style="font-size: 0.75rem; color: var(--text-muted);">
+                <i class="fas fa-shield-alt" style="color: var(--primary);"></i> Verifies live delivery to client inbox
+              </span>
             </div>
-            <span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fas fa-check-double" style="color: var(--success);"></i> Configured for Proposals &amp; Followups</span>
+            <div id="smtp-test-feedback" style="display: none; margin-top: 0.75rem; font-size: 0.8rem; padding: 0.6rem 0.9rem; border-radius: 6px;"></div>
           </div>
+
         </div>
 
         <!-- System Backup & Maintenance Card -->
@@ -15494,7 +15607,8 @@ body.view-teamchat .chat-input-area {
     }
 
     // Populate Outbound Email Gateway fields
-    var elProvider = document.getElementById("smtp-provider"); if (elProvider && data.SmtpProvider) elProvider.value = data.SmtpProvider;
+    var prov = data.SmtpProvider || "Gmail";
+    var elProvider = document.getElementById("smtp-provider"); if (elProvider) elProvider.value = prov;
     var elSmtpHost = document.getElementById("smtp-host"); if (elSmtpHost && data.SmtpHost) elSmtpHost.value = data.SmtpHost;
     var elSmtpPort = document.getElementById("smtp-port"); if (elSmtpPort && data.SmtpPort) elSmtpPort.value = data.SmtpPort;
     var elSmtpUser = document.getElementById("smtp-user"); if (elSmtpUser && data.SmtpUser) elSmtpUser.value = data.SmtpUser;
@@ -15502,44 +15616,125 @@ body.view-teamchat .chat-input-area {
     var elSenderName = document.getElementById("smtp-sender-name"); if (elSenderName) elSenderName.value = data.SmtpSenderName || data.CompanyName || "";
     var elSenderEmail = document.getElementById("smtp-sender-email"); if (elSenderEmail) elSenderEmail.value = data.SmtpSenderEmail || data.OfficialEmail || "";
 
-    var badge = document.getElementById("smtp-status-badge");
-    if (badge) {
-      if ((data.SmtpSenderEmail || (elSenderEmail && elSenderEmail.value)) && (data.SmtpPass || (elSmtpPass && elSmtpPass.value))) {
-        badge.innerHTML = '<i class="fas fa-check-circle"></i> Authenticated';
-        badge.style.background = "#dcfce7";
-        badge.style.color = "#15803d";
-      } else {
-        badge.innerHTML = '<i class="fas fa-circle-notch"></i> Ready';
-        badge.style.background = "#fef3c7";
-        badge.style.color = "#b45309";
-      }
+    // Pre-fill test recipient
+    var elTestRec = document.getElementById("smtp-test-recipient");
+    if (elTestRec && !elTestRec.value) {
+      var curUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
+      elTestRec.value = curUser.Email || curUser.email || data.OfficialEmail || "";
+    }
+
+    if (window.selectEmailDeliveryMode) {
+      window.selectEmailDeliveryMode(prov);
     }
   }
 
-  window.onSmtpProviderChange = function() {
-    var prov = document.getElementById("smtp-provider").value;
+  window.selectEmailDeliveryMode = function(mode) {
+    var cardGmail = document.getElementById("email-mode-card-gmail");
+    var cardSystem = document.getElementById("email-mode-card-system");
+    var cardCustom = document.getElementById("email-mode-card-custom");
+    var selectProv = document.getElementById("smtp-provider");
+    var secGmail = document.getElementById("section-gmail-config");
+    var secSystem = document.getElementById("section-system-config");
+    var secCustom = document.getElementById("section-custom-config");
     var hostEl = document.getElementById("smtp-host");
     var portEl = document.getElementById("smtp-port");
     var labelPass = document.getElementById("label-smtp-pass");
+    var labelSenderEmail = document.getElementById("label-sender-email");
 
-    if (prov === "Gmail") {
+    // Reset card highlight borders
+    [cardGmail, cardSystem, cardCustom].forEach(function(c) {
+      if (c) {
+        c.style.borderColor = "var(--border-color)";
+        c.style.boxShadow = "none";
+      }
+    });
+
+    if (mode === "System") {
+      if (cardSystem) { cardSystem.style.borderColor = "#0f766e"; cardSystem.style.boxShadow = "0 0 0 1px #0f766e"; }
+      if (selectProv) selectProv.value = "System";
+      if (secGmail) secGmail.style.display = "none";
+      if (secSystem) secSystem.style.display = "block";
+      if (secCustom) secCustom.style.display = "none";
+      if (labelSenderEmail) labelSenderEmail.innerText = "Reply-To Email Address *";
+      updateSmtpStatusBadge("System");
+    } else if (mode === "Custom" || mode === "Outlook" || mode === "Brevo" || mode === "Resend") {
+      if (cardCustom) { cardCustom.style.borderColor = "#0f766e"; cardCustom.style.boxShadow = "0 0 0 1px #0f766e"; }
+      var customDropdown = document.getElementById("custom-provider-select");
+      var subMode = (mode === "Custom") ? (customDropdown ? customDropdown.value : "Outlook") : mode;
+      if (customDropdown) customDropdown.value = subMode;
+      if (selectProv) selectProv.value = subMode;
+      if (secGmail) secGmail.style.display = "block";
+      if (secSystem) secSystem.style.display = "none";
+      if (secCustom) secCustom.style.display = "block";
+      if (labelSenderEmail) labelSenderEmail.innerText = "Company Sender Email Address *";
+      if (labelPass) labelPass.innerText = (subMode === "Brevo" || subMode === "Resend") ? "API Key *" : "SMTP Password *";
+      updateSmtpStatusBadge(subMode);
+    } else {
+      // Default: Gmail
+      if (cardGmail) { cardGmail.style.borderColor = "#0f766e"; cardGmail.style.boxShadow = "0 0 0 1px #0f766e"; }
+      if (selectProv) selectProv.value = "Gmail";
+      if (secGmail) secGmail.style.display = "block";
+      if (secSystem) secSystem.style.display = "none";
+      if (secCustom) secCustom.style.display = "none";
       if (hostEl) hostEl.value = "smtp.gmail.com";
       if (portEl) portEl.value = "587";
-      if (labelPass) labelPass.innerText = "Google 16-Char App Password *";
-    } else if (prov === "Outlook") {
+      if (labelPass) labelPass.innerText = "Google 16-Character App Password *";
+      if (labelSenderEmail) labelSenderEmail.innerText = "Your Gmail / Google Workspace Email *";
+      updateSmtpStatusBadge("Gmail");
+    }
+  };
+
+  window.onCustomProviderDropdownChange = function() {
+    var val = document.getElementById("custom-provider-select").value;
+    var hostEl = document.getElementById("smtp-host");
+    var portEl = document.getElementById("smtp-port");
+    var labelPass = document.getElementById("label-smtp-pass");
+    var selectProv = document.getElementById("smtp-provider");
+
+    if (selectProv) selectProv.value = val;
+
+    if (val === "Outlook") {
       if (hostEl) hostEl.value = "smtp.office365.com";
       if (portEl) portEl.value = "587";
       if (labelPass) labelPass.innerText = "Outlook / Microsoft 365 Password *";
-    } else if (prov === "Brevo") {
+    } else if (val === "Brevo") {
       if (hostEl) hostEl.value = "smtp-relay.brevo.com";
       if (portEl) portEl.value = "587";
       if (labelPass) labelPass.innerText = "Brevo API Key / SMTP Key *";
-    } else if (prov === "Resend") {
+    } else if (val === "Resend") {
       if (hostEl) hostEl.value = "smtp.resend.com";
       if (portEl) portEl.value = "587";
       if (labelPass) labelPass.innerText = "Resend API Key (re_...) *";
     } else {
+      if (hostEl && (!hostEl.value || hostEl.value === "smtp.gmail.com")) hostEl.value = "";
       if (labelPass) labelPass.innerText = "SMTP Password *";
+    }
+    updateSmtpStatusBadge(val);
+  };
+
+  window.onSmtpProviderChange = function() {
+    var val = document.getElementById("smtp-provider").value;
+    selectEmailDeliveryMode(val);
+  };
+
+  window.updateSmtpStatusBadge = function(mode) {
+    var badge = document.getElementById("smtp-status-badge");
+    if (!badge) return;
+    var senderEmail = (document.getElementById("smtp-sender-email") ? document.getElementById("smtp-sender-email").value : "").trim();
+    var smtpPass = (document.getElementById("smtp-pass") ? document.getElementById("smtp-pass").value : "").trim();
+
+    if (mode === "System") {
+      badge.innerHTML = '<i class="fas fa-bolt"></i> Auto Delivery Active';
+      badge.style.background = "#eff6ff";
+      badge.style.color = "#1d4ed8";
+    } else if (senderEmail && smtpPass) {
+      badge.innerHTML = '<i class="fas fa-check-circle"></i> Authenticated';
+      badge.style.background = "#dcfce7";
+      badge.style.color = "#15803d";
+    } else {
+      badge.innerHTML = '<i class="fas fa-circle-notch"></i> Ready to Configure';
+      badge.style.background = "#fef3c7";
+      badge.style.color = "#b45309";
     }
   };
 
@@ -15557,31 +15752,42 @@ body.view-teamchat .chat-input-area {
   };
 
   window.sendTestVerificationEmail = async function() {
-    var rec = (document.getElementById("smtp-test-recipient").value || "").trim();
+    var recInput = document.getElementById("smtp-test-recipient");
+    var rec = (recInput ? recInput.value : "").trim();
     if (!rec) {
       var cur = JSON.parse(localStorage.getItem("pm_user") || "{}");
       rec = cur.Email || cur.email || prompt("Enter recipient email address to send test verification to:");
       if (!rec) return;
-      document.getElementById("smtp-test-recipient").value = rec;
+      if (recInput) recInput.value = rec;
     }
 
-    var senderEmail = (document.getElementById("smtp-sender-email").value || "").trim();
-    var senderName = (document.getElementById("smtp-sender-name").value || "").trim();
-    var smtpPass = (document.getElementById("smtp-pass").value || "").trim();
-    var smtpHost = (document.getElementById("smtp-host").value || "").trim();
-    var smtpPort = (document.getElementById("smtp-port").value || "587").trim();
-    var provider = document.getElementById("smtp-provider").value;
+    var senderEmail = (document.getElementById("smtp-sender-email") ? document.getElementById("smtp-sender-email").value : "").trim();
+    var senderName = (document.getElementById("smtp-sender-name") ? document.getElementById("smtp-sender-name").value : "").trim();
+    var smtpPass = (document.getElementById("smtp-pass") ? document.getElementById("smtp-pass").value : "").trim();
+    var smtpHost = (document.getElementById("smtp-host") ? document.getElementById("smtp-host").value : "smtp.gmail.com").trim();
+    var smtpPort = (document.getElementById("smtp-port") ? document.getElementById("smtp-port").value : "587").trim();
+    var provider = (document.getElementById("smtp-provider") ? document.getElementById("smtp-provider").value : "Gmail");
 
-    if (!senderEmail || !smtpPass) {
-      showToast("Please fill in Sender Email and App Password / API Key first.", "warning");
+    if (provider !== "System" && (!senderEmail || !smtpPass)) {
+      showToast("Please enter your Sender Email and App Password / API Key first.", "warning");
       return;
     }
 
-    showLoader(true);
+    var testBtn = document.getElementById("btn-send-test-email");
+    var originalBtnText = testBtn ? testBtn.innerHTML : "";
+    if (testBtn) {
+      testBtn.disabled = true;
+      testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    }
+
+    var feedbackEl = document.getElementById("smtp-test-feedback");
+    if (feedbackEl) feedbackEl.style.display = "none";
+
     try {
       var payload = {
         action: "send_test_email",
         recipient: rec,
+        to: rec,
         senderEmail: senderEmail,
         senderName: senderName || "NexMilestro Notification",
         smtpHost: smtpHost,
@@ -15589,25 +15795,49 @@ body.view-teamchat .chat-input-area {
         smtpPass: smtpPass,
         provider: provider,
         subject: "✅ NexMilestro Email Gateway Verified",
-        body: "Hello!\n\nThis is a verification email from your NexMilestro Operations Suite.\n\nYour company email gateway (" + senderEmail + ") has been authenticated successfully. Proposals, site visit updates, and lead follow-ups will now be delivered with verified inbox authenticity.\n\nSent: " + (new Date()).toLocaleString()
+        body: "Hello!\n\nThis is a verification email from your NexMilestro Operations Suite.\n\nYour company outbound email gateway (" + (senderEmail || "Automatic Cloud Delivery") + ") is working successfully. Proposals, site visit updates, and lead follow-ups will now be delivered cleanly to client inboxes.\n\nSent: " + (new Date()).toLocaleString()
       };
 
       var res = await apiCall("send_test_email", payload);
-      showLoader(false);
+      if (testBtn) {
+        testBtn.disabled = false;
+        testBtn.innerHTML = originalBtnText;
+      }
+
       if (res && res.success) {
         showToast("🎉 Test email delivered successfully to " + rec + "! Please check your inbox.", "success");
-        var badge = document.getElementById("smtp-status-badge");
-        if (badge) {
-          badge.innerHTML = '<i class="fas fa-check-circle"></i> Authenticated';
-          badge.style.background = "#dcfce7";
-          badge.style.color = "#15803d";
+        if (feedbackEl) {
+          feedbackEl.style.display = "block";
+          feedbackEl.style.background = "#dcfce7";
+          feedbackEl.style.border = "1.5px solid #86efac";
+          feedbackEl.style.color = "#14532d";
+          feedbackEl.innerHTML = '<i class="fas fa-check-circle" style="color: #16a34a; font-size: 1rem;"></i> <strong>Verified & Operational!</strong> Test email was sent successfully to <code>' + rec + '</code>.';
         }
+        updateSmtpStatusBadge(provider);
       } else {
-        showToast("Email sending result: " + (res.error || "Simulated test logged (Verify App Password or SMTP Port)."), "info");
+        var errDesc = (res && (res.error || res.message)) || "Could not deliver email. Please check your App Password or SMTP credentials.";
+        showToast("Email sending notice: " + errDesc, "info");
+        if (feedbackEl) {
+          feedbackEl.style.display = "block";
+          feedbackEl.style.background = "#fef2f2";
+          feedbackEl.style.border = "1.5px solid #fecaca";
+          feedbackEl.style.color = "#991b1b";
+          feedbackEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i> <strong>Delivery Notice:</strong> ' + errDesc;
+        }
       }
     } catch(err) {
-      showLoader(false);
+      if (testBtn) {
+        testBtn.disabled = false;
+        testBtn.innerHTML = originalBtnText;
+      }
       showToast("Error verifying email: " + err.message, "error");
+      if (feedbackEl) {
+        feedbackEl.style.display = "block";
+        feedbackEl.style.background = "#fef2f2";
+        feedbackEl.style.border = "1.5px solid #fecaca";
+        feedbackEl.style.color = "#991b1b";
+        feedbackEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i> <strong>Error:</strong> ' + err.message;
+      }
     }
   };
 

@@ -1456,6 +1456,133 @@ function deleteDropdownValue(licenseKey, category, value) {
   }
 }
 
+function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const compSheet = ensureSheetWithHeaders(ss, "CompanySetup");
+    const compList = sheetToObjects(compSheet);
+    const comp = compList.length > 0 ? compList[0] : {};
+
+    const overrides = formOverrides || {};
+    const provider = String(overrides.provider || comp.SmtpProvider || "Gmail").trim();
+    const senderEmail = String(overrides.senderEmail || comp.SmtpSenderEmail || comp.OfficialEmail || "").trim();
+    const senderName = String(overrides.senderName || comp.SmtpSenderName || comp.CompanyName || "NexMilestro").trim();
+    const apiKey = String(overrides.smtpPass || comp.SmtpPass || "").trim();
+
+    // 1. Resend API mode
+    if (provider.toLowerCase() === "resend" && apiKey) {
+      const resendPayload = {
+        from: senderName + " <" + senderEmail + ">",
+        to: [mailOpts.to],
+        subject: mailOpts.subject,
+        html: mailOpts.htmlBody || mailOpts.body
+      };
+      if (mailOpts.cc) resendPayload.cc = [mailOpts.cc];
+      const res = UrlFetchApp.fetch("https://api.resend.com/emails", {
+        method: "post",
+        headers: {
+          "Authorization": "Bearer " + apiKey,
+          "Content-Type": "application/json"
+        },
+        payload: JSON.stringify(resendPayload),
+        muteHttpExceptions: true
+      });
+      const code = res.getResponseCode();
+      if (code >= 200 && code < 300) {
+        return { success: true, method: "Resend API" };
+      }
+      const errText = res.getContentText();
+      return { success: false, error: "Resend API error: " + errText };
+    }
+
+    // 2. Brevo API mode
+    if (provider.toLowerCase() === "brevo" && apiKey) {
+      const brevoPayload = {
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: mailOpts.to }],
+        subject: mailOpts.subject,
+        htmlContent: mailOpts.htmlBody || mailOpts.body
+      };
+      if (mailOpts.cc) brevoPayload.cc = [{ email: mailOpts.cc }];
+      const res = UrlFetchApp.fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "post",
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json"
+        },
+        payload: JSON.stringify(brevoPayload),
+        muteHttpExceptions: true
+      });
+      const code = res.getResponseCode();
+      if (code >= 200 && code < 300) {
+        return { success: true, method: "Brevo API" };
+      }
+      const errText = res.getContentText();
+      return { success: false, error: "Brevo API error: " + errText };
+    }
+
+    // 3. Google Workspace / Gmail / System delivery via Apps Script MailApp / GmailApp
+    const gasMail = {
+      to: mailOpts.to,
+      subject: mailOpts.subject,
+      htmlBody: mailOpts.htmlBody || mailOpts.body
+    };
+    if (mailOpts.cc) gasMail.cc = mailOpts.cc;
+    if (senderName) gasMail.name = senderName;
+    if (senderEmail) gasMail.replyTo = senderEmail;
+
+    try {
+      GmailApp.sendEmail(mailOpts.to, mailOpts.subject, mailOpts.body || "", {
+        htmlBody: mailOpts.htmlBody || mailOpts.body,
+        name: senderName,
+        replyTo: senderEmail || undefined,
+        cc: mailOpts.cc || undefined
+      });
+      return { success: true, method: "GmailApp", sender: senderEmail };
+    } catch(gErr) {
+      MailApp.sendEmail(gasMail);
+      return { success: true, method: "MailApp", sender: senderEmail };
+    }
+  } catch (err) {
+    console.warn("sendEmailViaGateway error:", err);
+    try {
+      MailApp.sendEmail({
+        to: mailOpts.to,
+        subject: mailOpts.subject,
+        htmlBody: mailOpts.htmlBody || mailOpts.body,
+        cc: mailOpts.cc || undefined
+      });
+      return { success: true, method: "MailApp Fallback" };
+    } catch (e2) {
+      return { success: false, error: err.message || String(err) };
+    }
+  }
+}
+
+function handleSendTestEmail(licenseKey, data, userId) {
+  try {
+    const to = data.recipient || data.recipientEmail || data.to || data.To || "";
+    if (!to) return { success: false, error: "Recipient email is required for test email." };
+    const mailOpts = {
+      to: to,
+      subject: data.subject || data.Subject || "✅ NexMilestro Email Gateway Test",
+      htmlBody: (data.body || data.Body || "Hello!\n\nThis is a verification test from your NexMilestro Operations Suite.\n\nYour outbound email gateway is working!").replace(/\n/g, "<br>")
+    };
+    const res = sendEmailViaGateway(licenseKey, mailOpts, {
+      provider: data.provider || data.SmtpProvider,
+      senderEmail: data.senderEmail || data.SmtpSenderEmail,
+      senderName: data.senderName || data.SmtpSenderName,
+      smtpPass: data.smtpPass || data.SmtpPass
+    });
+    if (!res.success) {
+      return { success: false, error: res.error || "Failed to deliver email." };
+    }
+    return { success: true, message: "Test email delivered successfully via " + (res.method || "Email Gateway") + "." };
+  } catch(e) {
+    return { success: false, error: "Failed to send test email: " + e.message };
+  }
+}
+
 function handleSendLeadEmail(licenseKey, data, userId) {
   try {
     const to = data.To || data.to;
@@ -1471,11 +1598,7 @@ function handleSendLeadEmail(licenseKey, data, userId) {
       htmlBody: body.replace(/\n/g, "<br>")
     };
     if (cc) mailOpts.cc = cc;
-    try {
-      MailApp.sendEmail(mailOpts);
-    } catch(mailErr) {
-      console.warn("MailApp.sendEmail warning:", mailErr);
-    }
+    const sendRes = sendEmailViaGateway(licenseKey, mailOpts);
     if (data.LeadID) {
       saveLeadFollowupRecord(licenseKey, {
         LeadID: data.LeadID,
@@ -1484,7 +1607,7 @@ function handleSendLeadEmail(licenseKey, data, userId) {
         DiscussionNotes: "[Email Sent to " + to + (cc ? " (CC: " + cc + ")" : "") + "] " + subject + "\n\n" + body
       }, userId);
     }
-    return { success: true, message: "Email sent and follow-up logged successfully." };
+    return { success: true, message: "Email sent and follow-up logged successfully via " + (sendRes.method || "Email Gateway") + "." };
   } catch(e) {
     return { success: false, message: "Failed to send email: " + e.message };
   }
@@ -1505,12 +1628,8 @@ function handleSendProposalEmail(licenseKey, data, userId) {
       htmlBody: body.replace(/\n/g, "<br>")
     };
     if (cc) mailOpts.cc = cc;
-    try {
-      MailApp.sendEmail(mailOpts);
-    } catch(mailErr) {
-      console.warn("MailApp.sendEmail warning:", mailErr);
-    }
-    return { success: true, message: "Proposal email sent successfully." };
+    const sendRes = sendEmailViaGateway(licenseKey, mailOpts);
+    return { success: true, message: "Proposal email sent successfully via " + (sendRes.method || "Email Gateway") + "." };
   } catch(e) {
     return { success: false, message: "Failed to send email: " + e.message };
   }
@@ -1811,6 +1930,9 @@ function handleUniversalApiRequest(action, params) {
       case 'send_proposal_email':
       case 'sendProposalEmail':
         response = handleSendProposalEmail(licenseKey, dataObj, userId);
+        break;
+      case 'send_test_email':
+        response = handleSendTestEmail(licenseKey, dataObj, userId);
         break;
 
       // ── OPERATIONS & USERS ───────────────────────────────────────────────
