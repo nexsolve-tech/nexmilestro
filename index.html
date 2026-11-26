@@ -15798,7 +15798,22 @@ body.view-teamchat .chat-input-area {
         body: "Hello!\n\nThis is a verification email from your NexMilestro Operations Suite.\n\nYour company outbound email gateway (" + (senderEmail || "Automatic Cloud Delivery") + ") is working successfully. Proposals, site visit updates, and lead follow-ups will now be delivered cleanly to client inboxes.\n\nSent: " + (new Date()).toLocaleString()
       };
 
-      var res = await apiCall("send_test_email", payload);
+      var res = await apiCall("send_test_email", payload).catch(function(e){ return { success: false, error: e.message }; });
+      if (!res || !res.success) {
+        // Seamless fallback to send_lead_email (supported across all backend versions)
+        var fallbackPayload = {
+          to: rec,
+          subject: payload.subject,
+          body: payload.body,
+          senderEmail: senderEmail,
+          senderName: senderName
+        };
+        var fbRes = await apiCall("send_lead_email", { data: fallbackPayload, to: rec, subject: payload.subject, body: payload.body }).catch(function(){ return null; });
+        if (fbRes && fbRes.success) {
+          res = fbRes;
+        }
+      }
+
       if (testBtn) {
         testBtn.disabled = false;
         testBtn.innerHTML = originalBtnText;
