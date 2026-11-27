@@ -766,7 +766,15 @@
     var smtpPort = (document.getElementById("smtp-port") ? document.getElementById("smtp-port").value : "587").trim();
     var provider = (document.getElementById("smtp-provider") ? document.getElementById("smtp-provider").value : "Gmail");
 
-    if (provider !== "System" && (!senderEmail || !smtpPass)) {
+    var cachedComp = (window._dataCache && window._dataCache.companySetup) || window.currentCompanySetupData || {};
+    var isOAuthActive = Boolean(cachedComp.OAuthProvider === "Google" && cachedComp.OAuthEmail && String(cachedComp.OAuthStatus).toLowerCase() === "active");
+
+    if (isOAuthActive) {
+      provider = "Google_OAuth";
+      if (!senderEmail) senderEmail = cachedComp.OAuthEmail;
+    }
+
+    if (!isOAuthActive && provider !== "System" && (!senderEmail || !smtpPass)) {
       showToast("Please enter your Sender Email and App Password / API Key first.", "warning");
       return;
     }
@@ -797,7 +805,7 @@
       };
 
       var res = await apiCall("send_test_email", payload).catch(function(e){ return { success: false, error: e.message }; });
-      if (!res || !res.success) {
+      if (res && !res.success && res.error && res.error.indexOf("Unrecognized API action") !== -1) {
         // Seamless fallback to send_lead_email (supported across all backend versions)
         var fallbackPayload = {
           to: rec,
@@ -818,24 +826,25 @@
       }
 
       if (res && res.success) {
-        showToast("🎉 Test email delivered successfully to " + rec + "! Please check your inbox.", "success");
+        var viaMsg = res.method ? (" via " + res.method) : "";
+        showToast("🎉 Test email delivered successfully to " + rec + "!" + viaMsg, "success");
         if (feedbackEl) {
           feedbackEl.style.display = "block";
           feedbackEl.style.background = "#dcfce7";
           feedbackEl.style.border = "1.5px solid #86efac";
           feedbackEl.style.color = "#14532d";
-          feedbackEl.innerHTML = '<i class="fas fa-check-circle" style="color: #16a34a; font-size: 1rem;"></i> <strong>Verified & Operational!</strong> Test email was sent successfully to <code>' + rec + '</code>.';
+          feedbackEl.innerHTML = '<i class="fas fa-check-circle" style="color: #16a34a; font-size: 1rem;"></i> <strong>Verified & Operational!</strong> Test email was sent successfully to <code>' + rec + '</code>' + viaMsg + '. Please check recipient inbox and Gmail Sent folder.';
         }
         updateSmtpStatusBadge(provider);
       } else {
-        var errDesc = (res && (res.error || res.message)) || "Could not deliver email. Please check your App Password or SMTP credentials.";
-        showToast("Email sending notice: " + errDesc, "info");
+        var errDesc = (res && (res.error || res.message)) || "Could not deliver email. Please check your OAuth connection or SMTP credentials.";
+        showToast("Email sending error: " + errDesc, "error");
         if (feedbackEl) {
           feedbackEl.style.display = "block";
           feedbackEl.style.background = "#fef2f2";
-          feedbackEl.style.border = "1.5px solid #fecaca";
+          feedbackEl.style.border = "1.5px solid #fca5a5";
           feedbackEl.style.color = "#991b1b";
-          feedbackEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i> <strong>Delivery Notice:</strong> ' + errDesc;
+          feedbackEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 1rem;"></i> <strong>Delivery Failed:</strong> ' + errDesc;
         }
       }
     } catch(err) {

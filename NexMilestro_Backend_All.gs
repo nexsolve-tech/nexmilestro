@@ -1506,17 +1506,41 @@ function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
     // 0. Google Workspace / Gmail OAuth 2.0 Mode (Direct Gmail API - lands in Sent folder)
     const oauthProvider = String(comp.OAuthProvider || "").trim().toLowerCase();
     const refreshToken = String(comp.OAuthRefreshToken || "").trim();
+    const currentAccessToken = String(comp.OAuthAccessToken || "").trim();
     const oauthStatus = String(comp.OAuthStatus || "").trim().toLowerCase();
 
-    if ((oauthProvider === "google" || provider.toLowerCase() === "google_oauth") && refreshToken && oauthStatus !== "disconnected") {
-      try {
-        const { clientId, clientSecret } = getGoogleOAuthConfig();
-        if (clientId && clientSecret) {
-          const freshAccessToken = refreshGoogleAccessToken(clientId, clientSecret, refreshToken);
-          return sendGmailViaOAuthApi(freshAccessToken, mailOpts, senderName, senderEmail || comp.OAuthEmail);
+    if ((oauthProvider === "google" || provider.toLowerCase() === "google_oauth") && oauthStatus === "active") {
+      let activeToken = currentAccessToken;
+      const { clientId, clientSecret } = getGoogleOAuthConfig();
+
+      // If we have refreshToken and credentials, refresh to ensure token is fresh
+      if (refreshToken && clientId && clientSecret) {
+        try {
+          activeToken = refreshGoogleAccessToken(clientId, clientSecret, refreshToken);
+          if (activeToken && activeToken !== currentAccessToken) {
+            writeTableRow(ss, "CompanySetup", "CompanyID", comp.CompanyID || "COMP-1001", { OAuthAccessToken: activeToken }, "SYSTEM");
+          }
+        } catch(refErr) {
+          console.warn("Could not refresh token, attempting with existing accessToken:", refErr);
         }
-      } catch (oauthErr) {
-        console.warn("Google OAuth dispatch warning, falling back to standard gateway:", oauthErr);
+      }
+
+      if (!activeToken) {
+        return { 
+          success: false, 
+          error: "Google OAuth access token is expired or missing. Please click 'Disconnect' and reconnect your Google account." 
+        };
+      }
+
+      // Dispatch via Gmail API
+      try {
+        const oauthResult = sendGmailViaOAuthApi(activeToken, mailOpts, senderName, senderEmail || comp.OAuthEmail);
+        return oauthResult;
+      } catch (gmailErr) {
+        return {
+          success: false,
+          error: "Google Gmail API dispatch failed: " + gmailErr.message
+        };
       }
     }
 
@@ -1738,30 +1762,37 @@ function sendGmailViaOAuthApi(accessToken, mailOpts, senderName, senderEmail) {
   const from = senderName ? ("\"" + senderName.replace(/"/g, "") + "\" <" + senderEmail + ">") : senderEmail;
 
   const boundary = "nex_bnd_" + Utilities.getUuid().replace(/-/g, "");
-  let raw = [
+  let rawLines = [
     "From: " + from,
-    "To: " + to,
-    cc ? ("Cc: " + cc) : "",
-    "Subject: =?utf-8?B?" + Utilities.base64Encode(subject, Utilities.Charset.UTF_8) + "?=",
-    "MIME-Version: 1.0",
-    "Content-Type: multipart/alternative; boundary=\"" + boundary + "\"",
-    "",
-    "--" + boundary,
-    "Content-Type: text/plain; charset=UTF-8",
-    "Content-Transfer-Encoding: base64",
-    "",
-    Utilities.base64Encode(body || "Please view the attached HTML email message.", Utilities.Charset.UTF_8),
-    "",
-    "--" + boundary,
-    "Content-Type: text/html; charset=UTF-8",
-    "Content-Transfer-Encoding: base64",
-    "",
-    Utilities.base64Encode(htmlBody, Utilities.Charset.UTF_8),
-    "",
-    "--" + boundary + "--"
-  ].filter(Boolean).join("\r\n");
+    "To: " + to
+  ];
+  if (cc) rawLines.push("Cc: " + cc);
+  rawLines.push("Subject: =?utf-8?B?" + Utilities.base64Encode(subject, Utilities.Charset.UTF_8) + "?=");
+  rawLines.push("MIME-Version: 1.0");
+  rawLines.push("Content-Type: multipart/alternative; boundary=\"" + boundary + "\"");
+  rawLines.push("");
+  rawLines.push("--" + boundary);
+  rawLines.push("Content-Type: text/plain; charset=UTF-8");
+  rawLines.push("Content-Transfer-Encoding: base64");
+  rawLines.push("");
+  rawLines.push(Utilities.base64Encode(body || "Please view the attached HTML email message.", Utilities.Charset.UTF_8));
+  rawLines.push("");
+  rawLines.push("--" + boundary);
+  rawLines.push("Content-Type: text/html; charset=UTF-8");
+  rawLines.push("Content-Transfer-Encoding: base64");
+  rawLines.push("");
+  rawLines.push(Utilities.base64Encode(htmlBody, Utilities.Charset.UTF_8));
+  rawLines.push("");
+  rawLines.push("--" + boundary + "--");
 
-  const encoded = Utilities.base64EncodeWebSafe(raw);
+  const raw = rawLines.join("\r\n");
+
+  // Web-safe base64url encoding (RFC 4648)
+  const encoded = Utilities.base64Encode(raw, Utilities.Charset.UTF_8)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
   const response = UrlFetchApp.fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     method: "post",
     contentType: "application/json",
@@ -1770,9 +1801,18 @@ function sendGmailViaOAuthApi(accessToken, mailOpts, senderName, senderEmail) {
     muteHttpExceptions: true
   });
 
-  const resJson = JSON.parse(response.getContentText());
-  if (resJson.error) {
-    throw new Error(resJson.error.message || "Gmail API dispatch failed");
+  const statusCode = response.getResponseCode();
+  const resText = response.getContentText();
+  let resJson = {};
+  try {
+    resJson = JSON.parse(resText);
+  } catch(e) {
+    resJson = { error: { message: resText } };
+  }
+
+  if (statusCode >= 400 || resJson.error) {
+    const errMsg = (resJson.error && resJson.error.message) ? resJson.error.message : ("HTTP " + statusCode + ": " + resText);
+    throw new Error(errMsg);
   }
 
   return {
@@ -2780,7 +2820,11 @@ function handleSendTestEmail(licenseKey, data, userId) {
     if (!res.success) {
       return { success: false, error: res.error || "Failed to deliver email." };
     }
-    return { success: true, message: "Test email delivered successfully via " + (res.method || "Email Gateway") + "." };
+    return { 
+      success: true, 
+      method: res.method || "Email Gateway",
+      message: "Test email delivered successfully via " + (res.method || "Email Gateway") + "." 
+    };
   } catch(e) {
     return { success: false, error: "Failed to send test email: " + e.message };
   }
