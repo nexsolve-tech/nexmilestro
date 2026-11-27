@@ -21,6 +21,9 @@
   <!-- Supabase Client for Sub-50ms Enterprise Database -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Google Identity Services (GIS) for Google OAuth 2.0 Connect -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <!-- Inject Core CSS Stylesheet -->
   <style>
 /* 
@@ -15241,9 +15244,14 @@ body.view-teamchat .chat-input-area {
                 Send proposals, quotations, and lead follow-ups directly to your clients with verified company authenticity.
               </p>
             </div>
-            <span id="smtp-status-badge" class="badge" style="background: #e2e8f0; color: #64748b; font-size: 0.75rem; font-weight: 700; padding: 6px 10px; border-radius: 6px;">
-              <i class="fas fa-circle-notch"></i> Ready
-            </span>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <button type="button" onclick="openGoogleOAuthConfigModal()" class="btn btn-sm" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.74rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
+                <i class="fas fa-cog"></i> Google OAuth App Settings
+              </button>
+              <span id="smtp-status-badge" class="badge" style="background: #e2e8f0; color: #64748b; font-size: 0.75rem; font-weight: 700; padding: 6px 10px; border-radius: 6px;">
+                <i class="fas fa-circle-notch"></i> Ready
+              </span>
+            </div>
           </div>
 
           <!-- Step 1: Visual Delivery Mode Cards -->
@@ -15253,15 +15261,17 @@ body.view-teamchat .chat-input-area {
             </label>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
               
-              <!-- Card 1: Google Workspace / Gmail -->
+              <!-- Card 1: Google Workspace / Gmail (OAuth 2.0) -->
               <div id="email-mode-card-gmail" onclick="selectEmailDeliveryMode('Gmail')" style="border: 2px solid #0f766e; background: var(--bg-card); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s ease; position: relative;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
-                  <span style="font-size: 1.25rem;"><i class="fab fa-google" style="color: #ea4335;"></i></span>
+                  <span style="font-size: 1.25rem;">
+                    <svg width="20" height="20" viewBox="0 0 48 48" style="vertical-align: middle;"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                  </span>
                   <span class="badge" style="background: #dcfce7; color: #166534; font-size: 0.65rem; font-weight: 700;">RECOMMENDED</span>
                 </div>
-                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">Google / Gmail</div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">Google / Gmail (OAuth)</div>
                 <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.35;">
-                  Send via your Google Workspace or @gmail account with 1-minute App Password.
+                  1-Click sign in with Google. Emails send from your Gmail and record in your Sent folder!
                 </div>
               </div>
 
@@ -15321,34 +15331,84 @@ body.view-teamchat .chat-input-area {
             </div>
           </div>
 
-          <!-- Google App Password & 1-Minute Guide (Shown when Gmail is active) -->
+          <!-- Google OAuth & 1-Click Connect Panel (Shown when Gmail is active) -->
           <div id="section-gmail-config" style="margin-top: 0.85rem;">
-            <div class="form-group" style="position: relative; margin-bottom: 0.5rem;">
-              <label class="form-label" id="label-smtp-pass" style="font-size: 0.8rem; font-weight: 600;">
-                Google 16-Character App Password *
-              </label>
-              <div style="position: relative;">
-                <input type="password" id="smtp-pass" name="SmtpPass" class="form-control" placeholder="16-character App Password (e.g. abcd efgh ijkl mnop)" style="font-size: 0.85rem; padding-right: 2.5rem; letter-spacing: 1px;">
-                <button type="button" onclick="toggleSmtpPasswordVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;"><i class="fas fa-eye" id="smtp-pass-toggle-icon"></i></button>
+            
+            <!-- Connected State Banner (When OAuth is Active) -->
+            <div id="google-oauth-connected-panel" style="display: none; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 1.1rem; margin-bottom: 0.75rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div style="width: 42px; height: 42px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                  </div>
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                      <span style="font-weight: 700; font-size: 0.9rem; color: #14532d;">Connected via Google Account</span>
+                      <span class="badge" style="background: #22c55e; color: #ffffff; font-size: 0.65rem; padding: 2px 6px;">ACTIVE</span>
+                    </div>
+                    <div id="google-oauth-connected-email" style="font-size: 0.8rem; font-weight: 600; color: #166534; margin-top: 2px;">user@example.com</div>
+                    <div style="font-size: 0.72rem; color: #15803d; margin-top: 1px;">Proposals and follow-ups will send directly from this account and appear in your Gmail Sent items.</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <button type="button" onclick="disconnectOAuthAccount()" class="btn btn-sm" style="background: #ffffff; color: #dc2626; border: 1.5px solid #fca5a5; font-size: 0.76rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;">
+                    <i class="fas fa-unlink"></i> Disconnect
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- Visual 1-Minute Step-by-Step Helper for Non-Technical Clients -->
-            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 0.9rem 1.1rem; margin-top: 0.6rem;">
-              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
-                <span style="font-weight: 700; font-size: 0.82rem; color: #0f172a; display: flex; align-items: center; gap: 0.4rem;">
-                  <i class="fab fa-google" style="color: #ea4335;"></i> How to get your Google App Password in 4 simple steps:
-                </span>
-                <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: #0f766e; color: #ffffff; font-size: 0.74rem; font-weight: 600; padding: 3px 10px; border-radius: 5px; text-decoration: none;">
-                  <i class="fas fa-external-link-alt"></i> Open Google App Passwords
-                </a>
+            <!-- Disconnected / Connect Panel -->
+            <div id="google-oauth-login-panel" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; text-align: center;">
+              <div style="max-width: 440px; margin: 0 auto;">
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main); margin-bottom: 0.35rem;">
+                  Connect Your Google Workspace or Gmail Account
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 1rem 0;">
+                  Click below to open the official Google sign-in &amp; permission screen. Proposals and follow-ups will send from your Gmail and record in your <strong>Sent</strong> folder.
+                </p>
+                <button type="button" id="btn-connect-google-oauth" onclick="connectGoogleOAuth()" class="btn" style="background: #ffffff; color: #3c4043; border: 1.5px solid #dadce0; border-radius: 8px; font-weight: 600; font-size: 0.88rem; padding: 10px 20px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 1px 3px rgba(60,64,67,0.15); cursor: pointer; transition: all 0.2s;">
+                  <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                  <span>Sign in with Google to Connect</span>
+                </button>
               </div>
-              <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.77rem; color: #334155; line-height: 1.6;">
-                <li>Click the green button above to open Google Account App Passwords in a new tab.</li>
-                <li>Under <strong>App name</strong>, type <strong>NexMilestro</strong> and click <strong>Create</strong>.</li>
-                <li>Google will show a <strong>16-letter password</strong> in a yellow box (e.g. <code>abcd efgh ijkl mnop</code>).</li>
-                <li>Copy those 16 letters and paste them into the password field above!</li>
-              </ol>
+
+              <!-- Collapsible Alternative: 16-Character App Password -->
+              <div style="margin-top: 1rem; border-top: 1px dashed #e2e8f0; padding-top: 0.85rem;">
+                <button type="button" onclick="toggleAppPasswordManualSection()" style="background: none; border: none; font-size: 0.75rem; color: var(--primary-color); font-weight: 600; cursor: pointer;">
+                  <i class="fas fa-key"></i> Or configure via 16-Character App Password (Classic SMTP) <i class="fas fa-chevron-down" id="app-pass-toggle-arrow"></i>
+                </button>
+
+                <div id="section-app-pass-manual" style="display: none; margin-top: 0.85rem; text-align: left;">
+                  <div class="form-group" style="position: relative; margin-bottom: 0.5rem;">
+                    <label class="form-label" id="label-smtp-pass" style="font-size: 0.8rem; font-weight: 600;">
+                      Google 16-Character App Password *
+                    </label>
+                    <div style="position: relative;">
+                      <input type="password" id="smtp-pass" name="SmtpPass" class="form-control" placeholder="16-character App Password (e.g. abcd efgh ijkl mnop)" style="font-size: 0.85rem; padding-right: 2.5rem; letter-spacing: 1px;">
+                      <button type="button" onclick="toggleSmtpPasswordVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;"><i class="fas fa-eye" id="smtp-pass-toggle-icon"></i></button>
+                    </div>
+                  </div>
+
+                  <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 0.9rem 1.1rem; margin-top: 0.6rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
+                      <span style="font-weight: 700; font-size: 0.82rem; color: #0f172a; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fab fa-google" style="color: #ea4335;"></i> How to get your Google App Password:
+                      </span>
+                      <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: #0f766e; color: #ffffff; font-size: 0.74rem; font-weight: 600; padding: 3px 10px; border-radius: 5px; text-decoration: none;">
+                        <i class="fas fa-external-link-alt"></i> Open Google App Passwords
+                      </a>
+                    </div>
+                    <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.77rem; color: #334155; line-height: 1.6;">
+                      <li>Click the green button above to open Google Account App Passwords in a new tab.</li>
+                      <li>Under <strong>App name</strong>, type <strong>NexMilestro</strong> and click <strong>Create</strong>.</li>
+                      <li>Google will show a <strong>16-letter password</strong> in a yellow box (e.g. <code>abcd efgh ijkl mnop</code>).</li>
+                      <li>Copy those 16 letters and paste them into the password field above!</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -15501,6 +15561,58 @@ body.view-teamchat .chat-input-area {
   </div>
 </div>
 
+<!-- Google OAuth 2.0 App Configuration Modal -->
+<div class="modal-overlay" id="company-google-oauth-modal" style="z-index: 600;">
+  <div class="modal-container" style="max-width: 580px;">
+    <div class="modal-header">
+      <h3 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Google OAuth 2.0 Configuration
+      </h3>
+      <button class="icon-btn" onclick="closeGoogleOAuthConfigModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="google-oauth-config-form" onsubmit="saveGoogleOAuthConfig(event)">
+      <div class="modal-body" style="padding: 1.25rem;">
+        <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1rem;">
+          <div style="font-weight: 700; font-size: 0.82rem; color: #1e40af; margin-bottom: 0.25rem;">
+            <i class="fas fa-info-circle"></i> 1-Time Setup for your Entire Application
+          </div>
+          <div style="font-size: 0.76rem; color: #1e3a8a; line-height: 1.5;">
+            Configure your single Google Cloud Client ID here. Once saved, all clients can connect their personal or work Google accounts with 1 click.
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Google Client ID *</label>
+          <input type="text" id="google-oauth-client-id-input" class="form-control" placeholder="e.g. 1234567890-abcdefg.apps.googleusercontent.com" required style="font-size: 0.85rem; font-family: monospace;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Google Client Secret *</label>
+          <input type="password" id="google-oauth-client-secret-input" class="form-control" placeholder="e.g. GOCSPX-xxxxxxxxxxxxxxxx" required style="font-size: 0.85rem; font-family: monospace;">
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.85rem 1rem;">
+          <div style="font-weight: 700; font-size: 0.78rem; color: #0f172a; margin-bottom: 0.4rem;">
+            <i class="fas fa-external-link-alt"></i> How to get this in 2 minutes:
+          </div>
+          <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.74rem; color: #475569; line-height: 1.6;">
+            <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style="color: #0284c7; font-weight: 600;">Google Cloud Console > Credentials</a>.</li>
+            <li>Click <strong>Create Credentials > OAuth client ID</strong>.</li>
+            <li>Select <strong>Web application</strong>.</li>
+            <li>Under <strong>Authorized JavaScript origins</strong>, add: <code>https://nexmilestro.nexsolve.in</code></li>
+            <li>Copy the <strong>Client ID</strong> &amp; <strong>Client Secret</strong> and paste them above!</li>
+          </ol>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeGoogleOAuthConfigModal()">Cancel</button>
+        <button type="submit" id="btn-save-oauth-settings" class="btn btn-primary">Save &amp; Activate Google OAuth</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   window.currentCompanySetupData = null;
   window.companyBankAccountsList = [];
@@ -15625,6 +15737,10 @@ body.view-teamchat .chat-input-area {
 
     if (window.selectEmailDeliveryMode) {
       window.selectEmailDeliveryMode(prov);
+    }
+
+    if (window.renderOAuthConnectionState) {
+      window.renderOAuthConnectionState(data);
     }
   }
 
@@ -16126,6 +16242,162 @@ body.view-teamchat .chat-input-area {
       showToast("Full backup generated! Downloading Excel file...", "success");
       var exportUrl = window.location.href.replace(/\/exec.*$/, '').replace(/\/dev.*$/, '') + '/export?format=xlsx';
       window.open(exportUrl, "_blank");
+    }
+  };
+
+  /**
+   * =========================================================================
+   * GOOGLE OAUTH 2.0 & EMAIL SERVICE PROVIDER INTEGRATION
+   * =========================================================================
+   */
+  window.renderOAuthConnectionState = function(companyData) {
+    companyData = companyData || window.currentCompanySetupData || {};
+    var isConnected = Boolean(companyData.OAuthProvider === "Google" && companyData.OAuthEmail && String(companyData.OAuthStatus).toLowerCase() === "active");
+    var connPanel = document.getElementById("google-oauth-connected-panel");
+    var loginPanel = document.getElementById("google-oauth-login-panel");
+    var emailEl = document.getElementById("google-oauth-connected-email");
+    var provSelect = document.getElementById("smtp-provider");
+
+    if (isConnected) {
+      if (connPanel) connPanel.style.display = "block";
+      if (loginPanel) loginPanel.style.display = "none";
+      if (emailEl) emailEl.innerText = companyData.OAuthEmail;
+      var senderEmailInput = document.getElementById("smtp-sender-email");
+      if (senderEmailInput && !senderEmailInput.value) {
+        senderEmailInput.value = companyData.OAuthEmail;
+      }
+      if (provSelect) provSelect.value = "Google_OAuth";
+      if (window.updateSmtpStatusBadge) window.updateSmtpStatusBadge("Google_OAuth");
+    } else {
+      if (connPanel) connPanel.style.display = "none";
+      if (loginPanel) loginPanel.style.display = "block";
+    }
+  };
+
+  window.toggleAppPasswordManualSection = function() {
+    var sec = document.getElementById("section-app-pass-manual");
+    var arrow = document.getElementById("app-pass-toggle-arrow");
+    if (!sec) return;
+    var isOpen = sec.style.display === "block";
+    sec.style.display = isOpen ? "none" : "block";
+    if (arrow) arrow.className = isOpen ? "fas fa-chevron-down" : "fas fa-chevron-up";
+  };
+
+  window.connectGoogleOAuth = async function() {
+    var settings = await apiCall("get_oauth_settings").catch(function(){ return null; });
+    var clientId = (settings && settings.fullGoogleClientId) || (window.APP_CONFIG && window.APP_CONFIG.GOOGLE_CLIENT_ID) || localStorage.getItem("nexmilestro_google_client_id") || "";
+
+    if (!clientId) {
+      openGoogleOAuthConfigModal();
+      showToast("Please configure your Google Cloud Client ID to enable 1-click Google connect.", "info");
+      return;
+    }
+
+    if (typeof google === "undefined" || !google.accounts || !google.accounts.oauth2) {
+      showToast("Google Identity Services is initializing. Please try again in a few seconds.", "warning");
+      return;
+    }
+
+    try {
+      var client = google.accounts.oauth2.initCodeClient({
+        client_id: clientId,
+        scope: "https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email",
+        ux_mode: "popup",
+        callback: async function(response) {
+          if (response && response.code) {
+            showToast("Connecting your Google account...", "info");
+            var res = await apiCall("exchange_google_oauth_code", { code: response.code });
+            if (res && res.success) {
+              showToast("🎉 Google account connected successfully (" + res.email + ")!", "success");
+              if (window._dataCache && window._dataCache.companySetup) {
+                window._dataCache.companySetup.OAuthProvider = "Google";
+                window._dataCache.companySetup.OAuthEmail = res.email;
+                window._dataCache.companySetup.OAuthStatus = "Active";
+                window._dataCache.companySetup.SmtpProvider = "Google_OAuth";
+              }
+              window.renderOAuthConnectionState({
+                OAuthProvider: "Google",
+                OAuthEmail: res.email,
+                OAuthStatus: "Active"
+              });
+            } else {
+              showToast("Failed to connect Google account: " + (res ? (res.error || res.message) : "Unknown error"), "error");
+            }
+          } else if (response && response.error) {
+            showToast("Google authorization cancelled or failed: " + response.error, "warning");
+          }
+        }
+      });
+      client.requestCode();
+    } catch(err) {
+      showToast("Could not open Google Sign-In popup: " + err.message, "error");
+    }
+  };
+
+  window.disconnectOAuthAccount = async function() {
+    if (!confirm("Are you sure you want to disconnect this Google Account? Outbound emails will revert to standard delivery.")) {
+      return;
+    }
+    showToast("Disconnecting account...", "info");
+    var res = await apiCall("disconnect_oauth");
+    if (res && res.success) {
+      showToast("Google account disconnected.", "info");
+      if (window._dataCache && window._dataCache.companySetup) {
+        window._dataCache.companySetup.OAuthStatus = "Disconnected";
+        window._dataCache.companySetup.OAuthRefreshToken = "";
+        window._dataCache.companySetup.SmtpProvider = "Gmail";
+      }
+      window.renderOAuthConnectionState({ OAuthStatus: "Disconnected" });
+      if (window.updateSmtpStatusBadge) window.updateSmtpStatusBadge("Gmail");
+    } else {
+      showToast("Error disconnecting: " + (res ? res.error : "Unknown error"), "error");
+    }
+  };
+
+  window.openGoogleOAuthConfigModal = async function() {
+    var modal = document.getElementById("company-google-oauth-modal");
+    if (modal) modal.classList.add("show");
+
+    var res = await apiCall("get_oauth_settings").catch(function(){ return null; });
+    if (res && res.fullGoogleClientId) {
+      var idInput = document.getElementById("google-oauth-client-id-input");
+      if (idInput) idInput.value = res.fullGoogleClientId;
+    }
+  };
+
+  window.closeGoogleOAuthConfigModal = function() {
+    var modal = document.getElementById("company-google-oauth-modal");
+    if (modal) modal.classList.remove("show");
+  };
+
+  window.saveGoogleOAuthConfig = async function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var clientId = (document.getElementById("google-oauth-client-id-input").value || "").trim();
+    var clientSecret = (document.getElementById("google-oauth-client-secret-input").value || "").trim();
+
+    if (!clientId) {
+      showToast("Please enter Google Client ID", "warning");
+      return;
+    }
+
+    var btn = document.getElementById("btn-save-oauth-settings");
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+
+    try {
+      var res = await apiCall("save_oauth_credentials", { clientId: clientId, clientSecret: clientSecret });
+      if (btn) { btn.disabled = false; btn.innerHTML = "Save & Activate Google OAuth"; }
+
+      if (res && res.success) {
+        localStorage.setItem("nexmilestro_google_client_id", clientId);
+        if (window.APP_CONFIG) window.APP_CONFIG.GOOGLE_CLIENT_ID = clientId;
+        showToast("✅ Google OAuth App configuration activated successfully!", "success");
+        closeGoogleOAuthConfigModal();
+      } else {
+        showToast("Failed to save credentials: " + (res ? res.error : "Unknown error"), "error");
+      }
+    } catch(err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = "Save & Activate Google OAuth"; }
+      showToast("Error saving credentials: " + err.message, "error");
     }
   };
 </script>
@@ -19563,7 +19835,8 @@ document.addEventListener("click", function() {
       DATABASE_DRIVER: "GAS", // 'SUPABASE' (Active) | 'GAS' (Standby Fallback)
       SUPABASE_URL: "https://jgyetqvgpmwegwdeldnm.supabase.co",
       SUPABASE_ANON_KEY: "sb_publishable_98_5F7Og7g14SbYdUA876g_1Oeuhbjk",
-      GAS_URL: "https://script.google.com/macros/s/AKfycbzEkj7l2fjy6xA0hLKIpHIgKQJTJcbxUjU0jepd4YXPQP1oRd0FH6nVRgJ3ecvwrbt_/exec"
+      GAS_URL: "https://script.google.com/macros/s/AKfycbzEkj7l2fjy6xA0hLKIpHIgKQJTJcbxUjU0jepd4YXPQP1oRd0FH6nVRgJ3ecvwrbt_/exec",
+      GOOGLE_CLIENT_ID: ""
     };
     window.DEFAULT_PRODUCTION_USERS = [
       { UserID: "USR-101", FullName: "Mehul Gandhi", Email: "mehul.gandhi@nexsolve.in", Mobile: "9811223344", RoleID: "Super Admin", Status: "Active", Password: "admin@123" },

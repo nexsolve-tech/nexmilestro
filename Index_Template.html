@@ -21,6 +21,9 @@
   <!-- Supabase Client for Sub-50ms Enterprise Database -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Google Identity Services (GIS) for Google OAuth 2.0 Connect -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <!-- Inject Core CSS Stylesheet -->
   <?!= include('CSS'); ?>
 
@@ -823,7 +826,8 @@
       DATABASE_DRIVER: "GAS", // 'SUPABASE' (Active) | 'GAS' (Standby Fallback)
       SUPABASE_URL: "https://jgyetqvgpmwegwdeldnm.supabase.co",
       SUPABASE_ANON_KEY: "sb_publishable_98_5F7Og7g14SbYdUA876g_1Oeuhbjk",
-      GAS_URL: "https://script.google.com/macros/s/AKfycbzEkj7l2fjy6xA0hLKIpHIgKQJTJcbxUjU0jepd4YXPQP1oRd0FH6nVRgJ3ecvwrbt_/exec"
+      GAS_URL: "https://script.google.com/macros/s/AKfycbzEkj7l2fjy6xA0hLKIpHIgKQJTJcbxUjU0jepd4YXPQP1oRd0FH6nVRgJ3ecvwrbt_/exec",
+      GOOGLE_CLIENT_ID: ""
     };
     window.DEFAULT_PRODUCTION_USERS = [
       { UserID: "USR-101", FullName: "Mehul Gandhi", Email: "mehul.gandhi@nexsolve.in", Mobile: "9811223344", RoleID: "Super Admin", Status: "Active", Password: "admin@123" },

@@ -302,7 +302,8 @@ const SHEET_HEADERS = {
     "CompanyID", "CompanyName", "Address", "OfficialEmail", "ContactNumber",
     "PANNumber", "GSTNumber", "Website", "BankName", "AccountNumber",
     "IFSCCode", "Branch", "LogoUrl", "BankAccounts", "ModifiedDate", "ModifiedBy",
-    "SmtpProvider", "SmtpSenderName", "SmtpSenderEmail", "SmtpUser", "SmtpHost", "SmtpPort", "SmtpPass"
+    "SmtpProvider", "SmtpSenderName", "SmtpSenderEmail", "SmtpUser", "SmtpHost", "SmtpPort", "SmtpPass",
+    "OAuthProvider", "OAuthEmail", "OAuthRefreshToken", "OAuthAccessToken", "OAuthStatus", "OAuthConnectedDate"
   ],
   "ChatMessages": [
     "MessageID", "ConversationID", "Sender", "Role", "Text", "Time", "Timestamp", "Initials", "CreatedDate", "CreatedBy"
@@ -1498,9 +1499,26 @@ function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
 
     const overrides = formOverrides || {};
     const provider = String(overrides.provider || comp.SmtpProvider || "Gmail").trim();
-    const senderEmail = String(overrides.senderEmail || comp.SmtpSenderEmail || comp.OfficialEmail || "").trim();
+    const senderEmail = String(overrides.senderEmail || comp.OAuthEmail || comp.SmtpSenderEmail || comp.OfficialEmail || "").trim();
     const senderName = String(overrides.senderName || comp.SmtpSenderName || comp.CompanyName || "NexMilestro").trim();
     const apiKey = String(overrides.smtpPass || comp.SmtpPass || "").trim();
+
+    // 0. Google Workspace / Gmail OAuth 2.0 Mode (Direct Gmail API - lands in Sent folder)
+    const oauthProvider = String(comp.OAuthProvider || "").trim().toLowerCase();
+    const refreshToken = String(comp.OAuthRefreshToken || "").trim();
+    const oauthStatus = String(comp.OAuthStatus || "").trim().toLowerCase();
+
+    if ((oauthProvider === "google" || provider.toLowerCase() === "google_oauth") && refreshToken && oauthStatus !== "disconnected") {
+      try {
+        const { clientId, clientSecret } = getGoogleOAuthConfig();
+        if (clientId && clientSecret) {
+          const freshAccessToken = refreshGoogleAccessToken(clientId, clientSecret, refreshToken);
+          return sendGmailViaOAuthApi(freshAccessToken, mailOpts, senderName, senderEmail || comp.OAuthEmail);
+        }
+      } catch (oauthErr) {
+        console.warn("Google OAuth dispatch warning, falling back to standard gateway:", oauthErr);
+      }
+    }
 
     // 1. Resend API mode
     if (provider.toLowerCase() === "resend" && apiKey) {
@@ -1662,6 +1680,264 @@ function handleSendProposalEmail(licenseKey, data, userId) {
     return { success: true, message: "Proposal email sent successfully via " + (sendRes.method || "Email Gateway") + "." };
   } catch(e) {
     return { success: false, error: "Failed to send email: " + e.message };
+  }
+}
+
+/**
+ * =========================================================================
+ * GOOGLE OAUTH 2.0 & GMAIL API ENGINE
+ * =========================================================================
+ */
+const GOOGLE_OAUTH_CONFIG = {
+  CLIENT_ID: "",
+  CLIENT_SECRET: ""
+};
+
+function getGoogleOAuthConfig() {
+  const props = PropertiesService.getScriptProperties();
+  const clientId = props.getProperty("GOOGLE_CLIENT_ID") || GOOGLE_OAUTH_CONFIG.CLIENT_ID || "";
+  const clientSecret = props.getProperty("GOOGLE_CLIENT_SECRET") || GOOGLE_OAUTH_CONFIG.CLIENT_SECRET || "";
+  return { clientId: String(clientId).trim(), clientSecret: String(clientSecret).trim() };
+}
+
+function refreshGoogleAccessToken(clientId, clientSecret, refreshToken) {
+  const tokenUrl = "https://oauth2.googleapis.com/token";
+  const payload = {
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token"
+  };
+
+  const res = UrlFetchApp.fetch(tokenUrl, {
+    method: "post",
+    contentType: "application/x-www-form-urlencoded",
+    payload: payload,
+    muteHttpExceptions: true
+  });
+
+  const data = JSON.parse(res.getContentText());
+  if (data.error) {
+    throw new Error("Failed to refresh Google OAuth token: " + (data.error_description || data.error));
+  }
+  return data.access_token;
+}
+
+function sendGmailViaOAuthApi(accessToken, mailOpts, senderName, senderEmail) {
+  const to = mailOpts.to;
+  const cc = mailOpts.cc || "";
+  const subject = mailOpts.subject || "Notification";
+  const body = String(mailOpts.body || (mailOpts.htmlBody ? mailOpts.htmlBody.replace(/<[^>]+>/g, " ") : "")).trim();
+  const htmlBody = String(mailOpts.htmlBody || mailOpts.body || body).replace(/\n/g, "<br>");
+  const from = senderName ? ("\"" + senderName.replace(/"/g, "") + "\" <" + senderEmail + ">") : senderEmail;
+
+  const boundary = "nex_bnd_" + Utilities.getUuid().replace(/-/g, "");
+  let raw = [
+    "From: " + from,
+    "To: " + to,
+    cc ? ("Cc: " + cc) : "",
+    "Subject: =?utf-8?B?" + Utilities.base64Encode(subject, Utilities.Charset.UTF_8) + "?=",
+    "MIME-Version: 1.0",
+    "Content-Type: multipart/alternative; boundary=\"" + boundary + "\"",
+    "",
+    "--" + boundary,
+    "Content-Type: text/plain; charset=UTF-8",
+    "Content-Transfer-Encoding: base64",
+    "",
+    Utilities.base64Encode(body || "Please view the attached HTML email message.", Utilities.Charset.UTF_8),
+    "",
+    "--" + boundary,
+    "Content-Type: text/html; charset=UTF-8",
+    "Content-Transfer-Encoding: base64",
+    "",
+    Utilities.base64Encode(htmlBody, Utilities.Charset.UTF_8),
+    "",
+    "--" + boundary + "--"
+  ].filter(Boolean).join("\r\n");
+
+  const encoded = Utilities.base64EncodeWebSafe(raw);
+  const response = UrlFetchApp.fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + accessToken },
+    payload: JSON.stringify({ raw: encoded }),
+    muteHttpExceptions: true
+  });
+
+  const resJson = JSON.parse(response.getContentText());
+  if (resJson.error) {
+    throw new Error(resJson.error.message || "Gmail API dispatch failed");
+  }
+
+  return {
+    success: true,
+    method: "Google Workspace (Gmail API)",
+    messageId: resJson.id,
+    sender: senderEmail
+  };
+}
+
+function handleExchangeGoogleOAuthCode(licenseKey, data, userId) {
+  try {
+    const code = data.code;
+    if (!code) return { success: false, error: "Authorization code missing." };
+
+    const { clientId, clientSecret } = getGoogleOAuthConfig();
+    if (!clientId) {
+      return { 
+        success: false, 
+        error: "Google Client ID is not configured yet. Please configure it in Google OAuth Settings." 
+      };
+    }
+
+    const tokenUrl = "https://oauth2.googleapis.com/token";
+    const payload = {
+      code: code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: "postmessage",
+      grant_type: "authorization_code"
+    };
+
+    const tokenRes = UrlFetchApp.fetch(tokenUrl, {
+      method: "post",
+      contentType: "application/x-www-form-urlencoded",
+      payload: payload,
+      muteHttpExceptions: true
+    });
+
+    const tokenData = JSON.parse(tokenRes.getContentText());
+    if (tokenData.error) {
+      return { success: false, error: "Google token exchange failed: " + (tokenData.error_description || tokenData.error) };
+    }
+
+    const accessToken = tokenData.access_token;
+    const refreshToken = tokenData.refresh_token;
+
+    let userEmail = "";
+    try {
+      const profileRes = UrlFetchApp.fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: "Bearer " + accessToken },
+        muteHttpExceptions: true
+      });
+      const profile = JSON.parse(profileRes.getContentText());
+      userEmail = profile.email || "";
+    } catch(e) {}
+
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const companySheet = ensureSheetWithHeaders(ss, "CompanySetup");
+    const rows = sheetToObjects(companySheet);
+
+    const updateData = {
+      OAuthProvider: "Google",
+      OAuthEmail: userEmail,
+      OAuthRefreshToken: refreshToken || "",
+      OAuthAccessToken: accessToken,
+      OAuthStatus: "Active",
+      OAuthConnectedDate: new Date(),
+      SmtpSenderEmail: userEmail,
+      SmtpProvider: "Google_OAuth",
+      ModifiedDate: new Date(),
+      ModifiedBy: userId || "SYSTEM_OAUTH"
+    };
+
+    if (rows.length > 0) {
+      writeTableRow(ss, "CompanySetup", "CompanyID", rows[0].CompanyID || "COMP-1001", updateData, userId);
+    } else {
+      updateData.CompanyID = "COMP-1001";
+      writeTableRow(ss, "CompanySetup", "CompanyID", "COMP-1001", updateData, userId);
+    }
+
+    return {
+      success: true,
+      email: userEmail,
+      provider: "Google",
+      message: "Connected to Google Workspace (" + userEmail + ") successfully!"
+    };
+  } catch (err) {
+    return { success: false, error: "OAuth exchange exception: " + err.message };
+  }
+}
+
+function handleDisconnectOAuth(licenseKey, data, userId) {
+  try {
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const compSheet = ensureSheetWithHeaders(ss, "CompanySetup");
+    const list = sheetToObjects(compSheet);
+    if (list.length > 0) {
+      const updateData = {
+        OAuthStatus: "Disconnected",
+        OAuthRefreshToken: "",
+        OAuthAccessToken: "",
+        SmtpProvider: "Gmail",
+        ModifiedDate: new Date(),
+        ModifiedBy: userId || "SYSTEM"
+      };
+      writeTableRow(ss, "CompanySetup", "CompanyID", list[0].CompanyID || "COMP-1001", updateData, userId);
+    }
+    return { success: true, message: "Email account disconnected successfully." };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+}
+
+function handleSaveSystemOAuthCredentials(licenseKey, data, userId) {
+  try {
+    const clientId = String(data.clientId || "").trim();
+    const clientSecret = String(data.clientSecret || "").trim();
+    
+    if (!clientId) {
+      return { success: false, error: "Google Client ID cannot be empty." };
+    }
+
+    const props = PropertiesService.getScriptProperties();
+    props.setProperty("GOOGLE_CLIENT_ID", clientId);
+    if (clientSecret) {
+      props.setProperty("GOOGLE_CLIENT_SECRET", clientSecret);
+    }
+
+    return { 
+      success: true, 
+      message: "Google OAuth credentials saved successfully in System Script Properties." 
+    };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+}
+
+function handleGetSystemOAuthSettings(licenseKey) {
+  try {
+    const { clientId, clientSecret } = getGoogleOAuthConfig();
+    let currentConn = { connected: false, provider: "", email: "", status: "Not Connected" };
+    
+    if (licenseKey) {
+      try {
+        const { ss } = getClientSpreadsheet(licenseKey);
+        const compSheet = ensureSheetWithHeaders(ss, "CompanySetup");
+        const list = sheetToObjects(compSheet);
+        if (list.length > 0) {
+          const c = list[0];
+          if (c.OAuthProvider && c.OAuthEmail && String(c.OAuthStatus).toLowerCase() === "active") {
+            currentConn = {
+              connected: true,
+              provider: c.OAuthProvider,
+              email: c.OAuthEmail,
+              status: "Active",
+              connectedDate: c.OAuthConnectedDate || ""
+            };
+          }
+        }
+      } catch(ssErr) {}
+    }
+
+    return {
+      success: true,
+      googleConfigured: Boolean(clientId),
+      googleClientId: clientId,
+      connection: currentConn
+    };
+  } catch(e) {
+    return { success: false, error: e.message };
   }
 }
 
@@ -1965,6 +2241,19 @@ function handleUniversalApiRequest(action, params) {
       case 'send_test_email':
       case 'sendTestEmail':
         response = handleSendTestEmail(licenseKey, dataObj, userId);
+        break;
+
+      case 'exchange_google_oauth_code':
+        response = handleExchangeGoogleOAuthCode(licenseKey, dataObj, userId);
+        break;
+      case 'disconnect_oauth':
+        response = handleDisconnectOAuth(licenseKey, dataObj, userId);
+        break;
+      case 'get_oauth_settings':
+        response = handleGetSystemOAuthSettings(licenseKey);
+        break;
+      case 'save_oauth_credentials':
+        response = handleSaveSystemOAuthCredentials(licenseKey, dataObj, userId);
         break;
 
       // ── OPERATIONS & USERS ───────────────────────────────────────────────
