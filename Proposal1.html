@@ -171,6 +171,7 @@
     </div>
     <form id="proposal-email-form" onsubmit="handleSendProposalEmail(event)">
       <input type="hidden" id="prop-email-id">
+      <input type="hidden" id="prop-email-attachments">
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">To * <small style="color:var(--text-muted); font-weight:normal;">(Editable, comma-separated)</small></label>
@@ -683,6 +684,28 @@
 
     document.getElementById("prop-email-body").value = bodyMsg;
 
+    var attField = document.getElementById("prop-email-attachments");
+    var attNotice = document.getElementById("prop-email-attachment-notice");
+    var rawAtts = String(prop.Attachments || "").trim();
+    if (attField) attField.value = rawAtts;
+    if (attNotice) {
+      if (rawAtts) {
+        var attList = rawAtts.split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+        var previewPills = attList.map(function(url, i) {
+          var label = "Document #" + (i + 1);
+          if (url.indexOf("drive.google.com") > -1) label = "Google Drive Link #" + (i + 1);
+          return '<span style="display:inline-flex; align-items:center; gap:4px; background:#ffffff; border:1px solid #cbd5e1; border-radius:4px; padding:3px 8px; margin:3px 4px 3px 0; font-size:0.75rem; color:#0f766e; font-weight:600;"><i class="fas fa-paperclip"></i> ' + label + '</span>';
+        }).join(" ");
+        attNotice.innerHTML = '<div style="font-weight:700; color:#0f766e; margin-bottom:4px;"><i class="fas fa-check-circle"></i> ' + attList.length + ' Secure Attachment Link(s) Will Be Included In Email:</div>' + previewPills;
+        attNotice.style.background = "#f0fdf4";
+        attNotice.style.borderColor = "#86efac";
+      } else {
+        attNotice.innerHTML = '<i class="fas fa-info-circle"></i> No documents attached to this proposal. Email will send standard proposal text.';
+        attNotice.style.background = "var(--bg-secondary)";
+        attNotice.style.borderColor = "var(--border-color)";
+      }
+    }
+
     var modal = document.getElementById("proposal-email-modal");
     if (modal) modal.classList.add("show");
   }
@@ -701,6 +724,7 @@
     var cc = document.getElementById("prop-email-cc").value.trim();
     var subject = document.getElementById("prop-email-subject").value.trim();
     var body = document.getElementById("prop-email-body").value.trim();
+    var attachments = document.getElementById("prop-email-attachments") ? document.getElementById("prop-email-attachments").value : "";
 
     if (!to) {
       showToast("Please enter at least one recipient email address.", "error");
@@ -712,7 +736,8 @@
       To: to,
       CC: cc,
       Subject: subject,
-      Body: body
+      Body: body,
+      Attachments: attachments
     };
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");

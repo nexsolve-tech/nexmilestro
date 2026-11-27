@@ -1037,7 +1037,8 @@
       CC: document.getElementById("email-cc") ? document.getElementById("email-cc").value : "",
       Subject: document.getElementById("email-subject").value,
       Body: document.getElementById("email-body").value,
-      NextFollowupDate: document.getElementById("email-next-date").value
+      NextFollowupDate: document.getElementById("email-next-date").value,
+      Attachments: activeLeadObj.Attachments || ""
     };
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");

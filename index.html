@@ -11232,7 +11232,8 @@ body.view-teamchat .chat-input-area {
       CC: document.getElementById("email-cc") ? document.getElementById("email-cc").value : "",
       Subject: document.getElementById("email-subject").value,
       Body: document.getElementById("email-body").value,
-      NextFollowupDate: document.getElementById("email-next-date").value
+      NextFollowupDate: document.getElementById("email-next-date").value,
+      Attachments: activeLeadObj.Attachments || ""
     };
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
@@ -11509,6 +11510,7 @@ body.view-teamchat .chat-input-area {
     </div>
     <form id="proposal-email-form" onsubmit="handleSendProposalEmail(event)">
       <input type="hidden" id="prop-email-id">
+      <input type="hidden" id="prop-email-attachments">
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">To * <small style="color:var(--text-muted); font-weight:normal;">(Editable, comma-separated)</small></label>
@@ -12021,6 +12023,28 @@ body.view-teamchat .chat-input-area {
 
     document.getElementById("prop-email-body").value = bodyMsg;
 
+    var attField = document.getElementById("prop-email-attachments");
+    var attNotice = document.getElementById("prop-email-attachment-notice");
+    var rawAtts = String(prop.Attachments || "").trim();
+    if (attField) attField.value = rawAtts;
+    if (attNotice) {
+      if (rawAtts) {
+        var attList = rawAtts.split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+        var previewPills = attList.map(function(url, i) {
+          var label = "Document #" + (i + 1);
+          if (url.indexOf("drive.google.com") > -1) label = "Google Drive Link #" + (i + 1);
+          return '<span style="display:inline-flex; align-items:center; gap:4px; background:#ffffff; border:1px solid #cbd5e1; border-radius:4px; padding:3px 8px; margin:3px 4px 3px 0; font-size:0.75rem; color:#0f766e; font-weight:600;"><i class="fas fa-paperclip"></i> ' + label + '</span>';
+        }).join(" ");
+        attNotice.innerHTML = '<div style="font-weight:700; color:#0f766e; margin-bottom:4px;"><i class="fas fa-check-circle"></i> ' + attList.length + ' Secure Attachment Link(s) Will Be Included In Email:</div>' + previewPills;
+        attNotice.style.background = "#f0fdf4";
+        attNotice.style.borderColor = "#86efac";
+      } else {
+        attNotice.innerHTML = '<i class="fas fa-info-circle"></i> No documents attached to this proposal. Email will send standard proposal text.';
+        attNotice.style.background = "var(--bg-secondary)";
+        attNotice.style.borderColor = "var(--border-color)";
+      }
+    }
+
     var modal = document.getElementById("proposal-email-modal");
     if (modal) modal.classList.add("show");
   }
@@ -12039,6 +12063,7 @@ body.view-teamchat .chat-input-area {
     var cc = document.getElementById("prop-email-cc").value.trim();
     var subject = document.getElementById("prop-email-subject").value.trim();
     var body = document.getElementById("prop-email-body").value.trim();
+    var attachments = document.getElementById("prop-email-attachments") ? document.getElementById("prop-email-attachments").value : "";
 
     if (!to) {
       showToast("Please enter at least one recipient email address.", "error");
@@ -12050,7 +12075,8 @@ body.view-teamchat .chat-input-area {
       To: to,
       CC: cc,
       Subject: subject,
-      Body: body
+      Body: body,
+      Attachments: attachments
     };
 
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
@@ -15246,7 +15272,10 @@ body.view-teamchat .chat-input-area {
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <button type="button" onclick="openGoogleOAuthConfigModal()" class="btn btn-sm" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.74rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
-                <i class="fas fa-cog"></i> Google OAuth App Settings
+                <i class="fas fa-cog"></i> Google OAuth Settings
+              </button>
+              <button type="button" onclick="openMicrosoftOAuthConfigModal()" class="btn btn-sm" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.74rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;">
+                <i class="fas fa-cog"></i> Microsoft OAuth Settings
               </button>
               <span id="smtp-status-badge" class="badge" style="background: #e2e8f0; color: #64748b; font-size: 0.75rem; font-weight: 700; padding: 6px 10px; border-radius: 6px;">
                 <i class="fas fa-circle-notch"></i> Ready
@@ -15275,7 +15304,21 @@ body.view-teamchat .chat-input-area {
                 </div>
               </div>
 
-              <!-- Card 2: System Automatic Delivery -->
+              <!-- Card 2: Microsoft 365 / Outlook (OAuth 2.0) -->
+              <div id="email-mode-card-microsoft" onclick="selectEmailDeliveryMode('Microsoft')" style="border: 1.5px solid var(--border-color); background: var(--bg-card); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s ease; position: relative;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                  <span style="font-size: 1.25rem;">
+                    <svg width="20" height="20" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+                  </span>
+                  <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 0.65rem; font-weight: 700;">POPULAR</span>
+                </div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">Microsoft 365 (OAuth)</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.35;">
+                  1-Click sign in with Microsoft. Sends via Outlook / Office 365 with Sent items copy!
+                </div>
+              </div>
+
+              <!-- Card 3: System Automatic Delivery -->
               <div id="email-mode-card-system" onclick="selectEmailDeliveryMode('System')" style="border: 1.5px solid var(--border-color); background: var(--bg-card); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
                   <span style="font-size: 1.25rem;"><i class="fas fa-bolt" style="color: #eab308;"></i></span>
@@ -15287,7 +15330,7 @@ body.view-teamchat .chat-input-area {
                 </div>
               </div>
 
-              <!-- Card 3: Custom SMTP / Outlook -->
+              <!-- Card 4: Custom SMTP / Other -->
               <div id="email-mode-card-custom" onclick="selectEmailDeliveryMode('Custom')" style="border: 1.5px solid var(--border-color); background: var(--bg-card); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
                   <span style="font-size: 1.25rem;"><i class="fas fa-server" style="color: #6366f1;"></i></span>
@@ -15295,7 +15338,7 @@ body.view-teamchat .chat-input-area {
                 </div>
                 <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">Custom SMTP / Other</div>
                 <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.35;">
-                  Connect Microsoft 365, Zoho, Hostinger, cPanel, or Brevo API.
+                  Connect Zoho, Hostinger, cPanel, or Brevo API.
                 </div>
               </div>
 
@@ -15304,6 +15347,8 @@ body.view-teamchat .chat-input-area {
             <!-- Hidden native select for form serialization -->
             <select id="smtp-provider" name="SmtpProvider" onchange="onSmtpProviderChange()" style="display: none;">
               <option value="Gmail">Gmail</option>
+              <option value="Google_OAuth">Google Workspace (OAuth)</option>
+              <option value="Microsoft_OAuth">Microsoft 365 (OAuth)</option>
               <option value="System">System</option>
               <option value="Outlook">Outlook</option>
               <option value="Custom">Custom</option>
@@ -15410,6 +15455,51 @@ body.view-teamchat .chat-input-area {
               </div>
 
             </div>
+          </div>
+
+          <!-- Microsoft OAuth & 1-Click Connect Panel (Shown when Microsoft is active) -->
+          <div id="section-microsoft-config" style="display: none; margin-top: 0.85rem;">
+            
+            <!-- Connected State Banner (When OAuth is Active) -->
+            <div id="microsoft-oauth-connected-panel" style="display: none; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 1.1rem; margin-bottom: 0.75rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div style="width: 42px; height: 42px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <svg width="22" height="22" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+                  </div>
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                      <span style="font-weight: 700; font-size: 0.9rem; color: #14532d;">Connected via Microsoft 365 Account</span>
+                      <span class="badge" style="background: #22c55e; color: #ffffff; font-size: 0.65rem; padding: 2px 6px;">ACTIVE</span>
+                    </div>
+                    <div id="microsoft-oauth-connected-email" style="font-size: 0.8rem; font-weight: 600; color: #166534; margin-top: 2px;">user@outlook.com</div>
+                    <div style="font-size: 0.72rem; color: #15803d; margin-top: 1px;">Proposals and follow-ups will send directly from your Microsoft Outlook / 365 account and appear in your Sent items.</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <button type="button" onclick="disconnectOAuthAccount('Microsoft')" class="btn btn-sm" style="background: #ffffff; color: #dc2626; border: 1.5px solid #fca5a5; font-size: 0.76rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;">
+                    <i class="fas fa-unlink"></i> Disconnect
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Disconnected / Connect Panel -->
+            <div id="microsoft-oauth-login-panel" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 1.25rem; text-align: center;">
+              <div style="max-width: 440px; margin: 0 auto;">
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main); margin-bottom: 0.35rem;">
+                  Connect Your Microsoft 365 or Outlook Account
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 1rem 0;">
+                  Click below to open the official Microsoft sign-in &amp; permission screen. Proposals and follow-ups will send from your Outlook account and appear in your <strong>Sent Items</strong>.
+                </p>
+                <button type="button" id="btn-connect-microsoft-oauth" onclick="connectMicrosoftOAuth()" class="btn" style="background: #ffffff; color: #1e293b; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600; font-size: 0.88rem; padding: 10px 20px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); cursor: pointer; transition: all 0.2s;">
+                  <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+                  <span>Sign in with Microsoft to Connect</span>
+                </button>
+              </div>
+            </div>
+
           </div>
 
           <!-- Zero-Setup Banner (Shown when System mode is active) -->
@@ -15613,6 +15703,59 @@ body.view-teamchat .chat-input-area {
   </div>
 </div>
 
+<!-- Microsoft OAuth Settings Modal -->
+<div class="modal" id="company-microsoft-oauth-modal">
+  <div class="modal-dialog" style="max-width: 520px;">
+    <form class="modal-content" id="form-microsoft-oauth-settings" onsubmit="saveMicrosoftOAuthConfig(event)">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+          <svg width="20" height="20" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          Microsoft 365 OAuth Settings
+        </h3>
+        <button type="button" class="modal-close" onclick="closeMicrosoftOAuthConfigModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.45;">
+          Connect Microsoft 365 or Outlook accounts via Azure Entra App Registration. These credentials enable 1-click Sign-In with Microsoft for team members.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Application (Client) ID *</label>
+          <input type="text" id="microsoft-oauth-client-id-input" class="form-control" placeholder="e.g. 00000000-0000-0000-0000-000000000000" required style="font-size: 0.85rem; font-family: monospace;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Client Secret *</label>
+          <input type="password" id="microsoft-oauth-client-secret-input" class="form-control" placeholder="Client secret value" required style="font-size: 0.85rem; font-family: monospace;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Directory (Tenant) ID (Optional, defaults to common)</label>
+          <input type="text" id="microsoft-oauth-tenant-id-input" class="form-control" placeholder="common" style="font-size: 0.85rem; font-family: monospace;">
+          <small style="font-size: 0.7rem; color: var(--text-muted);">Leave as 'common' for multi-tenant and personal Microsoft accounts, or enter your Azure Tenant ID.</small>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.85rem 1rem;">
+          <div style="font-weight: 700; font-size: 0.78rem; color: #0f172a; margin-bottom: 0.4rem;">
+            <i class="fas fa-external-link-alt"></i> Azure Portal Setup:
+          </div>
+          <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.74rem; color: #475569; line-height: 1.6;">
+            <li>Go to <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener noreferrer" style="color: #0284c7; font-weight: 600;">Azure Portal > App Registrations</a>.</li>
+            <li>Click <strong>New registration</strong>, select <strong>Accounts in any organizational directory and personal Microsoft accounts</strong>.</li>
+            <li>Under <strong>Redirect URI</strong>, choose <strong>Single-page application (SPA)</strong> or <strong>Web</strong>, set URI to: <code>https://nexmilestro.nexsolve.in</code></li>
+            <li>In <strong>API permissions</strong>, add Microsoft Graph delegated permissions: <code>Mail.Send</code>, <code>User.Read</code>, <code>offline_access</code>.</li>
+            <li>Create a <strong>Client secret</strong> and paste the Client ID and Secret above!</li>
+          </ol>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeMicrosoftOAuthConfigModal()">Cancel</button>
+        <button type="submit" id="btn-save-microsoft-oauth-settings" class="btn btn-primary">Save &amp; Activate Microsoft OAuth</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   window.currentCompanySetupData = null;
   window.companyBankAccountsList = [];
@@ -15720,6 +15863,9 @@ body.view-teamchat .chat-input-area {
 
     // Populate Outbound Email Gateway fields
     var prov = data.SmtpProvider || "Gmail";
+    if (data.OAuthProvider === "Microsoft" && data.OAuthEmail && String(data.OAuthStatus).toLowerCase() === "active") {
+      prov = "Microsoft";
+    }
     var elProvider = document.getElementById("smtp-provider"); if (elProvider) elProvider.value = prov;
     var elSmtpHost = document.getElementById("smtp-host"); if (elSmtpHost && data.SmtpHost) elSmtpHost.value = data.SmtpHost;
     var elSmtpPort = document.getElementById("smtp-port"); if (elSmtpPort && data.SmtpPort) elSmtpPort.value = data.SmtpPort;
@@ -15746,10 +15892,12 @@ body.view-teamchat .chat-input-area {
 
   window.selectEmailDeliveryMode = function(mode) {
     var cardGmail = document.getElementById("email-mode-card-gmail");
+    var cardMicrosoft = document.getElementById("email-mode-card-microsoft");
     var cardSystem = document.getElementById("email-mode-card-system");
     var cardCustom = document.getElementById("email-mode-card-custom");
     var selectProv = document.getElementById("smtp-provider");
     var secGmail = document.getElementById("section-gmail-config");
+    var secMicrosoft = document.getElementById("section-microsoft-config");
     var secSystem = document.getElementById("section-system-config");
     var secCustom = document.getElementById("section-custom-config");
     var hostEl = document.getElementById("smtp-host");
@@ -15758,7 +15906,7 @@ body.view-teamchat .chat-input-area {
     var labelSenderEmail = document.getElementById("label-sender-email");
 
     // Reset card highlight borders
-    [cardGmail, cardSystem, cardCustom].forEach(function(c) {
+    [cardGmail, cardMicrosoft, cardSystem, cardCustom].forEach(function(c) {
       if (c) {
         c.style.borderColor = "var(--border-color)";
         c.style.boxShadow = "none";
@@ -15769,10 +15917,20 @@ body.view-teamchat .chat-input-area {
       if (cardSystem) { cardSystem.style.borderColor = "#0f766e"; cardSystem.style.boxShadow = "0 0 0 1px #0f766e"; }
       if (selectProv) selectProv.value = "System";
       if (secGmail) secGmail.style.display = "none";
+      if (secMicrosoft) secMicrosoft.style.display = "none";
       if (secSystem) secSystem.style.display = "block";
       if (secCustom) secCustom.style.display = "none";
       if (labelSenderEmail) labelSenderEmail.innerText = "Reply-To Email Address *";
       updateSmtpStatusBadge("System");
+    } else if (mode === "Microsoft" || mode === "Microsoft_OAuth") {
+      if (cardMicrosoft) { cardMicrosoft.style.borderColor = "#0078d4"; cardMicrosoft.style.boxShadow = "0 0 0 1px #0078d4"; }
+      if (selectProv) selectProv.value = "Microsoft_OAuth";
+      if (secGmail) secGmail.style.display = "none";
+      if (secMicrosoft) secMicrosoft.style.display = "block";
+      if (secSystem) secSystem.style.display = "none";
+      if (secCustom) secCustom.style.display = "none";
+      if (labelSenderEmail) labelSenderEmail.innerText = "Your Outlook / Microsoft 365 Email *";
+      updateSmtpStatusBadge("Microsoft_OAuth");
     } else if (mode === "Custom" || mode === "Outlook" || mode === "Brevo" || mode === "Resend") {
       if (cardCustom) { cardCustom.style.borderColor = "#0f766e"; cardCustom.style.boxShadow = "0 0 0 1px #0f766e"; }
       var customDropdown = document.getElementById("custom-provider-select");
@@ -15780,6 +15938,7 @@ body.view-teamchat .chat-input-area {
       if (customDropdown) customDropdown.value = subMode;
       if (selectProv) selectProv.value = subMode;
       if (secGmail) secGmail.style.display = "block";
+      if (secMicrosoft) secMicrosoft.style.display = "none";
       if (secSystem) secSystem.style.display = "none";
       if (secCustom) secCustom.style.display = "block";
       if (labelSenderEmail) labelSenderEmail.innerText = "Company Sender Email Address *";
@@ -15790,6 +15949,7 @@ body.view-teamchat .chat-input-area {
       if (cardGmail) { cardGmail.style.borderColor = "#0f766e"; cardGmail.style.boxShadow = "0 0 0 1px #0f766e"; }
       if (selectProv) selectProv.value = "Gmail";
       if (secGmail) secGmail.style.display = "block";
+      if (secMicrosoft) secMicrosoft.style.display = "none";
       if (secSystem) secSystem.style.display = "none";
       if (secCustom) secCustom.style.display = "none";
       if (hostEl) hostEl.value = "smtp.gmail.com";
@@ -15843,6 +16003,14 @@ body.view-teamchat .chat-input-area {
       badge.innerHTML = '<i class="fas fa-bolt"></i> Auto Delivery Active';
       badge.style.background = "#eff6ff";
       badge.style.color = "#1d4ed8";
+    } else if (mode === "Google_OAuth") {
+      badge.innerHTML = '<i class="fab fa-google"></i> Google OAuth Active';
+      badge.style.background = "#dcfce7";
+      badge.style.color = "#15803d";
+    } else if (mode === "Microsoft_OAuth" || mode === "Microsoft") {
+      badge.innerHTML = '<i class="fab fa-microsoft"></i> Microsoft OAuth Active';
+      badge.style.background = "#e0f2fe";
+      badge.style.color = "#0369a1";
     } else if (senderEmail && smtpPass) {
       badge.innerHTML = '<i class="fas fa-check-circle"></i> Authenticated';
       badge.style.background = "#dcfce7";
@@ -15885,10 +16053,15 @@ body.view-teamchat .chat-input-area {
     var provider = (document.getElementById("smtp-provider") ? document.getElementById("smtp-provider").value : "Gmail");
 
     var cachedComp = (window._dataCache && window._dataCache.companySetup) || window.currentCompanySetupData || {};
-    var isOAuthActive = Boolean(cachedComp.OAuthProvider === "Google" && cachedComp.OAuthEmail && String(cachedComp.OAuthStatus).toLowerCase() === "active");
+    var isGoogleActive = Boolean(cachedComp.OAuthProvider === "Google" && cachedComp.OAuthEmail && String(cachedComp.OAuthStatus).toLowerCase() === "active");
+    var isMicrosoftActive = Boolean(cachedComp.OAuthProvider === "Microsoft" && cachedComp.OAuthEmail && String(cachedComp.OAuthStatus).toLowerCase() === "active");
+    var isOAuthActive = isGoogleActive || isMicrosoftActive;
 
-    if (isOAuthActive) {
+    if (isGoogleActive) {
       provider = "Google_OAuth";
+      if (!senderEmail) senderEmail = cachedComp.OAuthEmail;
+    } else if (isMicrosoftActive) {
+      provider = "Microsoft_OAuth";
       if (!senderEmail) senderEmail = cachedComp.OAuthEmail;
     }
 
@@ -16256,21 +16429,27 @@ body.view-teamchat .chat-input-area {
 
   /**
    * =========================================================================
-   * GOOGLE OAUTH 2.0 & EMAIL SERVICE PROVIDER INTEGRATION
+   * GOOGLE & MICROSOFT OAUTH 2.0 & EMAIL SERVICE PROVIDER INTEGRATION
    * =========================================================================
    */
   window.renderOAuthConnectionState = function(companyData) {
     companyData = companyData || window.currentCompanySetupData || {};
-    var isConnected = Boolean(companyData.OAuthProvider === "Google" && companyData.OAuthEmail && String(companyData.OAuthStatus).toLowerCase() === "active");
-    var connPanel = document.getElementById("google-oauth-connected-panel");
-    var loginPanel = document.getElementById("google-oauth-login-panel");
-    var emailEl = document.getElementById("google-oauth-connected-email");
+    var isGoogleConnected = Boolean(companyData.OAuthProvider === "Google" && companyData.OAuthEmail && String(companyData.OAuthStatus).toLowerCase() === "active");
+    var isMsConnected = Boolean(companyData.OAuthProvider === "Microsoft" && companyData.OAuthEmail && String(companyData.OAuthStatus).toLowerCase() === "active");
+
+    var gConnPanel = document.getElementById("google-oauth-connected-panel");
+    var gLoginPanel = document.getElementById("google-oauth-login-panel");
+    var gEmailEl = document.getElementById("google-oauth-connected-email");
+
+    var msConnPanel = document.getElementById("microsoft-oauth-connected-panel");
+    var msLoginPanel = document.getElementById("microsoft-oauth-login-panel");
+    var msEmailEl = document.getElementById("microsoft-oauth-connected-email");
     var provSelect = document.getElementById("smtp-provider");
 
-    if (isConnected) {
-      if (connPanel) connPanel.style.display = "block";
-      if (loginPanel) loginPanel.style.display = "none";
-      if (emailEl) emailEl.innerText = companyData.OAuthEmail;
+    if (isGoogleConnected) {
+      if (gConnPanel) gConnPanel.style.display = "block";
+      if (gLoginPanel) gLoginPanel.style.display = "none";
+      if (gEmailEl) gEmailEl.innerText = companyData.OAuthEmail;
       var senderEmailInput = document.getElementById("smtp-sender-email");
       if (senderEmailInput && !senderEmailInput.value) {
         senderEmailInput.value = companyData.OAuthEmail;
@@ -16278,8 +16457,23 @@ body.view-teamchat .chat-input-area {
       if (provSelect) provSelect.value = "Google_OAuth";
       if (window.updateSmtpStatusBadge) window.updateSmtpStatusBadge("Google_OAuth");
     } else {
-      if (connPanel) connPanel.style.display = "none";
-      if (loginPanel) loginPanel.style.display = "block";
+      if (gConnPanel) gConnPanel.style.display = "none";
+      if (gLoginPanel) gLoginPanel.style.display = "block";
+    }
+
+    if (isMsConnected) {
+      if (msConnPanel) msConnPanel.style.display = "block";
+      if (msLoginPanel) msLoginPanel.style.display = "none";
+      if (msEmailEl) msEmailEl.innerText = companyData.OAuthEmail;
+      var senderEmailInput = document.getElementById("smtp-sender-email");
+      if (senderEmailInput && !senderEmailInput.value) {
+        senderEmailInput.value = companyData.OAuthEmail;
+      }
+      if (provSelect) provSelect.value = "Microsoft_OAuth";
+      if (window.updateSmtpStatusBadge) window.updateSmtpStatusBadge("Microsoft_OAuth");
+    } else {
+      if (msConnPanel) msConnPanel.style.display = "none";
+      if (msLoginPanel) msLoginPanel.style.display = "block";
     }
   };
 
@@ -16352,20 +16546,97 @@ body.view-teamchat .chat-input-area {
     }
   };
 
-  window.disconnectOAuthAccount = async function() {
-    if (!confirm("Are you sure you want to disconnect this Google Account? Outbound emails will revert to standard delivery.")) {
+  window.connectMicrosoftOAuth = async function() {
+    var settings = await apiCall("get_microsoft_oauth_settings").catch(function(){ return null; });
+    var clientId = (settings && (settings.fullMicrosoftClientId || settings.microsoftClientId)) ||
+                   (window.APP_CONFIG && window.APP_CONFIG.MICROSOFT_CLIENT_ID) ||
+                   localStorage.getItem("nexmilestro_microsoft_client_id") || "";
+    var tenantId = (settings && settings.microsoftTenantId) ||
+                   (window.APP_CONFIG && window.APP_CONFIG.MICROSOFT_TENANT_ID) ||
+                   localStorage.getItem("nexmilestro_microsoft_tenant_id") || "common";
+
+    if (!clientId) {
+      openMicrosoftOAuthConfigModal();
+      showToast("Please configure your Microsoft Azure Application (Client) ID to enable 1-click Microsoft connect.", "info");
+      return;
+    }
+
+    var redirectUri = window.location.origin;
+    var state = "ms_" + Date.now();
+    var scopes = encodeURIComponent("https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access");
+    var authUrl = "https://login.microsoftonline.com/" + encodeURIComponent(tenantId) + "/oauth2/v2.0/authorize" +
+                  "?client_id=" + encodeURIComponent(clientId) +
+                  "&response_type=code" +
+                  "&redirect_uri=" + encodeURIComponent(redirectUri) +
+                  "&response_mode=query" +
+                  "&scope=" + scopes +
+                  "&state=" + encodeURIComponent(state);
+
+    var popup = window.open(authUrl, "microsoft_oauth_popup", "width=600,height=720,status=no,resizable=yes");
+    if (!popup || popup.closed || typeof popup.closed === "undefined") {
+      showToast("Popup was blocked by your browser. Please allow popups for this site.", "warning");
+      return;
+    }
+
+    showToast("Opening Microsoft authentication window...", "info");
+
+    var onMsg = async function(event) {
+      if (!event.data || event.data.type !== "MS_OAUTH_CODE") return;
+      window.removeEventListener("message", onMsg);
+
+      var authCode = event.data.code;
+      if (!authCode) return;
+
+      showToast("Connecting your Microsoft 365 account...", "info");
+      var secret = localStorage.getItem("nexmilestro_microsoft_client_secret") || "";
+      var res = await apiCall("exchange_microsoft_oauth_code", {
+        code: authCode,
+        clientId: clientId,
+        clientSecret: secret,
+        tenantId: tenantId,
+        redirectUri: redirectUri
+      });
+
+      if (res && res.success) {
+        showToast("🎉 Microsoft account connected successfully (" + res.email + ")!", "success");
+        if (window._dataCache && window._dataCache.companySetup) {
+          window._dataCache.companySetup.OAuthProvider = "Microsoft";
+          window._dataCache.companySetup.OAuthEmail = res.email;
+          window._dataCache.companySetup.OAuthStatus = "Active";
+          window._dataCache.companySetup.SmtpProvider = "Microsoft_OAuth";
+        }
+        window.renderOAuthConnectionState({
+          OAuthProvider: "Microsoft",
+          OAuthEmail: res.email,
+          OAuthStatus: "Active"
+        });
+      } else {
+        showToast("Failed to connect Microsoft account: " + (res ? (res.error || res.message) : "Unknown error"), "error");
+      }
+    };
+
+    window.addEventListener("message", onMsg);
+  };
+
+  window.disconnectOAuthAccount = async function(providerName) {
+    var cached = (window._dataCache && window._dataCache.companySetup) || window.currentCompanySetupData || {};
+    var prov = providerName || cached.OAuthProvider || "Google";
+    var label = prov === "Microsoft" ? "Microsoft 365" : "Google";
+    if (!confirm("Are you sure you want to disconnect this " + label + " Account? Outbound emails will revert to standard delivery.")) {
       return;
     }
     showToast("Disconnecting account...", "info");
     var res = await apiCall("disconnect_oauth");
     if (res && res.success) {
-      showToast("Google account disconnected.", "info");
+      showToast(label + " account disconnected.", "info");
       if (window._dataCache && window._dataCache.companySetup) {
         window._dataCache.companySetup.OAuthStatus = "Disconnected";
         window._dataCache.companySetup.OAuthRefreshToken = "";
+        window._dataCache.companySetup.OAuthProvider = "";
+        window._dataCache.companySetup.OAuthEmail = "";
         window._dataCache.companySetup.SmtpProvider = "Gmail";
       }
-      window.renderOAuthConnectionState({ OAuthStatus: "Disconnected" });
+      window.renderOAuthConnectionState({ OAuthStatus: "Disconnected", OAuthProvider: "" });
       if (window.updateSmtpStatusBadge) window.updateSmtpStatusBadge("Gmail");
     } else {
       showToast("Error disconnecting: " + (res ? res.error : "Unknown error"), "error");
@@ -16428,6 +16699,81 @@ body.view-teamchat .chat-input-area {
       if (btn) { btn.disabled = false; btn.innerHTML = "Save & Activate Google OAuth"; }
       showToast("Configuration saved locally: " + err.message, "info");
       closeGoogleOAuthConfigModal();
+    }
+  };
+
+  window.openMicrosoftOAuthConfigModal = async function() {
+    var modal = document.getElementById("company-microsoft-oauth-modal");
+    if (modal) modal.classList.add("show");
+
+    var idInput = document.getElementById("microsoft-oauth-client-id-input");
+    var secInput = document.getElementById("microsoft-oauth-client-secret-input");
+    var tenantInput = document.getElementById("microsoft-oauth-tenant-id-input");
+
+    var localId = localStorage.getItem("nexmilestro_microsoft_client_id") || (window.APP_CONFIG && window.APP_CONFIG.MICROSOFT_CLIENT_ID) || "";
+    var localSec = localStorage.getItem("nexmilestro_microsoft_client_secret") || "";
+    var localTenant = localStorage.getItem("nexmilestro_microsoft_tenant_id") || (window.APP_CONFIG && window.APP_CONFIG.MICROSOFT_TENANT_ID) || "common";
+
+    if (idInput && !idInput.value && localId) idInput.value = localId;
+    if (secInput && !secInput.value && localSec) secInput.value = localSec;
+    if (tenantInput && !tenantInput.value && localTenant) tenantInput.value = localTenant;
+
+    var res = await apiCall("get_microsoft_oauth_settings").catch(function(){ return null; });
+    if (res) {
+      if (res.fullMicrosoftClientId || res.microsoftClientId) {
+        if (idInput) idInput.value = res.fullMicrosoftClientId || res.microsoftClientId;
+      }
+      if (res.microsoftTenantId && tenantInput) {
+        tenantInput.value = res.microsoftTenantId;
+      }
+    }
+  };
+
+  window.closeMicrosoftOAuthConfigModal = function() {
+    var modal = document.getElementById("company-microsoft-oauth-modal");
+    if (modal) modal.classList.remove("show");
+  };
+
+  window.saveMicrosoftOAuthConfig = async function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var clientId = (document.getElementById("microsoft-oauth-client-id-input").value || "").trim();
+    var clientSecret = (document.getElementById("microsoft-oauth-client-secret-input").value || "").trim();
+    var tenantId = (document.getElementById("microsoft-oauth-tenant-id-input").value || "common").trim() || "common";
+
+    if (!clientId) {
+      showToast("Please enter Microsoft Application (Client) ID", "warning");
+      return;
+    }
+
+    localStorage.setItem("nexmilestro_microsoft_client_id", clientId);
+    if (clientSecret) localStorage.setItem("nexmilestro_microsoft_client_secret", clientSecret);
+    localStorage.setItem("nexmilestro_microsoft_tenant_id", tenantId);
+    if (window.APP_CONFIG) {
+      window.APP_CONFIG.MICROSOFT_CLIENT_ID = clientId;
+      window.APP_CONFIG.MICROSOFT_TENANT_ID = tenantId;
+    }
+
+    var btn = document.getElementById("btn-save-microsoft-oauth-settings");
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating...'; }
+
+    try {
+      var res = await apiCall("save_microsoft_oauth_credentials", {
+        clientId: clientId,
+        clientSecret: clientSecret,
+        tenantId: tenantId
+      });
+      if (btn) { btn.disabled = false; btn.innerHTML = "Save & Activate Microsoft OAuth"; }
+
+      if (res && res.success) {
+        showToast("✅ Microsoft OAuth configuration activated successfully!", "success");
+      } else {
+        showToast("Configuration saved: " + (res ? (res.error || res.message) : "Active"), "info");
+      }
+      closeMicrosoftOAuthConfigModal();
+    } catch(err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = "Save & Activate Microsoft OAuth"; }
+      showToast("Configuration saved locally: " + err.message, "info");
+      closeMicrosoftOAuthConfigModal();
     }
   };
 </script>
@@ -19854,6 +20200,21 @@ document.addEventListener("click", function() {
 
   <!-- ==================== UNIVERSAL API BRIDGE & CLIENT LOGIC ==================== -->
   <script>
+    // Immediate check if this window was opened as an OAuth popup redirect
+    (function checkOAuthPopupRedirect() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var code = params.get("code");
+        var state = params.get("state");
+        if (code && state && state.indexOf("ms_") === 0) {
+          if (window.opener) {
+            window.opener.postMessage({ type: "MS_OAUTH_CODE", code: code, state: state }, "*");
+            window.close();
+          }
+        }
+      } catch(e) {}
+    })();
+
     /**
      * =========================================================================
      * NEXMILESTRO V2 - ENTERPRISE CLIENT RUNTIME & DUAL-ENGINE BRIDGE

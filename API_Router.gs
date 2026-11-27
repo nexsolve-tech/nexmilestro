@@ -1690,6 +1690,85 @@ function deleteDropdownValue(licenseKey, category, value) {
 }
 
 
+function formatEmailWithAttachmentLinks(htmlBody, plainTextBody, attachmentsInput) {
+  let links = [];
+  if (!attachmentsInput) {
+    return { htmlBody: htmlBody || "", body: plainTextBody || "" };
+  }
+
+  if (typeof attachmentsInput === "string") {
+    const trimmed = attachmentsInput.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        links = JSON.parse(trimmed);
+      } catch(e) {
+        links = trimmed.split(",").map(s => s.trim()).filter(Boolean);
+      }
+    } else {
+      links = trimmed.split(",").map(s => s.trim()).filter(Boolean);
+    }
+  } else if (Array.isArray(attachmentsInput)) {
+    links = attachmentsInput;
+  }
+
+  if (!links || links.length === 0) {
+    return { htmlBody: htmlBody || "", body: plainTextBody || "" };
+  }
+
+  let htmlCards = "";
+  let textList = "\n\n────────────────────────────────────────────\n📎 ATTACHED DOCUMENTS & SECURE LINKS:\n";
+
+  links.forEach(function(item, idx) {
+    let url = "";
+    let name = "";
+    if (typeof item === "string") {
+      url = item.trim();
+      if (!url) return;
+      if (url.indexOf("drive.google.com") > -1) {
+        name = "Document / File #" + (idx + 1);
+      } else {
+        const segs = url.split("/");
+        name = segs[segs.length - 1].split("?")[0] || ("Document #" + (idx + 1));
+      }
+    } else if (typeof item === "object" && item !== null) {
+      url = item.url || item.fileUrl || item.link || "";
+      name = item.name || item.filename || item.fileName || ("Document #" + (idx + 1));
+    }
+
+    if (!url) return;
+
+    htmlCards += '<div style="margin-top: 10px; padding: 12px 16px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">' +
+      '<div style="font-size: 13px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 8px;">' +
+      '<span>📄</span> <span>' + String(name).replace(/</g, "&lt;").replace(/>/g, "&gt;") + '</span>' +
+      '</div>' +
+      '<div>' +
+      '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 7px 14px; background: #0f766e; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap;">' +
+      'View / Download ➔' +
+      '</a>' +
+      '</div>' +
+      '</div>';
+
+    textList += "• " + name + ": " + url + "\n";
+  });
+
+  if (!htmlCards) {
+    return { htmlBody: htmlBody || "", body: plainTextBody || "" };
+  }
+
+  const containerHtml = '<div style="margin-top: 25px; padding: 16px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">' +
+    '<div style="font-size: 13px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">' +
+    '📎 Attached Documents &amp; Secure Preview Links' +
+    '</div>' +
+    '<p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">Click on any link below to securely preview or download the attached project documents:</p>' +
+    htmlCards +
+    '</div>';
+
+  return {
+    htmlBody: (htmlBody || "") + containerHtml,
+    body: (plainTextBody || "") + textList
+  };
+}
+
 function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
   try {
     const { ss } = getClientSpreadsheet(licenseKey);
@@ -1703,7 +1782,15 @@ function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
     const senderName = String(overrides.senderName || comp.SmtpSenderName || comp.CompanyName || "NexMilestro").trim();
     const apiKey = String(overrides.smtpPass || comp.SmtpPass || "").trim();
 
-    // 0. Google Workspace / Gmail OAuth 2.0 Mode (Direct Gmail API - lands in Sent folder)
+    // Ensure attachments are formatted into email body if passed in mailOpts
+    const rawAttachments = mailOpts.attachments || mailOpts.attachmentLinks || mailOpts.Attachments || "";
+    if (rawAttachments) {
+      const formatted = formatEmailWithAttachmentLinks(mailOpts.htmlBody, mailOpts.body, rawAttachments);
+      mailOpts.htmlBody = formatted.htmlBody;
+      mailOpts.body = formatted.body;
+    }
+
+    // 0A. Google Workspace / Gmail OAuth 2.0 Mode (Direct Gmail API - lands in Sent folder)
     const oauthProvider = String(comp.OAuthProvider || "").trim().toLowerCase();
     const refreshToken = String(comp.OAuthRefreshToken || "").trim();
     const currentAccessToken = String(comp.OAuthAccessToken || "").trim();
@@ -1740,6 +1827,40 @@ function sendEmailViaGateway(licenseKey, mailOpts, formOverrides) {
         return {
           success: false,
           error: "Google Gmail API dispatch failed: " + gmailErr.message
+        };
+      }
+    }
+
+    // 0B. Microsoft 365 / Outlook OAuth 2.0 Mode (Direct Microsoft Graph API - lands in Sent Items)
+    if ((oauthProvider === "microsoft" || provider.toLowerCase() === "microsoft_oauth" || provider.toLowerCase() === "outlook_oauth") && oauthStatus === "active") {
+      let activeToken = currentAccessToken;
+      const { clientId, clientSecret, tenantId } = getMicrosoftOAuthConfig();
+
+      if (refreshToken && clientId && clientSecret) {
+        try {
+          activeToken = refreshMicrosoftAccessToken(clientId, clientSecret, refreshToken, tenantId);
+          if (activeToken && activeToken !== currentAccessToken) {
+            writeTableRow(ss, "CompanySetup", "CompanyID", comp.CompanyID || "COMP-1001", { OAuthAccessToken: activeToken }, "SYSTEM");
+          }
+        } catch(refErr) {
+          console.warn("Could not refresh Microsoft token, attempting with existing accessToken:", refErr);
+        }
+      }
+
+      if (!activeToken) {
+        return { 
+          success: false, 
+          error: "Microsoft OAuth access token is expired or missing. Please click 'Disconnect' and reconnect your Microsoft account." 
+        };
+      }
+
+      try {
+        const msResult = sendOutlookViaGraphApi(activeToken, mailOpts, senderName, senderEmail || comp.OAuthEmail);
+        return msResult;
+      } catch (msErr) {
+        return {
+          success: false,
+          error: "Microsoft Graph API dispatch failed: " + msErr.message
         };
       }
     }
@@ -1846,11 +1967,27 @@ function handleSendLeadEmail(licenseKey, data, userId) {
     if (!to || !body) {
       return { success: false, error: "Recipient email and message body are required." };
     }
+
+    // Resolve attachments if not explicitly provided
+    let attachments = data.Attachments || data.attachments || "";
+    if (!attachments && data.LeadID) {
+      try {
+        const { ss } = getClientSpreadsheet(licenseKey);
+        const leadSheet = ensureSheetWithHeaders(ss, "Leads");
+        const rows = sheetToObjects(leadSheet);
+        const found = rows.find(r => r.LeadID === data.LeadID);
+        if (found && found.Attachments) {
+          attachments = found.Attachments;
+        }
+      } catch(e) {}
+    }
+
     const mailOpts = {
       to: to,
       subject: subject,
       body: body,
-      htmlBody: body.replace(/\n/g, "<br>")
+      htmlBody: body.replace(/\n/g, "<br>"),
+      attachments: attachments
     };
     if (cc) mailOpts.cc = cc;
     const sendRes = sendEmailViaGateway(licenseKey, mailOpts, {
@@ -1885,11 +2022,27 @@ function handleSendProposalEmail(licenseKey, data, userId) {
     if (!to || !body) {
       return { success: false, error: "Recipient email and message body are required." };
     }
+
+    // Resolve attachments if not explicitly provided
+    let attachments = data.Attachments || data.attachments || "";
+    if (!attachments && data.ProposalID) {
+      try {
+        const { ss } = getClientSpreadsheet(licenseKey);
+        const propSheet = ensureSheetWithHeaders(ss, "Proposals");
+        const rows = sheetToObjects(propSheet);
+        const found = rows.find(r => r.ProposalID === data.ProposalID);
+        if (found && found.Attachments) {
+          attachments = found.Attachments;
+        }
+      } catch(e) {}
+    }
+
     const mailOpts = {
       to: to,
       subject: subject,
       body: body,
-      htmlBody: body.replace(/\n/g, "<br>")
+      htmlBody: body.replace(/\n/g, "<br>"),
+      attachments: attachments
     };
     if (cc) mailOpts.cc = cc;
     const sendRes = sendEmailViaGateway(licenseKey, mailOpts, {
@@ -2136,6 +2289,8 @@ function handleDisconnectOAuth(licenseKey, data, userId) {
         OAuthStatus: "Disconnected",
         OAuthRefreshToken: "",
         OAuthAccessToken: "",
+        OAuthProvider: "",
+        OAuthEmail: "",
         SmtpProvider: "Gmail",
         ModifiedDate: new Date(),
         ModifiedBy: userId || "SYSTEM"
@@ -2206,6 +2361,297 @@ function handleGetSystemOAuthSettings(licenseKey) {
     };
   } catch(e) {
     return { success: false, error: e.message };
+  }
+}
+
+/**
+ * =========================================================================
+ * MICROSOFT 365 / OUTLOOK OAUTH 2.0 & GRAPH API ENGINE
+ * =========================================================================
+ */
+const MICROSOFT_OAUTH_CONFIG = {
+  CLIENT_ID: "",
+  CLIENT_SECRET: "",
+  TENANT_ID: "common"
+};
+
+function getMicrosoftOAuthConfig() {
+  let clientId = "";
+  let clientSecret = "";
+  let tenantId = "common";
+  try {
+    const props = PropertiesService.getScriptProperties();
+    clientId = props.getProperty("MICROSOFT_CLIENT_ID") || "";
+    clientSecret = props.getProperty("MICROSOFT_CLIENT_SECRET") || "";
+    tenantId = props.getProperty("MICROSOFT_TENANT_ID") || "common";
+  } catch(e) {}
+  clientId = clientId.trim() || MICROSOFT_OAUTH_CONFIG.CLIENT_ID || "";
+  clientSecret = clientSecret.trim() || MICROSOFT_OAUTH_CONFIG.CLIENT_SECRET || "";
+  tenantId = tenantId.trim() || MICROSOFT_OAUTH_CONFIG.TENANT_ID || "common";
+  return { 
+    clientId: String(clientId).trim(), 
+    clientSecret: String(clientSecret).trim(),
+    tenantId: String(tenantId).trim()
+  };
+}
+
+function handleSaveSystemMicrosoftOAuthCredentials(licenseKey, data, userId) {
+  try {
+    const clientId = String(data.clientId || "").trim();
+    const clientSecret = String(data.clientSecret || "").trim();
+    const tenantId = String(data.tenantId || "common").trim() || "common";
+    
+    if (!clientId) {
+      return { success: false, error: "Microsoft Application (Client) ID cannot be empty." };
+    }
+
+    const props = PropertiesService.getScriptProperties();
+    props.setProperty("MICROSOFT_CLIENT_ID", clientId);
+    if (clientSecret) {
+      props.setProperty("MICROSOFT_CLIENT_SECRET", clientSecret);
+    }
+    props.setProperty("MICROSOFT_TENANT_ID", tenantId);
+
+    return { 
+      success: true, 
+      message: "Microsoft OAuth credentials saved successfully in System Script Properties." 
+    };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+}
+
+function handleGetSystemMicrosoftOAuthSettings(licenseKey) {
+  try {
+    const { clientId, clientSecret, tenantId } = getMicrosoftOAuthConfig();
+    let currentConn = { connected: false, provider: "", email: "", status: "Not Connected" };
+    
+    if (licenseKey) {
+      try {
+        const { ss } = getClientSpreadsheet(licenseKey);
+        const compSheet = ensureSheetWithHeaders(ss, "CompanySetup");
+        const list = sheetToObjects(compSheet);
+        if (list.length > 0) {
+          const c = list[0];
+          if (String(c.OAuthProvider).toLowerCase() === "microsoft" && c.OAuthEmail && String(c.OAuthStatus).toLowerCase() === "active") {
+            currentConn = {
+              connected: true,
+              provider: "Microsoft",
+              email: c.OAuthEmail,
+              status: "Active",
+              connectedDate: c.OAuthConnectedDate || ""
+            };
+          }
+        }
+      } catch(ssErr) {}
+    }
+
+    return {
+      success: true,
+      microsoftConfigured: Boolean(clientId),
+      microsoftClientId: clientId,
+      fullMicrosoftClientId: clientId,
+      tenantId: tenantId,
+      connection: currentConn
+    };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+}
+
+function refreshMicrosoftAccessToken(clientId, clientSecret, refreshToken, tenantId) {
+  const tokenUrl = "https://login.microsoftonline.com/" + (tenantId || "common") + "/oauth2/v2.0/token";
+  const payload = {
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+    scope: "offline_access User.Read Mail.Send"
+  };
+
+  const res = UrlFetchApp.fetch(tokenUrl, {
+    method: "post",
+    contentType: "application/x-www-form-urlencoded",
+    payload: payload,
+    muteHttpExceptions: true
+  });
+
+  const data = JSON.parse(res.getContentText());
+  if (data.error) {
+    throw new Error("Failed to refresh Microsoft OAuth token: " + (data.error_description || data.error));
+  }
+  return data.access_token;
+}
+
+function sendOutlookViaGraphApi(accessToken, mailOpts, senderName, senderEmail) {
+  const toList = String(mailOpts.to || "").split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+  const ccList = String(mailOpts.cc || "").split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+  const subject = mailOpts.subject || "Notification";
+  const htmlBody = String(mailOpts.htmlBody || mailOpts.body || "").replace(/\n/g, "<br>");
+
+  const toRecipients = toList.map(function(email){ return { emailAddress: { address: email } }; });
+  const ccRecipients = ccList.map(function(email){ return { emailAddress: { address: email } }; });
+
+  const messagePayload = {
+    message: {
+      subject: subject,
+      body: {
+        contentType: "HTML",
+        content: htmlBody
+      },
+      toRecipients: toRecipients
+    },
+    saveToSentItems: true
+  };
+
+  if (ccRecipients.length > 0) {
+    messagePayload.message.ccRecipients = ccRecipients;
+  }
+
+  if (senderEmail) {
+    messagePayload.message.from = {
+      emailAddress: {
+        name: senderName || senderEmail,
+        address: senderEmail
+      }
+    };
+  }
+
+  const response = UrlFetchApp.fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + accessToken },
+    payload: JSON.stringify(messagePayload),
+    muteHttpExceptions: true
+  });
+
+  const statusCode = response.getResponseCode();
+  const resText = response.getContentText();
+
+  // Microsoft Graph sendMail returns HTTP 202 on success with empty body
+  if (statusCode >= 200 && statusCode < 300) {
+    return {
+      success: true,
+      method: "Microsoft 365 (Graph API)",
+      sender: senderEmail
+    };
+  }
+
+  let errMsg = "HTTP " + statusCode + ": " + resText;
+  try {
+    const errJson = JSON.parse(resText);
+    if (errJson.error && errJson.error.message) {
+      errMsg = errJson.error.message;
+    }
+  } catch(e) {}
+
+  throw new Error("Microsoft Graph API dispatch failed: " + errMsg);
+}
+
+function handleExchangeMicrosoftOAuthCode(licenseKey, data, userId) {
+  try {
+    const code = data.code;
+    if (!code) return { success: false, error: "Authorization code missing." };
+
+    let { clientId, clientSecret, tenantId } = getMicrosoftOAuthConfig();
+    if ((!clientId || !clientSecret) && (data.clientId || data.clientSecret)) {
+      clientId = clientId || String(data.clientId || "").trim();
+      clientSecret = clientSecret || String(data.clientSecret || "").trim();
+      tenantId = tenantId || String(data.tenantId || "common").trim();
+      try {
+        const props = PropertiesService.getScriptProperties();
+        if (clientId) props.setProperty("MICROSOFT_CLIENT_ID", clientId);
+        if (clientSecret) props.setProperty("MICROSOFT_CLIENT_SECRET", clientSecret);
+        if (tenantId) props.setProperty("MICROSOFT_TENANT_ID", tenantId);
+      } catch(e) {}
+    }
+
+    if (!clientId) {
+      return { 
+        success: false, 
+        error: "Microsoft Client ID is not configured yet. Please configure it in Microsoft OAuth Settings." 
+      };
+    }
+    if (!clientSecret) {
+      return { 
+        success: false, 
+        error: "Microsoft Client Secret is not configured yet. Please configure it in Microsoft OAuth Settings." 
+      };
+    }
+
+    const redirectUri = String(data.redirectUri || "https://nexmilestro.nexsolve.in").trim();
+    const tokenUrl = "https://login.microsoftonline.com/" + (tenantId || "common") + "/oauth2/v2.0/token";
+    const payload = {
+      code: code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+      scope: "offline_access User.Read Mail.Send"
+    };
+
+    const tokenRes = UrlFetchApp.fetch(tokenUrl, {
+      method: "post",
+      contentType: "application/x-www-form-urlencoded",
+      payload: payload,
+      muteHttpExceptions: true
+    });
+
+    const tokenData = JSON.parse(tokenRes.getContentText());
+    if (tokenData.error) {
+      return { success: false, error: "Microsoft token exchange failed: " + (tokenData.error_description || tokenData.error) };
+    }
+
+    const accessToken = tokenData.access_token;
+    const refreshToken = tokenData.refresh_token;
+
+    let userEmail = "";
+    try {
+      const profileRes = UrlFetchApp.fetch("https://graph.microsoft.com/v1.0/me", {
+        headers: { Authorization: "Bearer " + accessToken },
+        muteHttpExceptions: true
+      });
+      const profile = JSON.parse(profileRes.getContentText());
+      userEmail = profile.mail || profile.userPrincipalName || "";
+    } catch(e) {}
+
+    const { ss } = getClientSpreadsheet(licenseKey);
+    const companySheet = ensureSheetWithHeaders(ss, "CompanySetup");
+    const rows = sheetToObjects(companySheet);
+
+    let finalRefreshToken = refreshToken || "";
+    if (!finalRefreshToken && rows.length > 0 && rows[0].OAuthRefreshToken) {
+      finalRefreshToken = rows[0].OAuthRefreshToken;
+    }
+
+    const updateData = {
+      OAuthProvider: "Microsoft",
+      OAuthEmail: userEmail,
+      OAuthRefreshToken: finalRefreshToken,
+      OAuthAccessToken: accessToken,
+      OAuthStatus: "Active",
+      OAuthConnectedDate: new Date(),
+      SmtpSenderEmail: userEmail,
+      SmtpProvider: "Microsoft_OAuth",
+      ModifiedDate: new Date(),
+      ModifiedBy: userId || "SYSTEM_OAUTH"
+    };
+
+    if (rows.length > 0) {
+      writeTableRow(ss, "CompanySetup", "CompanyID", rows[0].CompanyID || "COMP-1001", updateData, userId);
+    } else {
+      updateData.CompanyID = "COMP-1001";
+      writeTableRow(ss, "CompanySetup", "CompanyID", "COMP-1001", updateData, userId);
+    }
+
+    return {
+      success: true,
+      email: userEmail,
+      provider: "Microsoft",
+      message: "Connected to Microsoft 365 (" + userEmail + ") successfully!"
+    };
+  } catch (err) {
+    return { success: false, error: "Microsoft OAuth exchange exception: " + err.message };
   }
 }
 
@@ -2514,14 +2960,25 @@ function handleUniversalApiRequest(action, params) {
       case 'exchange_google_oauth_code':
         response = handleExchangeGoogleOAuthCode(licenseKey, dataObj, userId);
         break;
+      case 'exchange_microsoft_oauth_code':
+        response = handleExchangeMicrosoftOAuthCode(licenseKey, dataObj, userId);
+        break;
       case 'disconnect_oauth':
         response = handleDisconnectOAuth(licenseKey, dataObj, userId);
         break;
       case 'get_oauth_settings':
+      case 'get_google_oauth_settings':
         response = handleGetSystemOAuthSettings(licenseKey);
         break;
+      case 'get_microsoft_oauth_settings':
+        response = handleGetSystemMicrosoftOAuthSettings(licenseKey);
+        break;
       case 'save_oauth_credentials':
+      case 'save_google_oauth_credentials':
         response = handleSaveSystemOAuthCredentials(licenseKey, dataObj, userId);
+        break;
+      case 'save_microsoft_oauth_credentials':
+        response = handleSaveSystemMicrosoftOAuthCredentials(licenseKey, dataObj, userId);
         break;
 
       // ── OPERATIONS & USERS ───────────────────────────────────────────────
@@ -3009,7 +3466,9 @@ function handleSendTestEmail(licenseKey, data, userId) {
     const mailOpts = {
       to: to,
       subject: data.subject || data.Subject || "✅ NexMilestro Email Gateway Verified",
-      htmlBody: (data.body || data.Body || "This is a verification email from your NexMilestro Operations Suite.").replace(/\n/g, "<br>")
+      body: data.body || data.Body || "This is a verification email from your NexMilestro Operations Suite.",
+      htmlBody: (data.body || data.Body || "This is a verification email from your NexMilestro Operations Suite.").replace(/\n/g, "<br>"),
+      attachments: data.Attachments || data.attachments || ""
     };
     const res = sendEmailViaGateway(licenseKey, mailOpts, {
       provider: data.provider || data.SmtpProvider,

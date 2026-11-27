@@ -815,6 +815,21 @@
 
   <!-- ==================== UNIVERSAL API BRIDGE & CLIENT LOGIC ==================== -->
   <script>
+    // Immediate check if this window was opened as an OAuth popup redirect
+    (function checkOAuthPopupRedirect() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var code = params.get("code");
+        var state = params.get("state");
+        if (code && state && state.indexOf("ms_") === 0) {
+          if (window.opener) {
+            window.opener.postMessage({ type: "MS_OAUTH_CODE", code: code, state: state }, "*");
+            window.close();
+          }
+        }
+      } catch(e) {}
+    })();
+
     /**
      * =========================================================================
      * NEXMILESTRO V2 - ENTERPRISE CLIENT RUNTIME & DUAL-ENGINE BRIDGE
