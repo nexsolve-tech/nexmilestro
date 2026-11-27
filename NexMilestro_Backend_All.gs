@@ -1782,7 +1782,17 @@ function handleExchangeGoogleOAuthCode(licenseKey, data, userId) {
     const code = data.code;
     if (!code) return { success: false, error: "Authorization code missing." };
 
-    const { clientId, clientSecret } = getGoogleOAuthConfig();
+    let { clientId, clientSecret } = getGoogleOAuthConfig();
+    if (!clientId && data.clientId) {
+      clientId = String(data.clientId).trim();
+      clientSecret = String(data.clientSecret || clientSecret).trim();
+      try {
+        const props = PropertiesService.getScriptProperties();
+        props.setProperty("GOOGLE_CLIENT_ID", clientId);
+        if (clientSecret) props.setProperty("GOOGLE_CLIENT_SECRET", clientSecret);
+      } catch(e) {}
+    }
+
     if (!clientId) {
       return { 
         success: false, 

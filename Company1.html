@@ -1188,7 +1188,12 @@
         callback: async function(response) {
           if (response && response.code) {
             showToast("Connecting your Google account...", "info");
-            var res = await apiCall("exchange_google_oauth_code", { code: response.code });
+            var secret = localStorage.getItem("nexmilestro_google_client_secret") || "";
+            var res = await apiCall("exchange_google_oauth_code", { 
+              code: response.code,
+              clientId: clientId,
+              clientSecret: secret
+            });
             if (res && res.success) {
               showToast("🎉 Google account connected successfully (" + res.email + ")!", "success");
               if (window._dataCache && window._dataCache.companySetup) {
