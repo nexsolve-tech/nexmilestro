@@ -1321,31 +1321,229 @@ function saveCompanySetupRecord(licenseKey, data, userId) {
   }
 }
 
-// ── FILE ATTACHMENTS (GOOGLE DRIVE) ──────────────────────────────────────
+// ── FILE ATTACHMENTS (HIERARCHICAL GOOGLE DRIVE ENGINE) ─────────────────────────
 
-function uploadFileToDrive(licenseKey, base64Data, filename, mimeType, subfolderName) {
+function getOrCreateDriveFolder(parentFolder, name) {
+  const safeName = String(name || "Folder")
+    .replace(/[\\/:*?"<>|]/g, "_")
+    .replace(/\s+/g, " ")
+    .trim() || "Folder";
+  const iter = parentFolder.getFoldersByName(safeName);
+  return iter.hasNext() ? iter.next() : parentFolder.createFolder(safeName);
+}
+
+function uploadFileToDrive(licenseKey, base64Data, filename, mimeType, options) {
   try {
     const { ss, license } = getClientSpreadsheet(licenseKey);
-    let targetFolder = null;
+    let rootFolder = null;
 
-    // Check if client has a dedicated folder in sheet or Drive
+    // Check if client has a dedicated folder ID configured in CompanySetup
     const compSheet = ensureSheetWithHeaders(ss, "CompanySetup");
     const compRows = sheetToObjects(compSheet);
     if (compRows.length > 0 && compRows[0].DriveFolderID) {
-      try { targetFolder = DriveApp.getFolderById(compRows[0].DriveFolderID); } catch(e){}
+      try { 
+        rootFolder = DriveApp.getFolderById(String(compRows[0].DriveFolderID).trim()); 
+      } catch(e){}
     }
 
-    if (!targetFolder) {
-      // Find or create 'NexMilestro_Attachments' folder
-      const folders = DriveApp.getFoldersByName("NexMilestro_Attachments");
-      targetFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder("NexMilestro_Attachments");
+    // Default Master Parent Folder: 'NexMilestro_Database'
+    if (!rootFolder) {
+      const parentName = "NexMilestro_Database";
+      const folders = DriveApp.getFoldersByName(parentName);
+      rootFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(parentName);
     }
 
-    if (subfolderName) {
-      const subs = targetFolder.getFoldersByName(subfolderName);
-      targetFolder = subs.hasNext() ? subs.next() : targetFolder.createFolder(subfolderName);
+    // Parse options & context
+    const opts = (typeof options === "object" && options !== null) ? options : { subfolderName: options || "" };
+    const subfolderName = String(opts.subfolderName || opts.folderName || "").trim();
+    const moduleName = String(opts.module || "").trim();
+    const projectId = String(opts.projectId || opts.ProjectID || "").trim();
+    const customerId = String(opts.customerId || opts.CustomerID || "").trim();
+    const leadId = String(opts.leadId || opts.LeadID || "").trim();
+    const vendorId = String(opts.vendorId || opts.VendorID || "").trim();
+    const associateId = String(opts.associateId || opts.AssociateID || "").trim();
+    const proposalId = String(opts.proposalId || opts.ProposalID || "").trim();
+
+    let targetFolder = rootFolder;
+    let pathSegments = [];
+
+    // Helper to find record in sheet
+    function findRecord(sheetName, idCol, idVal) {
+      try {
+        const s = ensureSheetWithHeaders(ss, sheetName);
+        const rows = sheetToObjects(s);
+        return rows.find(r => String(r[idCol] || "").trim() === idVal) || null;
+      } catch(e) {
+        return null;
+      }
     }
 
+    // ── CASE 1: LINKED TO A PROJECT ──────────────────────────────────────────
+    // Structure: Customers / [CustomerID - CustomerName] / Projects / [ProjectID - ProjectName] / [Module Subfolder]
+    if (projectId) {
+      const projRecord = findRecord("Projects", "ProjectID", projectId);
+      const projName = projRecord ? (projRecord.ProjectName || projRecord.Title || "") : "";
+      const projCustId = (projRecord && projRecord.CustomerID) ? projRecord.CustomerID : customerId;
+
+      let custName = "";
+      if (projCustId) {
+        const custRecord = findRecord("Customers", "CustomerID", projCustId);
+        if (custRecord) custName = custRecord.CustomerName || custRecord.Name || "";
+      }
+
+      // 1. Customers/
+      const customersFolder = getOrCreateDriveFolder(rootFolder, "Customers");
+      pathSegments.push("Customers");
+
+      // 2. Customers / [CustomerID - CustomerName]/
+      const custFolderName = projCustId ? (custName ? (projCustId + " - " + custName) : projCustId) : "General_Clients";
+      const customerFolder = getOrCreateDriveFolder(customersFolder, custFolderName);
+      pathSegments.push(custFolderName);
+
+      // 3. Customers / [Customer] / Projects/
+      const projectsFolder = getOrCreateDriveFolder(customerFolder, "Projects");
+      pathSegments.push("Projects");
+
+      // 4. Customers / [Customer] / Projects / [ProjectID - ProjectName]/
+      const projFolderName = projName ? (projectId + " - " + projName) : projectId;
+      const projectFolder = getOrCreateDriveFolder(projectsFolder, projFolderName);
+      pathSegments.push(projFolderName);
+
+      // 5. Determine project-specific module subfolder:
+      let leafFolder = "Project Documents";
+      const modLower = moduleName.toLowerCase();
+      const subLower = subfolderName.toLowerCase();
+      if (modLower.indexOf("sitevisit") > -1 || subLower.indexOf("site") > -1) {
+        leafFolder = "Site Visits";
+      } else if (modLower.indexOf("task") > -1 || subLower.indexOf("task") > -1) {
+        leafFolder = "Tasks";
+      } else if (modLower.indexOf("transaction") > -1 || modLower.indexOf("finance") > -1 || subLower.indexOf("finance") > -1 || subLower.indexOf("receipt") > -1) {
+        leafFolder = "Income-Expense";
+      } else if (subfolderName) {
+        leafFolder = subfolderName;
+      }
+
+      targetFolder = getOrCreateDriveFolder(projectFolder, leafFolder);
+      pathSegments.push(leafFolder);
+
+    // ── CASE 2: LINKED TO A LEAD (Pre-sales inquiries / site visits) ──────────
+    // Structure: Leads / [LeadID - LeadName] / [Module Subfolder]
+    } else if (leadId) {
+      const leadRecord = findRecord("Leads", "LeadID", leadId);
+      const leadName = leadRecord ? (leadRecord.CustomerName || leadRecord.CompanyName || leadRecord.ProjectDetails || "") : "";
+
+      const leadsFolder = getOrCreateDriveFolder(rootFolder, "Leads");
+      pathSegments.push("Leads");
+
+      const leadFolderName = leadName ? (leadId + " - " + leadName) : leadId;
+      const leadFolder = getOrCreateDriveFolder(leadsFolder, leadFolderName);
+      pathSegments.push(leadFolderName);
+
+      let leafFolder = "Lead Documents";
+      const modLower = moduleName.toLowerCase();
+      const subLower = subfolderName.toLowerCase();
+      if (modLower.indexOf("sitevisit") > -1 || subLower.indexOf("site") > -1) {
+        leafFolder = "Site Visits";
+      } else if (subfolderName) {
+        leafFolder = subfolderName;
+      }
+
+      targetFolder = getOrCreateDriveFolder(leadFolder, leafFolder);
+      pathSegments.push(leafFolder);
+
+    // ── CASE 3: PROPOSALS ────────────────────────────────────────────────────
+    // Structure: Proposals / [ProposalID - Title]
+    } else if (proposalId || moduleName.toLowerCase().indexOf("proposal") > -1) {
+      const propRecord = proposalId ? findRecord("Proposals", "ProposalID", proposalId) : null;
+      const propTitle = propRecord ? (propRecord.ProjectName || propRecord.Title || "") : "";
+
+      const proposalsFolder = getOrCreateDriveFolder(rootFolder, "Proposals");
+      pathSegments.push("Proposals");
+
+      if (proposalId) {
+        const propFolderName = propTitle ? (proposalId + " - " + propTitle) : proposalId;
+        targetFolder = getOrCreateDriveFolder(proposalsFolder, propFolderName);
+        pathSegments.push(propFolderName);
+      } else {
+        targetFolder = proposalsFolder;
+      }
+
+    // ── CASE 4: VENDORS ──────────────────────────────────────────────────────
+    // Structure: Vendors / [VendorID - VendorName]
+    } else if (vendorId || moduleName.toLowerCase().indexOf("vendor") > -1) {
+      const vendRecord = vendorId ? findRecord("Vendors", "VendorID", vendorId) : null;
+      const vendName = vendRecord ? (vendRecord.VendorName || vendRecord.ContactPerson || "") : "";
+
+      const vendorsFolder = getOrCreateDriveFolder(rootFolder, "Vendors");
+      pathSegments.push("Vendors");
+
+      if (vendorId) {
+        const vendFolderName = vendName ? (vendorId + " - " + vendName) : vendorId;
+        targetFolder = getOrCreateDriveFolder(vendorsFolder, vendFolderName);
+        pathSegments.push(vendFolderName);
+      } else {
+        targetFolder = vendorsFolder;
+      }
+
+    // ── CASE 5: ASSOCIATES ───────────────────────────────────────────────────
+    // Structure: Associates / [AssociateID - AssociateName]
+    } else if (associateId || moduleName.toLowerCase().indexOf("associate") > -1) {
+      const assocRecord = associateId ? findRecord("Associates", "AssociateID", associateId) : null;
+      const assocName = assocRecord ? (assocRecord.AssociateName || assocRecord.FullName || "") : "";
+
+      const assocFolder = getOrCreateDriveFolder(rootFolder, "Associates");
+      pathSegments.push("Associates");
+
+      if (associateId) {
+        const assocFolderName = assocName ? (associateId + " - " + assocName) : associateId;
+        targetFolder = getOrCreateDriveFolder(assocFolder, assocFolderName);
+        pathSegments.push(assocFolderName);
+      } else {
+        targetFolder = assocFolder;
+      }
+
+    // ── CASE 6: CUSTOMER DIRECT (No project yet - e.g. KYC, Agreement) ───────
+    // Structure: Customers / [CustomerID - CustomerName] / _Customer_Documents
+    } else if (customerId || moduleName.toLowerCase().indexOf("customer") > -1) {
+      const custRecord = customerId ? findRecord("Customers", "CustomerID", customerId) : null;
+      const custName = custRecord ? (custRecord.CustomerName || custRecord.Name || "") : "";
+
+      const customersFolder = getOrCreateDriveFolder(rootFolder, "Customers");
+      pathSegments.push("Customers");
+
+      const custFolderName = customerId ? (custName ? (customerId + " - " + custName) : customerId) : "General_Clients";
+      const customerFolder = getOrCreateDriveFolder(customersFolder, custFolderName);
+      pathSegments.push(custFolderName);
+
+      targetFolder = getOrCreateDriveFolder(customerFolder, "_Customer_Documents");
+      pathSegments.push("_Customer_Documents");
+
+    // ── CASE 7: GENERAL / UNLINKED OPERATIONS ────────────────────────────────
+    // Structure: _General_Operations / [General Tasks | General Site Visits | Office Overhead]
+    } else {
+      const generalFolder = getOrCreateDriveFolder(rootFolder, "_General_Operations");
+      pathSegments.push("_General_Operations");
+
+      let leafFolder = "General Attachments";
+      const modLower = moduleName.toLowerCase();
+      const subLower = subfolderName.toLowerCase();
+      if (modLower.indexOf("sitevisit") > -1 || subLower.indexOf("site") > -1) {
+        leafFolder = "General Site Visits";
+      } else if (modLower.indexOf("task") > -1 || subLower.indexOf("task") > -1) {
+        leafFolder = "General Tasks";
+      } else if (modLower.indexOf("transaction") > -1 || modLower.indexOf("finance") > -1 || subLower.indexOf("finance") > -1 || subLower.indexOf("receipt") > -1) {
+        leafFolder = "Office Income-Expense";
+      } else if (modLower.indexOf("company") > -1 || subLower.indexOf("logo") > -1) {
+        leafFolder = "Company Branding & Logos";
+      } else if (subfolderName) {
+        leafFolder = subfolderName;
+      }
+
+      targetFolder = getOrCreateDriveFolder(generalFolder, leafFolder);
+      pathSegments.push(leafFolder);
+    }
+
+    // Decode and write the file
     const cleanBase64 = base64Data.indexOf(",") > -1 ? base64Data.split(",")[1] : base64Data;
     const bytes = Utilities.base64Decode(cleanBase64);
     const blob = Utilities.newBlob(bytes, mimeType || "application/octet-stream", filename || "document.pdf");
@@ -1357,7 +1555,9 @@ function uploadFileToDrive(licenseKey, base64Data, filename, mimeType, subfolder
       fileUrl: file.getUrl(),
       downloadUrl: file.getDownloadUrl(),
       fileId: file.getId(),
-      filename: filename
+      filename: filename,
+      folderPath: pathSegments.join(" / "),
+      folderUrl: targetFolder.getUrl()
     };
   } catch (err) {
     return { success: false, error: "Failed to upload file to Google Drive: " + err.message };
@@ -2357,7 +2557,7 @@ function handleUniversalApiRequest(action, params) {
 
       case 'uploadFile':
       case 'upload_attachment':
-        response = uploadFileToDrive(licenseKey, dataObj.base64Data || params.base64Data, dataObj.filename || dataObj.fileName || params.fileName, dataObj.mimeType || params.mimeType, dataObj.subfolderName || dataObj.folderName || params.folderName);
+        response = uploadFileToDrive(licenseKey, dataObj.base64Data || params.base64Data, dataObj.filename || dataObj.fileName || params.fileName, dataObj.mimeType || params.mimeType, dataObj);
         break;
 
       case 'mark_lead_won':

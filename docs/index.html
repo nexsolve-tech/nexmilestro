@@ -21728,12 +21728,13 @@ document.addEventListener("click", function() {
         var filename = (args[0] && typeof args[0] === "object") ? (args[0].filename || args[0].fileName) : args[2];
         var mimeType = (args[0] && typeof args[0] === "object") ? args[0].mimeType : args[3];
         var subfolder = (args[0] && typeof args[0] === "object") ? (args[0].subfolderName || args[0].folderName) : args[4];
-        var upRes = await apiCall("upload_attachment", {
+        var extraOpts = (args[0] && typeof args[0] === "object") ? args[0] : {};
+        var upRes = await apiCall("upload_attachment", Object.assign({
           base64Data: base64,
           filename: filename,
           mimeType: mimeType,
           subfolderName: subfolder
-        });
+        }, extraOpts));
         successCb(upRes);
         return;
       }
@@ -21901,7 +21902,14 @@ document.addEventListener("click", function() {
                     filename: fItem.filename || fItem.fileName || ("attachment_" + (fi + 1)),
                     mimeType: fItem.mimeType || "application/octet-stream",
                     base64Data: base64,
-                    subfolderName: subfolder
+                    subfolderName: subfolder,
+                    module: fnName.replace("save", ""),
+                    projectId: payload.ProjectID || payload.projectId,
+                    customerId: payload.CustomerID || payload.customerId,
+                    leadId: payload.LeadID || payload.leadId,
+                    vendorId: payload.VendorID || payload.vendorId,
+                    associateId: payload.AssociateID || payload.associateId,
+                    proposalId: payload.ProposalID || payload.proposalId
                   });
                   if (upRes && upRes.success && (upRes.fileUrl || upRes.downloadUrl)) {
                     uploadedUrls.push(upRes.fileUrl || upRes.downloadUrl);
