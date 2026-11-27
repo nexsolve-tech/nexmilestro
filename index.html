@@ -16285,7 +16285,10 @@ body.view-teamchat .chat-input-area {
 
   window.connectGoogleOAuth = async function() {
     var settings = await apiCall("get_oauth_settings").catch(function(){ return null; });
-    var clientId = (settings && settings.fullGoogleClientId) || (window.APP_CONFIG && window.APP_CONFIG.GOOGLE_CLIENT_ID) || localStorage.getItem("nexmilestro_google_client_id") || "";
+    var clientId = (settings && (settings.fullGoogleClientId || settings.googleClientId)) || 
+                   (window.APP_CONFIG && window.APP_CONFIG.GOOGLE_CLIENT_ID) || 
+                   localStorage.getItem("nexmilestro_google_client_id") || 
+                   "972226026333-lbatu6ov9v3csdr4th0g33qck0vv4mi9.apps.googleusercontent.com";
 
     if (!clientId) {
       openGoogleOAuthConfigModal();
@@ -16302,6 +16305,7 @@ body.view-teamchat .chat-input-area {
       var client = google.accounts.oauth2.initCodeClient({
         client_id: clientId,
         scope: "https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email",
+        prompt: "consent",
         ux_mode: "popup",
         callback: async function(response) {
           if (response && response.code) {
@@ -16363,10 +16367,17 @@ body.view-teamchat .chat-input-area {
     var modal = document.getElementById("company-google-oauth-modal");
     if (modal) modal.classList.add("show");
 
+    var idInput = document.getElementById("google-oauth-client-id-input");
+    var secInput = document.getElementById("google-oauth-client-secret-input");
+
+    var localId = localStorage.getItem("nexmilestro_google_client_id") || (window.APP_CONFIG && window.APP_CONFIG.GOOGLE_CLIENT_ID) || "972226026333-lbatu6ov9v3csdr4th0g33qck0vv4mi9.apps.googleusercontent.com";
+    var localSec = localStorage.getItem("nexmilestro_google_client_secret") || "";
+    if (idInput && !idInput.value && localId) idInput.value = localId;
+    if (secInput && !secInput.value && localSec) secInput.value = localSec;
+
     var res = await apiCall("get_oauth_settings").catch(function(){ return null; });
-    if (res && res.fullGoogleClientId) {
-      var idInput = document.getElementById("google-oauth-client-id-input");
-      if (idInput) idInput.value = res.fullGoogleClientId;
+    if (res && (res.fullGoogleClientId || res.googleClientId)) {
+      if (idInput) idInput.value = res.fullGoogleClientId || res.googleClientId;
     }
   };
 
@@ -16395,14 +16406,18 @@ body.view-teamchat .chat-input-area {
 
     try {
       // Also sync to Central Backend Script Properties
-      var res = await apiCall("save_oauth_credentials", { clientId: clientId, clientSecret: clientSecret }).catch(function(e){ return null; });
+      var res = await apiCall("save_oauth_credentials", { clientId: clientId, clientSecret: clientSecret });
       if (btn) { btn.disabled = false; btn.innerHTML = "Save & Activate Google OAuth"; }
 
-      showToast("✅ Google OAuth App configuration activated successfully!", "success");
+      if (res && res.success) {
+        showToast("✅ Google OAuth configuration activated successfully!", "success");
+      } else {
+        showToast("Configuration saved: " + (res ? (res.error || res.message) : "Active"), "info");
+      }
       closeGoogleOAuthConfigModal();
     } catch(err) {
       if (btn) { btn.disabled = false; btn.innerHTML = "Save & Activate Google OAuth"; }
-      showToast("✅ Google OAuth credentials activated!", "success");
+      showToast("Configuration saved locally: " + err.message, "info");
       closeGoogleOAuthConfigModal();
     }
   };
@@ -19842,7 +19857,7 @@ document.addEventListener("click", function() {
       SUPABASE_URL: "https://jgyetqvgpmwegwdeldnm.supabase.co",
       SUPABASE_ANON_KEY: "sb_publishable_98_5F7Og7g14SbYdUA876g_1Oeuhbjk",
       GAS_URL: "https://script.google.com/macros/s/AKfycbxG7RzpM-2tsFsviKvVY0DqFZxfk37PZJETjU-Xv5FfwRt_jgKfgb1jXZXxmKKPVp5b/exec",
-      GOOGLE_CLIENT_ID: ""
+      GOOGLE_CLIENT_ID: "972226026333-lbatu6ov9v3csdr4th0g33qck0vv4mi9.apps.googleusercontent.com"
     };
     window.DEFAULT_PRODUCTION_USERS = [
       { UserID: "USR-101", FullName: "Mehul Gandhi", Email: "mehul.gandhi@nexsolve.in", Mobile: "9811223344", RoleID: "Super Admin", Status: "Active", Password: "admin@123" },

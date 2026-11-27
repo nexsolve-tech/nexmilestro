@@ -1694,9 +1694,15 @@ const GOOGLE_OAUTH_CONFIG = {
 };
 
 function getGoogleOAuthConfig() {
-  const props = PropertiesService.getScriptProperties();
-  const clientId = props.getProperty("GOOGLE_CLIENT_ID") || GOOGLE_OAUTH_CONFIG.CLIENT_ID || "";
-  const clientSecret = props.getProperty("GOOGLE_CLIENT_SECRET") || GOOGLE_OAUTH_CONFIG.CLIENT_SECRET || "";
+  let clientId = "";
+  let clientSecret = "";
+  try {
+    const props = PropertiesService.getScriptProperties();
+    clientId = props.getProperty("GOOGLE_CLIENT_ID") || "";
+    clientSecret = props.getProperty("GOOGLE_CLIENT_SECRET") || "";
+  } catch(e) {}
+  clientId = clientId.trim() || GOOGLE_OAUTH_CONFIG.CLIENT_ID || "";
+  clientSecret = clientSecret.trim() || GOOGLE_OAUTH_CONFIG.CLIENT_SECRET || "";
   return { clientId: String(clientId).trim(), clientSecret: String(clientSecret).trim() };
 }
 
@@ -1783,12 +1789,12 @@ function handleExchangeGoogleOAuthCode(licenseKey, data, userId) {
     if (!code) return { success: false, error: "Authorization code missing." };
 
     let { clientId, clientSecret } = getGoogleOAuthConfig();
-    if (!clientId && data.clientId) {
-      clientId = String(data.clientId).trim();
-      clientSecret = String(data.clientSecret || clientSecret).trim();
+    if ((!clientId || !clientSecret) && (data.clientId || data.clientSecret)) {
+      clientId = clientId || String(data.clientId || "").trim();
+      clientSecret = clientSecret || String(data.clientSecret || "").trim();
       try {
         const props = PropertiesService.getScriptProperties();
-        props.setProperty("GOOGLE_CLIENT_ID", clientId);
+        if (clientId) props.setProperty("GOOGLE_CLIENT_ID", clientId);
         if (clientSecret) props.setProperty("GOOGLE_CLIENT_SECRET", clientSecret);
       } catch(e) {}
     }
@@ -1797,6 +1803,12 @@ function handleExchangeGoogleOAuthCode(licenseKey, data, userId) {
       return { 
         success: false, 
         error: "Google Client ID is not configured yet. Please configure it in Google OAuth Settings." 
+      };
+    }
+    if (!clientSecret) {
+      return { 
+        success: false, 
+        error: "Google Client Secret is not configured yet. Please configure it in Google OAuth Settings." 
       };
     }
 
@@ -1838,10 +1850,15 @@ function handleExchangeGoogleOAuthCode(licenseKey, data, userId) {
     const companySheet = ensureSheetWithHeaders(ss, "CompanySetup");
     const rows = sheetToObjects(companySheet);
 
+    let finalRefreshToken = refreshToken || "";
+    if (!finalRefreshToken && rows.length > 0 && rows[0].OAuthRefreshToken) {
+      finalRefreshToken = rows[0].OAuthRefreshToken;
+    }
+
     const updateData = {
       OAuthProvider: "Google",
       OAuthEmail: userEmail,
-      OAuthRefreshToken: refreshToken || "",
+      OAuthRefreshToken: finalRefreshToken,
       OAuthAccessToken: accessToken,
       OAuthStatus: "Active",
       OAuthConnectedDate: new Date(),
@@ -1944,6 +1961,7 @@ function handleGetSystemOAuthSettings(licenseKey) {
       success: true,
       googleConfigured: Boolean(clientId),
       googleClientId: clientId,
+      fullGoogleClientId: clientId,
       connection: currentConn
     };
   } catch(e) {
