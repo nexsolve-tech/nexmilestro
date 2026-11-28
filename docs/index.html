@@ -5032,7 +5032,6 @@ body.view-teamchat .chat-input-area {
         <table class="data-table" id="customers-table">
           <thead>
             <tr>
-              <th>Customer ID</th>
               <th>Customer Name</th>
               <th>Mobile</th>
               <th>Email</th>
@@ -5043,7 +5042,7 @@ body.view-teamchat .chat-input-area {
           </thead>
           <tbody>
             <tr>
-              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading customers list...</td>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading customers list...</td>
             </tr>
           </tbody>
         </table>
@@ -5337,7 +5336,7 @@ body.view-teamchat .chat-input-area {
   function renderCustomers(customers) {
     var tbody = document.querySelector("#customers-table tbody");
     if (customers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-users empty-state-icon"></i>\n          <p class="empty-state-title">No customers found</p>\n          <p class="empty-state-desc">Get started by creating your first customer contact.</p>\n        </div>\n      </td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-users empty-state-icon"></i>\n          <p class="empty-state-title">No customers found</p>\n          <p class="empty-state-desc">Get started by creating your first customer contact.</p>\n        </div>\n      </td></tr>';
       return;
     }
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
@@ -5404,8 +5403,10 @@ body.view-teamchat .chat-input-area {
       var cTypeEsc = typeof escapeHtml === "function" ? escapeHtml(cust.CustomerType || "") : (cust.CustomerType || "");
 
       return '<tr id="row-' + cIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + cIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + cNameEsc + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + cNameEsc + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + cIdEsc + '</div>' +
+        '</td>' +
         '<td>' + cMobileEsc + '</td>' +
         '<td>' + cEmailEsc + '</td>' +
         '<td>' + cTypeEsc + '</td>' +
@@ -5929,7 +5930,6 @@ body.view-teamchat .chat-input-area {
         <table class="data-table" id="projects-table">
           <thead>
             <tr>
-              <th>Project ID</th>
               <th>Project Name</th>
               <th>Customer</th>
               <th>Type</th>
@@ -5942,7 +5942,7 @@ body.view-teamchat .chat-input-area {
           </thead>
           <tbody>
             <tr>
-              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading projects list...</td>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading projects list...</td>
             </tr>
           </tbody>
         </table>
@@ -6439,8 +6439,10 @@ body.view-teamchat .chat-input-area {
       var pjTypeEsc = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectType || "") : (proj.ProjectType || "");
 
       return '<tr id="row-' + pjIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + pjIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + pjNameEsc + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + pjNameEsc + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + pjIdEsc + '</div>' +
+        '</td>' +
         '<td>' + pjCustEsc + '</td>' +
         '<td>' + pjTypeEsc + '</td>' +
         '<td style="font-family: monospace; font-weight: 500;">' + formattedVal + '</td>' +
@@ -7229,7 +7231,6 @@ body.view-teamchat .chat-input-area {
         <table class="data-table" id="visits-table">
           <thead>
             <tr>
-              <th>Visit ID</th>
               <th>Project / Lead</th>
               <th>Visit Date & Timing</th>
               <th>Purpose</th>
@@ -7243,7 +7244,7 @@ body.view-teamchat .chat-input-area {
           </thead>
           <tbody>
             <tr>
-              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading site visits...</td>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading site visits...</td>
             </tr>
           </tbody>
         </table>
@@ -7702,7 +7703,7 @@ body.view-teamchat .chat-input-area {
     if (!tbody) return;
 
     if (!visitsList || !Array.isArray(visitsList) || visitsList.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-eye empty-state-icon"></i>\n          <p class="empty-state-title">' + (activeVisitTab === "scheduled" ? "No scheduled visits" : "No site visits logged") + '</p>\n          <p class="empty-state-desc">' + (activeVisitTab === "scheduled" ? "Plan upcoming inspections and field audits." : "Record architectural site visits, inspection logs, and measurements.") + '</p>\n        </div>\n      </td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-eye empty-state-icon"></i>\n          <p class="empty-state-title">' + (activeVisitTab === "scheduled" ? "No scheduled visits" : "No site visits logged") + '</p>\n          <p class="empty-state-desc">' + (activeVisitTab === "scheduled" ? "Plan upcoming inspections and field audits." : "Record architectural site visits, inspection logs, and measurements.") + '</p>\n        </div>\n      </td></tr>';
       var pBar = document.getElementById("visits-pagination-bar");
       if (pBar) pBar.style.display = "none";
       return;
@@ -7882,8 +7883,10 @@ body.view-teamchat .chat-input-area {
       var billableHtml = isBillable ? '<span class="badge badge-completed">' + billableStr + '</span>' : '<span style="color:var(--text-muted);">-</span>';
 
       return '<tr id="row-' + svIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + svIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + entityHtml + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + entityHtml + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + svIdEsc + '</div>' +
+        '</td>' +
         '<td><div>' + dateStr + '</div>' + gpsInfoHtml + followupHtml + '</td>' +
         '<td>' + purposeEsc + '</td>' +
         '<td><div style="font-weight: 500;">' + assigneeEsc + '</div><div style="font-size: 0.75rem; color: var(--text-muted);">' + assignedTypeEsc + '</div></td>' +
@@ -8812,7 +8815,7 @@ body.view-teamchat .chat-input-area {
       if (mCheckin) checkinMapUrl = "https://www.google.com/maps?q=" + mCheckin[1] + "," + mCheckin[2];
 
       var activeVisitData = {
-        VisitID: formData.VisitID || ("VISIT-" + Math.floor(1000 + Math.random() * 9000)),
+        VisitID: formData.VisitID || ((typeof getNextSequentialId === "function") ? getNextSequentialId(allVisits, "VISIT-", 1001) : ""),
         LinkType: isLeadRadio ? "Lead" : "Project",
         ProjectID: formData.ProjectID || "",
         LeadID: formData.LeadID || "",
@@ -8991,8 +8994,8 @@ body.view-teamchat .chat-input-area {
 
   function executeSaveVisit(formData, fileData, userId) {
     if (!formData.VisitID) {
-      formData.VisitID = "VISIT-" + Math.floor(1000 + Math.random() * 9000);
-      allVisits.unshift(formData);
+      formData.VisitID = (typeof getNextSequentialId === "function") ? getNextSequentialId(allVisits, "VISIT-", 1001) : "";
+      if (formData.VisitID) allVisits.unshift(formData);
     } else {
       var vIdx = allVisits.findIndex(function(v) { return v.VisitID === formData.VisitID; });
       if (vIdx !== -1) allVisits[vIdx] = Object.assign(allVisits[vIdx], formData);
@@ -10056,9 +10059,9 @@ body.view-teamchat .chat-input-area {
     function executeSaveTask(fileDataArray) {
       // Optimistically update in local allTasks and global cache immediately
       if (!formData.TaskID) {
-        formData.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
-        allTasks.unshift(formData);
-        if (window._dataCache && Array.isArray(window._dataCache.tasks)) window._dataCache.tasks.unshift(formData);
+        formData.TaskID = (typeof getNextSequentialId === "function") ? getNextSequentialId(allTasks, "TASK-", 1001) : "";
+        if (formData.TaskID) allTasks.unshift(formData);
+        if (formData.TaskID && window._dataCache && Array.isArray(window._dataCache.tasks)) window._dataCache.tasks.unshift(formData);
       } else {
         var tIdx = allTasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
         if (tIdx !== -1) allTasks[tIdx] = Object.assign(allTasks[tIdx], formData);
@@ -10224,7 +10227,6 @@ body.view-teamchat .chat-input-area {
         <table class="data-table" id="leads-table">
           <thead>
             <tr>
-              <th>Lead ID</th>
               <th>Date</th>
               <th>Customer Name</th>
               <th>Project Type</th>
@@ -10688,9 +10690,11 @@ body.view-teamchat .chat-input-area {
       }
 
       return '<tr id="row-' + leadIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + leadIdEsc + '</td>' +
         '<td>' + formattedInquiryDate + '</td>' +
-        '<td style="font-weight: 600;">' + custNameEsc + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + custNameEsc + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + leadIdEsc + '</div>' +
+        '</td>' +
         '<td>' + projTypeEsc + '</td>' +
         '<td>' + mobileEsc + '</td>' +
         '<td>' + emailEsc + '</td>' +
@@ -11373,7 +11377,6 @@ body.view-teamchat .chat-input-area {
         <table class="data-table" id="proposals-table">
           <thead>
             <tr>
-              <th>Proposal ID</th>
               <th>Client / Prospect</th>
               <th>Project / Description</th>
               <th>Proposal Date</th>
@@ -11387,7 +11390,7 @@ body.view-teamchat .chat-input-area {
           </thead>
           <tbody>
             <tr>
-              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading proposals...</td>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading proposals...</td>
             </tr>
           </tbody>
         </table>
@@ -11748,7 +11751,7 @@ body.view-teamchat .chat-input-area {
     var tbody = document.querySelector("#proposals-table tbody");
     if (!tbody) return;
     if (proposals.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-file-invoice-dollar empty-state-icon"></i>\n          <p class="empty-state-title">No proposals recorded</p>\n          <p class="empty-state-desc">Record architectural quotes and designer proposals.</p>\n        </div>\n      </td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-file-invoice-dollar empty-state-icon"></i>\n          <p class="empty-state-title">No proposals recorded</p>\n          <p class="empty-state-desc">Record architectural quotes and designer proposals.</p>\n        </div>\n      </td></tr>';
       return;
     }
     var sorted = proposals.slice().sort(function(a, b) {
@@ -11829,8 +11832,10 @@ body.view-teamchat .chat-input-area {
       var prStatusEsc = typeof escapeHtml === "function" ? escapeHtml(prop.Status || "") : (prop.Status || "");
 
       return '<tr id="row-' + prIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + prIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + clientHtml + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + clientHtml + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + prIdEsc + '</div>' +
+        '</td>' +
         '<td>' + prProjNameEsc + '</td>' +
         '<td>' + propDate + '</td>' +
         '<td style="font-family: monospace; font-weight: 500;">' + amountFormatted + '</td>' +
@@ -12350,7 +12355,6 @@ body.view-teamchat .chat-input-area {
         <table class="data-table" id="vendors-table">
           <thead>
             <tr>
-              <th>Vendor ID</th>
               <th>Vendor Name</th>
               <th>Contact Person</th>
               <th>Mobile</th>
@@ -12364,7 +12368,7 @@ body.view-teamchat .chat-input-area {
           </thead>
           <tbody>
             <tr>
-              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading vendors...</td>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading vendors...</td>
             </tr>
           </tbody>
         </table>
@@ -12556,7 +12560,7 @@ body.view-teamchat .chat-input-area {
   function renderVendors(vendors) {
     var tbody = document.querySelector("#vendors-table tbody");
     if (vendors.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-truck empty-state-icon"></i>\n          <p class="empty-state-title">No vendors added</p>\n          <p class="empty-state-desc">Establish profiles for material suppliers and sub-contractors.</p>\n        </div>\n      </td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-truck empty-state-icon"></i>\n          <p class="empty-state-title">No vendors added</p>\n          <p class="empty-state-desc">Establish profiles for material suppliers and sub-contractors.</p>\n        </div>\n      </td></tr>';
       return;
     }
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
@@ -12626,8 +12630,10 @@ body.view-teamchat .chat-input-area {
       var vStatusStr = String(v.Status || "Active");
 
       return '<tr id="row-' + vIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + vIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + vNameEsc + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + vNameEsc + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + vIdEsc + '</div>' +
+        '</td>' +
         '<td>' + vContactEsc + '</td>' +
         '<td>' + vMobileEsc + '</td>' +
         '<td>' + vEmailEsc + '</td>' +
@@ -12930,7 +12936,6 @@ body.view-teamchat .chat-input-area {
         <table class="data-table" id="associates-table">
           <thead>
             <tr>
-              <th>Associate ID</th>
               <th>Associate Name</th>
               <th>Contact Person</th>
               <th>Category / Services</th>
@@ -12943,7 +12948,7 @@ body.view-teamchat .chat-input-area {
           </thead>
           <tbody>
             <tr>
-              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading associates...</td>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading associates...</td>
             </tr>
           </tbody>
         </table>
@@ -13069,7 +13074,7 @@ body.view-teamchat .chat-input-area {
     if (!tbody)
       return;
     if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-handshake empty-state-icon"></i>\n          <p class="empty-state-title">No associates registered</p>\n          <p class="empty-state-desc">Input external specialists, trade partners, and associates.</p>\n        </div>\n      </td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-handshake empty-state-icon"></i>\n          <p class="empty-state-title">No associates registered</p>\n          <p class="empty-state-desc">Input external specialists, trade partners, and associates.</p>\n        </div>\n      </td></tr>';
       return;
     }
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
@@ -13116,8 +13121,10 @@ body.view-teamchat .chat-input-area {
       var aStatusEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.Status || "Active") : (assoc.Status || "Active");
 
       return '<tr id="row-' + aIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + aIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + aNameEsc + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + aNameEsc + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + aIdEsc + '</div>' +
+        '</td>' +
         '<td>' + aContactEsc + '</td>' +
         '<td>' + aCategoryEsc + '</td>' +
         '<td>' + aMobileEsc + '</td>' +
@@ -13421,7 +13428,6 @@ body.view-teamchat .chat-input-area {
         <table class="data-table" id="transactions-table">
           <thead>
             <tr>
-              <th>Txn ID</th>
               <th>Date</th>
               <th>Project</th>
               <th>Vendor (If Paid Out)</th>
@@ -13435,7 +13441,7 @@ body.view-teamchat .chat-input-area {
           </thead>
           <tbody>
             <tr>
-              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading transaction ledger...</td>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading transaction ledger...</td>
             </tr>
           </tbody>
         </table>
@@ -14850,7 +14856,7 @@ body.view-teamchat .chat-input-area {
               existing.CanDelete = p.CanDelete;
             } else {
               window._dataCache.rolePermissions.push({
-                PermissionID: "PERM-" + Math.floor(1000 + Math.random() * 9000),
+                PermissionID: (typeof getNextSequentialId === "function") ? getNextSequentialId(window._dataCache.rolePermissions, "PERM-", 1001) : ("PERM-" + (window._dataCache.rolePermissions.length + 1001)),
                 RoleID: roleId,
                 Module: p.Module,
                 CanView: p.CanView,
@@ -19618,7 +19624,7 @@ window.renderLedger = function(txns) {
   
   txns = txns || [];
   if (txns.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">No transactions found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">No transactions found.</td></tr>';
     return;
   }
 
@@ -19756,11 +19762,13 @@ window.renderLedger = function(txns) {
     var refStr = typeof escapeHtml === "function" ? escapeHtml(t.ReferenceNumber || t.Remarks || "-") : (t.ReferenceNumber || t.Remarks || "-");
 
     html += '<tr id="row-' + tIdEscaped + '">' +
-      '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + tIdEscaped + '</td>' +
       '<td>' + dateText + '</td>' +
       '<td>' + projName + '</td>' +
       '<td>' + recipient + '</td>' +
-      '<td>' + catStr + '</td>' +
+      '<td>' +
+        '<div style="font-weight: 600; color: var(--text-main);">' + (catStr || "General") + '</div>' +
+        '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + tIdEscaped + '</div>' +
+      '</td>' +
       '<td>' + amountText + '</td>' +
       '<td>' + modeStr + '</td>' +
       '<td>' + refStr + '</td>' +
@@ -21217,7 +21225,7 @@ document.addEventListener("click", function() {
       var maxNum = startNum - 1;
       (list || []).forEach(function(item) {
         if (!item) return;
-        var idStr = String(item.TransactionID || item.ProjectID || item.CustomerID || item.TaskID || item.MilestoneID || item.LeadID || item.ProposalID || item.VendorID || item.AssociateID || item.VisitID || item.UserID || item.id || "");
+        var idStr = String(item.TransactionID || item.ProjectID || item.CustomerID || item.TaskID || item.MilestoneID || item.LeadID || item.ProposalID || item.VendorID || item.AssociateID || item.VisitID || item.UserID || item.PermissionID || item.FollowupID || item.id || "");
         if (idStr.indexOf(prefix) === 0) {
           var numPart = parseInt(idStr.substring(prefix.length), 10);
           if (!isNaN(numPart) && numPart > maxNum && numPart < 900000) {
@@ -21227,6 +21235,7 @@ document.addEventListener("click", function() {
       });
       return prefix + (maxNum + 1);
     }
+    window.getNextSequentialId = getNextSequentialId;
 
     function handleLocalOptimisticMutation(fnName, payload, args) {
       window._dataCache = window._dataCache || {};
@@ -21237,6 +21246,7 @@ document.addEventListener("click", function() {
         var cust = Object.assign({}, payload);
         if (!cust.CustomerID) {
           cust.CustomerID = getNextSequentialId(window._dataCache.customers, "CUST-", 1001);
+          payload.CustomerID = cust.CustomerID;
           cust.CreatedDate = nowIso;
           window._dataCache.customers.unshift(cust);
         } else {
@@ -21260,6 +21270,7 @@ document.addEventListener("click", function() {
         var proj = Object.assign({}, payload);
         if (!proj.ProjectID) {
           proj.ProjectID = getNextSequentialId(window._dataCache.projects, "PROJ-", 1001);
+          payload.ProjectID = proj.ProjectID;
           proj.CreatedDate = nowIso;
           window._dataCache.projects.unshift(proj);
         } else {
@@ -21283,6 +21294,7 @@ document.addEventListener("click", function() {
         var ms = Object.assign({}, payload);
         if (!ms.MilestoneID) {
           ms.MilestoneID = getNextSequentialId(window._dataCache.milestones, "MS-", 101);
+          payload.MilestoneID = ms.MilestoneID;
           ms.CreatedDate = nowIso;
           window._dataCache.milestones.push(ms);
         } else {
@@ -21306,6 +21318,7 @@ document.addEventListener("click", function() {
         var task = Object.assign({}, payload);
         if (!task.TaskID) {
           task.TaskID = getNextSequentialId(window._dataCache.tasks, "TASK-", 1001);
+          payload.TaskID = task.TaskID;
           task.CreatedDate = nowIso;
           window._dataCache.tasks.unshift(task);
         } else {
@@ -21343,6 +21356,7 @@ document.addEventListener("click", function() {
         var visit = Object.assign({}, payload);
         if (!visit.VisitID) {
           visit.VisitID = getNextSequentialId(window._dataCache.siteVisits, "VISIT-", 1001);
+          payload.VisitID = visit.VisitID;
           visit.CreatedDate = nowIso;
           window._dataCache.siteVisits.unshift(visit);
         } else {
@@ -21366,6 +21380,7 @@ document.addEventListener("click", function() {
         var lead = Object.assign({}, payload);
         if (!lead.LeadID) {
           lead.LeadID = getNextSequentialId(window._dataCache.leads, "LEAD-", 1001);
+          payload.LeadID = lead.LeadID;
           lead.CreatedDate = nowIso;
           window._dataCache.leads.unshift(lead);
         } else {
@@ -21395,7 +21410,10 @@ document.addEventListener("click", function() {
       if (fnName === "saveLeadFollowup") {
         window._dataCache.leadFollowups = window._dataCache.leadFollowups || [];
         var fup = Object.assign({}, payload);
-        if (!fup.FollowupID) fup.FollowupID = getNextSequentialId(window._dataCache.leadFollowups, "FLP-", 1001);
+        if (!fup.FollowupID) {
+          fup.FollowupID = getNextSequentialId(window._dataCache.leadFollowups, "FLP-", 1001);
+          payload.FollowupID = fup.FollowupID;
+        }
         window._dataCache.leadFollowups.unshift(fup);
         populateAllCaches(window._dataCache);
         return { success: true, message: "Follow-up logged successfully." };
@@ -21406,6 +21424,7 @@ document.addEventListener("click", function() {
         var prop = Object.assign({}, payload);
         if (!prop.ProposalID) {
           prop.ProposalID = getNextSequentialId(window._dataCache.proposals, "PROP-", 1001);
+          payload.ProposalID = prop.ProposalID;
           prop.CreatedDate = nowIso;
           window._dataCache.proposals.unshift(prop);
         } else {
@@ -21429,6 +21448,7 @@ document.addEventListener("click", function() {
         var vend = Object.assign({}, payload);
         if (!vend.VendorID) {
           vend.VendorID = getNextSequentialId(window._dataCache.vendors, "VNDR-", 1001);
+          payload.VendorID = vend.VendorID;
           vend.CreatedDate = nowIso;
           window._dataCache.vendors.unshift(vend);
         } else {
@@ -21452,6 +21472,7 @@ document.addEventListener("click", function() {
         var assoc = Object.assign({}, payload);
         if (!assoc.AssociateID) {
           assoc.AssociateID = getNextSequentialId(window._dataCache.associates, "ASSOC-", 1001);
+          payload.AssociateID = assoc.AssociateID;
           assoc.CreatedDate = nowIso;
           window._dataCache.associates.unshift(assoc);
         } else {
@@ -21475,6 +21496,7 @@ document.addEventListener("click", function() {
         var txn = Object.assign({}, payload);
         if (!txn.TransactionID) {
           txn.TransactionID = getNextSequentialId(window._dataCache.transactions, "TXN-", 1001);
+          payload.TransactionID = txn.TransactionID;
           txn.CreatedDate = nowIso;
           window._dataCache.transactions.unshift(txn);
         } else {

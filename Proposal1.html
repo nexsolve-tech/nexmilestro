@@ -34,7 +34,6 @@
         <table class="data-table" id="proposals-table">
           <thead>
             <tr>
-              <th>Proposal ID</th>
               <th>Client / Prospect</th>
               <th>Project / Description</th>
               <th>Proposal Date</th>
@@ -48,7 +47,7 @@
           </thead>
           <tbody>
             <tr>
-              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading proposals...</td>
+              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading proposals...</td>
             </tr>
           </tbody>
         </table>
@@ -409,7 +408,7 @@
     var tbody = document.querySelector("#proposals-table tbody");
     if (!tbody) return;
     if (proposals.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-file-invoice-dollar empty-state-icon"></i>\n          <p class="empty-state-title">No proposals recorded</p>\n          <p class="empty-state-desc">Record architectural quotes and designer proposals.</p>\n        </div>\n      </td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-file-invoice-dollar empty-state-icon"></i>\n          <p class="empty-state-title">No proposals recorded</p>\n          <p class="empty-state-desc">Record architectural quotes and designer proposals.</p>\n        </div>\n      </td></tr>';
       return;
     }
     var sorted = proposals.slice().sort(function(a, b) {
@@ -490,8 +489,10 @@
       var prStatusEsc = typeof escapeHtml === "function" ? escapeHtml(prop.Status || "") : (prop.Status || "");
 
       return '<tr id="row-' + prIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + prIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + clientHtml + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + clientHtml + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + prIdEsc + '</div>' +
+        '</td>' +
         '<td>' + prProjNameEsc + '</td>' +
         '<td>' + propDate + '</td>' +
         '<td style="font-family: monospace; font-weight: 500;">' + amountFormatted + '</td>' +

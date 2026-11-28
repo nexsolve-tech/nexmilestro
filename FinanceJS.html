@@ -856,7 +856,7 @@ window.renderLedger = function(txns) {
   
   txns = txns || [];
   if (txns.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">No transactions found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">No transactions found.</td></tr>';
     return;
   }
 
@@ -994,11 +994,13 @@ window.renderLedger = function(txns) {
     var refStr = typeof escapeHtml === "function" ? escapeHtml(t.ReferenceNumber || t.Remarks || "-") : (t.ReferenceNumber || t.Remarks || "-");
 
     html += '<tr id="row-' + tIdEscaped + '">' +
-      '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + tIdEscaped + '</td>' +
       '<td>' + dateText + '</td>' +
       '<td>' + projName + '</td>' +
       '<td>' + recipient + '</td>' +
-      '<td>' + catStr + '</td>' +
+      '<td>' +
+        '<div style="font-weight: 600; color: var(--text-main);">' + (catStr || "General") + '</div>' +
+        '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + tIdEscaped + '</div>' +
+      '</td>' +
       '<td>' + amountText + '</td>' +
       '<td>' + modeStr + '</td>' +
       '<td>' + refStr + '</td>' +

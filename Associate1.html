@@ -27,7 +27,6 @@
         <table class="data-table" id="associates-table">
           <thead>
             <tr>
-              <th>Associate ID</th>
               <th>Associate Name</th>
               <th>Contact Person</th>
               <th>Category / Services</th>
@@ -40,7 +39,7 @@
           </thead>
           <tbody>
             <tr>
-              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading associates...</td>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading associates...</td>
             </tr>
           </tbody>
         </table>
@@ -166,7 +165,7 @@
     if (!tbody)
       return;
     if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-handshake empty-state-icon"></i>\n          <p class="empty-state-title">No associates registered</p>\n          <p class="empty-state-desc">Input external specialists, trade partners, and associates.</p>\n        </div>\n      </td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">\n        <div class="empty-state">\n          <i class="fas fa-handshake empty-state-icon"></i>\n          <p class="empty-state-title">No associates registered</p>\n          <p class="empty-state-desc">Input external specialists, trade partners, and associates.</p>\n        </div>\n      </td></tr>';
       return;
     }
     var currentUser = JSON.parse(localStorage.getItem("pm_user") || "{}");
@@ -213,8 +212,10 @@
       var aStatusEsc = typeof escapeHtml === "function" ? escapeHtml(assoc.Status || "Active") : (assoc.Status || "Active");
 
       return '<tr id="row-' + aIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + aIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + aNameEsc + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + aNameEsc + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + aIdEsc + '</div>' +
+        '</td>' +
         '<td>' + aContactEsc + '</td>' +
         '<td>' + aCategoryEsc + '</td>' +
         '<td>' + aMobileEsc + '</td>' +

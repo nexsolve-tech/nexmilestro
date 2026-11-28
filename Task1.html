@@ -888,9 +888,9 @@
     function executeSaveTask(fileDataArray) {
       // Optimistically update in local allTasks and global cache immediately
       if (!formData.TaskID) {
-        formData.TaskID = "TASK-" + Math.floor(1000 + Math.random() * 9000);
-        allTasks.unshift(formData);
-        if (window._dataCache && Array.isArray(window._dataCache.tasks)) window._dataCache.tasks.unshift(formData);
+        formData.TaskID = (typeof getNextSequentialId === "function") ? getNextSequentialId(allTasks, "TASK-", 1001) : "";
+        if (formData.TaskID) allTasks.unshift(formData);
+        if (formData.TaskID && window._dataCache && Array.isArray(window._dataCache.tasks)) window._dataCache.tasks.unshift(formData);
       } else {
         var tIdx = allTasks.findIndex(function(t) { return t.TaskID === formData.TaskID; });
         if (tIdx !== -1) allTasks[tIdx] = Object.assign(allTasks[tIdx], formData);

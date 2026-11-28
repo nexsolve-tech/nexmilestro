@@ -51,7 +51,6 @@
         <table class="data-table" id="projects-table">
           <thead>
             <tr>
-              <th>Project ID</th>
               <th>Project Name</th>
               <th>Customer</th>
               <th>Type</th>
@@ -64,7 +63,7 @@
           </thead>
           <tbody>
             <tr>
-              <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading projects list...</td>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading projects list...</td>
             </tr>
           </tbody>
         </table>
@@ -561,8 +560,10 @@
       var pjTypeEsc = typeof escapeHtml === "function" ? escapeHtml(proj.ProjectType || "") : (proj.ProjectType || "");
 
       return '<tr id="row-' + pjIdEsc + '">' +
-        '<td style="font-family: monospace; font-weight: 600; color: var(--primary);">' + pjIdEsc + '</td>' +
-        '<td style="font-weight: 600;">' + pjNameEsc + '</td>' +
+        '<td>' +
+          '<div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">' + pjNameEsc + '</div>' +
+          '<div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace; font-weight: 600; margin-top: 2px;">#' + pjIdEsc + '</div>' +
+        '</td>' +
         '<td>' + pjCustEsc + '</td>' +
         '<td>' + pjTypeEsc + '</td>' +
         '<td style="font-family: monospace; font-weight: 500;">' + formattedVal + '</td>' +

@@ -870,7 +870,7 @@
               existing.CanDelete = p.CanDelete;
             } else {
               window._dataCache.rolePermissions.push({
-                PermissionID: "PERM-" + Math.floor(1000 + Math.random() * 9000),
+                PermissionID: (typeof getNextSequentialId === "function") ? getNextSequentialId(window._dataCache.rolePermissions, "PERM-", 1001) : ("PERM-" + (window._dataCache.rolePermissions.length + 1001)),
                 RoleID: roleId,
                 Module: p.Module,
                 CanView: p.CanView,

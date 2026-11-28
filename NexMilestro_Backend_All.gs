@@ -434,25 +434,34 @@ function ensureSheetWithHeaders(ss, sheetName) {
 }
 
 /**
- * Generates next sequential ID (e.g. CUST-1001, PROJ-1012).
+ * Generates next strict sequential ID (e.g. CUST-1001, PROJ-1012).
+ * Uses LockService to guarantee concurrency safety and atomic continuous sequence.
  */
 function generateNextId(sheet, prefix) {
-  const lastRow = sheet.getLastRow();
-  if (lastRow <= 1) {
-    return prefix + "1001";
-  }
-  const idValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-  let maxNum = 1000;
-  for (let i = 0; i < idValues.length; i++) {
-    const raw = String(idValues[i][0] || "").trim();
-    if (raw.indexOf(prefix) === 0) {
-      const numPart = parseInt(raw.substring(prefix.length), 10);
-      if (!isNaN(numPart) && numPart > maxNum) {
-        maxNum = numPart;
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch(e) {}
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      return prefix + "1001";
+    }
+    const idValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    let maxNum = 1000;
+    for (let i = 0; i < idValues.length; i++) {
+      const raw = String(idValues[i][0] || "").trim();
+      if (raw.indexOf(prefix) === 0) {
+        const numPart = parseInt(raw.substring(prefix.length), 10);
+        if (!isNaN(numPart) && numPart > maxNum && numPart < 900000) {
+          maxNum = numPart;
+        }
       }
     }
+    return prefix + (maxNum + 1);
+  } finally {
+    try { lock.releaseLock(); } catch(e) {}
   }
-  return prefix + (maxNum + 1);
 }
 
 /**

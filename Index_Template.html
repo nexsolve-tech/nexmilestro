@@ -1832,7 +1832,7 @@
       var maxNum = startNum - 1;
       (list || []).forEach(function(item) {
         if (!item) return;
-        var idStr = String(item.TransactionID || item.ProjectID || item.CustomerID || item.TaskID || item.MilestoneID || item.LeadID || item.ProposalID || item.VendorID || item.AssociateID || item.VisitID || item.UserID || item.id || "");
+        var idStr = String(item.TransactionID || item.ProjectID || item.CustomerID || item.TaskID || item.MilestoneID || item.LeadID || item.ProposalID || item.VendorID || item.AssociateID || item.VisitID || item.UserID || item.PermissionID || item.FollowupID || item.id || "");
         if (idStr.indexOf(prefix) === 0) {
           var numPart = parseInt(idStr.substring(prefix.length), 10);
           if (!isNaN(numPart) && numPart > maxNum && numPart < 900000) {
@@ -1842,6 +1842,7 @@
       });
       return prefix + (maxNum + 1);
     }
+    window.getNextSequentialId = getNextSequentialId;
 
     function handleLocalOptimisticMutation(fnName, payload, args) {
       window._dataCache = window._dataCache || {};
@@ -1852,6 +1853,7 @@
         var cust = Object.assign({}, payload);
         if (!cust.CustomerID) {
           cust.CustomerID = getNextSequentialId(window._dataCache.customers, "CUST-", 1001);
+          payload.CustomerID = cust.CustomerID;
           cust.CreatedDate = nowIso;
           window._dataCache.customers.unshift(cust);
         } else {
@@ -1875,6 +1877,7 @@
         var proj = Object.assign({}, payload);
         if (!proj.ProjectID) {
           proj.ProjectID = getNextSequentialId(window._dataCache.projects, "PROJ-", 1001);
+          payload.ProjectID = proj.ProjectID;
           proj.CreatedDate = nowIso;
           window._dataCache.projects.unshift(proj);
         } else {
@@ -1898,6 +1901,7 @@
         var ms = Object.assign({}, payload);
         if (!ms.MilestoneID) {
           ms.MilestoneID = getNextSequentialId(window._dataCache.milestones, "MS-", 101);
+          payload.MilestoneID = ms.MilestoneID;
           ms.CreatedDate = nowIso;
           window._dataCache.milestones.push(ms);
         } else {
@@ -1921,6 +1925,7 @@
         var task = Object.assign({}, payload);
         if (!task.TaskID) {
           task.TaskID = getNextSequentialId(window._dataCache.tasks, "TASK-", 1001);
+          payload.TaskID = task.TaskID;
           task.CreatedDate = nowIso;
           window._dataCache.tasks.unshift(task);
         } else {
@@ -1958,6 +1963,7 @@
         var visit = Object.assign({}, payload);
         if (!visit.VisitID) {
           visit.VisitID = getNextSequentialId(window._dataCache.siteVisits, "VISIT-", 1001);
+          payload.VisitID = visit.VisitID;
           visit.CreatedDate = nowIso;
           window._dataCache.siteVisits.unshift(visit);
         } else {
@@ -1981,6 +1987,7 @@
         var lead = Object.assign({}, payload);
         if (!lead.LeadID) {
           lead.LeadID = getNextSequentialId(window._dataCache.leads, "LEAD-", 1001);
+          payload.LeadID = lead.LeadID;
           lead.CreatedDate = nowIso;
           window._dataCache.leads.unshift(lead);
         } else {
@@ -2010,7 +2017,10 @@
       if (fnName === "saveLeadFollowup") {
         window._dataCache.leadFollowups = window._dataCache.leadFollowups || [];
         var fup = Object.assign({}, payload);
-        if (!fup.FollowupID) fup.FollowupID = getNextSequentialId(window._dataCache.leadFollowups, "FLP-", 1001);
+        if (!fup.FollowupID) {
+          fup.FollowupID = getNextSequentialId(window._dataCache.leadFollowups, "FLP-", 1001);
+          payload.FollowupID = fup.FollowupID;
+        }
         window._dataCache.leadFollowups.unshift(fup);
         populateAllCaches(window._dataCache);
         return { success: true, message: "Follow-up logged successfully." };
@@ -2021,6 +2031,7 @@
         var prop = Object.assign({}, payload);
         if (!prop.ProposalID) {
           prop.ProposalID = getNextSequentialId(window._dataCache.proposals, "PROP-", 1001);
+          payload.ProposalID = prop.ProposalID;
           prop.CreatedDate = nowIso;
           window._dataCache.proposals.unshift(prop);
         } else {
@@ -2044,6 +2055,7 @@
         var vend = Object.assign({}, payload);
         if (!vend.VendorID) {
           vend.VendorID = getNextSequentialId(window._dataCache.vendors, "VNDR-", 1001);
+          payload.VendorID = vend.VendorID;
           vend.CreatedDate = nowIso;
           window._dataCache.vendors.unshift(vend);
         } else {
@@ -2067,6 +2079,7 @@
         var assoc = Object.assign({}, payload);
         if (!assoc.AssociateID) {
           assoc.AssociateID = getNextSequentialId(window._dataCache.associates, "ASSOC-", 1001);
+          payload.AssociateID = assoc.AssociateID;
           assoc.CreatedDate = nowIso;
           window._dataCache.associates.unshift(assoc);
         } else {
@@ -2090,6 +2103,7 @@
         var txn = Object.assign({}, payload);
         if (!txn.TransactionID) {
           txn.TransactionID = getNextSequentialId(window._dataCache.transactions, "TXN-", 1001);
+          payload.TransactionID = txn.TransactionID;
           txn.CreatedDate = nowIso;
           window._dataCache.transactions.unshift(txn);
         } else {
